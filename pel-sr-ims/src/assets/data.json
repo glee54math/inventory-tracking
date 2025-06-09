@@ -1,0 +1,41 @@
+{
+    "MG1": [
+        {"range": "1-10", "count": 1},
+        {"range": "11-20", "count": 2},
+        {"range": "21-30", "count": 3},
+        {"range": "31-40", "count": 4},
+        {"range": "41-50", "count": 5},
+        {"range": "51-60", "count": 5},
+        {"range": "61-70", "count": 4},
+        {"range": "71-80", "count": 3},
+        {"range": "81-90", "count": 2},
+        {"range": "91-100", "count": 1},
+        {"range": "101-110", "count": 1}
+    ],
+    "MG2": [
+        {"range": "1-10", "count": 1},
+        {"range": "11-20", "count": 2},
+        {"range": "21-30", "count": 3},
+        {"range": "31-40", "count": 4},
+        {"range": "41-50", "count": 5},
+        {"range": "51-60", "count": 5},
+        {"range": "61-70", "count": 4},
+        {"range": "71-80", "count": 3},
+        {"range": "81-90", "count": 2},
+        {"range": "91-100", "count": 1},
+        {"range": "101-110", "count": 1}
+    ],
+    "MG3": [
+        {"range": "1-10", "count": 1},
+        {"range": "11-20", "count": 2},
+        {"range": "21-30", "count": 3},
+        {"range": "31-40", "count": 4},
+        {"range": "41-50", "count": 5},
+        {"range": "51-60", "count": 5},
+        {"range": "61-70", "count": 4},
+        {"range": "71-80", "count": 3},
+        {"range": "81-90", "count": 2},
+        {"range": "91-100", "count": 1},
+        {"range": "101-110", "count": 1}
+    ]
+}
