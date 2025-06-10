@@ -1,13 +1,20 @@
 import React from "react";
-import data from "../assets/data.json";
+// import data from "../assets/data.json"; // This was imported just for testing purposes.
 
-function FrontInventory() {
+interface FrontInventoryProps {
+  data: object;
+}
+interface Subsection {
+  range: string;
+  count: number;
+}
+
+function FrontInventory({ data }: FrontInventoryProps) {
   // values, entries, keys
-  const everything = Object.values(data);
+  console.log(data);
   const levels = Object.keys(data);
-  const subsections = Object.values(data)[0];
+  const subsections: Subsection = Object.values(data)[0];
   //   console.log(data[levels[1]]);
-  console.log(everything, levels, subsections);
 
   return (
     <div>
@@ -17,7 +24,7 @@ function FrontInventory() {
             <th className="border border-gray-400 px-2 py-1 text-left">
               Level
             </th>
-            {subsections.map((section) => (
+            {subsections.map((section: Subsection) => (
               <th
                 key={section.range}
                 className="border border-gray-400 px-2 py-1 text-left"
@@ -34,7 +41,7 @@ function FrontInventory() {
               className="border border-gray-400 px-2 py-1 text-center"
             >
               <td>{level}</td>
-              {data[level].map(({ range, count }) => (
+              {data[level].map(({ range, count }: Subsection) => (
                 <td
                   key={range}
                   className="border border-gray-400 px-2 py-1 text-center"

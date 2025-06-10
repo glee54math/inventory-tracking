@@ -1,6 +1,6 @@
 {
     "MG1": [
-        {"range": "1-10", "count": 1},
+        {"range": "1-10", "count": 4},
         {"range": "11-20", "count": 2},
         {"range": "21-30", "count": 3},
         {"range": "31-40", "count": 4},

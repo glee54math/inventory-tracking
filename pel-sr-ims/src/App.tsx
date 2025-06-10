@@ -20,28 +20,44 @@ function App() {
     load();
   }, []);
 
+  // I'll upload later.
   const handleUpload = async () => {
     await saveInventory(data);
     alert("Uploaded!");
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold">Inventory Dashboard</h1>
-      <button
-        onClick={handleUpload}
-        className="mt-2 bg-blue-500 text-green px-3 py-1 rounded"
-      >
-        Upload Local JSON to Backend
-      </button>
-      <h2 className="mt-4 font-semibold">Fetched Inventory from Firebase:</h2>
-      <pre className="bg-gray-100 p-2 rounded mt-2">
-        {inventory ? JSON.stringify(inventory, null, 2) : "Loading..."}
-      </pre>
-      <FrontInventory />
-      {/* data={inventory} will need to be passed into Inventory */}
+    <div className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-hidden">
+      {/* Left Side */}
+      <div className="flex flex-col w-1/2 gap-4 overflow-hidden">
+        <div className="border p-2 bg-white flex-1 flex flex-col items-center justify-start">
+          <h2 className="font-bold mb-2">Inventory 1</h2>
+          <div className="overflow-auto w-full max-w-full">
+            {inventory && <FrontInventory data={inventory} />}
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side */}
+      <div className="flex flex-col w-1/2 gap-4 overflow-hidden">
+        <div className="border p-2 bg-white flex-1">
+          <h2 className="font-bold mb-2 text-center">Actions</h2>
+        </div>
+        <div className="border p-2 bg-white flex-1">
+          <h2 className="font-bold mb-2 text-center">Log</h2>
+        </div>
+      </div>
     </div>
   );
 }
 
 export default App;
+
+{
+  /* <button
+          onClick={handleUpload}
+          className="mt-2 bg-blue-500 text-green px-3 py-1 rounded"
+        >
+          Upload Local JSON to Backend
+        </button> */
+}
