@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { MovementType, SubmittedAction } from "../utils/types";
 import Action from "./Action";
+import { ActionProvider } from "./ActionContext";
 
 function ActionContainer() {
   const [actionList, setActionList] = useState<SubmittedAction[]>(
@@ -31,13 +32,12 @@ function ActionContainer() {
   return (
     <div className="space-y-4">
       {actionList.map((action: SubmittedAction, index) => (
-        <Action
-          key={index}
-          index={index}
+        <ActionProvider key={index}>
+          <Action index={index} />
+          </ActionProvider>
           // onChange={(updatedAction: SubmittedAction) => {
           //     setActionList((prev) => prev.map((a,i) => (i === index ? updatedAction : a)))
           // }}
-        />
       ))}
       <button
         onClick={() => createNewAction()}
