@@ -33,8 +33,8 @@ function ActionContainer() {
     <div className="space-y-4">
       {actionList.map((action: SubmittedAction, index) => (
         <ActionProvider key={index}>
-          <Action index={index} />
-          </ActionProvider>
+          <Action />
+        </ActionProvider>
           // onChange={(updatedAction: SubmittedAction) => {
           //     setActionList((prev) => prev.map((a,i) => (i === index ? updatedAction : a)))
           // }}

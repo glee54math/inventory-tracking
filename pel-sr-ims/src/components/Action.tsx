@@ -3,11 +3,11 @@ import { useActionContext } from "./ActionContext";
 import { updateInventoryFromActions } from "../utils/inventoryService";
 import type { MovementType } from "../utils/types";
 
-interface ActionProps {
-  index: number;
-}
-
-function Action({ index }: ActionProps) {
+// interface ActionProps {
+//   index: number;
+// }
+// { index }: ActionProps
+function Action() {
   //   const [subject, setSubject] = useState<"Math" | "English" | null>(null);
   //   const [level, setLevel] = useState<string>("");
   //   const [selectedSubsections, setSelectedSubsections] = useState<string[]>([]);
