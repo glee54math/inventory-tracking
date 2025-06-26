@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useActionContext } from "./ActionContext";
 import type { Subsection, InventoryData } from "../utils/types";
 // import data from "../assets/data.json"; // This was imported just for testing purposes.
@@ -11,6 +11,7 @@ interface InventoryProps {
 
 function Inventory({ data }: InventoryProps) {
   // values, entries, keys
+  const [collapsed, setCollapsed] = useState(false);
   const levels = Object.keys(data);
   const subsections: Subsection[] = Object.values(data)[0];
 
@@ -20,6 +21,14 @@ function Inventory({ data }: InventoryProps) {
 
   return (
     <div>
+      <button
+      onClick={() => setCollapsed(!collapsed)}
+      className="mb-3 bg-green-500 text-black rounded hover:bg-blue-600"
+      >
+        {collapsed ? "Show Inventory" : "Hide Inventory"}
+      </button>
+
+      {!collapsed && (
       <table className="p-2">
         <thead>
           <tr>
@@ -59,6 +68,7 @@ function Inventory({ data }: InventoryProps) {
           ))}
         </tbody>
       </table>
+      )}
       {submittedActions.map((action, index) => (
         <pre key={index}>
           {action.subject}: {action.level}, {action.selectedSubsections}
