@@ -192,7 +192,7 @@ function Action({ index }: ActionProps) {
           {/* Once a level is selected */}
           {/* Select All */}
           {subject && level && (
-            <div className="flex flex-col gap-2 border p-2 rounded max-h-64 overflow-y-auto">
+            <div className="flex flex-col gap-2 border p-2 rounded max-h-90 overflow-y-auto">
               <label key="CheckAll" id="checkAll" className="flex gap-2">
                 <input
                   type="checkbox"

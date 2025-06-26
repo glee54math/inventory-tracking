@@ -41,7 +41,7 @@ function ActionContainer() {
       ))}
       <button
         onClick={() => createNewAction()}
-        className="border outline-1 outline-blue-500 rounded mt-1 bg-blue-200"
+        className="border outline-1 outline-blue-500 rounded mt-3 bg-blue-200"
       >
         Create New
       </button>
