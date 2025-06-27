@@ -1,7 +1,5 @@
-import React, { useState } from "react";
 import { useActionContext } from "./ActionContext";
 import type { Subsection, InventoryData } from "../utils/types";
-// import data from "../assets/data.json"; // This was imported just for testing purposes.
 
 interface InventoryProps {
   data: InventoryData;
@@ -20,7 +18,6 @@ function Inventory({ data }: InventoryProps) {
 
   return (
     <div>
-     
       <table className="p-2">
         <thead>
           <tr>
