@@ -56,7 +56,6 @@ function ActionContainer() {
   return (
     <div className="space-y-4">
       <div className="mb-4">
-        <h2 className="text-xl font-bold mb-2">Inventory Management Actions</h2>
         {actionList.length === 0 && (
           <p className="text-gray-500">No actions created yet. Click "Create New Action" to start.</p>
         )}
