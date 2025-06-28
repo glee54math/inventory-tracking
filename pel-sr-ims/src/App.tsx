@@ -107,11 +107,15 @@ function App() {
                 </button>
               )}
             </div>
-            <ActionContainer />
+            <div className="max-h-[70vh] flex flex-col">
+              <ActionContainer />
+            </div>
           </div>
           <div className="border p-2 bg-white flex-1">
             <h2 className="font-bold mb-2 text-center">Log</h2>
-            <Log />
+            <div className="max-h-[20vh] flex flex-col">
+              <Log />
+            </div>
           </div>
         </div>
       </div>

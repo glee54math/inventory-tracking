@@ -78,16 +78,18 @@ export async function updateInventoryFromActions( submittedActions: SubmittedAct
         const objFoundBySection: Subsection | undefined = inventoryFrom[action.level]?.find((subsection: Subsection) => subsection.range===section);
         
         // Once found, the count is subtracted by the number of Copies based on the section "range".
-        if (objFoundBySection)
+        if (objFoundBySection) {
           objFoundBySection.count -= action.movementNumOfCopiesMap[section];
+        }
       }
       if (inventoryTo) {
         // This finds the object in JSON data based on the section "range".
         const objFoundBySection: Subsection | undefined = inventoryTo[action.level]?.find((subsection: Subsection) => subsection.range===section);
 
         // Once found, the count is subtracted by the number of Copies based on the section "range".
-        if (objFoundBySection)
+        if (objFoundBySection) {
           objFoundBySection.count += action.movementNumOfCopiesMap[section];
+        }
       }
     })
 
@@ -97,11 +99,13 @@ export async function updateInventoryFromActions( submittedActions: SubmittedAct
     const movementType = action.movementMap[action.selectedSubsections[index]];
     const fromFrontBackOrShipment = movementType.substring(0,movementType.indexOf("To"))
     const toFrontBackOrStudent = movementType.substring(movementType.indexOf("To")+2)
-    if (inventoryFrom && fromFrontBackOrShipment !== 'Shipment')
+    console.log(movementType, fromFrontBackOrShipment, toFrontBackOrStudent, index);
+    if (inventoryFrom && fromFrontBackOrShipment !== 'Shipment') {
       saveInventory(inventoryFrom,`${action.subject?.toLowerCase()}_${fromFrontBackOrShipment.toLowerCase()}`);
-    if (inventoryTo && toFrontBackOrStudent !== 'Student')
+    }
+    if (inventoryTo && toFrontBackOrStudent !== 'Student') {
       saveInventory(inventoryTo,`${action.subject?.toLowerCase()}_${toFrontBackOrStudent.toLowerCase()}`);
-
+    }
     index++;
   }
 
