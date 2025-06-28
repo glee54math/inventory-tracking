@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, } from "firebase/firestore";
+import { doc, getDoc, getDocs, setDoc, collection} from "firebase/firestore";
 import { db } from "./firebase";
 import type { SubmittedAction } from "./types";
 import type { InventoryData, Subsection } from "./types";
@@ -10,6 +10,19 @@ export const saveInventory = async (data: object, subject_Location: string) => {
     const ref = doc(db,"inventory",subject_Location); 
     await setDoc(ref, data) 
     console.log("Saved!");
+}
+
+export async function loadAllInventories() {
+  const collectionRef = collection(db, 'inventory');
+  const querySnapshot = await getDocs(collectionRef);
+
+  const allData: Record<string, any> = {};
+
+  querySnapshot.forEach((doc) => {
+    allData[doc.id] = doc.data(); // doc.id is like "math_back", "english_front", etc.
+  });
+
+  return allData;
 }
 
 export async function loadInventory(subject_Location: string) {
