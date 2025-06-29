@@ -28,14 +28,14 @@ function App() {
     const load = async () => {
       const allData = await loadAllInventories();
       console.log(allData);
-      const names = Object.keys(allData);
-      console.log(names);
-      const values = Object.values(allData);
+      const inventoryNames = Object.keys(allData);
+      const inventoryData = Object.values(allData);
+      console.log(inventoryData);
 
       const newInventories: Record<string, any> = {};
 
-      names.forEach((name, index) => {
-        newInventories[name] = values[index];
+      inventoryNames.forEach((name, index) => {
+        newInventories[name] = inventoryData[index];
       });
 
       setInventories(newInventories);
@@ -96,7 +96,7 @@ function App() {
           } gap-4 overflow-hidden transition-all duration-300`}
         >
           <div className="border p-2 bg-white flex-3">
-            <div className="flex justify-end items-center mb-2">
+            <div className="flex justify-end items-center">
               <h2 className="font-bold mb-2 text-center w-full">Actions</h2>
               {!showInventory && (
                 <button

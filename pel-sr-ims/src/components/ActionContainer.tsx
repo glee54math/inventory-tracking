@@ -68,7 +68,13 @@ function ActionContainer() {
       </div>
 
       {actionList.map((action, index) => (
-        <div key={index} className="relative">
+        <div key={index} className="flex items-start gap-2">
+          <button
+            onClick={() => removeAction(index)}
+            className="ml-4 mr-2 text-black-500 border outline-1 outline-red-500 rounded hover:border-red-100"
+          >
+            X
+          </button>
           <Action
             index={index}
             data={action}
@@ -76,15 +82,6 @@ function ActionContainer() {
               handleActionChange(index, updatedAction)
             }
           />
-          {actionList.length > 1 && (
-            <button
-              onClick={() => removeAction(index)}
-              className="absolute top-2 right-2 border outline-1 outline-red-300 bg-red-500 px-2 py-1 rounded text-sm hover:bg-red-600"
-            >
-              Remove
-              {/* border outline-1 outline-blue-500 rounded bg-blue-200 px-4 py-2 hover:bg-blue-300" */}
-            </button>
-          )}
         </div>
       ))}
 

@@ -1,4 +1,6 @@
 import type { MovementType, SubmittedAction } from "../utils/types";
+import dataMath from "../assets/dataMath.json";
+import dataEnglish from "../assets/data.json";
 
 interface ActionProps {
   index: number;
@@ -17,8 +19,8 @@ function Action({ index, data, onChange }: ActionProps) {
       ? data.selectedSubsections.filter((r) => r !== range)
       : [...data.selectedSubsections, range];
 
-    let newMovementMap = { ...data.movementMap };
-    let newMovementNumOfCopiesMap = { ...data.movementNumOfCopiesMap };
+    const newMovementMap = { ...data.movementMap };
+    const newMovementNumOfCopiesMap = { ...data.movementNumOfCopiesMap };
 
     // If deselected, remove from the maps
     if (isSelected) {
@@ -138,9 +140,11 @@ function Action({ index, data, onChange }: ActionProps) {
               className="border px-1 py-1 rounded field-sizing-content"
             >
               <option value="">Select Level</option>
-              <option value="MG1">MG1</option>
-              <option value="MG2">MG2</option>
-              <option value="MG3">MG3</option>
+              {Object.keys(dataMath).map((level: string) => (
+                <option key={level} value={level}>
+                  {level}
+                </option>
+              ))}
             </select>
           )}
 
@@ -154,9 +158,11 @@ function Action({ index, data, onChange }: ActionProps) {
               className="border px-1 py-1 rounded field-sizing-content"
             >
               <option value="">Select Level</option>
-              <option value="EG1">EG1</option>
-              <option value="EG2">EG2</option>
-              <option value="EG3">EG3</option>
+              {Object.keys(dataEnglish).map((level: string) => (
+                <option key={level} value={level}>
+                  {level}
+                </option>
+              ))}
             </select>
           )}
 
