@@ -1,4 +1,6 @@
 import type { MovementType, SubmittedAction } from "../utils/types";
+import dataMath from "../assets/dataMath.json";
+import dataEnglish from "../assets/data.json";
 
 interface ActionProps {
   index: number;
@@ -17,8 +19,8 @@ function Action({ index, data, onChange }: ActionProps) {
       ? data.selectedSubsections.filter((r) => r !== range)
       : [...data.selectedSubsections, range];
 
-    let newMovementMap = { ...data.movementMap };
-    let newMovementNumOfCopiesMap = { ...data.movementNumOfCopiesMap };
+    const newMovementMap = { ...data.movementMap };
+    const newMovementNumOfCopiesMap = { ...data.movementNumOfCopiesMap };
 
     // If deselected, remove from the maps
     if (isSelected) {
@@ -35,13 +37,26 @@ function Action({ index, data, onChange }: ActionProps) {
   };
 
   const subsections = [
-    "1-10", "11-20", "21-30", "31-40", "41-50", "51-60",
-    "61-70", "71-80", "81-90", "91-100", "101-110",
+    "1-10",
+    "11-20",
+    "21-30",
+    "31-40",
+    "41-50",
+    "51-60",
+    "61-70",
+    "71-80",
+    "81-90",
+    "91-100",
+    "101-110",
   ];
 
   const movements = [
-    "BackToFront", "BackToStudent", "FrontToBack",
-    "FrontToStudent", "ShipmentToBack", "ShipmentToFront",
+    "BackToFront",
+    "BackToStudent",
+    "FrontToBack",
+    "FrontToStudent",
+    "ShipmentToBack",
+    "ShipmentToFront",
   ];
 
   const selectAllSubsections = () => {
@@ -61,7 +76,10 @@ function Action({ index, data, onChange }: ActionProps) {
     data.selectedSubsections.forEach((range: string) => {
       newMap[range] = numOfCopies;
     });
-    updateField("movementNumOfCopiesMap", { ...data.movementNumOfCopiesMap, ...newMap });
+    updateField("movementNumOfCopiesMap", {
+      ...data.movementNumOfCopiesMap,
+      ...newMap,
+    });
   };
 
   const deSelectAllSubsections = () => {
@@ -96,13 +114,15 @@ function Action({ index, data, onChange }: ActionProps) {
 
   return (
     <div>
-      <form name="Action" className="flex flex-row gap-1">
-        <div className="flex flex-row gap-1">
+      <form name="Action" className="flex items-start gap-1">
+        <div className="flex items-start gap-1">
           <select
             name="Subject"
             id={`subject-${index}`}
             value={data.subject ?? ""}
-            onChange={(e) => handleSubjectChange(e.target.value as "Math" | "English" | "")}
+            onChange={(e) =>
+              handleSubjectChange(e.target.value as "Math" | "English" | "")
+            }
             className="border px-1 py-1 rounded field-sizing-content"
           >
             <option value="">Select Subject</option>
@@ -120,9 +140,11 @@ function Action({ index, data, onChange }: ActionProps) {
               className="border px-1 py-1 rounded field-sizing-content"
             >
               <option value="">Select Level</option>
-              <option value="MG1">MG1</option>
-              <option value="MG2">MG2</option>
-              <option value="MG3">MG3</option>
+              {Object.keys(dataMath).map((level: string) => (
+                <option key={level} value={level}>
+                  {level}
+                </option>
+              ))}
             </select>
           )}
 
@@ -136,9 +158,11 @@ function Action({ index, data, onChange }: ActionProps) {
               className="border px-1 py-1 rounded field-sizing-content"
             >
               <option value="">Select Level</option>
-              <option value="EG1">EG1</option>
-              <option value="EG2">EG2</option>
-              <option value="EG3">EG3</option>
+              {Object.keys(dataEnglish).map((level: string) => (
+                <option key={level} value={level}>
+                  {level}
+                </option>
+              ))}
             </select>
           )}
 
@@ -150,9 +174,13 @@ function Action({ index, data, onChange }: ActionProps) {
                   type="checkbox"
                   name={`check-all-${index}`}
                   id={`check-all-${index}`}
-                  checked={data.selectedSubsections.length === subsections.length}
+                  checked={
+                    data.selectedSubsections.length === subsections.length
+                  }
                   onChange={(e) =>
-                    e.target.checked ? selectAllSubsections() : deSelectAllSubsections()
+                    e.target.checked
+                      ? selectAllSubsections()
+                      : deSelectAllSubsections()
                   }
                 />
                 Select All
@@ -202,7 +230,7 @@ function Action({ index, data, onChange }: ActionProps) {
                     onChange={() => toggleSubsection(range)}
                   />
                   {range}
-                  
+
                   {data.selectedSubsections.includes(range) && (
                     <select
                       name={`${range}-movement-${index}`}
@@ -224,7 +252,7 @@ function Action({ index, data, onChange }: ActionProps) {
                       ))}
                     </select>
                   )}
-                  
+
                   {data.selectedSubsections.includes(range) && (
                     <input
                       type="number"
@@ -254,11 +282,6 @@ function Action({ index, data, onChange }: ActionProps) {
 }
 
 export default Action;
-
-
-
-
-
 
 // // import { useState } from "react";
 // import { useActionContext } from "./ActionContext";

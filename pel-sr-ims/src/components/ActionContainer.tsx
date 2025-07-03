@@ -18,7 +18,10 @@ function ActionContainer() {
     setActionList((prev) => [...prev, newAction]);
   };
 
-  const handleActionChange = (index: number, updatedAction: SubmittedAction) => {
+  const handleActionChange = (
+    index: number,
+    updatedAction: SubmittedAction
+  ) => {
     setActionList((prev) =>
       prev.map((action, i) => (i === index ? updatedAction : action))
     );
@@ -30,12 +33,13 @@ function ActionContainer() {
 
   const submitAllActions = async () => {
     // Filter out incomplete actions
-    const completeActions = actionList.filter(action => 
-      action.subject && 
-      action.level && 
-      action.selectedSubsections.length > 0 &&
-      Object.keys(action.movementMap).length > 0 &&
-      Object.keys(action.movementNumOfCopiesMap).length > 0
+    const completeActions = actionList.filter(
+      (action) =>
+        action.subject &&
+        action.level &&
+        action.selectedSubsections.length > 0 &&
+        Object.keys(action.movementMap).length > 0 &&
+        Object.keys(action.movementNumOfCopiesMap).length > 0
     );
 
     if (completeActions.length === 0) {
@@ -45,7 +49,7 @@ function ActionContainer() {
     try {
       // Submit to database
       await updateInventoryFromActions(completeActions);
-      
+
       // Clear the action list after successful submission
       setActionList([]);
     } catch (error) {
@@ -54,39 +58,41 @@ function ActionContainer() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 overflow-auto">
       <div className="mb-4">
         {actionList.length === 0 && (
-          <p className="text-gray-500">No actions created yet. Click "Create New Action" to start.</p>
+          <p className="text-gray-500">
+            No actions created yet. Click "Create New Action" to start.
+          </p>
         )}
       </div>
 
       {actionList.map((action, index) => (
-        <div key={index} className="relative">
+        <div key={index} className="flex items-start gap-2">
+          <button
+            onClick={() => removeAction(index)}
+            className="ml-4 mr-2 text-black-500 border outline-1 outline-red-500 rounded hover:border-red-100"
+          >
+            X
+          </button>
           <Action
             index={index}
             data={action}
-            onChange={(updatedAction) => handleActionChange(index, updatedAction)}
+            onChange={(updatedAction) =>
+              handleActionChange(index, updatedAction)
+            }
           />
-          {actionList.length > 1 && (
-            <button
-              onClick={() => removeAction(index)}
-              className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
-            >
-              Remove
-            </button>
-          )}
         </div>
       ))}
 
-      <div className="flex gap-4 pt-4 border-t">
+      <div className="flex gap-4 p-4 border-t">
         <button
           onClick={createNewAction}
           className="border outline-1 outline-blue-500 rounded bg-blue-200 px-4 py-2 hover:bg-blue-300"
         >
           Create New Action
         </button>
-        
+
         {actionList.length > 0 && (
           <button
             onClick={submitAllActions}
@@ -95,7 +101,7 @@ function ActionContainer() {
             Submit All Actions
           </button>
         )}
-        
+
         {actionList.length > 0 && (
           <button
             onClick={() => setActionList([])}
@@ -110,62 +116,62 @@ function ActionContainer() {
 }
 
 export default ActionContainer;
-  
-  // import { useState } from "react";
-  // import type { MovementType, SubmittedAction } from "../utils/types";
-  // import Action from "./Action";
-  // import { ActionProvider } from "./ActionContext";
 
-  // function ActionContainer() {
-  //   const [actionList, setActionList] = useState<SubmittedAction[]>(
-  //     [] as SubmittedAction[]
-  //   );
+// import { useState } from "react";
+// import type { MovementType, SubmittedAction } from "../utils/types";
+// import Action from "./Action";
+// import { ActionProvider } from "./ActionContext";
 
-  //   /*
-  //         export interface SubmittedAction {
-  //         subject: "Math" | "English" | null;
-  //         level: string;
-  //         movementMap: Record<string, MovementType>;
-  //         movementNumOfCopiesMap: Record<string, number>;
-  //         selectedSubsections: string[];
-  //         }
-  //     */
-  //   const createNewAction = () => {
-  //     const newAction = {
-  //       subject: null as "Math" | "English" | null,
-  //       level: "" as string,
-  //       movementMap: {} as Record<string, MovementType>,
-  //       movementNumOfCopiesMap: { "": 0 } as Record<string, number>,
-  //       selectedSubsections: [] as string[],
-  //     };
+// function ActionContainer() {
+//   const [actionList, setActionList] = useState<SubmittedAction[]>(
+//     [] as SubmittedAction[]
+//   );
 
-  //     setActionList((prev) => [...prev, newAction]);
-  //   };
+//   /*
+//         export interface SubmittedAction {
+//         subject: "Math" | "English" | null;
+//         level: string;
+//         movementMap: Record<string, MovementType>;
+//         movementNumOfCopiesMap: Record<string, number>;
+//         selectedSubsections: string[];
+//         }
+//     */
+//   const createNewAction = () => {
+//     const newAction = {
+//       subject: null as "Math" | "English" | null,
+//       level: "" as string,
+//       movementMap: {} as Record<string, MovementType>,
+//       movementNumOfCopiesMap: { "": 0 } as Record<string, number>,
+//       selectedSubsections: [] as string[],
+//     };
 
-  //   return (
-  //     <div className="space-y-4">
-  //       {actionList.map((action: SubmittedAction, index) => (
-  //     <Action
-  //       key={index}
-  //       index={index}
-  //       data={action}
-  //       onChange={(updatedAction) => {
-  //       setActionList((prev) =>
-  //           prev.map((a, i) => (i === index ? updatedAction : a))
-  //       );
-  //     }}
-  //   />
-  // ))}
+//     setActionList((prev) => [...prev, newAction]);
+//   };
 
-  //       <button
-  //         onClick={() => createNewAction()}
-  //         className="border outline-1 outline-blue-500 rounded mt-3 bg-blue-200"
-  //       >
-  //         Create New
-  //       </button>
-  //       {/* <button onClick={() => createNewAction()}>Submit All</button> */}
-  //     </div>
-  //   );
-  // }
+//   return (
+//     <div className="space-y-4">
+//       {actionList.map((action: SubmittedAction, index) => (
+//     <Action
+//       key={index}
+//       index={index}
+//       data={action}
+//       onChange={(updatedAction) => {
+//       setActionList((prev) =>
+//           prev.map((a, i) => (i === index ? updatedAction : a))
+//       );
+//     }}
+//   />
+// ))}
 
-  // export default ActionContainer;
+//       <button
+//         onClick={() => createNewAction()}
+//         className="border outline-1 outline-blue-500 rounded mt-3 bg-blue-200"
+//       >
+//         Create New
+//       </button>
+//       {/* <button onClick={() => createNewAction()}>Submit All</button> */}
+//     </div>
+//   );
+// }
+
+// export default ActionContainer;
