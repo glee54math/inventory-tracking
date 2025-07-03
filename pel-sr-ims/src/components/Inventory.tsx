@@ -27,9 +27,14 @@ function Inventory({ data }: InventoryProps) {
             {subsections.map((section: Subsection) => (
               <th
                 key={section.range}
-                className="border border-gray-400 px-2 py-1 text-left"
+                className="border border-gray-400 px-2 py-1 text-left relative h-20 w-16"
               >
-                {section.range}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="transform -rotate-45 whitespace-nowrap text-sm">
+                     {section.range} 
+                  </span>
+                </div>
+                
               </th>
             ))}
           </tr>
