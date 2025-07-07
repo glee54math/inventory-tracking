@@ -75,7 +75,7 @@ function ActionContainer() {
         <div key={index} className="flex items-start gap-2">
           <button
             onClick={() => removeAction(index)}
-            className="ml-4 mr-2 text-black-500 border outline-1 outline-red-500 rounded hover:border-red-100"
+            className="ml-4 mr-2 text-black-500 border outline-1 outline-red-500 rounded hover:!bg-red-100"
           >
             X
           </button>
@@ -92,7 +92,7 @@ function ActionContainer() {
       <div className="flex gap-4 p-4 border-t">
         <button
           onClick={createNewAction}
-          className="border outline-1 outline-blue-500 rounded bg-blue-200 px-4 py-2 hover:bg-blue-300"
+          className="border outline-1 outline-blue-500 rounded bg-blue-200 px-4 py-2 hover:!bg-blue-300"
         >
           Create New Action
         </button>
@@ -100,7 +100,7 @@ function ActionContainer() {
         {actionList.length > 0 && (
           <button
             onClick={submitAllActions}
-            className="border outline-1 outline-green-500 rounded bg-green-200 px-4 py-2 hover:bg-green-300"
+            className="border outline-1 outline-green-500 rounded bg-green-200 px-4 py-2 hover:!bg-green-300"
           >
             Submit All Actions
           </button>
@@ -109,7 +109,7 @@ function ActionContainer() {
         {actionList.length > 0 && (
           <button
             onClick={() => setActionList([])}
-            className="border outline-1 outline-red-500 rounded bg-red-200 px-4 py-2 hover:bg-red-300"
+            className="border outline-1 outline-red-500 rounded bg-red-200 px-4 py-2 hover:!bg-red-300"
           >
             Clear All
           </button>

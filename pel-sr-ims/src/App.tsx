@@ -80,7 +80,7 @@ function App() {
                       setInventoriesVisibility((prev) => ({...prev, [name]: !prev[name],
                      }))
                }
-                      className="font-bold mb-2 text-center w-full px-3 py-1 rounded">
+                      className="font-bold mb-2 text-center w-full px-3 py-1 rounded hover:!border-blue-300">
                         {name} Inventory {inventoriesVisibility[name] ? "▼" : "▶"}
                       </button>
                       
