@@ -1,18 +1,31 @@
-import { useActionContext } from "./ActionContext";
+import { useEffect, useState } from "react";
+import { loadLog } from "../utils/inventoryService";
+import type { LogEntry } from "../utils/types";
 
 function Log() {
-  const { submittedActions } = useActionContext();
+  const [actionLog, setActionLog] = useState<LogEntry[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      const logsFromDB = await loadLog();
+
+      // Convert Firestore.Timestamp to JS Date
+      const processed = Object.values(logsFromDB).map((entry) => ({
+        ...entry,
+        timeStamp: entry.timeStamp.toDate() ?? entry.timeStamp, // fallback if already Date
+      }));
+
+      setActionLog(processed);
+    };
+    load();
+  }, []);
+
   return (
     <div>
-      {submittedActions.map((action, index) => (
-        <div key={index}>
-          {action.selectedSubsections.map((range: string) => (
-            <pre key={range}>
-              {action.level} {range}: {action.movementMap[range]} -{" "}
-              {action.movementNumOfCopiesMap[range]} copies.
-            </pre>
-          ))}
-        </div>
+      {actionLog.map((entry, index) => (
+        <p key={entry.eventType + index}>
+          {index + 1 + ") " + entry.timeStamp + " | " + entry.message}
+        </p>
       ))}
     </div>
   );

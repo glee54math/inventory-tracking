@@ -1,6 +1,6 @@
-import { doc, getDoc, getDocs, setDoc, collection} from "firebase/firestore";
+import { doc, getDoc, getDocs, setDoc, collection, addDoc} from "firebase/firestore";
 import { db } from "./firebase";
-import type { SubmittedAction } from "./types";
+import type { LogEntry, SubmittedAction } from "./types";
 import type { InventoryData, Subsection } from "./types";
 
 
@@ -36,6 +36,26 @@ export async function loadInventory(subject_Location: string) {
 
   return docSnap.data(); 
 }
+
+export async function loadLog() {
+  const collectionRef = collection(db, "logs");
+  const documentSnapshot = await getDocs(collectionRef);
+
+  const documents: Record<string, LogEntry> = {}
+
+  documentSnapshot.forEach((doc) => {
+    documents[doc.id] = doc.data() as LogEntry;
+  })
+
+  return documents; 
+};
+
+export const saveLog = async (logEntry: LogEntry) => {
+  const logsRef = collection(db, "logs");
+  await addDoc(logsRef, logEntry);
+  console.log("Log entry saved");
+};
+
 
 export async function updateInventoryFromActions( submittedActions: SubmittedAction[]) {
   // SubmittedAction has subject, level, subsection[], movementType(AtoB), numOfCopies
@@ -108,5 +128,24 @@ export async function updateInventoryFromActions( submittedActions: SubmittedAct
     }
     index++;
   }
+}
 
+export async function updateLogFromActions(submittedActions: SubmittedAction[]) {
+  for (const action of submittedActions) {
+    const logTime = new Date();
+
+    for (const range of action.selectedSubsections) {
+      const numOfCopies = action.movementNumOfCopiesMap[range];
+      const movementAction = action.movementMap[range];
+
+      const logEntry: LogEntry = {
+        timeStamp: logTime,
+        userID: "Mr. Lee",
+        eventType: `Adding ${action} To Log`,
+        message: `${numOfCopies} copies of ${action.level} ${range} from ${movementAction}`
+      };
+
+      await saveLog(logEntry); // call new version
+    }
+  }
 }
