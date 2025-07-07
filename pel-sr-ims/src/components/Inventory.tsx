@@ -14,22 +14,13 @@ function Inventory({ data }: InventoryProps) {
   const subsections: Subsection[] = Object.values(data)[0];
 
   const { submittedActions } = useActionContext();
-  const [showInventory, setShowInventory] = useState(true);
+ 
   // [ array of Actions ]
   // { subject, level, selectedSubsections[], movementMap, movementNumOfCopiesMap }
 
   return (
     <div>
       <div className="mb-4">
-        <button onClick={() => setShowInventory(!showInventory)}
-        className="mb-2 px-3 py-1 bg-blue-500 text-black rounded"
-       >
-        {showInventory ? "Hide" : "Show"} Inventory Table
-         <span className="ml-2">
-            {showInventory ? "▼" : "▶"}
-          </span>
-        </button> 
-        {showInventory && (
       <table className="p-2">
         <thead>
           <tr>
@@ -74,7 +65,6 @@ function Inventory({ data }: InventoryProps) {
           ))}
         </tbody>
       </table>
-        )}
        </div>
         
       {submittedActions.map((action, index) => (

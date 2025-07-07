@@ -23,6 +23,8 @@ function App() {
     Record<InventoryType, InventoryData>
   >({} as Record<InventoryType, InventoryData>);
   const [showInventory, setShowInventory] = useState(true);
+  const [inventoriesVisibility, setInventoriesVisibility] = useState<Record<string, boolean>>({});
+
 
   useEffect(() => {
     const load = async () => {
@@ -30,15 +32,19 @@ function App() {
       console.log(allData);
       const inventoryNames = Object.keys(allData);
       const inventoryData = Object.values(allData);
+
       console.log(inventoryData);
 
       const newInventories: Record<string, any> = {};
+      const visibility: Record<string, boolean> = {};
 
       inventoryNames.forEach((name, index) => {
         newInventories[name] = inventoryData[index];
       });
 
       setInventories(newInventories);
+      setInventoriesVisibility(visibility);
+
     };
     load();
   }, []);
@@ -69,10 +75,16 @@ function App() {
                 <div className="overflow-auto w-full max-w-full">
                   {Object.entries(inventories).map(([name, inventory]) => (
                     <div key={name} className="p-2 gap-4">
-                      <h2 className="font-bold mb-2 text-center">
-                        {name} Inventory
-                      </h2>
-                      <Inventory key={name} data={inventory} />
+                      <button 
+                      onClick={() =>
+                      setInventoriesVisibility((prev) => ({...prev, [name]: !prev[name],
+                     }))
+               }
+                      className="font-bold mb-2 text-center w-full px-3 py-1 rounded">
+                        {name} Inventory {inventoriesVisibility[name] ? "▼" : "▶"}
+                      </button>
+                      
+                      {inventoriesVisibility[name] && <Inventory data={inventory} />}
                     </div>
                   ))}
                 </div>
