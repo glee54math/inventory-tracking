@@ -13,7 +13,6 @@ function Inventory({ data }: InventoryProps) {
   const levels = Object.keys(data);
   const subsections: Subsection[] = Object.values(data)[0];
 
-  const { submittedActions } = useActionContext();
  
   // [ array of Actions ]
   // { subject, level, selectedSubsections[], movementMap, movementNumOfCopiesMap }
