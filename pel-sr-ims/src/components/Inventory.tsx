@@ -1,5 +1,5 @@
-import {useState} from "react";
-import { useActionContext } from "./ActionContext";
+import { useState } from "react";
+// import { useActionContext } from "./ActionContext";
 import type { Subsection, InventoryData } from "../utils/types";
 
 interface InventoryProps {
@@ -13,81 +13,64 @@ function Inventory({ data }: InventoryProps) {
   const levels = Object.keys(data);
   const subsections: Subsection[] = Object.values(data)[0];
 
-  const { submittedActions } = useActionContext();
   const [showInventory, setShowInventory] = useState(true);
   // [ array of Actions ]
   // { subject, level, selectedSubsections[], movementMap, movementNumOfCopiesMap }
 
   return (
-    <div>
-      <div className="mb-4">
-        <button onClick={() => setShowInventory(!showInventory)}
+    <div className="mb-4">
+      <button
+        onClick={() => setShowInventory(!showInventory)}
         className="mb-2 px-3 py-1 bg-blue-500 text-black rounded"
-       >
+      >
         {showInventory ? "Hide" : "Show"} Inventory Table
-         <span className="ml-2">
-            {showInventory ? "▼" : "▶"}
-          </span>
-        </button> 
-        {showInventory && (
-      <table className="p-2">
-        <thead>
-          <tr>
-            <th className="border border-gray-400 px-2 py-1 text-left">
-              Level
-            </th>
-            {subsections.map((section: Subsection) => (
-              <th
-                key={section.range}
-                className="border border-gray-400 px-2 py-1 text-left relative h-20 w-16"
-              >
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="transform -rotate-45 whitespace-nowrap text-sm">
-                     {section.range} 
-                  </span>
-                </div>
-                
+        <span className="ml-2">{showInventory ? "▼" : "▶"}</span>
+      </button>
+      {showInventory && (
+        <table className="p-2">
+          <thead>
+            <tr>
+              <th className="border border-gray-400 px-2 py-1 text-left">
+                Level
               </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {levels.sort().map((level: string) => (
-            <tr
-              key={level}
-              className="border border-gray-400 px-2 py-1 text-center"
-            >
-              <td>{level}</td>
-              {data[level].map(({ range, count }: Subsection) => (
-                <td
-                  key={range}
-                  className={
-                    count <= 1
-                      ? "border border-gray-400 px-2 py-1 text-center bg-red-200"
-                      : "border border-gray-400 px-2 py-1 text-center"
-                  }
+              {subsections.map((section: Subsection) => (
+                <th
+                  key={section.range}
+                  className="border border-gray-400 px-2 py-1 text-left relative h-20 w-16"
                 >
-                  {count}
-                </td>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="transform -rotate-45 whitespace-nowrap text-sm">
+                      {section.range}
+                    </span>
+                  </div>
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-        )}
-       </div>
-        
-      {submittedActions.map((action, index) => (
-        <pre key={index}>
-          {action.subject}: {action.level}, {action.selectedSubsections}
-          {action.movementMap[action.selectedSubsections[0]]}
-          {action.movementNumOfCopiesMap[action.selectedSubsections[0]]}
-        </pre>
-      ))}
-      {/* {level}
-          {selectedSubsections}
-          {movementMap[selectedSubsections[0]]}
-          {movementNumOfCopiesMap[selectedSubsections[0]]} */}
+          </thead>
+          <tbody>
+            {levels.sort().map((level: string) => (
+              <tr
+                key={level}
+                className="border border-gray-400 px-2 py-1 text-center"
+              >
+                <td>{level}</td>
+                {data[level].map(({ range, count }: Subsection) => (
+                  <td
+                    key={range}
+                    className={
+                      count <= 1
+                        ? "border border-gray-400 px-2 py-1 text-center bg-red-200"
+                        : "border border-gray-400 px-2 py-1 text-center"
+                    }
+                  >
+                    {count}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

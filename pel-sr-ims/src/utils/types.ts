@@ -1,3 +1,5 @@
+import type { Timestamp } from "firebase/firestore";
+
 export type MovementType =
   | "BackToFront"
   | "BackToStudent"
@@ -22,3 +24,10 @@ export interface Subsection {
 export type InventoryData = {
   [level: string]: Subsection[];
 };
+
+export type LogEntry = {
+    timeStamp: Date | Timestamp;
+    userID: string;
+    eventType: string;
+    message: string;
+}

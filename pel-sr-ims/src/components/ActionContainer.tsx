@@ -1,7 +1,10 @@
 import { useState } from "react";
-import type { MovementType, SubmittedAction } from "../utils/types";
+import type { SubmittedAction } from "../utils/types";
 import Action from "./Action";
-import { updateInventoryFromActions } from "../utils/inventoryService";
+import {
+  updateInventoryFromActions,
+  updateLogFromActions,
+} from "../utils/inventoryService";
 
 function ActionContainer() {
   const [actionList, setActionList] = useState<SubmittedAction[]>([]);
@@ -49,6 +52,7 @@ function ActionContainer() {
     try {
       // Submit to database
       await updateInventoryFromActions(completeActions);
+      await updateLogFromActions(completeActions);
 
       // Clear the action list after successful submission
       setActionList([]);
