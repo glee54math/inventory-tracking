@@ -21,7 +21,7 @@ function Log() {
   }, []);
 
   return (
-    <div>
+    <div className="overflow-auto">
       {actionLog.map((entry, index) => (
         <p key={entry.eventType + index}>
           {index + 1 + ") " + entry.timeStamp + " | " + entry.message}
