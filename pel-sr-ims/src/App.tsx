@@ -11,6 +11,8 @@ import Log from "./components/Log";
 // import dataMath from "./assets/dataMath.json";
 import type { InventoryData } from "./utils/types";
 import ActionContainer from "./components/ActionContainer";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "./utils/firebase";
 
 type InventoryType =
   | "Back Math"
@@ -28,25 +30,34 @@ function App() {
   >({});
 
   useEffect(() => {
-    const load = async () => {
-      const allData = await loadAllInventories();
-      console.log(allData);
-      const inventoryNames = Object.keys(allData);
-      const inventoryData = Object.values(allData);
-
-      console.log(inventoryData);
-
+    const unsubscribe = onSnapshot(collection(db, "inventory"), (snapshot) => {
       const newInventories: Record<string, any> = {};
-      const visibility: Record<string, boolean> = {};
 
-      inventoryNames.forEach((name, index) => {
-        newInventories[name] = inventoryData[index];
+      snapshot.forEach((doc) => {
+        newInventories[doc.id] = doc.data();
       });
-
       setInventories(newInventories);
-      setInventoriesVisibility(visibility);
-    };
-    load();
+    });
+    return () => unsubscribe();
+    // const load = async () => {
+    //   const allData = await loadAllInventories();
+    //   console.log(allData);
+    //   const inventoryNames = Object.keys(allData);
+    //   const inventoryData = Object.values(allData);
+
+    //   console.log(inventoryData);
+
+    //   const newInventories: Record<string, any> = {};
+    //   const visibility: Record<string, boolean> = {};
+
+    //   inventoryNames.forEach((name, index) => {
+    //     newInventories[name] = inventoryData[index];
+    //   });
+
+    //   setInventories(newInventories);
+    //   setInventoriesVisibility(visibility);
+    // };
+    // load();
   }, []);
 
   // Keep this in case we need to hard upload.
