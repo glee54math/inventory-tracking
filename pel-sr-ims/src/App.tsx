@@ -23,8 +23,9 @@ function App() {
     Record<InventoryType, InventoryData>
   >({} as Record<InventoryType, InventoryData>);
   const [showInventory, setShowInventory] = useState(true);
-  const [inventoriesVisibility, setInventoriesVisibility] = useState<Record<string, boolean>>({});
-
+  const [inventoriesVisibility, setInventoriesVisibility] = useState<
+    Record<string, boolean>
+  >({});
 
   useEffect(() => {
     const load = async () => {
@@ -44,7 +45,6 @@ function App() {
 
       setInventories(newInventories);
       setInventoriesVisibility(visibility);
-
     };
     load();
   }, []);
@@ -67,7 +67,7 @@ function App() {
             <div className="border p-2 bg-white flex-1 flex flex-col items-center justify-start overflow-auto">
               <button
                 onClick={() => setShowInventory(false)}
-                className="mb-2 bg-green-500 text-black px-3 py-1 rounded"
+                className="mb-2 w-full bg-green-500 text-black px-3 py-1 rounded hover:!border-blue-300"
               >
                 Hide Inventory
               </button>
@@ -75,16 +75,22 @@ function App() {
                 <div className="overflow-auto w-full max-w-full">
                   {Object.entries(inventories).map(([name, inventory]) => (
                     <div key={name} className="p-2 gap-4">
-                      <button 
-                      onClick={() =>
-                      setInventoriesVisibility((prev) => ({...prev, [name]: !prev[name],
-                     }))
-               }
-                      className="font-bold mb-2 text-center w-full px-3 py-1 rounded hover:!border-blue-300">
-                        {name} Inventory {inventoriesVisibility[name] ? "▼" : "▶"}
+                      <button
+                        onClick={() =>
+                          setInventoriesVisibility((prev) => ({
+                            ...prev,
+                            [name]: !prev[name],
+                          }))
+                        }
+                        className="font-bold mb-2 text-center w-full px-3 py-1 rounded hover:!border-blue-300"
+                      >
+                        {name} Inventory{" "}
+                        {inventoriesVisibility[name] ? "▼" : "▶"}
                       </button>
-                      
-                      {inventoriesVisibility[name] && <Inventory data={inventory} />}
+
+                      {inventoriesVisibility[name] && (
+                        <Inventory data={inventory} />
+                      )}
                     </div>
                   ))}
                 </div>

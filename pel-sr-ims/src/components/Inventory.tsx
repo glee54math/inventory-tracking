@@ -1,20 +1,15 @@
-import { useState } from "react";
+// import { useState } from "react";
 // import { useActionContext } from "./ActionContext";
 import type { Subsection, InventoryData } from "../utils/types";
 
 interface InventoryProps {
   data: InventoryData;
-  // location: "Front" | "Back";
-  // subject: "Math" | "English";
 }
 
 function Inventory({ data }: InventoryProps) {
   // values, entries, keys
   const levels = Object.keys(data);
   const subsections: Subsection[] = Object.values(data)[0];
-
-  // [ array of Actions ]
-  // { subject, level, selectedSubsections[], movementMap, movementNumOfCopiesMap }
 
   return (
     <div>
