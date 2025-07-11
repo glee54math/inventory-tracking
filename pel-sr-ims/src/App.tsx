@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./App.css";
+import Sidebar from "./components/Sidebar";
 import Inventory from "./components/Inventory";
 import {
   // saveInventory,
@@ -70,81 +71,76 @@ function App() {
   // };
 
   return (
-    <div className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-hidden transition-all duration-300">
-      <div className="flex flex-row w-full gap-4 transition-all duration-300">
-        {/* Left Side */}
-        {showInventory ? (
-          <div className="w-1/2 flex flex-col gap-4 transition-all duration-300">
-            <div className="border p-2 bg-white flex-1 flex flex-col items-center justify-start overflow-auto">
-              <button
-                onClick={() => setShowInventory(false)}
-                className="mb-2 w-full bg-green-500 text-black px-3 py-1 rounded hover:!border-blue-300"
-              >
-                Hide Inventory
-              </button>
-              {inventories && (
-                <div className="overflow-auto w-full max-w-full">
-                  {Object.entries(inventories).map(([name, inventory]) => (
-                    <div key={name} className="p-2 gap-4">
-                      <button
-                        onClick={() =>
-                          setInventoriesVisibility((prev) => ({
-                            ...prev,
-                            [name]: !prev[name],
-                          }))
-                        }
-                        className="font-bold mb-2 text-center w-full px-3 py-1 rounded hover:!border-blue-300"
-                      >
-                        {name} Inventory{" "}
-                        {inventoriesVisibility[name] ? "▼" : "▶"}
-                      </button>
+    <div className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-hidden">
+      {/* Sidebar */}
+      <div className="bg-gray-100 p-2 min-w-[60px] max-w-[80px] border">
+        <Sidebar />
+      </div>
 
-                      {inventoriesVisibility[name] && (
-                        <Inventory data={inventory} />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {/* <button
-                onClick={handleUpload}
-                className="mt-2 bg-blue-500 text-green px-3 py-1 rounded"
-              >
-                Upload Local JSON to Backend
-              </button> */}
-            </div>
-          </div>
-        ) : (
-          <div className="w-0 transition-all duration-300" />
-        )}
-        {!showInventory && <div className="w-0 transition-all duration-300" />}
-        {/* Right Side */}
-        <div
-          className={`flex flex-col ${
-            showInventory ? "w-1/2" : "w-full"
-          } gap-4 overflow-hidden transition-all duration-300`}
+      {/* Inventory Panel */}
+      <div
+        className={`transition-all duration-500 overflow-hidden bg-white ${
+          showInventory
+            ? "w-[40%] opacity-100 p-2 border pointer-events-auto"
+            : "w-0 opacity-0 !p-0 !border-none pointer-events-none"
+        }`}
+      >
+        <button
+          onClick={() => setShowInventory(false)}
+          className="mb-2 w-full text-black mt-2 px-3 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
         >
-          <div className="border p-2 bg-white flex-3">
-            <div className="flex justify-end items-center">
-              <h2 className="font-bold mb-2 text-center w-full">Actions</h2>
-              {!showInventory && (
+          Hide Inventory
+        </button>
+
+        {inventories && (
+          <div className="overflow-auto w-full max-w-full">
+            {Object.entries(inventories).map(([name, inventory]) => (
+              <div key={name} className="p-2 gap-4">
                 <button
-                  onClick={() => setShowInventory(true)}
-                  className="bg-green-500 text-black px-2 py-1 rounded"
+                  onClick={() =>
+                    setInventoriesVisibility((prev) => ({
+                      ...prev,
+                      [name]: !prev[name],
+                    }))
+                  }
+                  className="font-bold mb-2 text-center w-full px-1 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
                 >
-                  Show Inventory
+                  {name} Inventory {inventoriesVisibility[name] ? "▼" : "▶"}
                 </button>
-              )}
-            </div>
-            <div className="max-h-[70vh] flex flex-col">
-              <ActionContainer />
-            </div>
+                {inventoriesVisibility[name] && <Inventory data={inventory} />}
+              </div>
+            ))}
           </div>
-          <div className="border p-2 bg-white flex-1">
-            <h2 className="font-bold mb-2 text-center">Log</h2>
-            <div className="max-h-[20vh] flex flex-col">
-              <Log />
-            </div>
+        )}
+      </div>
+
+      {/* Right Panel */}
+      <div
+        className={`flex flex-col transition-all duration-500 gap-4 overflow-hidden ${
+          showInventory ? "w-[60%]" : "w-full"
+        }`}
+      >
+        <div className="border p-2 bg-white flex-3">
+          <div className="flex justify-end items-center">
+            <h2 className="font-bold mb-2 text-center w-full">Actions</h2>
+            {!showInventory && (
+              <button
+                onClick={() => setShowInventory(true)}
+                className="bg-green-500 text-black px-2 py-1 rounded hover:!bg-green-300"
+              >
+                Show Inventory
+              </button>
+            )}
+          </div>
+          <div className="max-h-[70vh] flex flex-col">
+            <ActionContainer />
+          </div>
+        </div>
+
+        <div className="border p-2 bg-white flex-1">
+          <h2 className="font-bold mb-2 text-center">Log</h2>
+          <div className="max-h-[20vh] flex flex-col">
+            <Log />
           </div>
         </div>
       </div>
