@@ -42,4 +42,5 @@ export type Worker = {
     firstName: string;
     lastName: string;
     initials: string;
+    password: string;
 }

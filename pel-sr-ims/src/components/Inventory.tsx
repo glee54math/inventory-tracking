@@ -49,7 +49,7 @@ function Inventory({ data }: InventoryProps) {
                         ? "border border-gray-400 px-2 py-1 text-center bg-red-200"
                         : count < 4
                         ? "border border-gray-400 px-2 py-1 text-center bg-yellow-200"
-                        : "border border-gray-400 px-2 py-1 text-center bg-green-200"    
+                        : "border border-gray-400 px-2 py-1 text-center bg-green-200"
                     }
                   >
                     {count}
