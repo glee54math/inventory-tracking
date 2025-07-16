@@ -159,6 +159,6 @@ export async function loadWorkersFromDB() {
   documentSnapshot.forEach((doc) => {
     workers[doc.id] = doc.data() as Worker;
   })
-
+  console.log(workers)
   return workers; 
 }

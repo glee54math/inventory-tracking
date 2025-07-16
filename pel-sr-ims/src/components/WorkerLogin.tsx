@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { loadWorkersFromDB } from "../utils/inventoryService";
 import type { Worker } from "../utils/types";
 
@@ -7,22 +7,24 @@ interface WorkerLoginProps {
   setNameOfWorker: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export default function WorkerLogin({ 
-    nameOfWorker, 
-    setNameOfWorker 
-}:WorkerLoginProps) {
-    // const [nameOfWorker, setNameOfWorker] = useState<string>("");
-  const [workersList, setWorkersList] = useState<Worker[]>(Object.values(loadWorkersFromDB));
+export default function WorkerLogin({
+  nameOfWorker,
+  setNameOfWorker,
+}: WorkerLoginProps) {
+  // const [nameOfWorker, setNameOfWorker] = useState<string>("");
+  const [workersList, setWorkersList] = useState<Worker[]>(
+    Object.values(loadWorkersFromDB)
+  );
 
   return (
-      <div className="min-h-screen w-full bg-gradient-to-br bg-blue-400 flex flex-col justify-start items-center pt-76">
-      <h1 className="text-white text-4xl font-extrabold mb-20 drop-shadow-lg">PEL Worker Login</h1>
+    <div className="min-h-screen w-full bg-gradient-to-br bg-blue-400 flex flex-col justify-start items-center pt-76">
+      <h1 className="text-white text-4xl font-extrabold mb-20 drop-shadow-lg">
+        PEL Worker Login
+      </h1>
 
       <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm">
-        
-
         <select
-          id="name-of-worker"       
+          id="name-of-worker"
           onChange={(e) => setNameOfWorker(e.target.value)}
           className="
             w-full
@@ -43,13 +45,12 @@ export default function WorkerLogin({
           "
         >
           <option value={""}>Select Worker</option>
-            <option 
-                value={"Mr. Lee"}
-            >Mr. Lee</option>
-            {workersList.map((worker:Worker) => (
-                <option value={worker.initials}>{worker.firstName +" "+ worker.lastName}</option>
-        ))
-        }
+          <option value={"Mr. Lee"}>Mr. Lee</option>
+          {workersList.map((worker: Worker) => (
+            <option value={worker.initials}>
+              {worker.firstName + " " + worker.lastName}
+            </option>
+          ))}
         </select>
       </div>
     </div>
