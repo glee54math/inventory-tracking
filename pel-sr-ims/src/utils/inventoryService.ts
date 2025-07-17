@@ -149,3 +149,16 @@ export async function updateLogFromActions(submittedActions: SubmittedAction[]) 
     }
   }
 }
+
+export async function loadWorkersFromDB() {
+  const collectionRef = collection(db, "workers");
+  const documentSnapshot = await getDocs(collectionRef);
+
+  const workers: Record<string, Worker> = {}
+
+  documentSnapshot.forEach((doc) => {
+    workers[doc.id] = doc.data() as Worker;
+  })
+
+  return workers; 
+}

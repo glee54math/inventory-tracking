@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import "./App.css";
+<<<<<<< HEAD
+=======
+import WorkerLogin from "./components/WorkerLogin"
+>>>>>>> 6d4880b800e5e00938e91625aec86cba5725d960
 import Sidebar from "./components/Sidebar";
 import Inventory from "./components/Inventory";
 import {
@@ -29,6 +33,10 @@ function App() {
   const [inventoriesVisibility, setInventoriesVisibility] = useState<
     Record<string, boolean>
   >({});
+<<<<<<< HEAD
+=======
+  const [userLoggedIn, setUserLoggedIn] = useState<string>("");
+>>>>>>> 6d4880b800e5e00938e91625aec86cba5725d960
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "inventory"), (snapshot) => {
@@ -72,6 +80,7 @@ function App() {
 
   return (
     <div className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-hidden">
+<<<<<<< HEAD
       {/* Sidebar */}
       <div className="bg-gray-100 p-2 min-w-[60px] max-w-[80px] border">
         <Sidebar />
@@ -88,6 +97,64 @@ function App() {
         <button
           onClick={() => setShowInventory(false)}
           className="mb-2 w-full text-black mt-2 px-3 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
+=======
+      {/* Makeshift Login Screen */}
+      {userLoggedIn==="" &&
+        <WorkerLogin nameOfWorker={userLoggedIn} setNameOfWorker={setUserLoggedIn}/>
+      }
+
+      {userLoggedIn &&
+      <div id="dashboard" className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-hidden">
+        {/* Sidebar */}
+        <div className="bg-gray-100 p-2 min-w-[60px] border w-fit">
+          <Sidebar />
+        </div>
+
+        {/* Inventory Panel */}
+        <div
+          className={`transition-all duration-500 overflow-auto bg-white ${
+            showInventory
+              ? "w-[40%] opacity-100 p-2 border pointer-events-auto"
+              : "w-0 opacity-0 !p-0 !border-none pointer-events-none"
+          }`}
+        >
+          {/* Hide Inventory Button */}
+          <button
+            onClick={() => setShowInventory(false)}
+            className="mb-2 w-full text-black mt-2 px-3 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
+          >
+            Hide Inventory
+          </button>
+
+          {/* Inventories */}
+          {inventories && (
+            <div className="overflow-auto w-full max-w-full">
+              {Object.entries(inventories).map(([name, inventory]) => (
+                <div key={name} className="p-2 gap-4">
+                  <button
+                    onClick={() =>
+                      setInventoriesVisibility((prev) => ({
+                        ...prev,
+                        [name]: !prev[name],
+                      }))
+                    }
+                    className="font-bold mb-2 text-center w-full px-1 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
+                  >
+                    {name} Inventory {inventoriesVisibility[name] ? "▼" : "▶"}
+                  </button>
+                  {inventoriesVisibility[name] && <Inventory data={inventory} />}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right Panel */}
+        <div
+          className={`flex flex-col transition-all duration-500 gap-4 overflow-hidden ${
+            showInventory ? "w-[60%]" : "w-full"
+          }`}
+>>>>>>> 6d4880b800e5e00938e91625aec86cba5725d960
         >
           Hide Inventory
         </button>
@@ -143,7 +210,8 @@ function App() {
             <Log />
           </div>
         </div>
-      </div>
+      </div>  
+      }
     </div>
   );
 }

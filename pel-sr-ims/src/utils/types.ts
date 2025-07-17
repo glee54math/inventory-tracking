@@ -26,8 +26,14 @@ export type InventoryData = {
 };
 
 export type LogEntry = {
-    timeStamp: Date | Timestamp;
+    timeStamp: Date;
     userID: string;
     eventType: string;
     message: string;
+}
+
+export type Worker = {
+    firstName: string;
+    lastName: string;
+    initials: string;
 }
