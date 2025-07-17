@@ -31,3 +31,9 @@ export type LogEntry = {
     eventType: string;
     message: string;
 }
+
+export type Worker = {
+    firstName: string;
+    lastName: string;
+    initials: string;
+}
