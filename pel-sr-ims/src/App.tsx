@@ -7,11 +7,12 @@ import {
   // saveInventory,
   // loadInventory,
   loadAllInventories,
+  determinePacketsNeededToBeOrdered,
 } from "./utils/inventoryService";
 import Log from "./components/Log";
 // import data from "./assets/data.json";
 // import dataMath from "./assets/dataMath.json";
-import type { InventoryData } from "./utils/types";
+import type { InventoryData, InsufficientSubsection,  } from "./utils/types";
 import ActionContainer from "./components/ActionContainer";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "./utils/firebase";
@@ -31,6 +32,8 @@ function App() {
     Record<string, boolean>
   >({});
   const [userLoggedIn, setUserLoggedIn] = useState<string>("");
+  const [insufficientPackets, setInsufficientPackets] = useState<InsufficientSubsection[]>([]);
+  const [showInsufficient, setShowInsufficient] = useState<boolean>(false);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "inventory"), (snapshot) => {
@@ -123,6 +126,28 @@ function App() {
                 ))}
               </div>
             )}
+                      
+            {/* Amount Needed to Be Ordered */}
+            <div id="insufficient-packets">
+              <button
+                onClick={async () => {
+                  setShowInsufficient(!showInsufficient);
+                  setInsufficientPackets(await determinePacketsNeededToBeOrdered());
+                }}
+                className="font-bold mb-2 text-center w-full px-1 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
+              >
+                Packets That Need To Be Ordered {showInsufficient ? "▼" : "▶"}
+              </button>
+              {showInsufficient &&
+                <div id="insufficient-packets-table" >
+                  {insufficientPackets.map((entry:InsufficientSubsection) => (
+                    <p>{entry.level + " " + entry.range + " needs " + entry.missingCount + " copies."}</p>
+                  ))}
+                  {/* <Inventory data={insufficientPackets} />  */}
+                  {/* Need to restructure insufficient Packets to be an Inventory Type */}
+                </div>
+              }
+            </div>
           </div>
 
           {/* Right Panel */}

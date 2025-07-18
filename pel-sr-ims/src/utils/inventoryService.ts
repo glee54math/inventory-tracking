@@ -1,8 +1,7 @@
 import { doc, getDoc, getDocs, setDoc, collection, addDoc} from "firebase/firestore";
 import { db } from "./firebase";
 import type { LogEntry, SubmittedAction } from "./types";
-import type { InventoryData, Subsection } from "./types";
-
+import type { InventoryData, Subsection, InsufficientSubsection, } from "./types";
 
 // subject_Location = math_back, math_front, english_back, english_front
 // Upload your local JSON to Firestore
@@ -161,4 +160,50 @@ export async function loadWorkersFromDB() {
   })
 
   return workers; 
+}
+
+export async function determinePacketsNeededToBeOrdered() {
+  //  Pull data on front and back inventory
+  const collectionRef = collection(db, "inventories");
+  const documentSnapshot = await getDocs(collectionRef);
+
+    // load inventories from documentSnapshot
+  const backMathAndFinal: InventoryData | undefined = await loadInventory("math_back");
+  const frontMath: InventoryData | undefined = await loadInventory("math_front");
+  const backEnglishAndFinal: InventoryData | undefined = await loadInventory("english_back");
+  const frontEnglish: InventoryData | undefined = await loadInventory("english_front");
+
+  // loop through the data
+  const insufficient: InsufficientSubsection[] = [];
+  const mathLevels = Object.keys(frontMath);
+  for (const level of mathLevels) {
+    for (const range of frontMath[level]) {
+      const backMathCount = backMathAndFinal[level].find((subsection: Subsection) => subsection.range===range.range)?.count || 0;
+      const frontMathCount = range.count;
+      if (backMathCount + frontMathCount < 8) {
+        insufficient.push({
+          level,
+          range: (range.range),
+          missingCount:(8-(backMathCount+frontMathCount))
+        });
+      }
+    }
+  }
+  
+  const englishLevels = Object.keys(frontEnglish);
+  for (const level of englishLevels) {
+    for (const range of frontEnglish[level]) {
+      const backEnglishCount = backEnglishAndFinal[level].find((subsection: Subsection) => subsection.range===range.range)?.count || 0;
+      const frontEnglishCount = range.count;
+      if (backEnglishCount + frontEnglishCount < 8) {
+        insufficient.push({
+          level,
+          range: (range.range),
+          missingCount:(8-(backEnglishCount+frontEnglishCount))
+        });
+      }
+    }
+  }
+
+  return insufficient;
 }

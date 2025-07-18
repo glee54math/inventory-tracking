@@ -21,9 +21,15 @@ export interface Subsection {
   count: number;
 }
 
-export type InventoryData = {
+export interface InventoryData {
   [level: string]: Subsection[];
 };
+
+export interface InsufficientSubsection {
+  level: string;
+  range: string;
+  missingCount: number;
+}
 
 export type LogEntry = {
     timeStamp: Date;
