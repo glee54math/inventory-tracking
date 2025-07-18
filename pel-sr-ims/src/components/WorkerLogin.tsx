@@ -7,12 +7,14 @@ interface WorkerLoginProps {
   setNameOfWorker: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export default function WorkerLogin({ 
-    nameOfWorker, 
-    setNameOfWorker 
-}:WorkerLoginProps) {
-    // const [nameOfWorker, setNameOfWorker] = useState<string>("");
-  const [workersList, setWorkersList] = useState<Worker[]>(Object.values(loadWorkersFromDB));
+export default function WorkerLogin({
+  nameOfWorker,
+  setNameOfWorker,
+}: WorkerLoginProps) {
+  // const [nameOfWorker, setNameOfWorker] = useState<string>("");
+  const [workersList, setWorkersList] = useState<Worker[]>(
+    Object.values(loadWorkersFromDB)
+  );
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br bg-blue-400 flex flex-col justify-start items-center pt-76">
