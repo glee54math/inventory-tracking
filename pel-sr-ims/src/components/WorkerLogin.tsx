@@ -3,16 +3,16 @@ import { loadWorkersFromDB } from "../utils/inventoryService";
 import type { Worker } from "../utils/types";
 
 interface WorkerLoginProps {
-    nameOfWorker: string;
-    setNameOfWorker: React.Dispatch<React.SetStateAction<string>>;
+  nameOfWorker: string;
+  setNameOfWorker: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export default function WorkerLogin({
-    nameOfWorker,
-    setNameOfWorker
+export default function WorkerLogin({ 
+    nameOfWorker, 
+    setNameOfWorker 
 }:WorkerLoginProps) {
     // const [nameOfWorker, setNameOfWorker] = useState<string>("");
-    const [workersList, setWorkersList] = useState<Worker[]>(Object.values(loadWorkersFromDB));
+  const [workersList, setWorkersList] = useState<Worker[]>(Object.values(loadWorkersFromDB));
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br bg-blue-400 flex flex-col justify-start items-center pt-76">
@@ -50,7 +50,7 @@ export default function WorkerLogin({
             </option>
           ))}
         </select>
-      </div>  
+      </div>
     </div>
   );
 }
