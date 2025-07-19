@@ -23,6 +23,27 @@ type InventoryType =
   | "Back English"
   | "Front English";
 
+function restructure(lowStock: InsufficientSubsection[]): InventoryData {
+  const result: InventoryData = {};
+
+  for (const { level, range, missingCount } of lowStock) {
+    if(!result[level]){
+      result[level] = [];
+    }
+
+    result[level].push({
+      range,
+      count: missingCount,
+    });
+
+    
+  }
+
+  return result;
+  
+}
+
+
 function App() {
   const [inventories, setInventories] = useState<
     Record<InventoryType, InventoryData>
@@ -131,18 +152,19 @@ function App() {
             <div id="insufficient-packets">
               <button
                 onClick={async () => {
-                  setShowInsufficient(!showInsufficient);
-                  setInsufficientPackets(await determinePacketsNeededToBeOrdered());
+                  //fetch data before setting state
+                  const temp = await determinePacketsNeededToBeOrdered();
+                  setShowInsufficient(prev => !prev);
+                  setInsufficientPackets(temp);
                 }}
                 className="font-bold mb-2 text-center w-full px-1 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
               >
                 Packets That Need To Be Ordered {showInsufficient ? "▼" : "▶"}
               </button>
+              
               {showInsufficient &&
                 <div id="insufficient-packets-table" >
-                  {insufficientPackets.map((entry:InsufficientSubsection) => (
-                    <p>{entry.level + " " + entry.range + " needs " + entry.missingCount + " copies."}</p>
-                  ))}
+                  <Inventory data={restructure(insufficientPackets)}/>
                   {/* <Inventory data={insufficientPackets} />  */}
                   {/* Need to restructure insufficient Packets to be an Inventory Type */}
                 </div>
