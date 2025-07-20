@@ -27,21 +27,9 @@ export default function WorkerLogin({
           id="name-of-worker"
           onChange={(e) => setNameOfWorker(e.target.value)}
           className="
-            w-full
-            px-4
-            py-3
-            rounded-lg
-            border
-            border-gray-300
-            text-gray-800
-            text-lg
-            focus:outline-none
-            focus:ring-2
-            focus:ring-indigo-500
-            focus:border-indigo-500
-            appearance-none
-            bg-white
-            cursor-pointer
+            w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-800
+            text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500
+            focus:border-indigo-500 appearance-none bg-white cursor-pointer
           "
         >
           <option value={""}>Select Worker</option>

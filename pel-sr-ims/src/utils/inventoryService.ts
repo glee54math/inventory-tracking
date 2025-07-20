@@ -167,7 +167,7 @@ export async function determinePacketsNeededToBeOrdered() {
   const collectionRef = collection(db, "inventories");
   const documentSnapshot = await getDocs(collectionRef);
 
-    // load inventories from documentSnapshot
+  // load inventories from documentSnapshot
   const backMathAndFinal: InventoryData | undefined = await loadInventory("math_back");
   const frontMath: InventoryData | undefined = await loadInventory("math_front");
   const backEnglishAndFinal: InventoryData | undefined = await loadInventory("english_back");
@@ -187,6 +187,13 @@ export async function determinePacketsNeededToBeOrdered() {
           missingCount:(8-(backMathCount+frontMathCount))
         });
       }
+      else {
+        insufficient.push({
+          level,
+          range: (range.range),
+          missingCount: 0,
+        });
+      }
     }
   }
   
@@ -200,6 +207,13 @@ export async function determinePacketsNeededToBeOrdered() {
           level,
           range: (range.range),
           missingCount:(8-(backEnglishCount+frontEnglishCount))
+        });
+      }
+      else {
+        insufficient.push({
+          level,
+          range: (range.range),
+          missingCount: 0,
         });
       }
     }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-import WorkerLogin from "./components/WorkerLogin"
+import WorkerLogin from "./components/WorkerLogin";
 import Sidebar from "./components/Sidebar";
 import Inventory from "./components/Inventory";
 import {
@@ -12,7 +12,7 @@ import {
 import Log from "./components/Log";
 // import data from "./assets/data.json";
 // import dataMath from "./assets/dataMath.json";
-import type { InventoryData, InsufficientSubsection,  } from "./utils/types";
+import type { InventoryData, InsufficientSubsection } from "./utils/types";
 import ActionContainer from "./components/ActionContainer";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "./utils/firebase";
@@ -26,8 +26,9 @@ type InventoryType =
 function restructure(lowStock: InsufficientSubsection[]): InventoryData {
   const result: InventoryData = {};
 
+  // console.log(lowStock);
   for (const { level, range, missingCount } of lowStock) {
-    if(!result[level]){
+    if (!result[level]) {
       result[level] = [];
     }
 
@@ -35,14 +36,10 @@ function restructure(lowStock: InsufficientSubsection[]): InventoryData {
       range,
       count: missingCount,
     });
-
-    
   }
 
   return result;
-  
 }
-
 
 function App() {
   const [inventories, setInventories] = useState<
@@ -53,12 +50,14 @@ function App() {
     Record<string, boolean>
   >({});
   const [userLoggedIn, setUserLoggedIn] = useState<string>("");
-  const [insufficientPackets, setInsufficientPackets] = useState<InsufficientSubsection[]>([]);
+  const [insufficientPackets, setInsufficientPackets] = useState<
+    InsufficientSubsection[]
+  >([]);
   const [showInsufficient, setShowInsufficient] = useState<boolean>(false);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "inventory"), (snapshot) => {
-      const newInventories: Record<string, any> = {};
+      const newInventories: Record<string, InventoryData> = {};
 
       snapshot.forEach((doc) => {
         newInventories[doc.id] = doc.data();
@@ -99,12 +98,18 @@ function App() {
   return (
     <div className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-hidden">
       {/* Makeshift Login Screen */}
-      {userLoggedIn==="" &&
-        <WorkerLogin nameOfWorker={userLoggedIn} setNameOfWorker={setUserLoggedIn}/>
-      }
+      {userLoggedIn === "" && (
+        <WorkerLogin
+          nameOfWorker={userLoggedIn}
+          setNameOfWorker={setUserLoggedIn}
+        />
+      )}
 
-      {userLoggedIn &&
-        <div id="dashboard" className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-hidden">
+      {userLoggedIn && (
+        <div
+          id="dashboard"
+          className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-hidden"
+        >
           {/* Sidebar */}
           <div className="bg-gray-100 p-2 min-w-[60px] border w-fit">
             <Sidebar />
@@ -142,33 +147,33 @@ function App() {
                     >
                       {name} Inventory {inventoriesVisibility[name] ? "▼" : "▶"}
                     </button>
-                    {inventoriesVisibility[name] && <Inventory data={inventory} />}
+                    {inventoriesVisibility[name] && (
+                      <Inventory data={inventory} />
+                    )}
                   </div>
                 ))}
               </div>
             )}
-                      
+
             {/* Amount Needed to Be Ordered */}
             <div id="insufficient-packets">
               <button
                 onClick={async () => {
                   //fetch data before setting state
                   const temp = await determinePacketsNeededToBeOrdered();
-                  setShowInsufficient(prev => !prev);
+                  setShowInsufficient((prev) => !prev);
                   setInsufficientPackets(temp);
                 }}
                 className="font-bold mb-2 text-center w-full px-1 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
               >
                 Packets That Need To Be Ordered {showInsufficient ? "▼" : "▶"}
               </button>
-              
-              {showInsufficient &&
-                <div id="insufficient-packets-table" >
-                  <Inventory data={restructure(insufficientPackets)}/>
-                  {/* <Inventory data={insufficientPackets} />  */}
-                  {/* Need to restructure insufficient Packets to be an Inventory Type */}
+
+              {showInsufficient && (
+                <div id="insufficient-packets-table">
+                  <Inventory data={restructure(insufficientPackets)} />
                 </div>
-              }
+              )}
             </div>
           </div>
 
@@ -201,9 +206,9 @@ function App() {
                 <Log />
               </div>
             </div>
-          </div>  
+          </div>
         </div>
-      }
+      )}
     </div>
   );
 }
