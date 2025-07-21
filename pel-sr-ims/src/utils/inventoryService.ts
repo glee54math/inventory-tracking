@@ -1,7 +1,7 @@
 import { doc, getDoc, getDocs, setDoc, collection, addDoc} from "firebase/firestore";
 import { db } from "./firebase";
 import type { LogEntry, SubmittedAction } from "./types";
-import type { InventoryData, Subsection, InsufficientSubsection, } from "./types";
+import type { InventoryData, Subsection, InsufficientSubsection, Worker} from "./types";
 
 // subject_Location = math_back, math_front, english_back, english_front
 // Upload your local JSON to Firestore
@@ -153,21 +153,21 @@ export async function loadWorkersFromDB() {
   const collectionRef = collection(db, "workers");
   const documentSnapshot = await getDocs(collectionRef);
 
-  const workers: Record<string, Worker> = {}
+  const workers: Worker[] = [];
 
   documentSnapshot.forEach((doc) => {
-    workers[doc.id] = doc.data() as Worker;
-  })
-  console.log(workers)
+    const data = doc.data();
+    const siteWorkers = data.workers as Worker[];
+    if (Array.isArray(siteWorkers)) {
+      workers.push(...siteWorkers);
+    }
+  });
+  // console.log(workers["san-ramon"])
   return workers; 
 }
 
 export async function determinePacketsNeededToBeOrdered() {
   //  Pull data on front and back inventory
-  const collectionRef = collection(db, "inventories");
-  const documentSnapshot = await getDocs(collectionRef);
-
-  // load inventories from documentSnapshot
   const backMathAndFinal: InventoryData | undefined = await loadInventory("math_back");
   const frontMath: InventoryData | undefined = await loadInventory("math_front");
   const backEnglishAndFinal: InventoryData | undefined = await loadInventory("english_back");

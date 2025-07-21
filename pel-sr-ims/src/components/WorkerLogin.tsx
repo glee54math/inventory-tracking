@@ -12,9 +12,15 @@ export default function WorkerLogin({
   setNameOfWorker,
 }: WorkerLoginProps) {
   // const [nameOfWorker, setNameOfWorker] = useState<string>("");
-  const [workersList, setWorkersList] = useState<Worker[]>(
-    Object.values(loadWorkersFromDB)
-  );
+  const [workersList, setWorkersList] = useState<Worker[]>([]);
+
+  useEffect(() => {
+    const settingWorkersList = async () => {
+      const temp: Worker[] = await loadWorkersFromDB();
+      setWorkersList(temp);
+    };
+    settingWorkersList();
+  }, []);
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br bg-blue-400 flex flex-col justify-start items-center pt-76">

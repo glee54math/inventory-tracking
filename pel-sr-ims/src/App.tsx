@@ -6,7 +6,7 @@ import Inventory from "./components/Inventory";
 import {
   // saveInventory,
   // loadInventory,
-  loadAllInventories,
+  // loadAllInventories,
   determinePacketsNeededToBeOrdered,
 } from "./utils/inventoryService";
 import Log from "./components/Log";
