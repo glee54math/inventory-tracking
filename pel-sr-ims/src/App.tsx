@@ -111,6 +111,9 @@ function App() {
     const handleMouseUp = () => {
       isDragging.current = false;
     };
+
+    window.addEventListener("mousemove", handleMovement);
+    window.addEventListener("mouseup", handleMouseUp);
     return () => {
       window.removeEventListener("mousemove", handleMovement);
       window.removeEventListener("mouseup", handleMouseUp);
