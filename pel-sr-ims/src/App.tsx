@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRef } from "react";
 import "./App.css";
 import WorkerLogin from "./components/WorkerLogin";
 import Sidebar from "./components/Sidebar";
@@ -95,6 +96,27 @@ function App() {
   //   alert("Uploaded!");
   // };
 
+  const [logHeight, setLogHeight] = useState(250);
+  const isDragging = useRef(false);
+
+  const handleMouseDown = () => {
+    isDragging.current = true;
+  }
+  useEffect(() => {
+    const handleMovement = (e: MouseEvent) => {
+    if(!isDragging.current) return;
+    const newHeight = window.innerHeight - e.clientY - 32;
+    setLogHeight(Math.max(150, newHeight));
+    };  
+    const handleMouseUp = () => {
+      isDragging.current = false;
+    };
+    return () => {
+      window.removeEventListener("mousemove", handleMovement);
+      window.removeEventListener("mouseup", handleMouseUp);
+  };
+}, []);
+
   return (
     <div className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-hidden">
       {/* Makeshift Login Screen */}
@@ -112,7 +134,11 @@ function App() {
         >
           {/* Sidebar */}
           <div className="bg-gray-100 p-2 min-w-[60px] border w-fit">
-            <Sidebar />
+            <Sidebar 
+              showInventory = {showInventory}
+              toggleInventory={() => setShowInventory(prev => !prev)}
+            />
+            
           </div>
 
           {/* Inventory Panel */}
@@ -123,13 +149,6 @@ function App() {
                 : "w-0 opacity-0 !p-0 !border-none pointer-events-none"
             }`}
           >
-            {/* Hide Inventory Button */}
-            <button
-              onClick={() => setShowInventory(false)}
-              className="mb-2 w-full text-black mt-2 px-3 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
-            >
-              Hide Inventory
-            </button>
 
             {/* Inventories */}
             {inventories && (
@@ -186,23 +205,23 @@ function App() {
             <div className="border p-2 bg-white flex-3">
               <div className="flex justify-end items-center">
                 <h2 className="font-bold mb-2 text-center w-full">Actions</h2>
-                {!showInventory && (
-                  <button
-                    onClick={() => setShowInventory(true)}
-                    className="bg-green-500 text-black px-2 py-1 rounded hover:!bg-green-300"
-                  >
-                    Show Inventory
-                  </button>
-                )}
               </div>
               <div className="max-h-[70vh] flex flex-col">
                 <ActionContainer />
               </div>
             </div>
+                  
+           
+            <div className="relative w-full bg-white border"
+              style={{ height: `${logHeight}px`, minHeight: "100px" }}
+            >
 
-            <div className="border p-2 bg-white flex-1">
-              <h2 className="font-bold mb-2 text-center">Log</h2>
-              <div className="max-h-[20vh] flex flex-col">
+              <div className="absolute top-0 left-0 w-full h-2 cursor-row-resize bg-gray-300 z-10"
+                onMouseDown={handleMouseDown}>
+              </div>
+
+              <div className="pt-2 h-full overflow-auto">
+                <h2 className="font-bold mb-2 text-center">Log</h2>
                 <Log />
               </div>
             </div>
