@@ -22,8 +22,9 @@ export default function Sidebar({showInventory, toggleInventory}: SideBarProps) 
                 className="mt-2 py-2 hover:!bg-green-300 hover:!border-blue-300"
                 title={showInventory ? "Hide" : "Show"}
             >
-                {showInventory ? "Hide" : "Show"}
-                {/* {showInventory ? "⮜ " : "⮞ "} */}
+                {/* {showInventory ? "Hide" : "Show"} */}
+                {showInventory ? "⮜ " : "⮞ "}
+                
             </button>
         </div>
     )
