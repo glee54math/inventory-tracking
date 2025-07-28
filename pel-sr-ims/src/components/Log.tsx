@@ -6,6 +6,8 @@ import { db } from "../utils/firebase";
 
 function Log() {
   const [actionLog, setActionLog] = useState<LogEntry[]>([]);
+  const [visibleCount, setVisibleCount] = useState(20);
+  const visibleLogs = actionLog.slice(0, visibleCount);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "logs"), (snapshot) => {
@@ -42,11 +44,22 @@ function Log() {
 
   return (
     <div className="overflow-auto">
-      {actionLog.map((entry, index) => (
+      {visibleLogs.map((entry, index) => (
         <p key={entry.eventType + index}>
           {index + 1 + ") " + entry.timeStamp + " | " + entry.message}
         </p>
+
+        
       ))}
+
+      {visibleCount < actionLog.length && (
+         <button
+          onClick={() => setVisibleCount((prev) => prev + 20)}
+          className="mt-2 px-4 py-1 text-black rounded"
+        >
+          Show More
+        </button>
+      )}
     </div>
   );
 }
