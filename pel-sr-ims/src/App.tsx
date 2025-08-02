@@ -17,6 +17,7 @@ import type { InventoryData, InsufficientSubsection } from "./utils/types";
 import ActionContainer from "./components/ActionContainer";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "./utils/firebase";
+import { useNameContext } from "./components/NameContext";
 
 type InventoryType =
   | "Back Math"
@@ -50,7 +51,8 @@ function App() {
   const [inventoriesVisibility, setInventoriesVisibility] = useState<
     Record<string, boolean>
   >({});
-  const [userLoggedIn, setUserLoggedIn] = useState<string>("");
+  // const [userLoggedIn, setUserLoggedIn] = useState<string>(""); // pivoted to NameContext
+  const {nameOfWorker} = useNameContext();
   const [insufficientPackets, setInsufficientPackets] = useState<
     InsufficientSubsection[]
   >([]);
@@ -123,14 +125,11 @@ function App() {
   return (
     <div className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-hidden">
       {/* Makeshift Login Screen */}
-      {userLoggedIn === "" && (
-        <WorkerLogin
-          nameOfWorker={userLoggedIn}
-          setNameOfWorker={setUserLoggedIn}
-        />
+      {nameOfWorker === "" && (
+        <WorkerLogin />
       )}
 
-      {userLoggedIn && (
+      {nameOfWorker && (
         <div
           id="dashboard"
           className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-hidden"
