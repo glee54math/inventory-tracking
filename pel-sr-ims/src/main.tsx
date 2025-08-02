@@ -1,13 +1,13 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { ActionProvider } from "./components/ActionContext.tsx";
+import { NameProvider } from "./components/NameContext.tsx";
 import "./index.css";
 import App from "./App.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ActionProvider>
+    <NameProvider>
       <App />
-    </ActionProvider>
+    </NameProvider>
   </StrictMode>
 );
