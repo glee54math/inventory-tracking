@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
 import { loadWorkersFromDB } from "../utils/inventoryService";
 import type { Worker } from "../utils/types";
+import { useNameContext } from "./NameContext";
 
-interface WorkerLoginProps {
-  nameOfWorker: string;
-  setNameOfWorker: React.Dispatch<React.SetStateAction<string>>;
-}
 
-export default function WorkerLogin({
-  nameOfWorker,
-  setNameOfWorker,
-}: WorkerLoginProps) {
-  // const [nameOfWorker, setNameOfWorker] = useState<string>("");
+// interface WorkerLoginProps {
+//   nameOfWorker: string;
+//   setNameOfWorker: React.Dispatch<React.SetStateAction<string>>;
+// }
+
+export default function WorkerLogin() {
+  const {setNameOfWorker} = useNameContext();
   const [workersList, setWorkersList] = useState<Worker[]>([]);
 
   useEffect(() => {

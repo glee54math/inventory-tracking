@@ -1,4 +1,5 @@
-import { useState } from "react";
+// import { useState } from "react";
+import { useNameContext } from "./NameContext";
 
 interface SideBarProps {
     showInventory: boolean;
@@ -7,15 +8,15 @@ interface SideBarProps {
 
 export default function Sidebar({showInventory, toggleInventory}: SideBarProps) {
     // const [showSidebar, setShowSidebar] = useState<boolean>(false);
-
-    const handleSidebar = () => {
-
-    }
+    const { nameOfWorker } = useNameContext();
 
     return (
         <div
             id="sidebar"
         >
+            <p className="text-center text-xs">
+                Hello<br></br>{nameOfWorker}
+            </p>
             <button
                 id="Inventory"
                 onClick={toggleInventory}
