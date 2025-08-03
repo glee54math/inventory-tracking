@@ -39,17 +39,20 @@ function Log() {
   }, [visibleCount]);
 
   return (
-    <div className="overflow-auto">
+    <div className="mx-2 overflow-auto">
       {actionLog.map((entry, index) => (
-        <p key={entry.eventType + index}>
-          {index + 1 + ")   " + entry.timeStamp.toLocaleDateString() + " " + entry.timeStamp.toLocaleTimeString() + "  |  " + entry.message}
-        </p>
+        <pre
+          key={entry.eventType + index}
+          className="mx-2"
+        >
+          {index + 1 + ")  " + entry.timeStamp.toLocaleDateString() + " " + entry.timeStamp.toLocaleTimeString() + "  |  " + entry.message}
+        </pre>
       ))}
 
       {(
         <button
           onClick={() => setVisibleCount((prev) => prev + 20)}
-          className="mt-2 px-4 py-1 text-black rounded"
+          className="m-2 px-4 py-1 text-black hover:!bg-blue-300 border outline-1 outline-blue-500 rounded"
         >
           Show More
         </button>
