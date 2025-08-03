@@ -1,4 +1,6 @@
-import { useState } from "react";
+// import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useNameContext } from "./NameContext";
 
 interface SideBarProps {
     showInventory: boolean;
@@ -7,15 +9,47 @@ interface SideBarProps {
 
 export default function Sidebar({showInventory, toggleInventory}: SideBarProps) {
     // const [showSidebar, setShowSidebar] = useState<boolean>(false);
+    const { nameOfWorker } = useNameContext();
+    const [isProfileButtonPressed, setIsProfileButtonPressed] = useState<boolean>(false);
+    const profileDropdownRef = useRef<HTMLDivElement|null>(null);
 
-    const handleSidebar = () => {
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+          if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+            setIsProfileButtonPressed(false);
+          }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
 
-    }
+        return () => {
+          document.removeEventListener('mousedown', handleClickOutside);
+        };
+      }, [profileDropdownRef]);
 
     return (
         <div
             id="sidebar"
         >
+            <div className="dropdown-container" ref={profileDropdownRef}>
+                <button 
+                    onClick={() => setIsProfileButtonPressed(!isProfileButtonPressed)}
+                    className="text-xs !bg-gray-200 px-3 py-2 border outline-1 outline-gray-200 rounded hover:!bg-green-300"
+                >
+                    Hello<br />{nameOfWorker}
+                </button>
+                {isProfileButtonPressed && (
+                    <ul className="absolute mt-2 w-32 bg-white border border-gray-300 rounded">
+                        <li className="rounded">
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="w-full text-left px-4 py-2 text-sm hover:!bg-gray-200 rounded"
+                            >
+                                Log Out
+                            </button>
+                        </li>
+                    </ul>
+                )}
+            </div>
             <button
                 id="Inventory"
                 onClick={toggleInventory}
