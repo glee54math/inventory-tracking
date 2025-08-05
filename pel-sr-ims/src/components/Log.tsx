@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 // import { loadLog } from "../utils/inventoryService";
-// import { loadLog } from "../utils/inventoryService";
 import type { LogEntry } from "../utils/types";
-import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { db } from "../utils/firebase";
 
