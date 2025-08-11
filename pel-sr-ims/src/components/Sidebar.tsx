@@ -30,12 +30,16 @@ export default function Sidebar({showInventory, toggleInventory}: SideBarProps) 
         <div
             id="sidebar"
         >
-            <div className="dropdown-container" ref={profileDropdownRef}>
+            {/* Profile Button */}
+            <div id="profile-button" ref={profileDropdownRef} className="mb-3">
+                <p className="text-xs">
+                    Logged in as:
+                </p>
                 <button 
                     onClick={() => setIsProfileButtonPressed(!isProfileButtonPressed)}
-                    className="text-xs !bg-gray-200 px-3 py-2 border outline-1 outline-gray-200 rounded hover:!bg-green-300"
+                    className="w-full !bg-gray-200 px-3 py-2 border outline-1 outline-gray-200 rounded hover:!bg-green-300"
                 >
-                    Hello<br />{nameOfWorker}
+                    {nameOfWorker}
                 </button>
                 {isProfileButtonPressed && (
                     <ul className="absolute mt-2 w-32 bg-white border border-gray-300 rounded">
@@ -50,16 +54,21 @@ export default function Sidebar({showInventory, toggleInventory}: SideBarProps) 
                     </ul>
                 )}
             </div>
-            <button
-                id="Inventory"
-                onClick={toggleInventory}
-                className="mt-2 py-2 hover:!bg-green-300 hover:!border-blue-300"
-                title={showInventory ? "Hide" : "Show"}
-            >
-                {/* {showInventory ? "Hide" : "Show"} */}
-                {showInventory ? "⮜ " : "⮞ "}
-                
-            </button>
+            {/* Hide/Show Inventory Button */}
+            <div id="inventory-button" className="mb-3 w-full mx-1/2">
+                <p className="text-xs">
+                    {showInventory ? "Hide Inventory" : "Show Inventory"}
+                </p>
+                <button
+                    id="Inventory"
+                    onClick={toggleInventory}
+                    className="py-2 w-full !bg-gray-200 hover:!bg-green-300 hover:!border-blue-300"
+                    title={showInventory ? "Hide" : "Show"}
+                >
+                    {/* {showInventory ? "Hide" : "Show"} */}
+                    {showInventory ? "⮜ " : "⮞ "}  
+                </button>
+            </div>
         </div>
     )
 }

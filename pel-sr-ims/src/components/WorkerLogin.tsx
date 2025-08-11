@@ -37,10 +37,10 @@ export default function WorkerLogin() {
             focus:border-indigo-500 appearance-none bg-white cursor-pointer
           "
         >
-          <option value={""}>Select Worker</option>
-          <option value={"Mr. Lee"}>Mr. Lee</option>
+          <option key={""} value={""}>Select Worker</option>
+          <option key={"Mr. Lee"} value={"Mr. Lee"}>Mr. Lee</option>
           {workersList.map((worker: Worker) => (
-            <option value={worker.initials}>
+            <option key={worker.initials} value={worker.initials}>
               {worker.firstName + " " + worker.lastName}
             </option>
           ))}

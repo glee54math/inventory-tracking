@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 // import { loadLog } from "../utils/inventoryService";
 import type { LogEntry } from "../utils/types";
-import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db } from "../utils/firebase";
 
 function Log() {
@@ -10,32 +10,27 @@ function Log() {
   // const visibleLogs = actionLog.slice(0, visibleCount);
 
   useEffect(() => {
-    const fetchLogs = async () => {
-      const logsQuery = query(
-        collection(db,"logs"),
-        orderBy("timeStamp", "desc"),
-        limit(visibleCount)
-      );
+    const logsQuery = query(
+      collection(db,"logs"),
+      orderBy("timeStamp","desc"),
+      limit(visibleCount)
+    );
 
-      const snapshot = await getDocs(logsQuery);
+    const unsubscribe = onSnapshot(logsQuery, (snapshot) => {
       const newLogs: LogEntry[] = [];
-
       snapshot.forEach((doc) => {
         const data = doc.data();
-        const logEntry: LogEntry = {
+        newLogs.push({
           timeStamp: data.timeStamp.toDate(), // convert Firestore Timestamp to JS Date
           userID: data.userID,
           eventType: data.eventType,
           message: data.message,
-        };
-        newLogs.push(logEntry);
+        });
       });
-      // Sort newest first (optional)
-      // newLogs.sort((a, b) => b.timeStamp.getTime() - a.timeStamp.getTime());
       setActionLog(newLogs);
-    };
-    
-    fetchLogs();
+    });
+
+    return () => unsubscribe();
   }, [visibleCount]);
 
   return (
