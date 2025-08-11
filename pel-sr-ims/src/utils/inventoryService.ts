@@ -63,35 +63,36 @@ export async function updateInventoryFromActions( submittedActions: SubmittedAct
   console.log(submittedActions)
   let inventoryFrom: InventoryData | undefined;
   let inventoryTo: InventoryData | undefined;
-  let index = 0;  // used for associating [] and map
 
   for (const action of submittedActions) {
-    switch (action.movementMap[action.selectedSubsections[index]]) {
-      case "BackToFront":
-        inventoryFrom = await loadInventory(`${action.subject?.toLowerCase()}_back`);
-        inventoryTo = await loadInventory(`${action.subject?.toLowerCase()}_front`);
-        break;
-      case "BackToStudent":
-        inventoryFrom = await loadInventory(`${action.subject?.toLowerCase()}_back`);
-        break;
-      case "FrontToBack":
-        inventoryFrom = await loadInventory(`${action.subject?.toLowerCase()}_front`);
-        inventoryTo = await loadInventory(`${action.subject?.toLowerCase()}_back`);
-        break;
-      case "FrontToStudent":
-        inventoryFrom = await loadInventory(`${action.subject?.toLowerCase()}_front`);
-        break;
-      case "ShipmentToBack":
-        inventoryTo = await loadInventory(`${action.subject?.toLowerCase()}_back`);
-        break;
-      case "ShipmentToFront":
-        inventoryTo = await loadInventory(`${action.subject?.toLowerCase()}_front`);
-        break;
-    }
+    let index = 0;  // used for associating [] and map
+    for (const section of action.selectedSubsections) {
+      switch (action.movementMap[action.selectedSubsections[index]]) {
+        case "BackToFront":
+          inventoryFrom = await loadInventory(`${action.subject?.toLowerCase()}_back`);
+          inventoryTo = await loadInventory(`${action.subject?.toLowerCase()}_front`);
+          break;
+        case "BackToStudent":
+          inventoryFrom = await loadInventory(`${action.subject?.toLowerCase()}_back`);
+          break;
+        case "FrontToBack":
+          inventoryFrom = await loadInventory(`${action.subject?.toLowerCase()}_front`);
+          inventoryTo = await loadInventory(`${action.subject?.toLowerCase()}_back`);
+          break;
+        case "FrontToStudent":
+          inventoryFrom = await loadInventory(`${action.subject?.toLowerCase()}_front`);
+          break;
+        case "ShipmentToBack":
+          inventoryTo = await loadInventory(`${action.subject?.toLowerCase()}_back`);
+          break;
+        case "ShipmentToFront":
+          inventoryTo = await loadInventory(`${action.subject?.toLowerCase()}_front`);
+          break;
+      }
      
-    // inventoryFrom[level][subsection] -= numOfCopies
-    // inventoryTo[level][subsection] += numOfCopies
-    action.selectedSubsections.forEach((section: string) => {
+      // inventoryFrom[level][subsection] -= numOfCopies
+      // inventoryTo[level][subsection] += numOfCopies
+    
       if (inventoryFrom) {
         // This finds the object in JSON data based on the section "range".
         const objFoundBySection: Subsection | undefined = inventoryFrom[action.level]?.find((subsection: Subsection) => subsection.range===section);
@@ -110,22 +111,23 @@ export async function updateInventoryFromActions( submittedActions: SubmittedAct
           objFoundBySection.count += action.movementNumOfCopiesMap[section];
         }
       }
-    })
+    
 
-    // Update database of both inventoryFrom and inventoryTo
-    // movementType = BackToFront, BackToStudent, FrontToBack, FrontToStudent, ShipmentToBack, ShipmentToFront
-    // inventory names are of the form: (subject)_(location); all lowercase
-    const movementType = action.movementMap[action.selectedSubsections[index]];
-    const fromFrontBackOrShipment = movementType.substring(0,movementType.indexOf("To"))
-    const toFrontBackOrStudent = movementType.substring(movementType.indexOf("To")+2)
-    console.log(movementType, fromFrontBackOrShipment, toFrontBackOrStudent, index);
-    if (inventoryFrom && fromFrontBackOrShipment !== 'Shipment') {
-      saveInventory(inventoryFrom,`${action.subject?.toLowerCase()}_${fromFrontBackOrShipment.toLowerCase()}`);
+      // Update database of both inventoryFrom and inventoryTo
+      // movementType = BackToFront, BackToStudent, FrontToBack, FrontToStudent, ShipmentToBack, ShipmentToFront
+      // inventory names are of the form: (subject)_(location); all lowercase
+      const movementType = action.movementMap[action.selectedSubsections[index]];
+      const fromFrontBackOrShipment = movementType.substring(0,movementType.indexOf("To"))
+      const toFrontBackOrStudent = movementType.substring(movementType.indexOf("To")+2)
+      console.log(movementType, fromFrontBackOrShipment, toFrontBackOrStudent, index);
+      if (inventoryFrom && fromFrontBackOrShipment !== 'Shipment') {
+        saveInventory(inventoryFrom,`${action.subject?.toLowerCase()}_${fromFrontBackOrShipment.toLowerCase()}`);
+      }
+      if (inventoryTo && toFrontBackOrStudent !== 'Student') {
+        saveInventory(inventoryTo,`${action.subject?.toLowerCase()}_${toFrontBackOrStudent.toLowerCase()}`);
+      }
+      index++;
     }
-    if (inventoryTo && toFrontBackOrStudent !== 'Student') {
-      saveInventory(inventoryTo,`${action.subject?.toLowerCase()}_${toFrontBackOrStudent.toLowerCase()}`);
-    }
-    index++;
   }
 }
 
