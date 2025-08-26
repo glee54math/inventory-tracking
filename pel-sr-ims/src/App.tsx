@@ -68,25 +68,6 @@ function App() {
       setInventories(newInventories);
     });
     return () => unsubscribe();
-    // const load = async () => {
-    //   const allData = await loadAllInventories();
-    //   console.log(allData);
-    //   const inventoryNames = Object.keys(allData);
-    //   const inventoryData = Object.values(allData);
-
-    //   console.log(inventoryData);
-
-    //   const newInventories: Record<string, any> = {};
-    //   const visibility: Record<string, boolean> = {};
-
-    //   inventoryNames.forEach((name, index) => {
-    //     newInventories[name] = inventoryData[index];
-    //   });
-
-    //   setInventories(newInventories);
-    //   setInventoriesVisibility(visibility);
-    // };
-    // load();
   }, []);
 
   // Keep this in case we need to hard upload.
@@ -123,7 +104,7 @@ function App() {
 }, []);
 
   return (
-    <div className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-hidden">
+    <div className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-auto">
       {/* Makeshift Login Screen */}
       {nameOfWorker === "" && (
         <WorkerLogin />
@@ -132,7 +113,7 @@ function App() {
       {nameOfWorker && (
         <div
           id="dashboard"
-          className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-hidden"
+          className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-auto"
         >
           {/* Sidebar */}
           <div className="bg-gray-100 p-2 min-w-[60px] border w-fit">
