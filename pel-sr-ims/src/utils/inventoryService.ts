@@ -1,7 +1,7 @@
 import { doc, getDoc, getDocs, setDoc, collection, addDoc} from "firebase/firestore";
 import { db } from "./firebase";
 import type { LogEntry, SubmittedAction } from "./types";
-import type { InventoryData, Subsection, InsufficientSubsection, Worker} from "./types";
+import type { InventoryData, Subsection, InsufficientSubsection, Worker, Student} from "./types";
 
 // subject_Location = math_back, math_front, english_back, english_front
 // Upload your local JSON to Firestore
@@ -222,4 +222,22 @@ export async function determinePacketsNeededToBeOrdered() {
   }
 
   return insufficient;
+}
+
+export async function loadStudentsFromDB(place: string) {
+  const collectionRef = collection(db,"students");
+  const documentSnapshot = await getDocs(collectionRef);
+
+  const students: Student[] = [];
+
+  documentSnapshot.forEach((doc) => {
+    const data = doc.data();
+    const siteStudents = data.students as Student[];
+
+    if (Array.isArray(siteStudents)) {
+      students.push(...siteStudents);
+    }
+  });
+
+  return students;
 }

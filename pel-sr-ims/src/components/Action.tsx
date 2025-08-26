@@ -1,6 +1,8 @@
-import type { MovementType, SubmittedAction } from "../utils/types";
+import type { MovementType, Student, SubmittedAction } from "../utils/types";
 import dataMath from "../assets/dataMath.json";
 import dataEnglish from "../assets/data.json";
+import { loadStudentsFromDB } from "../utils/inventoryService";
+import { useEffect, useState } from "react";
 
 interface ActionProps {
   index: number;
@@ -12,6 +14,14 @@ function Action({ index, data, onChange }: ActionProps) {
   const updateField = (field: keyof SubmittedAction, value: any) => {
     onChange({ ...data, [field]: value });
   };
+  const [allStudents, setAllStudents] = useState<Student[]>([])
+
+  useEffect(() => {
+    const getStudents = async () => {
+      setAllStudents(await loadStudentsFromDB("san-ramon"));
+    };
+    getStudents();
+  }, []);
 
   const toggleSubsection = (range: string) => {
     const isSelected = data.selectedSubsections.includes(range);
@@ -88,6 +98,7 @@ function Action({ index, data, onChange }: ActionProps) {
       selectedSubsections: [],
       movementMap: {},
       movementNumOfCopiesMap: {},
+      toStudentMap: {},
     });
   };
 
@@ -99,6 +110,7 @@ function Action({ index, data, onChange }: ActionProps) {
       selectedSubsections: [],
       movementMap: {},
       movementNumOfCopiesMap: {},
+      toStudentMap: {},
     });
   };
 
@@ -109,26 +121,55 @@ function Action({ index, data, onChange }: ActionProps) {
       selectedSubsections: [],
       movementMap: {},
       movementNumOfCopiesMap: {},
+      toStudentMap: {},
     });
   };
+
+  const handleToStudentChange = (student: string) => {
+    // need to handle "Add New Student"
+    // change map within data: Submitted Action
+  }
 
   return (
     <div>
       <form name="Action" className="flex items-start gap-1">
         <div className="flex items-start gap-1">
-          <select
-            name="Subject"
-            id={`subject-${index}`}
-            value={data.subject ?? ""}
-            onChange={(e) =>
-              handleSubjectChange(e.target.value as "Math" | "English" | "")
-            }
-            className="border px-1 py-1 rounded field-sizing-content"
-          >
-            <option value="">Select Subject</option>
-            <option value="Math">Math</option>
-            <option value="English">English</option>
-          </select>
+          <div className="flex flex-col item-start gap-1">
+            <select
+              name="Subject"
+              id={`subject-${index}`}
+              value={data.subject ?? ""}
+              onChange={(e) =>
+                handleSubjectChange(e.target.value as "Math" | "English" | "")
+              }
+              className="border px-1 py-1 rounded field-sizing-content"
+            >
+              <option value="">Select Subject</option>
+              <option value="Math">Math</option>
+              <option value="English">English</option>
+            </select>
+            
+            {data.selectedSubsections.length != 0 && 
+             (Object.values(data.movementMap).includes("BackToStudent") || Object.values(data.movementMap).includes("FrontToStudent")) && 
+             (Object.values(data.movementNumOfCopiesMap).some(value => value != 0)) && (
+              <select
+                name="Student"
+                id={`subject-${index}`}
+                onChange={(e) =>
+                  handleToStudentChange(e.target.value)
+                }
+                className="border px-1 py-1 rounded field-sizing-content"
+              >
+                <option value="">Select Student</option>
+                {allStudents.map((student: Student) => (
+                  <option value={student.firstName + " " + student.lastName}>
+                    {student.firstName + " " + student.lastName}
+                  </option>
+                ))}
+                <option value="Add New Student">Add New Student</option>
+              </select>
+            )}
+          </div>
 
           {/* Math Level */}
           {data.subject === "Math" && (

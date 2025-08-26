@@ -14,6 +14,7 @@ export interface SubmittedAction {
   movementMap: Record<string, MovementType>;
   movementNumOfCopiesMap: Record<string, number>;
   selectedSubsections: string[];
+  toStudentMap?: Record<string, Student>
 }
 
 export interface Subsection {
@@ -43,4 +44,13 @@ export type Worker = {
     lastName: string;
     initials: string;
     password: string;
+}
+
+export type Student = {
+  firstName: string;
+  lastName: string;
+  father: string;
+  mother: string;
+  subjects_startDate_Map: Record<string, Date>;
+  hwkAssigned: string[]; // This will probably be changed 
 }

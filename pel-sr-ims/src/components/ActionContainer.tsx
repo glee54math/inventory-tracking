@@ -16,6 +16,7 @@ function ActionContainer() {
       movementMap: {},
       movementNumOfCopiesMap: {},
       selectedSubsections: [],
+      toStudentMap: {},
     };
 
     setActionList((prev) => [...prev, newAction]);
