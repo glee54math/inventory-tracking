@@ -1,4 +1,4 @@
-import { doc, getDoc, getDocs, setDoc, collection, addDoc} from "firebase/firestore";
+import { doc, getDoc, getDocs, setDoc, collection, addDoc, deleteField, updateDoc, } from "firebase/firestore";
 import { db } from "./firebase";
 import type { LogEntry, SubmittedAction } from "./types";
 import type { InventoryData, Subsection, InsufficientSubsection, Worker, Student} from "./types";
@@ -225,19 +225,53 @@ export async function determinePacketsNeededToBeOrdered() {
 }
 
 export async function loadStudentsFromDB(place: string) {
-  const collectionRef = collection(db,"students");
+  const collectionRef = collection(db,"students", place,"students");  // place = san-ramon
   const documentSnapshot = await getDocs(collectionRef);
 
   const students: Student[] = [];
 
   documentSnapshot.forEach((doc) => {
-    const data = doc.data();
-    const siteStudents = data.students as Student[];
-
-    if (Array.isArray(siteStudents)) {
-      students.push(...siteStudents);
-    }
+    const studentData = doc.data();
+    students.push(studentData as Student);
   });
 
   return students;
+}
+
+export async function addNewStudentToDatabase(place: string, student: Student) {
+  const studentsCollectionRef = collection(db,"students", place,"students");
+  await addDoc(studentsCollectionRef, student);
+  console.log(student.firstName + student.lastName + " was added.");
+}
+
+// one-time use: 9/2/25
+export async function migrateStudentsArrayToSubcollection() {
+  const studentsDocRef = doc(db, "students", "san-ramon");
+  const studentSnap = await getDoc(studentsDocRef);
+
+  if (!studentSnap.exists()) {
+    console.error("❌ san-ramon doc does not exist");
+    return;
+  }
+
+  const data = studentSnap.data();
+  const studentsArray: Student[] = data.students || []; // existing array
+
+  if (!studentsArray.length) {
+    console.log("✅ No students array found, nothing to migrate");
+    return;
+  }
+
+  console.log(`🔄 Migrating ${studentsArray.length} students...`);
+
+  const studentsSubCol = collection(db, "students", "san-ramon", "students");
+
+  for (const student of studentsArray) {
+    await addDoc(studentsSubCol, student);
+    console.log(`✅ Migrated: ${student.firstName} ${student.lastName}`);
+  }
+
+  // OPTIONAL: remove the old array after migration
+  // await updateDoc(studentsDocRef, { students: deleteField() });
+  // console.log("🧹 Old students array removed from san-ramon doc");
 }

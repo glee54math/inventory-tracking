@@ -46,11 +46,11 @@ export type Worker = {
     password: string;
 }
 
-export type Student = {
+export interface Student {
   firstName: string;
   lastName: string;
   father: string;
   mother: string;
   subjects_startDate_Map: Record<string, Date>;
-  hwkAssigned: string[]; // This will probably be changed 
+  hwkAssigned?: string[]; // This will probably be changed 
 }

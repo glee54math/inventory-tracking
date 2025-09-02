@@ -3,6 +3,7 @@ import dataMath from "../assets/dataMath.json";
 import dataEnglish from "../assets/data.json";
 import { loadStudentsFromDB } from "../utils/inventoryService";
 import { useEffect, useState } from "react";
+import { NewStudentForm } from "./NewStudent";
 
 interface ActionProps {
   index: number;
@@ -14,7 +15,8 @@ function Action({ index, data, onChange }: ActionProps) {
   const updateField = (field: keyof SubmittedAction, value: any) => {
     onChange({ ...data, [field]: value });
   };
-  const [allStudents, setAllStudents] = useState<Student[]>([])
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
+  const [newStudentFormPopUp, setNewStudentFormPopUp] = useState<boolean>(false);
 
   useEffect(() => {
     const getStudents = async () => {
@@ -127,6 +129,9 @@ function Action({ index, data, onChange }: ActionProps) {
 
   const handleToStudentChange = (student: string) => {
     // need to handle "Add New Student"
+    if (student === "Add New Student") {
+      setNewStudentFormPopUp(true);
+    }
     // change map within data: Submitted Action
   }
 
@@ -149,6 +154,7 @@ function Action({ index, data, onChange }: ActionProps) {
               <option value="English">English</option>
             </select>
             
+            {/* Student to assign to if option selected */}
             {data.selectedSubsections.length != 0 && 
              (Object.values(data.movementMap).includes("BackToStudent") || Object.values(data.movementMap).includes("FrontToStudent")) && 
              (Object.values(data.movementNumOfCopiesMap).some(value => value != 0)) && (
@@ -160,16 +166,26 @@ function Action({ index, data, onChange }: ActionProps) {
                 }
                 className="border px-1 py-1 rounded field-sizing-content"
               >
-                <option value="">Select Student</option>
+                <option key="" value="">Select Student</option>
                 {allStudents.map((student: Student) => (
-                  <option value={student.firstName + " " + student.lastName}>
+                  <option
+                    key={student.firstName + " " + student.lastName} 
+                    value={student.firstName + " " + student.lastName}
+                  >
                     {student.firstName + " " + student.lastName}
                   </option>
                 ))}
-                <option value="Add New Student">Add New Student</option>
+                <option key="add" value="Add New Student">Add New Student</option>
               </select>
             )}
           </div>
+
+          {/* PopUp */}
+          {newStudentFormPopUp &&
+            <div className="fixed inset-0 flex justify-center items-center"> 
+              <NewStudentForm onClose={() => setNewStudentFormPopUp(false)} />
+            </div>
+          }
 
           {/* Math Level */}
           {data.subject === "Math" && (
