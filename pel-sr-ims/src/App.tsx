@@ -18,6 +18,7 @@ import ActionContainer from "./components/ActionContainer";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "./utils/firebase";
 import { useNameContext } from "./components/NameContext";
+import Database from "./components/Database";
 
 type InventoryType =
   | "Back Math"
@@ -57,6 +58,7 @@ function App() {
     InsufficientSubsection[]
   >([]);
   const [showInsufficient, setShowInsufficient] = useState<boolean>(false);
+  const [showStudentDatabase, setShowStudentDatabase] = useState<boolean>(false);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "inventory"), (snapshot) => {
@@ -120,21 +122,22 @@ function App() {
             <Sidebar 
               showInventory = {showInventory}
               toggleInventory={() => setShowInventory(prev => !prev)}
+              toggleStudentDatabase={() => setShowStudentDatabase(prev => !prev)}
             />
             
           </div>
 
-          {/* Inventory Panel */}
+          {/* Inventory Panel || Student Database Panel */}
           <div
             className={`transition-all duration-500 overflow-auto bg-white ${
-              showInventory
+              showInventory || showStudentDatabase
                 ? "w-[40%] opacity-100 p-2 border pointer-events-auto"
                 : "w-0 opacity-0 !p-0 !border-none pointer-events-none"
             }`}
           >
 
             {/* Inventories */}
-            {inventories && (
+            {showInventory && !showStudentDatabase && (
               <div className="overflow-auto w-full max-w-full">
                 {Object.entries(inventories).map(([name, inventory]) => (
                   <div key={name} className="p-2 gap-4">
@@ -154,29 +157,38 @@ function App() {
                     )}
                   </div>
                 ))}
+                
+                {/* Amount Needed to Be Ordered */}
+                <div id="insufficient-packets">
+                  <button
+                    onClick={async () => {
+                      //fetch data before setting state
+                      const temp = await determinePacketsNeededToBeOrdered();
+                      setShowInsufficient((prev) => !prev);
+                      setInsufficientPackets(temp);
+                    }}
+                    className="font-bold mb-2 text-center w-full px-1 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
+                  >
+                    Packets That Need To Be Ordered {showInsufficient ? "▼" : "▶"}
+                  </button>
+
+                  {showInsufficient && (
+                    <div id="insufficient-packets-table">
+                      <Inventory data={restructure(insufficientPackets)} />
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
-            {/* Amount Needed to Be Ordered */}
-            <div id="insufficient-packets">
-              <button
-                onClick={async () => {
-                  //fetch data before setting state
-                  const temp = await determinePacketsNeededToBeOrdered();
-                  setShowInsufficient((prev) => !prev);
-                  setInsufficientPackets(temp);
-                }}
-                className="font-bold mb-2 text-center w-full px-1 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
-              >
-                Packets That Need To Be Ordered {showInsufficient ? "▼" : "▶"}
-              </button>
+            {/* Student Database */}
+            {showStudentDatabase && (
+              <div className="w-[40%] opacity-100 p-2 border overflow-auto w-full max-w-full">
+                <Database />
+              </div>
+            )}
 
-              {showInsufficient && (
-                <div id="insufficient-packets-table">
-                  <Inventory data={restructure(insufficientPackets)} />
-                </div>
-              )}
-            </div>
+            
           </div>
 
           {/* Right Panel */}

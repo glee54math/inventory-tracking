@@ -5,9 +5,10 @@ import { useNameContext } from "./NameContext";
 interface SideBarProps {
     showInventory: boolean;
     toggleInventory: () => void;
+    toggleStudentDatabase: () => void;
 }
 
-export default function Sidebar({showInventory, toggleInventory}: SideBarProps) {
+export default function Sidebar({showInventory, toggleInventory, toggleStudentDatabase}: SideBarProps) {
     // const [showSidebar, setShowSidebar] = useState<boolean>(false);
     const { nameOfWorker } = useNameContext();
     const [isProfileButtonPressed, setIsProfileButtonPressed] = useState<boolean>(false);
@@ -32,7 +33,7 @@ export default function Sidebar({showInventory, toggleInventory}: SideBarProps) 
         >
             {/* Profile Button */}
             <div id="profile-button" ref={profileDropdownRef} className="mb-3">
-                <p className="text-xs">
+                <p className="text-xs text-center">
                     Logged in as:
                 </p>
                 <button 
@@ -56,7 +57,7 @@ export default function Sidebar({showInventory, toggleInventory}: SideBarProps) 
             </div>
             {/* Hide/Show Inventory Button */}
             <div id="inventory-button" className="mb-3 w-full mx-1/2">
-                <p className="text-xs">
+                <p className="text-xs text-center">
                     {showInventory ? "Hide Inventory" : "Show Inventory"}
                 </p>
                 <button
@@ -68,6 +69,22 @@ export default function Sidebar({showInventory, toggleInventory}: SideBarProps) 
                     {/* {showInventory ? "Hide" : "Show"} */}
                     {showInventory ? "⮜ " : "⮞ "}  
                 </button>
+            </div>
+
+            {/* Student Database */}
+            <div id="student-database-button" className="mb-3 w-full mx-1/2">
+                <p className="text-xs text-center">
+                    Student Database
+                </p>
+                <a>
+                    <button
+                        id="student-database"
+                        onClick={toggleStudentDatabase}
+                        className="py-2 w-full !bg-gray-200 hover:!bg-green-300 hover:!border-blue-300"
+                    >
+                        SDB
+                    </button>
+                </a>
             </div>
         </div>
     )
