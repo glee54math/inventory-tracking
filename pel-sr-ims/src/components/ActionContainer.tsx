@@ -1,7 +1,8 @@
 import { useState } from "react";
-import type { SubmittedAction } from "../utils/types";
+import type { Student, SubmittedAction } from "../utils/types";
 import Action from "./Action";
 import {
+  assignHWToStudent,
   updateInventoryFromActions,
   updateLogFromActions,
 } from "../utils/inventoryService";
@@ -16,7 +17,7 @@ function ActionContainer() {
       movementMap: {},
       movementNumOfCopiesMap: {},
       selectedSubsections: [],
-      toStudentMap: {},
+      toStudent: {} as Student,
     };
 
     setActionList((prev) => [...prev, newAction]);
@@ -54,6 +55,16 @@ function ActionContainer() {
       // Submit to database
       await updateInventoryFromActions(completeActions);
       await updateLogFromActions(completeActions);
+      for (const action of completeActions) {
+        // need to filter the actions that are back/frontToStudent
+        const filteredToStudentHWPackets = action.selectedSubsections.filter((range) => {
+          return action.movementMap[range].includes("ToStudent");
+        });
+        if (filteredToStudentHWPackets.length !== 0) {
+          const studentHWPacketsToDatabase = filteredToStudentHWPackets.map((packet) => action.level + " " + packet);
+          await assignHWToStudent(action.toStudent, studentHWPacketsToDatabase);
+        }
+      }
 
       // Clear the action list after successful submission
       setActionList([]);

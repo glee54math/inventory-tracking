@@ -23,6 +23,7 @@ export default function Database() {
             setStudents(await loadStudentsFromDB("san-ramon"));
             // console.log(students);
             setStudentProps((Object.keys(students[0])).sort());
+            // console.log((students["subjects_startDate_Map"]));
         };
         getStudents();
     }, [students]);
@@ -42,15 +43,20 @@ export default function Database() {
                 </tr>
             </thead>
             <tbody>
-                {/* <tr>
-                    {students.map((student: Student) => (
-                        studentProps.map((property: string) => (
-                            <td>
-                                {student[property]}
+                {students.map((student: Student) => (
+                    <tr>
+                        {studentProps.map((property: string) => (
+                            <td
+                                onPointerOver={() => {
+                                    console.log(student[property] + " is a string: " + (typeof(student[property]) === "string"))
+                                    console.log(student[property] + " is an Object: " + typeof(student[property]))
+                                }}
+                            >
+                                {student["firstName"] + "'s " + property} 
                             </td>
-                        ))
-                    ))}
-                </tr> */}
+                        ))}
+                    </tr>
+                ))}
             </tbody>
         </table>
     )

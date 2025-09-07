@@ -16,6 +16,7 @@ function Action({ index, data, onChange }: ActionProps) {
     onChange({ ...data, [field]: value });
   };
   const [allStudents, setAllStudents] = useState<Student[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<Student>({} as Student);
   const [newStudentFormPopUp, setNewStudentFormPopUp] = useState<boolean>(false);
 
   useEffect(() => {
@@ -100,7 +101,7 @@ function Action({ index, data, onChange }: ActionProps) {
       selectedSubsections: [],
       movementMap: {},
       movementNumOfCopiesMap: {},
-      toStudentMap: {},
+      toStudent: {} as Student,
     });
   };
 
@@ -112,7 +113,7 @@ function Action({ index, data, onChange }: ActionProps) {
       selectedSubsections: [],
       movementMap: {},
       movementNumOfCopiesMap: {},
-      toStudentMap: {},
+      toStudent: {} as Student,
     });
   };
 
@@ -123,16 +124,25 @@ function Action({ index, data, onChange }: ActionProps) {
       selectedSubsections: [],
       movementMap: {},
       movementNumOfCopiesMap: {},
-      toStudentMap: {},
+      toStudent: {} as Student,
     });
   };
 
-  const handleToStudentChange = (student: string) => {
+  const handleToStudentChange = (studentName: string) => {
     // need to handle "Add New Student"
-    if (student === "Add New Student") {
+    if (studentName === "Add New Student") {
       setNewStudentFormPopUp(true);
     }
-    // change map within data: Submitted Action
+
+    // selectedStudent: ability to assign work to Student.
+    const temp = (allStudents.filter((stud) => {
+      return (stud.firstName + " " + stud.lastName) === studentName;
+    }));
+    setSelectedStudent(temp[0]);  // should only have 1, given there isn't two students with the same name.
+    onChange({
+      ...data,
+      toStudent: temp[0]
+    })
   }
 
   return (

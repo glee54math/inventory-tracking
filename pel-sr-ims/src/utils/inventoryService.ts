@@ -1,4 +1,4 @@
-import { doc, getDoc, getDocs, setDoc, collection, addDoc, deleteField, updateDoc, } from "firebase/firestore";
+import { doc, getDoc, getDocs, setDoc, collection, addDoc, deleteField, updateDoc, query, where } from "firebase/firestore";
 import { db } from "./firebase";
 import type { LogEntry, SubmittedAction } from "./types";
 import type { InventoryData, Subsection, InsufficientSubsection, Worker, Student} from "./types";
@@ -274,4 +274,35 @@ export async function migrateStudentsArrayToSubcollection() {
   // OPTIONAL: remove the old array after migration
   // await updateDoc(studentsDocRef, { students: deleteField() });
   // console.log("🧹 Old students array removed from san-ramon doc");
+}
+
+export async function assignHWToStudent(student: Student, hwPackets: string[]) {
+  // find student from within database
+  const q = query(
+    collection(db, "students", "san-ramon", "students"),
+    where('firstName','==',student.firstName),
+    where('lastName','==',student.lastName)
+  );
+
+  // if nothing is found or if more than one is found.
+  const qSnapShot = await getDocs(q);
+  if (qSnapShot.size !== 1) {
+    console.log("The size of your search is NOT 1")
+    return;
+  }
+   
+  for (const docSnap of qSnapShot.docs) {
+    // Get current homework assigned (if missing, default to empty array)
+    const currentHW = (docSnap.data().hwkAssigned ?? []) as string[];
+
+    // Merge new hw packets with existing ones (avoid duplicates if needed)
+    const updatedHW = [...currentHW, ...hwPackets];
+
+    // ✅ Only update hwkAssigned field
+    await updateDoc(docSnap.ref, {
+      hwkAssigned: updatedHW,
+    });
+
+    console.log(`✅ Updated hwkAssigned for ${student.firstName} ${student.lastName}`);
+  }
 }

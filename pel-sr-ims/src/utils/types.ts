@@ -14,7 +14,7 @@ export interface SubmittedAction {
   movementMap: Record<string, MovementType>;
   movementNumOfCopiesMap: Record<string, number>;
   selectedSubsections: string[];
-  toStudentMap?: Record<string, Student>
+  toStudent: Student;
 }
 
 export interface Subsection {
