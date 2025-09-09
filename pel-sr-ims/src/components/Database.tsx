@@ -22,7 +22,8 @@ export default function Database() {
         const getStudents = async() => {
             setStudents(await loadStudentsFromDB("san-ramon"));
             // console.log(students);
-            setStudentProps((Object.keys(students[0])).sort());
+            const ind = students.findIndex((student) => student.firstName === "Dylan");
+            setStudentProps((Object.keys(students[ind])).sort());
             // console.log((students["subjects_startDate_Map"]));
         };
         getStudents();
@@ -44,16 +45,41 @@ export default function Database() {
             </thead>
             <tbody>
                 {students.map((student: Student) => (
-                    <tr>
+                    <tr key={student.firstName + student.lastName}>
                         {studentProps.map((property: string) => (
-                            <td
-                                onPointerOver={() => {
-                                    console.log(student[property] + " is a string: " + (typeof(student[property]) === "string"))
-                                    console.log(student[property] + " is an Object: " + typeof(student[property]))
-                                }}
-                            >
-                                {student["firstName"] + "'s " + property} 
-                            </td>
+                            // if it's an array, then I want to print the contents.
+                            (Array.isArray(student[property]) && (
+                                <td 
+                                    key={student.firstName + property} 
+                                    className="border border-gray-400 px-2 py-1 text-xs"
+                                >
+                                    {student[property].join(", ")}
+                                </td>
+                            )) ||
+                            ((typeof student[property] === "string") && (
+                                <td 
+                                    key={student.firstName + property} 
+                                    className="border border-gray-400 px-2 py-1 text-xs"
+                                >
+                                    {student[property]}
+                                </td>
+                            )) ||
+                            ((typeof student[property] === "object") && (
+                                <td 
+                                    key={student.firstName + property} 
+                                    className="border border-gray-400 px-2 py-1 text-xs"
+                                >
+                                    This means that it's a map.
+                                </td>
+                            )) ||
+                            ((typeof student[property] === "undefined") && (
+                                <td 
+                                    key={student.firstName + property} 
+                                    className="border border-gray-400 px-2 py-1 text-xs"
+                                >
+                                    This means that it's empty.
+                                </td>
+                            ))
                         ))}
                     </tr>
                 ))}

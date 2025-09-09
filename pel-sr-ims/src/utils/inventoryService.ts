@@ -1,4 +1,4 @@
-import { doc, getDoc, getDocs, setDoc, collection, addDoc, deleteField, updateDoc, query, where } from "firebase/firestore";
+import { doc, getDoc, getDocs, setDoc, collection, addDoc, deleteField, updateDoc, query, where, orderBy, } from "firebase/firestore";
 import { db } from "./firebase";
 import type { LogEntry, SubmittedAction } from "./types";
 import type { InventoryData, Subsection, InsufficientSubsection, Worker, Student} from "./types";
@@ -138,12 +138,13 @@ export async function updateLogFromActions(submittedActions: SubmittedAction[]) 
     for (const range of action.selectedSubsections) {
       const numOfCopies = action.movementNumOfCopiesMap[range];
       const movementAction = action.movementMap[range];
+      const studentFirstName = action.toStudent.firstName
 
       const logEntry: LogEntry = {
         timeStamp: logTime,
         userID: "Mr. Lee",
         eventType: `Adding ${action} To Log`,
-        message: `${numOfCopies} copies of ${action.level} ${range} from ${movementAction}`
+        message: `${numOfCopies} copies of ${action.level} ${range} from ${movementAction} for ${studentFirstName}`
       };
 
       await saveLog(logEntry); // call new version
@@ -226,11 +227,15 @@ export async function determinePacketsNeededToBeOrdered() {
 
 export async function loadStudentsFromDB(place: string) {
   const collectionRef = collection(db,"students", place,"students");  // place = san-ramon
-  const documentSnapshot = await getDocs(collectionRef);
+  const q = query(
+    collectionRef,
+    orderBy("firstName", "asc"),
+  )
+  const querySnapshot = await getDocs(q);
 
   const students: Student[] = [];
 
-  documentSnapshot.forEach((doc) => {
+  querySnapshot.forEach((doc) => {
     const studentData = doc.data();
     students.push(studentData as Student);
   });
@@ -240,7 +245,7 @@ export async function loadStudentsFromDB(place: string) {
 
 export async function addNewStudentToDatabase(place: string, student: Student) {
   const studentsCollectionRef = collection(db,"students", place,"students");
-  await addDoc(studentsCollectionRef, student);
+  await addDoc(studentsCollectionRef, student); // somehow it's not PROPERLY adding subjects startDate
   console.log(student.firstName + student.lastName + " was added.");
 }
 

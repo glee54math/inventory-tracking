@@ -24,7 +24,7 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
     const [father, setFather] = useState("");
     const [mother, setMother] = useState("");
     const [subjectsChecked, setSubjectsChecked] = useState<string[]>([]);
-    const [subjects_startDate_Map, setSubjects_startDate_Map] = useState<Record<string, Date>>({});
+    const [subjects_startDate_Map, setSubjects_startDate_Map] = useState<Record<string, string>>({});   // subject: Date as string.
 
     const handleReset = () => {
         setFirstName("");
@@ -34,6 +34,22 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
         setSubjectsChecked([]);
         setSubjects_startDate_Map({});
     }
+
+    const toggleSubject = (subject: string) => {
+        setSubjectsChecked((prev) => {
+            if (prev.includes(subject)) {
+                // remove subject + cleanup map entry
+                setSubjects_startDate_Map((map) => {
+                    const newMap = { ...map };
+                    delete newMap[subject];
+                    return newMap;
+                });
+                return prev.filter((s) => s !== subject);
+            } else {
+                return [...prev, subject];
+            }
+        });
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault(); // ⛔ prevent page refresh
@@ -62,6 +78,7 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
             </button> */}
             <h1>Add New Student</h1>
             <div className="flex flex-col">
+                {/* First Name */}
                 <label htmlFor="firstName">First Name: </label>
                 <input 
                     type="text" 
@@ -71,6 +88,7 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
                     className="border rounded"
                 />
 
+                {/* Last Name */}
                 <label htmlFor="lastName">Last Name: </label>
                 <input 
                     type="text" 
@@ -79,6 +97,7 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
                     onChange={(e) => setLastName(e.target.value)}
                     className="border rounded" />
 
+                {/* Mother's Name */}
                 <label htmlFor="mothersName">Mother's Name: </label>
                 <input 
                     type="text" 
@@ -88,6 +107,7 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
                     className="border rounded"
                 />
 
+                {/* Father's Name */}
                 <label htmlFor="fathersName">Father's Name: </label>
                 <input 
                     type="text" 
@@ -105,16 +125,21 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
                                 type="checkbox" 
                                 id="math-enrolled"
                                 checked={subjectsChecked.includes("Math")}
-                                onChange={() => setSubjectsChecked((prev) => (
-                                    !prev.includes("Math") ? [...prev,"Math"] : prev.filter(item => item !== "Math")
-                                ))}
+                                onChange={() => toggleSubject("Math")}
                                 className="border rounded mr-1"
                             />
                             <label htmlFor="math-enrolled" className="mr-6">Math</label>
                             {subjectsChecked.includes("Math") &&
                                 <div>
                                     <label htmlFor="math-date-enrolled">Date Enrolled: </label>
-                                    <input type="date" id="math-date-enrolled" className={
+                                    <input 
+                                        type="date" 
+                                        id="math-date-enrolled" 
+                                        onChange={(e) => setSubjects_startDate_Map((prev) => ({
+                                            ...prev,
+                                            "Math": (e.target.value),
+                                        }))}
+                                        className={
                                             `border rounded mx-1 w-1/2}`
                                         } />
                                 </div>
@@ -125,16 +150,21 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
                                 type="checkbox" 
                                 id="english-enrolled"
                                 checked={subjectsChecked.includes("English")}
-                                onChange={() => setSubjectsChecked((prev) => (
-                                    !prev.includes("English") ? [...prev,"English"] : prev.filter(item => item != "English")
-                                ))}
+                                onChange={() => toggleSubject("English")}
                                 className="border rounded mr-1"
                             />
                             <label htmlFor="english-enrolled" className="mr-3">English</label>
                             {subjectsChecked.includes("English") &&
                                 <div>
                                     <label htmlFor="english-date-enrolled">Date Enrolled: </label>
-                                    <input type="date" id="english-date-enrolled" className={
+                                    <input 
+                                        type="date" 
+                                        id="english-date-enrolled" 
+                                        onChange={(e) => setSubjects_startDate_Map((prev) => ({
+                                            ...prev,
+                                            "English": (e.target.value),
+                                        }))}
+                                        className={
                                             `border rounded mx-1 w-1/2}`
                                         } />
                                 </div>

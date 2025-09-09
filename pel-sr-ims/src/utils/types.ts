@@ -51,6 +51,6 @@ export interface Student {
   lastName: string;
   father: string;
   mother: string;
-  subjects_startDate_Map: Record<string, Date>;
+  subjects_startDate_Map: Record<string, string>; // [subject]: Date as string
   hwkAssigned?: string[]; // This will probably be changed 
 }
