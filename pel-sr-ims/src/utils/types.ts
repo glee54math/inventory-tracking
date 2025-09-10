@@ -53,4 +53,5 @@ export interface Student {
   mother: string;
   subjects_startDate_Map: Record<string, string>; // [subject]: Date as string
   hwkAssigned?: string[]; // This will probably be changed 
+  [key: string]: any;
 }
