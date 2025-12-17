@@ -1,7 +1,7 @@
 import type { MovementType, Student, SubmittedAction } from "../utils/types";
 import dataMath from "../assets/dataMath.json";
 import dataEnglish from "../assets/data.json";
-import { loadStudentsFromDB } from "../utils/inventoryService";
+import { loadInventory, loadStudentsFromDB } from "../utils/inventoryService";
 import { useEffect, useState } from "react";
 import { NewStudentForm } from "./NewStudent";
 
@@ -18,6 +18,8 @@ function Action({ index, data, onChange }: ActionProps) {
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student>({} as Student);
   const [newStudentFormPopUp, setNewStudentFormPopUp] = useState<boolean>(false);
+  const [backInventoryValues, setBackInventoryValues] = useState<Record<string, Record<string,number>[]>>({});
+  const [frontInventoryValues, setFrontInventoryValues] = useState<Record<string, Record<string,number>[]>>({});
 
   useEffect(() => {
     const getStudents = async () => {
@@ -25,6 +27,20 @@ function Action({ index, data, onChange }: ActionProps) {
     };
     getStudents();
   }, []);
+
+  const toggleFrontBackInvValues = async (subject: string, level: string) => {
+    // get back and front Inventory values
+    const back = await loadInventory(subject.toLowerCase()+"_back");
+    const front = await loadInventory(subject.toLowerCase()+"_front");
+
+    setBackInventoryValues(back);
+    setFrontInventoryValues(front);
+    // front and backInventory values are in a Record and can be retrieved by map[level]
+    console.log(subject, level); // good
+    console.log(back, front);
+    console.log(backInventoryValues[data.level][0]["count"], frontInventoryValues[data.level][0]["count"]); // this return empty.
+    
+  }
 
   const toggleSubsection = (range: string) => {
     const isSelected = data.selectedSubsections.includes(range);
@@ -126,6 +142,7 @@ function Action({ index, data, onChange }: ActionProps) {
       movementNumOfCopiesMap: {},
       toStudent: {} as Student,
     });
+    // retrieve backend data for level
   };
 
   const handleToStudentChange = (studentName: string) => {
@@ -197,42 +214,59 @@ function Action({ index, data, onChange }: ActionProps) {
             </div>
           }
 
-          {/* Math Level */}
-          {data.subject === "Math" && (
-            <select
-              name="math-Level"
-              id={`math-level-${index}`}
-              value={data.level}
-              onChange={(e) => handleLevelChange(e.target.value)}
-              className="border px-1 py-1 rounded field-sizing-content"
-            >
-              <option value="">Select Level</option>
-              {Object.keys(dataMath).map((level: string) => (
-                <option key={level} value={level}>
-                  {level}
-                </option>
-              ))}
-            </select>
-          )}
+          {/* Subject Level and Inventory Values  */}
+          <div className="flex flex-col item-start gap-1">
+            {/* Math Level */}
+            {data.subject === "Math" && (
+              <select
+                name="math-Level"
+                id={`math-level-${index}`}
+                value={data.level}
+                onChange={(e) => {
+                  handleLevelChange(e.target.value)
+                  toggleFrontBackInvValues("math", e.target.value)
+                }}
+                className="border px-1 py-1 rounded field-sizing-content"
+              >
+                <option value="">Select Level</option>
+                {Object.keys(dataMath).map((level: string) => (
+                  <option key={level} value={level}>
+                    {level}
+                  </option>
+                ))}
+              </select>
+            )}
 
-          {/* English Level */}
-          {data.subject === "English" && (
-            <select
-              name="english-level"
-              id={`english-level-${index}`}
-              value={data.level}
-              onChange={(e) => handleLevelChange(e.target.value)}
-              className="border px-1 py-1 rounded field-sizing-content"
-            >
-              <option value="">Select Level</option>
-              {Object.keys(dataEnglish).map((level: string) => (
-                <option key={level} value={level}>
-                  {level}
-                </option>
-              ))}
-            </select>
-          )}
+            {/* English Level */}
+            {data.subject === "English" && (
+              <select
+                name="english-level"
+                id={`english-level-${index}`}
+                value={data.level}
+                onChange={(e) => handleLevelChange(e.target.value)}
+                className="border px-1 py-1 rounded field-sizing-content"
+              >
+                <option value="">Select Level</option>
+                {Object.keys(dataEnglish).map((level: string) => (
+                  <option key={level} value={level}>
+                    {level}
+                  </option>
+                ))}
+              </select>
+            )}
 
+            {/* Inventory Values
+            {data.level !== "" && (
+              <div className="flex flex-col gap-3 mt-3">
+                {subsections.map((section: string) => (
+                  <p className="text-xs">
+                    {"B: " + backInventoryValues[section] + " F: " + frontInventoryValues[section]}
+                  </p>
+                ))}
+              </div>
+            )} */}
+          </div>
+          
           {/* Subsections */}
           {data.subject && data.level && (
             <div className="flex flex-col gap-2 border p-2 rounded max-h-90 overflow-y-auto">
@@ -299,25 +333,30 @@ function Action({ index, data, onChange }: ActionProps) {
                   {range}
 
                   {data.selectedSubsections.includes(range) && (
-                    <select
-                      name={`${range}-movement-${index}`}
-                      id={`${range}-movement-${index}`}
-                      value={data.movementMap[range] ?? ""}
-                      onChange={(e) => {
-                        updateField("movementMap", {
-                          ...data.movementMap,
-                          [range]: e.target.value as MovementType,
-                        });
-                      }}
-                      className="border rounded"
-                    >
-                      <option value="">Select Movement</option>
-                      {movements.map((movement) => (
-                        <option key={movement} value={movement}>
-                          {movement}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex flex-row whitespace-nowrap">
+                      <p className="text-xs m-1">
+                        {"B: " + backInventoryValues[data.level][(Number(range.substring(0,range.indexOf("-")))-1)/10]["count"] + "  F: " + frontInventoryValues[data.level][(Number(range.substring(0,range.indexOf("-")))-1)/10]["count"]}
+                      </p>
+                      <select
+                        name={`${range}-movement-${index}`}
+                        id={`${range}-movement-${index}`}
+                        value={data.movementMap[range] ?? ""}
+                        onChange={(e) => {
+                          updateField("movementMap", {
+                            ...data.movementMap,
+                            [range]: e.target.value as MovementType,
+                          });
+                        }}
+                        className="border rounded"
+                      >
+                        <option value="">Select Movement</option>
+                        {movements.map((movement) => (
+                          <option key={movement} value={movement}>
+                            {movement}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   )}
 
                   {data.selectedSubsections.includes(range) && (

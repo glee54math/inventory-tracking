@@ -7,7 +7,11 @@ import {
   updateLogFromActions,
 } from "../utils/inventoryService";
 
-function ActionContainer() {
+interface ActionContainerProps {
+  workerName: string;
+}
+
+function ActionContainer({workerName}:ActionContainerProps) {
   const [actionList, setActionList] = useState<SubmittedAction[]>([]);
 
   const createNewAction = () => {
@@ -54,7 +58,7 @@ function ActionContainer() {
     try {
       // Submit to database
       await updateInventoryFromActions(completeActions);
-      await updateLogFromActions(completeActions);
+      await updateLogFromActions(workerName, completeActions);
       for (const action of completeActions) {
         // need to filter the actions that are back/frontToStudent
         const filteredToStudentHWPackets = action.selectedSubsections.filter((range) => {
@@ -87,7 +91,7 @@ function ActionContainer() {
         <div key={index} className="flex items-start gap-2">
           <button
             onClick={() => removeAction(index)}
-            className="ml-4 mr-2 text-black-500 border outline-1 outline-red-500 rounded hover:!bg-red-100"
+            className="ml-2 mr-1 text-black-500 border outline-1 outline-red-500 rounded hover:!bg-red-100"
           >
             X
           </button>

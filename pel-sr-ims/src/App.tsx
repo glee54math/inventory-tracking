@@ -202,7 +202,7 @@ function App() {
                 <h2 className="font-bold mb-2 text-center w-full">Actions</h2>
               </div>
               <div className="max-h-[70vh] flex flex-col">
-                <ActionContainer />
+                <ActionContainer workerName={nameOfWorker}/>
               </div>
             </div>
                   

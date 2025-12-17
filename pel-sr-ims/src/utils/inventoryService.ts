@@ -25,6 +25,8 @@ export async function loadAllInventories() {
 }
 
 export async function loadInventory(subject_Location: string) {
+  // subject_Location: "math_front" | "math_back" | "english_front" | "english_back"
+  // returns {(level: string) --> [ map: {count: # , range: string} ] }
   const docRef = doc(db, 'inventory', subject_Location);
   const docSnap = await getDoc(docRef);
 
@@ -131,7 +133,7 @@ export async function updateInventoryFromActions( submittedActions: SubmittedAct
   }
 }
 
-export async function updateLogFromActions(submittedActions: SubmittedAction[]) {
+export async function updateLogFromActions(workerName: string, submittedActions: SubmittedAction[]) {
   for (const action of submittedActions) {
     const logTime = new Date();
 
@@ -142,9 +144,9 @@ export async function updateLogFromActions(submittedActions: SubmittedAction[]) 
 
       const logEntry: LogEntry = {
         timeStamp: logTime,
-        userID: "Mr. Lee",
+        userID: workerName,
         eventType: `Adding ${action} To Log`,
-        message: `${numOfCopies} copies of ${action.level} ${range} from ${movementAction} for ${studentFirstName}`
+        message: `${numOfCopies} ${numOfCopies===1?"copy":"copies"} of ${action.level} ${range} from ${movementAction} ${studentFirstName?"for "+studentFirstName:""}`
       };
 
       await saveLog(logEntry); // call new version

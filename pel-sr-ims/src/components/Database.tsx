@@ -65,11 +65,16 @@ export default function Database() {
                                 </td>
                             )) ||
                             ((typeof student[property] === "object") && (
+                                // map, needs to be broken down. 
                                 <td 
                                     key={student.firstName + property} 
                                     className="border border-gray-400 px-2 py-1 text-xs"
                                 >
-                                    This means that it's a map.
+                                    {Object.entries(student[property]).map( ([subject, date]) => (
+                                        <div key={subject+"-join-date"}>
+                                            {subject + ": " + date}
+                                        </div>
+                                    ))}
                                 </td>
                             )) ||
                             ((typeof student[property] === "undefined") && (

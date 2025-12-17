@@ -13,6 +13,20 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
     const { nameOfWorker } = useNameContext();
     const [isProfileButtonPressed, setIsProfileButtonPressed] = useState<boolean>(false);
     const profileDropdownRef = useRef<HTMLDivElement|null>(null);
+    const [isLevelsButtonPressed, setIsLevelsButtonPressed] = useState<boolean>(false);
+    const [levelsArray, setLevelsArray] = useState<string[]>(
+        [
+            "MK1", "MK2", "MK3", "MK4",
+            "MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11", 
+            "MM1", "MM2", "MM3", 
+            "MH1", "MH2", "MH3", "MH4", "MH5", "MH6", "MHG", "MHT",
+
+            "EK1", "EK2", "EK3", "EK4", "EK5", 
+            "EG1", "EG1B", "EG2", "EG2B", "EG3", "EG4", "EG5", "EG6", "EG7", "EG8", "EG9", "EG10",
+            "EM1", "EM2", "EM3", "EM4", "EM5",
+            "EH1", "EH2", "EH3", "EH4", "EH5", "EH6",
+        ]
+    );
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -85,6 +99,42 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                         SDB
                     </button>
                 </a>
+            </div>
+
+            {/* Levels */}
+            <div>
+                <p className="text-xs text-center">
+                    All Levels
+                </p>
+                <button
+                    id="level-dropdown-button"
+                    onClick={() => setIsLevelsButtonPressed(!isLevelsButtonPressed)}
+                    className="py-2 w-full !bg-gray-200 hover:!bg-green-300 hover:!border-blue-300"
+                >
+                    Levels
+                </button>
+                {isLevelsButtonPressed && (
+                    <ul id="level-dropdown-button-list" className="absolute mt-2 w-32 max-h-48 overflow-y-auto bg-white border border-gray-300 rounded">
+                        {levelsArray.map((level:string, index) => (
+                            <li 
+                                id={level+"-button-redirect"}
+                                key={level+"-button-redirect"}
+                                className="rounded">
+                                <button
+                                    onClick={() => {
+                                        // return level pressed
+                                        console.log(level + " was pressed on Sidebar.");
+                                        // close the dropdown
+                                        setIsLevelsButtonPressed(false);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm hover:!bg-gray-200 rounded"
+                                >
+                                    {level}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </div>
         </div>
     )
