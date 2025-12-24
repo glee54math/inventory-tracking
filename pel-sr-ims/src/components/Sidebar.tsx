@@ -1,6 +1,7 @@
 // import { useState } from "react";
 import { useState, useRef, useEffect } from "react";
 import { useNameContext } from "./NameContext";
+import { useNavigate } from "react-router-dom";
 
 interface SideBarProps {
     showInventory: boolean;
@@ -10,9 +11,11 @@ interface SideBarProps {
 
 export default function Sidebar({showInventory, toggleInventory, toggleStudentDatabase}: SideBarProps) {
     // const [showSidebar, setShowSidebar] = useState<boolean>(false);
+    const sideBarButtonCSS = "py-2 w-full !bg-gray-200 hover:!bg-green-300 hover:!border-blue-300";
     const { nameOfWorker } = useNameContext();
     const [isProfileButtonPressed, setIsProfileButtonPressed] = useState<boolean>(false);
     const profileDropdownRef = useRef<HTMLDivElement|null>(null);
+    const levelsDropdownRef = useRef<HTMLDivElement | null>(null);
     const [isLevelsButtonPressed, setIsLevelsButtonPressed] = useState<boolean>(false);
     const [levelsArray, setLevelsArray] = useState<string[]>(
         [
@@ -27,19 +30,29 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
             "EH1", "EH2", "EH3", "EH4", "EH5", "EH6",
         ]
     );
+    const navigate = useNavigate();
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-          if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
-            setIsProfileButtonPressed(false);
-          }
+            const mouseTarget = event.target as Node;
+        
+            // profile dropdown
+            if (profileDropdownRef.current && !profileDropdownRef.current.contains(mouseTarget)) {
+                setIsProfileButtonPressed(false);
+            }
+
+            // levelSelection dropdown
+            if (levelsDropdownRef.current && !levelsDropdownRef.current.contains(mouseTarget)) {
+                setIsLevelsButtonPressed(false);
+            }
+
         };
         document.addEventListener('mousedown', handleClickOutside);
 
         return () => {
           document.removeEventListener('mousedown', handleClickOutside);
         };
-      }, [profileDropdownRef]);
+      }, []);
 
     return (
         <div
@@ -52,7 +65,7 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                 </p>
                 <button 
                     onClick={() => setIsProfileButtonPressed(!isProfileButtonPressed)}
-                    className="w-full !bg-gray-200 px-3 py-2 border outline-1 outline-gray-200 rounded hover:!bg-green-300"
+                    className={sideBarButtonCSS}
                 >
                     {nameOfWorker}
                 </button>
@@ -77,7 +90,7 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                 <button
                     id="Inventory"
                     onClick={toggleInventory}
-                    className="py-2 w-full !bg-gray-200 hover:!bg-green-300 hover:!border-blue-300"
+                    className={sideBarButtonCSS}
                     title={showInventory ? "Hide" : "Show"}
                 >
                     {/* {showInventory ? "Hide" : "Show"} */}
@@ -94,7 +107,7 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                     <button
                         id="student-database"
                         onClick={toggleStudentDatabase}
-                        className="py-2 w-full !bg-gray-200 hover:!bg-green-300 hover:!border-blue-300"
+                        className={sideBarButtonCSS}
                     >
                         SDB
                     </button>
@@ -102,14 +115,14 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
             </div>
 
             {/* Levels */}
-            <div>
+            <div id="levels-dropdown" ref={levelsDropdownRef} className="mb-3">
                 <p className="text-xs text-center">
                     All Levels
                 </p>
                 <button
                     id="level-dropdown-button"
                     onClick={() => setIsLevelsButtonPressed(!isLevelsButtonPressed)}
-                    className="py-2 w-full !bg-gray-200 hover:!bg-green-300 hover:!border-blue-300"
+                    className={sideBarButtonCSS}
                 >
                     Levels
                 </button>
@@ -124,6 +137,7 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                                     onClick={() => {
                                         // return level pressed
                                         console.log(level + " was pressed on Sidebar.");
+                                        navigate(`/levels/${level}`);
                                         // close the dropdown
                                         setIsLevelsButtonPressed(false);
                                     }}
@@ -135,6 +149,19 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                         ))}
                     </ul>
                 )}
+            </div>
+
+            {/* Presentation */}
+            <div id="presentation-slides" className="mb-3 w-full mx-1/2">
+                <p id="presentation-slides-text-on-top-of-button" className="text-xs text-center">
+                    Presentation 
+                </p>
+                <button
+                    // Will go to slides; different tsx files that link together
+                    className={sideBarButtonCSS}
+                >
+                    Slides
+                </button>
             </div>
         </div>
     )

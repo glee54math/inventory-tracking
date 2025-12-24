@@ -19,6 +19,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "./utils/firebase";
 import { useNameContext } from "./components/NameContext";
 import Database from "./components/Database";
+import AppRoutes from "./routes/AppRoutes";
 
 type InventoryType =
   | "Back Math"
@@ -223,6 +224,7 @@ function App() {
           </div>
         </div>
       )}
+      {/* <AppRoutes /> */}
     </div>
   );
 }
