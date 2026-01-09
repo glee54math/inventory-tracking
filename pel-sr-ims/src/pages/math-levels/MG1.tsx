@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 export interface TenFrameProps {
   filled: number | null;
+  inputBox?: boolean;
   total?: number;
   interactive?: boolean;
   onCountChange?: (count: number) => void;
@@ -22,6 +23,7 @@ export interface TenFrameProps {
 
 export const TenFrame: React.FC<TenFrameProps> = ({
   filled,
+  inputBox = false,
   total = 10,
   interactive = false,
   onCountChange,
@@ -60,7 +62,7 @@ export const TenFrame: React.FC<TenFrameProps> = ({
 
   const displayCount = filled !== null ? filled : count;
   const isCorrect = correctAnswer !== undefined && displayCount === correctAnswer;
-//   const isIncorrect = correctAnswer !== undefined && displayCount !== correctAnswer;
+  const isIncorrect = correctAnswer !== undefined && displayCount !== correctAnswer;
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -99,7 +101,7 @@ export const TenFrame: React.FC<TenFrameProps> = ({
       </div>
 
       {/* Input box for non-interactive mode */}
-      {!interactive && filled === null && (
+      {!interactive && inputBox && (
         <input
           type="text"
           value={inputValue}
@@ -172,7 +174,8 @@ const TenFrameDemo: React.FC = () => {
                 {showFeedback ? 'Hide' : 'Check'} Answer
               </button>
               <TenFrame 
-                filled={null} 
+                filled={7}
+                inputBox={true} 
                 size="lg" 
                 showFeedback={showFeedback}
                 correctAnswer={8}
