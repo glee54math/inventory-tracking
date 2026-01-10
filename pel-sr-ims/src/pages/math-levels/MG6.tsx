@@ -193,73 +193,159 @@ export const TapeDiagram: React.FC<TapeDiagramProps> = ({
 // DEMO COMPONENT
 // ============================================================================
 
-const MathDiagramDemo: React.FC = () => {
-    const [showFeedback] = useState(false);
-  
-    const [tapeExample, setTapeExample] = useState<'example1' | 'example2' | 'example3'>('example1');
+const TapeDiagramDemo: React.FC = () => {
+  const [showFeedback1, setShowFeedback1] = useState(false);
+  const [showFeedback2, setShowFeedback2] = useState(false);
+  const [showFeedback3, setShowFeedback3] = useState(false);
 
-    const tapeExamples = {
-        example1: { parts: [5, 3, null], total: 10, labels: [] },
-        example2: { parts: [null, 4, 6, 2], total: 15, labels: ['A', 'B', 'C', 'D'] },
-        example3: { parts: [10, 20, 15], total: null, labels: ['Week 1', 'Week 2', 'Week 3'] }
-    };
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">Tape Diagram Component</h1>
+        <p className="text-gray-600 mb-8">Visual model for part-whole relationships and addition</p>
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8">
-            <div className="max-w-4xl mx-auto">
-                {/* Tape Diagram Controls */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                    <h2 className="text-xl font-semibold mb-4">Tape Diagram Controls</h2>
-          
-                    <div className="flex gap-4 mb-4">
-                        <button
-                            onClick={() => setTapeExample('example1')}
-                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                                tapeExample === 'example1' 
-                                ? '!bg-purple-500 !text-white' 
-                                : '!bg-gray-200 !text-gray-700 !hover:bg-gray-300'
-                            }`}
-                            >
-                            3 Parts
-                        </button>
-                        <button
-                            onClick={() => setTapeExample('example2')}
-                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                                tapeExample === 'example2' 
-                                ? '!bg-purple-500 !text-white' 
-                                : '!bg-gray-200 !text-gray-700 !hover:bg-gray-300'
-                            }`}
-                            >
-                            4 Parts + Labels
-                        </button>
-                        <button
-                            onClick={() => setTapeExample('example3')}
-                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                                tapeExample === 'example3' 
-                                ? '!bg-purple-500 !text-white' 
-                                : '!bg-gray-200 !text-gray-700 !hover:bg-gray-300'
-                            }`}
-                        >
-                            Find Total
-                        </button>
-                    </div>
-                </div>
-
-                {/* Tape Diagram */}
-                <div className="bg-white rounded-lg shadow-md p-8 mb-8">
-                    <h2 className="text-2xl font-semibold mb-6 text-center">Tape Diagram</h2>
-                    
-                    <TapeDiagram
-                        parts={tapeExamples[tapeExample].parts}
-                        total={tapeExamples[tapeExample].total}
-                        labels={tapeExamples[tapeExample].labels}
-                        showFeedback={showFeedback}
-                        size="lg"
-                    />
-                </div>
-            </div>
+        {/* Example 1: 3 Parts */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-2xl font-semibold mb-4">Example 1: Find Missing Part (3 Parts)</h3>
+          <p className="text-gray-600 mb-4">Find the missing part when total is known</p>
+          <div className="flex justify-center mb-4">
+            <button
+              onClick={() => setShowFeedback1(!showFeedback1)}
+              className="px-6 py-2 !bg-green-500 text-white rounded-lg font-medium 
+                hover:bg-green-600 transition-colors"
+            >
+              {showFeedback1 ? 'Hide' : 'Check'} Answer
+            </button>
+          </div>
+          <TapeDiagram
+            parts={[5, 3, null]}
+            total={10}
+            showFeedback={showFeedback1}
+            size="lg"
+          />
         </div>
-    );
-}
 
-export default MathDiagramDemo;
+        {/* Example 2: 4 Parts + Labels */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-2xl font-semibold mb-4">Example 2: With Labels (4 Parts)</h3>
+          <p className="text-gray-600 mb-4">Multiple parts with custom labels</p>
+          <div className="flex justify-center mb-4">
+            <button
+              onClick={() => setShowFeedback2(!showFeedback2)}
+              className="px-6 py-2 !bg-green-500 text-white rounded-lg font-medium 
+                hover:bg-green-600 transition-colors"
+            >
+              {showFeedback2 ? 'Hide' : 'Check'} Answer
+            </button>
+          </div>
+          <TapeDiagram
+            parts={[null, 4, 6, 2]}
+            total={15}
+            labels={['A', 'B', 'C', 'D']}
+            showFeedback={showFeedback2}
+            size="lg"
+          />
+        </div>
+
+        {/* Example 3: Find Total */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-2xl font-semibold mb-4">Example 3: Find Total</h3>
+          <p className="text-gray-600 mb-4">All parts known, find the total sum</p>
+          <div className="flex justify-center mb-4">
+            <button
+              onClick={() => setShowFeedback3(!showFeedback3)}
+              className="px-6 py-2 !bg-green-500 text-white rounded-lg font-medium 
+                hover:bg-green-600 transition-colors"
+            >
+              {showFeedback3 ? 'Hide' : 'Check'} Answer
+            </button>
+          </div>
+          <TapeDiagram
+            parts={[10, 20, 15]}
+            total={null}
+            labels={['Week 1', 'Week 2', 'Week 3']}
+            showFeedback={showFeedback3}
+            size="lg"
+          />
+        </div>
+
+        {/* Features List */}
+        <div className="mt-8 bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold mb-4">Component Features</h2>
+          <ul className="space-y-2 text-gray-700">
+            <li>✅ <strong>Variable number of parts</strong> - Any number of sections</li>
+            <li>✅ <strong>Optional labels</strong> - Add custom labels below each part</li>
+            <li>✅ <strong>Show/hide total</strong> - Toggle total bracket display</li>
+            <li>✅ <strong>Find unknown parts or total</strong> - Flexible problem types</li>
+            <li>✅ <strong>Visual feedback</strong> - Green for correct, red for incorrect</li>
+            <li>✅ <strong>Automatic validation</strong> - Calculates correct answers</li>
+            <li>✅ <strong>Size variants</strong> - sm, md, lg sizes available</li>
+            <li>✅ <strong>TypeScript types exported</strong> - Full type safety</li>
+          </ul>
+        </div>
+
+        {/* Usage Examples */}
+        <div className="mt-8 bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold mb-4">Usage Examples</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-semibold mb-2">Example 1: Find Missing Part (3 Parts)</h3>
+              <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
+{`<TapeDiagram
+  parts={[5, 3, null]}  // null = input box
+  total={10}
+  showFeedback={showFeedback}
+  size="lg"
+/>`}
+              </pre>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-2">Example 2: With Labels (4 Parts)</h3>
+              <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
+{`<TapeDiagram
+  parts={[null, 4, 6, 2]}
+  total={15}
+  labels={['A', 'B', 'C', 'D']}
+  showFeedback={showFeedback}
+  size="lg"
+/>`}
+              </pre>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-2">Example 3: Find Total</h3>
+              <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
+{`<TapeDiagram
+  parts={[10, 20, 15]}
+  total={null}  // null = input box for total
+  labels={['Week 1', 'Week 2', 'Week 3']}
+  showFeedback={showFeedback}
+  size="lg"
+/>`}
+              </pre>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-2">Props Reference</h3>
+              <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
+{`interface TapeDiagramProps {
+  parts: (number | null)[];    // Array of values, null for input
+  total?: number | null;        // Total value, null for input
+  showTotal?: boolean;          // Show/hide total bracket
+  labels?: string[];            // Optional labels for each part
+  onAnswerChange?: (value: string, index: number) => void;
+  showFeedback?: boolean;       // Show green/red feedback
+  size?: 'sm' | 'md' | 'lg';   // Component size
+}`}
+              </pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TapeDiagramDemo;
