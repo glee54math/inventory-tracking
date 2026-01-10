@@ -52,7 +52,6 @@ export const TenFrame: React.FC<TenFrameProps> = ({
   const handleCellClick = (index: number) => {
     if (!interactive) return;
     
-    // const newCount = index < count ? index + 1 : count === index ? count - 1 : index + 1;
     const newCount = count === (index + 1) ? 0 : (index + 1);
     const finalCount = Math.max(0, Math.min(total, newCount));
     
@@ -60,9 +59,15 @@ export const TenFrame: React.FC<TenFrameProps> = ({
     onCountChange?.(finalCount);
   };
 
-  const displayCount = filled !== null ? filled : count;
-  const isCorrect = correctAnswer !== undefined && displayCount === correctAnswer;
-  const isIncorrect = correctAnswer !== undefined && displayCount !== correctAnswer;
+  // For input mode, use the filled prop to display
+  // For interactive mode, use the count state
+  const displayCount = inputBox ? (filled ?? 0) : (filled !== null ? filled : count);
+  
+  // For input mode, check against the input value
+  // For interactive mode, check against the count
+  const userAnswer = inputBox ? (inputValue ? parseInt(inputValue) : null) : count;
+  const isCorrect = correctAnswer !== undefined && userAnswer !== null && userAnswer === correctAnswer;
+  const isIncorrect = correctAnswer !== undefined && userAnswer !== null && userAnswer !== correctAnswer;
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -72,7 +77,9 @@ export const TenFrame: React.FC<TenFrameProps> = ({
           showFeedback && correctAnswer !== undefined
             ? isCorrect
               ? 'ring-4 ring-green-500'
-              : 'ring-4 ring-red-500'
+              : isIncorrect 
+                ? 'ring-4 ring-red-500'
+                : ''
             : ''
         }`}
         style={{
@@ -100,8 +107,8 @@ export const TenFrame: React.FC<TenFrameProps> = ({
         })}
       </div>
 
-      {/* Input box for non-interactive mode */}
-      {!interactive && inputBox && (
+      {/* Input box for input mode */}
+      {inputBox && !interactive && (
         <input
           type="text"
           value={inputValue}
@@ -109,10 +116,6 @@ export const TenFrame: React.FC<TenFrameProps> = ({
             const val = e.target.value;
             if (val === '' || /^\d+$/.test(val)) {
               setInputValue(val);
-              const numVal = parseInt(val) || 0;
-              if (numVal <= total) {
-                setCount(numVal);
-              }
             }
           }}
           className={`w-20 text-center text-2xl font-semibold border-2 border-gray-800 rounded px-2 py-2
@@ -130,9 +133,16 @@ export const TenFrame: React.FC<TenFrameProps> = ({
 
       {/* Count display for interactive mode */}
       {interactive && (
-        <div className="text-3xl font-bold text-gray-800">
-          {displayCount}
-        </div>
+        <>
+          <div className="text-3xl font-bold text-gray-800">
+            {count}
+          </div>
+          {correctAnswer !== undefined && (
+            <p className="text-center text-gray-600">
+              Select {correctAnswer} {correctAnswer === 1 ? 'box' : 'boxes'}.
+            </p>
+          )}
+        </>
       )}
     </div>
   );
@@ -143,8 +153,9 @@ export const TenFrame: React.FC<TenFrameProps> = ({
 // ============================================================================
 
 const TenFrameDemo: React.FC = () => {
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [interactiveCount, setInteractiveCount] = useState(7);
+  const [showFeedbackInput, setShowFeedbackInput] = useState(false);
+  const [showFeedbackInteractive, setShowFeedbackInteractive] = useState(false);
+  const [interactiveCount, setInteractiveCount] = useState(0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8">
@@ -164,39 +175,48 @@ const TenFrameDemo: React.FC = () => {
           {/* Input Mode */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-semibold mb-4">Input Mode</h2>
-            <p className="text-gray-600 mb-4">Student fills in the answer</p>
+            <p className="text-gray-600 mb-4">Student sees the counters and types the answer</p>
             <div className="flex flex-col items-center">
               <button
-                onClick={() => setShowFeedback(!showFeedback)}
-                className="mb-4 px-4 py-2 bg-green-500 text-white rounded-lg font-medium 
+                onClick={() => setShowFeedbackInput(!showFeedbackInput)}
+                className="mb-4 px-4 py-2 !bg-green-500 !text-white rounded-lg font-medium 
                   hover:bg-green-600 transition-colors"
               >
-                {showFeedback ? 'Hide' : 'Check'} Answer
+                {showFeedbackInput ? 'Hide' : 'Check'} Answer
               </button>
               <TenFrame 
-                filled={7}
+                filled={8}
                 inputBox={true} 
                 size="lg" 
-                showFeedback={showFeedback}
+                showFeedback={showFeedbackInput}
                 correctAnswer={8}
               />
-              <p className="text-center mt-4 text-gray-600">How many counters? (Answer: 8)</p>
+              <p className="text-center mt-4 text-gray-600">How many counters?</p>
             </div>
           </div>
 
           {/* Interactive Mode */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-semibold mb-4">Interactive Mode</h2>
-            <p className="text-gray-600 mb-4">Click cells to add/remove counters</p>
-            <TenFrame 
-              filled={interactiveCount}
-              interactive={true}
-              fillColor='bg-blue-300'
-              onCountChange={setInteractiveCount}
-              showFeedback={showFeedback}
-              correctAnswer={7}
-              size="lg"
-            />
+            <p className="text-gray-600 mb-4">Click cells to select counters</p>
+            <div className="flex flex-col items-center">
+              <button
+                onClick={() => setShowFeedbackInteractive(!showFeedbackInteractive)}
+                className="mb-4 px-4 py-2 !bg-green-500 !text-white rounded-lg font-medium 
+                  !hover:bg-green-600 transition-colors"
+              >
+                {showFeedbackInteractive ? 'Hide' : 'Check'} Answer
+              </button>
+              <TenFrame 
+                filled={interactiveCount}
+                interactive={true}
+                fillColor='bg-blue-400'
+                onCountChange={setInteractiveCount}
+                showFeedback={showFeedbackInteractive}
+                correctAnswer={7}
+                size="lg"
+              />
+            </div>
           </div>
 
           {/* Different Colors */}
@@ -205,11 +225,11 @@ const TenFrameDemo: React.FC = () => {
             <p className="text-gray-600 mb-4">Different counter colors</p>
             <div className="space-y-4">
               <div className="flex flex-col items-center">
-                <TenFrame filled={5} size="md" fillColor="!bg-blue-500" />
+                <TenFrame filled={5} size="md" fillColor="bg-blue-500" />
                 <p className="text-sm text-gray-600 mt-2">Blue counters</p>
               </div>
               <div className="flex flex-col items-center">
-                <TenFrame filled={9} size="md" fillColor="!bg-green-500" />
+                <TenFrame filled={9} size="md" fillColor="bg-green-500" />
                 <p className="text-sm text-gray-600 mt-2">Green counters</p>
               </div>
             </div>
