@@ -178,8 +178,9 @@ export const NumberLine: React.FC<NumberLineProps> = ({
     return (
       <g 
         key={`marker-${index}`}
-        className={isDraggable ? 'cursor-move' : ''}
+        className={isDraggable ? 'cursor-move select-none' : 'select-none'}
         onMouseDown={() => isDraggable && handleMouseDown(marker.id!)}
+        style={{ userSelect: 'none' }}
       >
         {shape === 'circle' && (
           <circle
@@ -218,7 +219,7 @@ export const NumberLine: React.FC<NumberLineProps> = ({
             x={x}
             y={y - dims.markerSize - 8}
             textAnchor="middle"
-            className={`font-semibold ${dims.fontSize} pointer-events-none`}
+            className={`font-semibold ${dims.fontSize} pointer-events-none select-none`}
             fill={color}
           >
             {marker.label}
@@ -242,7 +243,7 @@ export const NumberLine: React.FC<NumberLineProps> = ({
     const controlY = y - 20;
 
     return (
-      <g key={`jump-${index}`}>
+      <g key={`jump-${index}`} className="select-none" style={{ userSelect: 'none' }}>
         {curved ? (
           <>
             <path
@@ -279,7 +280,7 @@ export const NumberLine: React.FC<NumberLineProps> = ({
             x={midX}
             y={controlY - 5}
             textAnchor="middle"
-            className={`font-semibold ${dims.fontSize}`}
+            className={`font-semibold ${dims.fontSize} pointer-events-none select-none`}
             fill={color}
           >
             {jump.label}
@@ -339,7 +340,8 @@ export const NumberLine: React.FC<NumberLineProps> = ({
         ref={svgRef}
         width={dims.width} 
         height={dims.height}
-        className={interactive ? 'cursor-pointer' : ''}
+        className={`${interactive ? 'cursor-pointer' : ''} ${draggedMarkerId ? 'select-none' : ''}`}
+        style={{ userSelect: draggedMarkerId ? 'none' : 'auto' }}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
@@ -392,7 +394,7 @@ export const NumberLine: React.FC<NumberLineProps> = ({
                     textAnchor="middle"
                     className={`font-semibold ${dims.fontSize} ${
                       isHighlighted ? 'fill-blue-600' : 'fill-gray-700'
-                    }`}
+                    } pointer-events-none select-none`}
                   >
                     {value}
                   </text>
@@ -421,13 +423,13 @@ export const NumberLine: React.FC<NumberLineProps> = ({
 
       {/* Equation display */}
       {showEquation && (
-        <div className="text-2xl font-bold text-gray-800">
+        <div className="text-2xl font-bold text-gray-800 select-none">
           {calculateEquation()}
         </div>
       )}
 
       {interactive && (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 select-none">
           {draggedMarkerId ? 'Drag to move the marker' : 'Click and drag the markers'}
         </p>
       )}
