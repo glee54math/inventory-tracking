@@ -303,7 +303,7 @@ const PartPartWholeDemo: React.FC = () => {
           <div className="flex justify-center mb-4">
             <button
               onClick={() => setShowFeedback1(!showFeedback1)}
-              className="px-6 py-2 bg-green-500 text-white rounded-lg font-medium 
+              className="px-6 py-2 !bg-green-500 text-white rounded-lg font-medium 
                 hover:bg-green-600 transition-colors"
             >
               {showFeedback1 ? 'Hide' : 'Check'} Answer
@@ -324,7 +324,7 @@ const PartPartWholeDemo: React.FC = () => {
           <div className="flex justify-center mb-4">
             <button
               onClick={() => setShowFeedback2(!showFeedback2)}
-              className="px-6 py-2 bg-green-500 text-white rounded-lg font-medium 
+              className="px-6 py-2 !bg-green-500 text-white rounded-lg font-medium 
                 hover:bg-green-600 transition-colors"
             >
               {showFeedback2 ? 'Hide' : 'Check'} Answer
@@ -345,7 +345,7 @@ const PartPartWholeDemo: React.FC = () => {
           <div className="flex justify-center mb-4">
             <button
               onClick={() => setShowFeedback3(!showFeedback3)}
-              className="px-6 py-2 bg-green-500 text-white rounded-lg font-medium 
+              className="px-6 py-2 !bg-green-500 text-white rounded-lg font-medium 
                 hover:bg-green-600 transition-colors"
             >
               {showFeedback3 ? 'Hide' : 'Check'} Answer
