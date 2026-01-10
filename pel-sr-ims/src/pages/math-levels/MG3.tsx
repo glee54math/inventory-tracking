@@ -102,7 +102,7 @@ export const MathInput: React.FC<MathInputProps> = ({
 };
 
 // ============================================================================
-// DIAGRAM COMPONENTS
+// PART-PART-WHOLE COMPONENT
 // ============================================================================
 
 export const PartPartWhole: React.FC<PartPartWholeProps> = ({
@@ -178,77 +178,104 @@ export const PartPartWhole: React.FC<PartPartWholeProps> = ({
     onAnswerChange?.(value, position);
   };
 
+  // Get display values for equation
+  const getDisplayValue = (position: 'whole' | 'part1' | 'part2'): string => {
+    if (position === 'whole') {
+      return whole !== null ? whole.toString() : (wholeInput || '?');
+    }
+    if (position === 'part1') {
+      return part1 !== null ? part1.toString() : (part1Input || '?');
+    }
+    if (position === 'part2') {
+      return part2 !== null ? part2.toString() : (part2Input || '?');
+    }
+    return '?';
+  };
+
   return (
-    <div ref={containerRef} className="relative flex flex-col items-center p-8">
-      {/* SVG for connecting lines */}
-      {lineCoords && (
-        <svg className="absolute inset-0 w-full h-full pointer-events-none">
-          {/* Line from whole (6 o'clock) to part1 (12 o'clock) */}
-          <line 
-            x1={lineCoords.whole.x}
-            y1={lineCoords.whole.y}
-            x2={lineCoords.part1.x}
-            y2={lineCoords.part1.y}
-            stroke="#1f2937" 
-            strokeWidth="2"
-          />
-          {/* Line from whole (6 o'clock) to part2 (12 o'clock) */}
-          <line 
-            x1={lineCoords.whole.x}
-            y1={lineCoords.whole.y}
-            x2={lineCoords.part2.x}
-            y2={lineCoords.part2.y}
-            stroke="#1f2937" 
-            strokeWidth="2"
-          />
-        </svg>
-      )}
-
-      {/* Whole (top) */}
-      <div ref={wholeRef} className="mb-16" style={{ zIndex: 1 }}>
-        {whole === null ? (
-          <MathInput
-            value={wholeInput}
-            onChange={(val) => handleInputChange(val, 'whole')}
-            correctAnswer={getCorrectAnswer('whole')}
-            showFeedback={showFeedback}
-            size={size}
-          />
-        ) : (
-          <CircleNode value={whole} size={size} />
+    <div>
+      <div ref={containerRef} className="relative flex flex-col items-center p-8">
+        {/* SVG for connecting lines */}
+        {lineCoords && (
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            {/* Line from whole (6 o'clock) to part1 (12 o'clock) */}
+            <line 
+              x1={lineCoords.whole.x}
+              y1={lineCoords.whole.y}
+              x2={lineCoords.part1.x}
+              y2={lineCoords.part1.y}
+              stroke="#1f2937" 
+              strokeWidth="2"
+            />
+            {/* Line from whole (6 o'clock) to part2 (12 o'clock) */}
+            <line 
+              x1={lineCoords.whole.x}
+              y1={lineCoords.whole.y}
+              x2={lineCoords.part2.x}
+              y2={lineCoords.part2.y}
+              stroke="#1f2937" 
+              strokeWidth="2"
+            />
+          </svg>
         )}
-      </div>
 
-      {/* Parts (bottom) */}
-      <div className="flex gap-12" style={{ zIndex: 1 }}>
-        {/* Part 1 */}
-        <div ref={part1Ref}>
-          {part1 === null ? (
+        {/* Whole (top) */}
+        <div ref={wholeRef} className="mb-16" style={{ zIndex: 1 }}>
+          {whole === null ? (
             <MathInput
-              value={part1Input}
-              onChange={(val) => handleInputChange(val, 'part1')}
-              correctAnswer={getCorrectAnswer('part1')}
+              value={wholeInput}
+              onChange={(val) => handleInputChange(val, 'whole')}
+              correctAnswer={getCorrectAnswer('whole')}
               showFeedback={showFeedback}
               size={size}
             />
           ) : (
-            <CircleNode value={part1} size={size} />
+            <CircleNode value={whole} size={size} />
           )}
         </div>
 
-        {/* Part 2 */}
-        <div ref={part2Ref}>
-          {part2 === null ? (
-            <MathInput
-              value={part2Input}
-              onChange={(val) => handleInputChange(val, 'part2')}
-              correctAnswer={getCorrectAnswer('part2')}
-              showFeedback={showFeedback}
-              size={size}
-            />
-          ) : (
-            <CircleNode value={part2} size={size} />
-          )}
+        {/* Parts (bottom) */}
+        <div className="flex gap-12" style={{ zIndex: 1 }}>
+          {/* Part 1 */}
+          <div ref={part1Ref}>
+            {part1 === null ? (
+              <MathInput
+                value={part1Input}
+                onChange={(val) => handleInputChange(val, 'part1')}
+                correctAnswer={getCorrectAnswer('part1')}
+                showFeedback={showFeedback}
+                size={size}
+              />
+            ) : (
+              <CircleNode value={part1} size={size} />
+            )}
+          </div>
+
+          {/* Part 2 */}
+          <div ref={part2Ref}>
+            {part2 === null ? (
+              <MathInput
+                value={part2Input}
+                onChange={(val) => handleInputChange(val, 'part2')}
+                correctAnswer={getCorrectAnswer('part2')}
+                showFeedback={showFeedback}
+                size={size}
+              />
+            ) : (
+              <CircleNode value={part2} size={size} />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Equation Display */}
+      <div className="mt-4 text-center">
+        <div className="inline-flex items-center gap-3 text-3xl font-semibold">
+          <span>{getDisplayValue('part1')}</span>
+          <span>+</span>
+          <span>{getDisplayValue('part2')}</span>
+          <span>=</span>
+          <span>{getDisplayValue('whole')}</span>
         </div>
       </div>
     </div>
@@ -259,90 +286,78 @@ export const PartPartWhole: React.FC<PartPartWholeProps> = ({
 // DEMO COMPONENT
 // ============================================================================
 
-const MathDiagramDemo: React.FC = () => {
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [example, setExample] = useState<'part2' | 'part1' | 'whole'>('part2');
-
-  const examples = {
-    part2: { whole: 12, part1: 10, part2: null },
-    part1: { whole: 15, part1: null, part2: 7 },
-    whole: { whole: null, part1: 8, part2: 5 }
-  };
+const PartPartWholeDemo: React.FC = () => {
+  const [showFeedback1, setShowFeedback1] = useState(false);
+  const [showFeedback2, setShowFeedback2] = useState(false);
+  const [showFeedback3, setShowFeedback3] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">Math Diagram Components</h1>
-        <p className="text-gray-600 mb-8">Reusable, scalable components for K-12 math problems</p>
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">Part-Part-Whole Component</h1>
+        <p className="text-gray-600 mb-8">Visual model for addition and part-whole relationships</p>
 
-        {/* Controls */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Controls</h2>
-          
-          <div className="flex gap-4 mb-4">
+        {/* Find Part 2 */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-2xl font-semibold mb-4">Example 1: Find Part 2</h3>
+          <div className="flex justify-center mb-4">
             <button
-              onClick={() => setExample('part2')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                example === 'part2' 
-                  ? '!bg-blue-500 !text-white' 
-                  : '!bg-gray-200 !text-gray-700 !hover:bg-gray-300'
-              }`}
+              onClick={() => setShowFeedback1(!showFeedback1)}
+              className="px-6 py-2 bg-green-500 text-white rounded-lg font-medium 
+                hover:bg-green-600 transition-colors"
             >
-              Find Part 2
-            </button>
-            <button
-              onClick={() => setExample('part1')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                example === 'part1' 
-                  ? '!bg-blue-500 !text-white' 
-                  : '!bg-gray-200 !text-gray-700 !hover:bg-gray-300'
-              }`}
-            >
-              Find Part 1
-            </button>
-            <button
-              onClick={() => setExample('whole')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                example === 'whole' 
-                  ? '!bg-blue-500 !text-white' 
-                  : '!bg-gray-200 !text-gray-700 !hover:bg-gray-300'
-              }`}
-            >
-              Find Whole
+              {showFeedback1 ? 'Hide' : 'Check'} Answer
             </button>
           </div>
-
-          <button
-            onClick={() => setShowFeedback(!showFeedback)}
-            className="px-6 py-2 !bg-green-500 !text-white rounded-lg font-medium 
-              !hover:bg-green-600 transition-colors"
-          >
-            {showFeedback ? 'Hide' : 'Check'} Answer
-          </button>
-        </div>
-
-        {/* Part-Part-Whole Diagram */}
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <h2 className="text-2xl font-semibold mb-6 text-center">Part-Part-Whole Model</h2>
-          
           <PartPartWhole
-            whole={examples[example].whole}
-            part1={examples[example].part1}
-            part2={examples[example].part2}
-            showFeedback={showFeedback}
+            whole={12}
+            part1={10}
+            part2={null}
+            showFeedback={showFeedback1}
             size="lg"
           />
+        </div>
 
-          {/* Equation Display */}
-          <div className="mt-8 text-center">
-            <div className="inline-flex items-center gap-3 text-3xl font-semibold">
-              <span>{examples[example].part1 ?? '?'}</span>
-              <span>+</span>
-              <span>{examples[example].part2 ?? '?'}</span>
-              <span>=</span>
-              <span>{examples[example].whole ?? '?'}</span>
-            </div>
+        {/* Find Part 1 */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-2xl font-semibold mb-4">Example 2: Find Part 1</h3>
+          <div className="flex justify-center mb-4">
+            <button
+              onClick={() => setShowFeedback2(!showFeedback2)}
+              className="px-6 py-2 bg-green-500 text-white rounded-lg font-medium 
+                hover:bg-green-600 transition-colors"
+            >
+              {showFeedback2 ? 'Hide' : 'Check'} Answer
+            </button>
           </div>
+          <PartPartWhole
+            whole={15}
+            part1={null}
+            part2={7}
+            showFeedback={showFeedback2}
+            size="lg"
+          />
+        </div>
+
+        {/* Find Whole */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-2xl font-semibold mb-4">Example 3: Find Whole</h3>
+          <div className="flex justify-center mb-4">
+            <button
+              onClick={() => setShowFeedback3(!showFeedback3)}
+              className="px-6 py-2 bg-green-500 text-white rounded-lg font-medium 
+                hover:bg-green-600 transition-colors"
+            >
+              {showFeedback3 ? 'Hide' : 'Check'} Answer
+            </button>
+          </div>
+          <PartPartWhole
+            whole={null}
+            part1={8}
+            part2={5}
+            showFeedback={showFeedback3}
+            size="lg"
+          />
         </div>
 
         {/* Usage Instructions */}
@@ -353,14 +368,29 @@ const MathDiagramDemo: React.FC = () => {
             <li>✅ <strong>Automatic validation</strong> - Calculates correct answer based on known values</li>
             <li>✅ <strong>Visual feedback</strong> - Green for correct, red for incorrect</li>
             <li>✅ <strong>Number-only inputs</strong> - Validates input to numbers only</li>
+            <li>✅ <strong>Live equation updates</strong> - Shows user input in real-time</li>
             <li>✅ <strong>Size variants</strong> - sm, md, lg sizes available</li>
             <li>✅ <strong>TypeScript types exported</strong> - Full type safety</li>
             <li>✅ <strong>Reusable primitives</strong> - CircleNode, MathInput can be used independently</li>
           </ul>
+        </div>
+
+        {/* Usage Example */}
+        <div className="mt-8 bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold mb-4">Usage Example</h2>
+          <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto">
+{`<PartPartWhole
+  whole={12}
+  part1={10}
+  part2={null}  // This becomes the input
+  showFeedback={showFeedback}
+  size="lg"
+/>`}
+          </pre>
         </div>
       </div>
     </div>
   );
 };
 
-export default MathDiagramDemo;
+export default PartPartWholeDemo;
