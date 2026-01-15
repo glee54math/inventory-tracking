@@ -7,11 +7,11 @@ import App from "../App";
 // import Database from "../components/Database";
 
 export default function AppRoutes() {
-    const baseInventoryURL = "/inventory-tracking";
+    
     return (
         <Routes>
             {/* Auth */}
-            <Route path={baseInventoryURL} element={<App />} />
+            <Route path={"/"} element={<App />} />
             {/* <Route path={baseInventoryURL+"/login"} element={<WorkerLogin />} /> */}
             {/* ^^ will eventually replace the WorkerLogin state. Will need to rethink NameContext too  */}
 

@@ -8,7 +8,7 @@ import AppRoutes from "./routes/AppRoutes.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/inventory-tracking">
       <NameProvider>
         <AppRoutes />
       </NameProvider>
