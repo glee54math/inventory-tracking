@@ -124,7 +124,6 @@ export const MakeTenStrategy: React.FC<MakeTenStrategyProps> = ({
   // State for inputs
   const [splitPart1, setSplitPart1] = useState(''); // Amount that makes ten (Node 3)
   const [splitPart2, setSplitPart2] = useState(''); // Remainder (Node 4)
-  const [middleSum, setMiddleSum] = useState('10'); // Should be 10 (Node 5)
   const [finalSum, setFinalSum] = useState(''); // Final answer (Node 7)
   
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -177,10 +176,7 @@ export const MakeTenStrategy: React.FC<MakeTenStrategyProps> = ({
       node4Top: getTop(node4Ref),
       node4Bottom: getBottom(node4Ref),
       node5Top: getTop(node5Ref),
-      node5Bottom: getBottom(node5Ref),
-      node6Top: getTop(node6Ref),
-      node6Bottom: getBottom(node6Ref),
-      node7Top: getTop(node7Ref)
+      node6Top: getTop(node6Ref)
     });
   }, [size, splitPart2]);
 
@@ -209,7 +205,7 @@ export const MakeTenStrategy: React.FC<MakeTenStrategyProps> = ({
               strokeWidth="2"
             />
             
-            {/* Line from node 1 to node 5 (GREEN - makes ten) */}
+            {/* Line from node 1 to node 5 */}
             <line 
               x1={lineCoords.node1Bottom.x}
               y1={lineCoords.node1Bottom.y}
@@ -219,7 +215,7 @@ export const MakeTenStrategy: React.FC<MakeTenStrategyProps> = ({
               strokeWidth="2"
             />
             
-            {/* Line from node 3 to node 5 (GREEN - makes ten) */}
+            {/* Line from node 3 to node 5 */}
             <line 
               x1={lineCoords.node3Bottom.x}
               y1={lineCoords.node3Bottom.y}
@@ -238,7 +234,6 @@ export const MakeTenStrategy: React.FC<MakeTenStrategyProps> = ({
               stroke="#1f2937" 
               strokeWidth="2"
             />
-
           </svg>
         )}
 
@@ -252,7 +247,9 @@ export const MakeTenStrategy: React.FC<MakeTenStrategyProps> = ({
             <CircleNode value={addend2} size={size} highlight={true} />
           </div>
           <span className="text-3xl font-bold">=</span>
-          <span className="text-3xl font-bold">?</span>
+          <div className="w-20 h-20 border-2 border-gray-800 rounded flex items-center justify-center text-3xl font-bold bg-white">
+            ?
+          </div>
         </div>
 
         {/* Middle row: Node 3 + Node 4 */}
@@ -281,7 +278,7 @@ export const MakeTenStrategy: React.FC<MakeTenStrategyProps> = ({
         {/* Bottom row: Node 5 + Node 6 = Node 7 */}
         <div className="flex items-center gap-4" style={{ zIndex: 1 }}>
           <div ref={node5Ref}>
-            <CircleNode value={middleSum} size={size} />
+            <CircleNode value={10} size={size} />
           </div>
           <span className="text-3xl font-bold">+</span>
           <div ref={node6Ref}>
@@ -289,14 +286,45 @@ export const MakeTenStrategy: React.FC<MakeTenStrategyProps> = ({
           </div>
           <span className="text-3xl font-bold">=</span>
           <div ref={node7Ref}>
-            <MathInput
+            <input
+              type="text"
               value={finalSum}
-              onChange={setFinalSum}
-              correctAnswer={finalAnswer}
-              showFeedback={showFeedback}
-              size={size}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || /^\d+$/.test(val)) {
+                  setFinalSum(val);
+                }
+              }}
+              className={`w-20 h-20 border-2 border-gray-800 rounded text-center text-3xl font-bold 
+                focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors bg-white ${
+                showFeedback && finalSum
+                  ? parseInt(finalSum) === finalAnswer
+                    ? '!border-green-500 !bg-green-50'
+                    : '!border-red-500 !bg-red-50'
+                  : ''
+              }`}
+              placeholder="?"
             />
           </div>
+        </div>
+        <div className="mt-4 text-center">
+            <div className="inline-flex items-center gap-3 text-3xl font-semibold">
+                <span>{addend1}</span>
+                <span>+</span>
+                <span>{addend2}</span>
+                <span>=</span>
+                <span>{addend1}</span>
+                <span>+</span>
+                <span>{splitPart1 || "?"}</span>
+                <span>+</span>
+                <span>{splitPart2 || "?"}</span>
+                <span>=</span>
+                <span>{10}</span>
+                <span>+</span>
+                <span>{splitPart2 || "?"}</span>
+                <span>=</span>
+                <span>{finalSum || "?"}</span>
+            </div>
         </div>
       </div>
     </div>
@@ -325,8 +353,8 @@ const MakeTenStrategyDemo: React.FC = () => {
           <div className="flex justify-center mb-4">
             <button
               onClick={() => setShowFeedback1(!showFeedback1)}
-              className="px-6 py-2 bg-green-500 text-white rounded-lg font-medium 
-                hover:bg-green-600 transition-colors"
+              className="px-6 py-2 !bg-green-500 text-white rounded-lg font-medium 
+                !hover:bg-green-600 transition-colors"
             >
               {showFeedback1 ? 'Hide' : 'Check'} Answer
             </button>
@@ -346,8 +374,8 @@ const MakeTenStrategyDemo: React.FC = () => {
           <div className="flex justify-center mb-4">
             <button
               onClick={() => setShowFeedback2(!showFeedback2)}
-              className="px-6 py-2 bg-green-500 text-white rounded-lg font-medium 
-                hover:bg-green-600 transition-colors"
+              className="px-6 py-2 !bg-green-500 text-white rounded-lg font-medium 
+                !hover:bg-green-600 transition-colors"
             >
               {showFeedback2 ? 'Hide' : 'Check'} Answer
             </button>
@@ -367,8 +395,8 @@ const MakeTenStrategyDemo: React.FC = () => {
           <div className="flex justify-center mb-4">
             <button
               onClick={() => setShowFeedback3(!showFeedback3)}
-              className="px-6 py-2 bg-green-500 text-white rounded-lg font-medium 
-                hover:bg-green-600 transition-colors"
+              className="px-6 py-2 !bg-green-500 text-white rounded-lg font-medium 
+                !hover:bg-green-600 transition-colors"
             >
               {showFeedback3 ? 'Hide' : 'Check'} Answer
             </button>
