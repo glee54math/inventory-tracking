@@ -313,7 +313,7 @@ const parseProblem = (
   }
   
   // Calculate carries AFTER solving for correct answers
-  // First, create solved version of operands
+  // First, create solved version of operands (replace ALL ? with correct answers)
   const solvedOperands = operands.map((op, row) =>
     op.map((d, col) => {
       if (d === '?') {
@@ -324,7 +324,15 @@ const parseProblem = (
     })
   );
   
-  carries = calculateCarries(solvedOperands, operation);
+  // Debug: log the solved operands
+  console.log('Solved operands for carry calc:', solvedOperands);
+  
+  // Also need to include the result length when calculating max digits
+  const maxDigitsIncludingResult = Math.max(...solvedOperands.map(o => o.length), result.length);
+  
+  carries = calculateCarries(solvedOperands, operation, maxDigitsIncludingResult);
+  
+  console.log('Calculated carries:', carries);
   
   return { operands, result, missingPositions, correctAnswers, carries };
 };
@@ -384,25 +392,38 @@ const solveProblemWithUnknowns = (
   return { operands: solved, result: solvedResult };
 };
 
-const calculateCarries = (operands: string[][], operation: 'add' | 'sub'): number[] => {
+const calculateCarries = (operands: string[][], operation: 'add' | 'sub', maxLen?: number): number[] => {
   if (operation === 'sub') return [];
   
-  const maxLen = Math.max(...operands.map(o => o.length));
-  const carries: number[] = new Array(maxLen).fill(0);
+  // Use provided maxLen or calculate from operands
+  const actualMaxLen = maxLen || Math.max(...operands.map(o => o.length));
+  
+  // Pad all operands to the same length (left-pad with empty strings for alignment)
+  const paddedOps = operands.map(op => {
+    const padded = [...op];
+    while (padded.length < actualMaxLen) {
+      padded.unshift(''); // Empty string for padding, not '0'
+    }
+    return padded;
+  });
+  
+  const carries: number[] = new Array(actualMaxLen).fill(0);
   let carry = 0;
   
-  for (let col = maxLen - 1; col >= 0; col--) {
+  // Process from right to left (rightmost column is actualMaxLen-1)
+  for (let col = actualMaxLen - 1; col >= 0; col--) {
     let sum = carry;
-    operands.forEach(operand => {
-      const idx = operand.length - (maxLen - col);
-      if (idx >= 0 && operand[idx] !== '?') {
-        sum += parseInt(operand[idx]);
+    paddedOps.forEach(operand => {
+      const digit = operand[col];
+      if (digit && digit !== '?') {
+        sum += parseInt(digit);
       }
     });
     
     carry = Math.floor(sum / 10);
+    // The carry goes ABOVE the next column to the left
     if (col > 0) {
-      carries[col - 1] = carry; // Store carry for the next column to the left
+      carries[col - 1] = carry;
     }
   }
   
@@ -592,7 +613,7 @@ const VerticalMathDemo: React.FC = () => {
 
         {/* Example 1: Random missing digits */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 className="text-2xl font-semibold mb-4">Example 1: Random Missing Digits</h3>
+          <h3 className="text-2xl font-semibold mb-4">Example 1: 999 + 999 + 999 = 2997</h3>
           <p className="text-gray-600 mb-4">3 missing digits placed randomly</p>
           <div className="flex gap-4 mb-4">
             <button
@@ -609,7 +630,7 @@ const VerticalMathDemo: React.FC = () => {
             </button>
           </div>
           <VerticalMath
-            nums={[79, 11, 90, 180]}
+            nums={[999, 999, 999, 2997]}
             operation="add"
             numOfDigitsMissing={3}
             showFeedback={showFeedback1}
@@ -620,8 +641,8 @@ const VerticalMathDemo: React.FC = () => {
 
         {/* Example 2: Specified missing positions */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 className="text-2xl font-semibold mb-4">Example 2: Specified Missing Positions</h3>
-          <p className="text-gray-600 mb-4">Using ? to specify exact positions</p>
+          <h3 className="text-2xl font-semibold mb-4">Example 2: 179 + 111 + 190 = 480</h3>
+          <p className="text-gray-600 mb-4">3 missing digits placed randomly</p>
           <div className="flex gap-4 mb-4">
             <button
               onClick={() => setShowFeedback2(!showFeedback2)}
@@ -637,8 +658,9 @@ const VerticalMathDemo: React.FC = () => {
             </button>
           </div>
           <VerticalMath
-            nums={['4?', '27', '?1']}
-            operation="addition"
+            nums={[179, 111, 190, "48?"]}
+            operation="add"
+            numOfDigitsMissing={3}
             showFeedback={showFeedback2}
             showCarry={showCarry2}
             size="lg"
