@@ -62,6 +62,7 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
         try {
             addNewStudentToDatabase("san-ramon", newStudent);
             handleReset();
+            onClose();
             console.log(newStudent.firstName + newStudent.lastName + " was added successfully.");
         } catch (error) {
             console.log("Error occured in adding new student to database.");
@@ -69,14 +70,21 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
     }
 
     return (
-        <div className="bg-white rounded-lg shadow p-6 space-y-3 max-w-md">
-            {/* <button
-                onClick={onclose}
-                className="absolute top-2 right-2 text-gray-600 !hover:text-black "
+        <div className="relative bg-white rounded-lg shadow p-6 space-y-3 max-w-md">
+            <button
+                onClick={onClose}
+                className=" absolute bg-white rounded-lg shadow p-6 space-y-3 max-w-sm 
+                            top-2 right-2 !bg-red-200 !hover:bg-red-700
+                          "
             >
                 X
-            </button> */}
-            <h1>Add New Student</h1>
+            </button>
+            
+            {/* Add New Student Header */}
+            <h1 className="text-large font-semibold pr-10">
+                Add New Student
+            </h1>
+            
             <div className="flex flex-col">
                 {/* First Name */}
                 <label htmlFor="firstName">First Name: </label>

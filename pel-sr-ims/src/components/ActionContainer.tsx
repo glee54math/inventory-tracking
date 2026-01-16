@@ -6,6 +6,7 @@ import {
   updateInventoryFromActions,
   updateLogFromActions,
 } from "../utils/inventoryService";
+import { NewStudentForm } from "./NewStudent";
 
 interface ActionContainerProps {
   workerName: string;
@@ -13,6 +14,7 @@ interface ActionContainerProps {
 
 function ActionContainer({workerName}:ActionContainerProps) {
   const [actionList, setActionList] = useState<SubmittedAction[]>([]);
+  const [newStudentFormPopUp, setNewStudentFormPopUp]= useState<boolean>(false);
 
   const createNewAction = () => {
     const newAction: SubmittedAction = {
@@ -129,6 +131,19 @@ function ActionContainer({workerName}:ActionContainerProps) {
           >
             Clear All
           </button>
+        )}
+
+        <button
+          onClick={() => { setNewStudentFormPopUp(true)}}
+          className="border outline-1 outline-purple-500 rounded bg-purple-200 px-4 py-2 hover:!bg-purple-300"
+        >
+          Add New Student          
+        </button>
+        
+        {newStudentFormPopUp && (
+          <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50"> 
+            <NewStudentForm onClose={() => setNewStudentFormPopUp(false)} />
+          </div>
         )}
       </div>
     </div>
