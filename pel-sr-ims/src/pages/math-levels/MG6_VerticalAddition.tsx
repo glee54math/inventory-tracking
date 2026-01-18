@@ -9,7 +9,7 @@ export interface VerticalMathProps {
   operation: 'add' | 'addition' | '+' | 'sub' | 'subtract' | 'subtraction' | '-';
   numOfDigitsMissing?: number;
   showFeedback?: boolean;
-  showCarry?: boolean;
+  showWork?: boolean;
   size?: 'sm' | 'md' | 'lg';
 }
 
@@ -19,6 +19,7 @@ interface ParsedProblem {
   missingPositions: { row: number; col: number }[];
   correctAnswers: { [key: string]: string };
   carries: number[];
+  borrows: { row: number; col: number; original: string; reduced: string }[];
 }
 
 // ============================================================================
@@ -51,6 +52,7 @@ const parseProblem = (
   let missingPositions: { row: number; col: number }[] = [];
   let correctAnswers: { [key: string]: string } = {};
   let carries: number[] = [];
+  let borrows: { row: number; col: number; original: string; reduced: string }[] = [];
 
   if (hasQuestionMarks) {
     // User specified missing positions with '?'
@@ -316,7 +318,7 @@ const parseProblem = (
     }
   }
   
-  // Calculate carries AFTER solving for correct answers
+  // Calculate carries/borrows AFTER solving for correct answers
   // First, create fully solved version of operands (replace ALL ? with correct answers OR original digits)
   const solvedOperands = operands.map((op, row) =>
     op.map((d, col) => {
@@ -344,9 +346,14 @@ const parseProblem = (
     solvedResult.length
   );
   
-  carries = calculateCarries(solvedOperands, operation, maxDigitsIncludingResult);
+  if (operation === 'add') {
+    carries = calculateCarries(solvedOperands, operation, maxDigitsIncludingResult);
+  } else {
+    // Calculate borrows for subtraction
+    borrows = calculateBorrows(solvedOperands[0], solvedOperands[1]);
+  }
   
-  return { operands, result, missingPositions, correctAnswers, carries };
+  return { operands, result, missingPositions, correctAnswers, carries, borrows };
 };
 
 const solveProblemWithUnknowns = (
@@ -442,6 +449,81 @@ const calculateCarries = (operands: string[][], operation: 'add' | 'sub', maxLen
   return carries;
 };
 
+const calculateBorrows = (
+  operand1: string[],
+  operand2: string[]
+): { row: number; col: number; original: string; reduced: string }[] => {
+  const borrows: { row: number; col: number; original: string; reduced: string }[] = [];
+  
+  // Pad operands to same length
+  const maxLen = Math.max(operand1.length, operand2.length);
+  const padded1 = [...operand1];
+  const padded2 = [...operand2];
+  
+  while (padded1.length < maxLen) padded1.unshift('0');
+  while (padded2.length < maxLen) padded2.unshift('0');
+  
+  // Create working copy for borrowing
+  const working = padded1.map(d => d === '?' ? '0' : d);
+  
+  // Process from right to left
+  for (let col = maxLen - 1; col >= 0; col--) {
+    const digit1 = parseInt(working[col]);
+    const digit2 = padded2[col] === '?' ? 0 : parseInt(padded2[col]);
+    
+    if (digit1 < digit2) {
+      // Need to borrow
+      // Find the next non-zero digit to the left
+      for (let borrowCol = col - 1; borrowCol >= 0; borrowCol--) {
+        const borrowDigit = parseInt(working[borrowCol]);
+        
+        if (borrowDigit > 0) {
+          // Borrow from this column
+          const originalDigit = working[borrowCol];
+          const reducedDigit = (borrowDigit - 1).toString();
+          working[borrowCol] = reducedDigit;
+          
+          // Map back to original column index (accounting for padding)
+          const originalCol = borrowCol - (maxLen - operand1.length);
+          if (originalCol >= 0 && padded1[borrowCol] !== '?') {
+            borrows.push({
+              row: 0, // First operand
+              col: originalCol,
+              original: originalDigit,
+              reduced: reducedDigit
+            });
+          }
+          
+          // Add 10 to all columns between borrow column and current column
+          for (let i = borrowCol + 1; i <= col; i++) {
+            const currentVal = parseInt(working[i]);
+            if (i < col) {
+              // Intermediate columns: add 10 then subtract 1 for next borrow
+              working[i] = '9';
+              const origCol = i - (maxLen - operand1.length);
+              if (origCol >= 0 && padded1[i] !== '?') {
+                borrows.push({
+                  row: 0,
+                  col: origCol,
+                  original: padded1[i],
+                  reduced: '9'
+                });
+              }
+            } else {
+              // Target column: just add 10
+              working[i] = (currentVal + 10).toString();
+            }
+          }
+          
+          break;
+        }
+      }
+    }
+  }
+  
+  return borrows;
+};
+
 // ============================================================================
 // VERTICAL MATH COMPONENT
 // ============================================================================
@@ -451,7 +533,7 @@ export const VerticalMath: React.FC<VerticalMathProps> = ({
   operation,
   numOfDigitsMissing,
   showFeedback = false,
-  showCarry = false,
+  showWork = false,
   size = 'md'
 }) => {
   const normalizedOp = normalizeOperation(operation);
@@ -521,30 +603,56 @@ export const VerticalMath: React.FC<VerticalMathProps> = ({
       const userAnswer = inputs[key] || '';
       const isCorrect = userAnswer === correctAnswer;
       
+      // Check if this digit has a borrow mark (for subtraction)
+      const borrowMark = problem.borrows.find(b => b.row === row && b.col === col);
+      
       return (
-        <input
-          ref={el => inputRefs.current[key] = el}
-          type="text"
-          maxLength={1}
-          value={userAnswer}
-          onChange={(e) => handleInputChange(row, col, e.target.value)}
-          onKeyDown={(e) => handleKeyDown(row, col, e)}
-          className={`${sizeClasses.box} border-2 border-gray-800 text-center font-bold 
-            focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors ${
-            showFeedback && userAnswer
-              ? isCorrect
-                ? 'bg-green-50 border-green-500'
-                : 'bg-red-50 border-red-500'
-              : 'bg-white'
-          }`}
-          placeholder="?"
-        />
+        <div className="relative">
+          {/* Borrow notation above (only if showWork and user has entered a value) */}
+          {showWork && normalizedOp === 'sub' && borrowMark && userAnswer && (
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-xs text-red-500 font-semibold">
+              {borrowMark.reduced}
+            </div>
+          )}
+          
+          <input
+            ref={el => inputRefs.current[key] = el}
+            type="text"
+            maxLength={1}
+            value={userAnswer}
+            onChange={(e) => handleInputChange(row, col, e.target.value)}
+            onKeyDown={(e) => handleKeyDown(row, col, e)}
+            className={`${sizeClasses.box} border-2 border-gray-800 text-center font-bold 
+              focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors ${
+              showFeedback && userAnswer
+                ? isCorrect
+                  ? '!bg-green-50 border-green-500'
+                  : '!bg-red-50 border-red-500'
+                : '!bg-white'
+            } ${showWork && normalizedOp === 'sub' && borrowMark && userAnswer ? 'line-through' : ''}`}
+            placeholder="?"
+          />
+        </div>
       );
     }
     
+    // Check if this digit has a borrow mark (for subtraction)
+    const borrowMark = problem.borrows.find(b => b.row === row && b.col === col);
+    
     return digit ? (
-      <div className={`${sizeClasses.digit} flex items-center justify-center font-bold`}>
-        {digit}
+      <div className="relative">
+        {/* Borrow notation above */}
+        {showWork && normalizedOp === 'sub' && borrowMark && (
+          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-xs text-red-500 font-semibold">
+            {borrowMark.reduced}
+          </div>
+        )}
+        
+        <div className={`${sizeClasses.digit} flex items-center justify-center font-bold ${
+          showWork && normalizedOp === 'sub' && borrowMark ? 'line-through' : ''
+        }`}>
+          {digit}
+        </div>
       </div>
     ) : (
       <div className={sizeClasses.digit}></div>
@@ -553,8 +661,8 @@ export const VerticalMath: React.FC<VerticalMathProps> = ({
   
   return (
     <div className="flex flex-col items-end">
-      {/* Carry numbers */}
-      {showCarry && normalizedOp === 'add' && (
+      {/* Carry numbers for addition */}
+      {showWork && normalizedOp === 'add' && (
         <div className="flex mb-1">
           <div className={`${sizeClasses.digit} pr-2`}></div>
           {paddedOperands[0].map((_, colIdx) => {
@@ -614,8 +722,9 @@ const VerticalMathDemo: React.FC = () => {
   const [showFeedback1, setShowFeedback1] = useState(false);
   const [showFeedback2, setShowFeedback2] = useState(false);
   const [showFeedback3, setShowFeedback3] = useState(false);
-  const [showCarry1, setShowCarry1] = useState(false);
-  const [showCarry2, setShowCarry2] = useState(false);
+  const [showWork1, setShowWork1] = useState(false);
+  const [showWork2, setShowWork2] = useState(false);
+  const [showWork3, setShowWork3] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8">
@@ -623,10 +732,10 @@ const VerticalMathDemo: React.FC = () => {
         <h1 className="text-4xl font-bold text-gray-800 mb-2">Vertical Math Component</h1>
         <p className="text-gray-600 mb-8">Addition and subtraction with missing digits</p>
 
-        {/* Example 1: Random missing digits */}
+        {/* Example 1: Subtraction with borrowing */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 className="text-2xl font-semibold mb-4">Example 1: 999 + 999 + 999 = 2997</h3>
-          <p className="text-gray-600 mb-4">3 missing digits placed randomly</p>
+          <h3 className="text-2xl font-semibold mb-4">Example 1: 84 - 25 = 59</h3>
+          <p className="text-gray-600 mb-4">2 missing digits placed randomly</p>
           <div className="flex gap-4 mb-4">
             <button
               onClick={() => setShowFeedback1(!showFeedback1)}
@@ -635,26 +744,26 @@ const VerticalMathDemo: React.FC = () => {
               {showFeedback1 ? 'Hide' : 'Check'} Answer
             </button>
             <button
-              onClick={() => setShowCarry1(!showCarry1)}
+              onClick={() => setShowWork1(!showWork1)}
               className="px-4 py-2 !bg-blue-500 text-white rounded-lg font-medium hover:!bg-blue-600"
             >
-              {showCarry1 ? 'Hide' : 'Show'} Carry
+              {showWork1 ? 'Hide' : 'Show'} Borrowing
             </button>
           </div>
           <VerticalMath
-            nums={[999, 999, 999, 2997]}
-            operation="add"
-            numOfDigitsMissing={3}
+            nums={[84, 25, 59]}
+            operation="subtraction"
+            numOfDigitsMissing={2}
             showFeedback={showFeedback1}
-            showCarry={showCarry1}
+            showWork={showWork1}
             size="lg"
           />
         </div>
 
-        {/* Example 2: Specified missing positions */}
+        {/* Example 2: Multiple digit borrowing */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 className="text-2xl font-semibold mb-4">Example 2: 179 + ?11 + 1?0 = 48?</h3>
-          <p className="text-gray-600 mb-4">Using ? to specify exact positions</p>
+          <h3 className="text-2xl font-semibold mb-4">Example 2: 213 - 124 = 89</h3>
+          <p className="text-gray-600 mb-4">3 missing digits placed randomly</p>
           <div className="flex gap-4 mb-4">
             <button
               onClick={() => setShowFeedback2(!showFeedback2)}
@@ -663,25 +772,26 @@ const VerticalMathDemo: React.FC = () => {
               {showFeedback2 ? 'Hide' : 'Check'} Answer
             </button>
             <button
-              onClick={() => setShowCarry2(!showCarry2)}
+              onClick={() => setShowWork2(!showWork2)}
               className="px-4 py-2 !bg-blue-500 text-white rounded-lg font-medium hover:!bg-blue-600"
             >
-              {showCarry2 ? 'Hide' : 'Show'} Carry
+              {showWork2 ? 'Hide' : 'Show'} Borrowing
             </button>
           </div>
           <VerticalMath
-            nums={["179", "?11", "1?0", "48?"]}
-            operation="add"
+            nums={[213, 124, 89]}
+            operation="subtraction"
+            numOfDigitsMissing={3}
             showFeedback={showFeedback2}
-            showCarry={showCarry2}
+            showWork={showWork2}
             size="lg"
           />
         </div>
 
-        {/* Example 3: Subtraction */}
+        {/* Example 3: Multiple sequential borrowing */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 className="text-2xl font-semibold mb-4">Example 3: Subtraction</h3>
-          <p className="text-gray-600 mb-4">Subtraction with 2 random missing digits</p>
+          <h3 className="text-2xl font-semibold mb-4">Example 3: 200 - 25 = 175</h3>
+          <p className="text-gray-600 mb-4">Multiple sequential borrows (200 → 1910 → 175)</p>
           <div className="flex gap-4 mb-4">
             <button
               onClick={() => setShowFeedback3(!showFeedback3)}
@@ -689,12 +799,19 @@ const VerticalMathDemo: React.FC = () => {
             >
               {showFeedback3 ? 'Hide' : 'Check'} Answer
             </button>
+            <button
+              onClick={() => setShowWork3(!showWork3)}
+              className="px-4 py-2 !bg-blue-500 text-white rounded-lg font-medium hover:!bg-blue-600"
+            >
+              {showWork3 ? 'Hide' : 'Show'} Borrowing
+            </button>
           </div>
           <VerticalMath
-            nums={[84, 25, 59]}
+            nums={[200, 25, 175]}
             operation="subtraction"
             numOfDigitsMissing={2}
             showFeedback={showFeedback3}
+            showWork={showWork3}
             size="lg"
           />
         </div>
