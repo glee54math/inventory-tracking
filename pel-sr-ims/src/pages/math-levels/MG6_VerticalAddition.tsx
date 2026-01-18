@@ -170,82 +170,86 @@ const parseProblem = (
       });
     } else {
       // Valid configuration - solve for the correct answers
-      // Build complete numbers by solving the equation
-      
-      // First, solve for any unknowns in the operands
+      // First, track where the missing positions are (before we solve)
       operands.forEach((operand, row) => {
         operand.forEach((digit, col) => {
           if (digit === '?') {
-            // We need to find what digit makes the equation work
-            // Try digits 0-9
-            for (let testDigit = 0; testDigit <= 9; testDigit++) {
-              // Create test version with this digit filled in
-              const testOperands = operands.map((op, r) => {
-                if (r === row) {
-                  return op.map((d, c) => c === col ? testDigit.toString() : (d === '?' ? '0' : d));
-                }
-                return op.map(d => d === '?' ? '0' : d);
-              });
-              
-              const testNums = testOperands.map(op => parseInt(op.join('')));
-              let calcResult: number;
-              
-              if (operation === 'add') {
-                calcResult = testNums.reduce((sum, n) => sum + n, 0);
-              } else {
-                calcResult = testNums[0] - testNums[1];
-              }
-              
-              const calcResultStr = calcResult.toString();
-              
-              // Check if this matches the expected result pattern
-              let matches = true;
-              if (calcResultStr.length === result.length) {
-                for (let i = 0; i < result.length; i++) {
-                  if (result[i] !== '?' && calcResultStr[i] !== result[i]) {
-                    matches = false;
-                    break;
-                  }
-                }
-                
-                if (matches) {
-                  correctAnswers[`${row}-${col}`] = testDigit.toString();
-                  break;
-                }
-              }
-            }
+            missingPositions.push({ row, col });
           }
         });
       });
       
-      // Now solve for unknowns in the result using the filled operands
-      const filledOperands = operands.map((op, row) => 
-        op.map((d, col) => {
-          if (d === '?') {
-            return correctAnswers[`${row}-${col}`] || '0';
-          }
-          return d;
-        })
-      );
-      
-      const nums = filledOperands.map(op => parseInt(op.join('')));
-      let actualResult: number;
-      
-      if (operation === 'add') {
-        actualResult = nums.reduce((sum, n) => sum + n, 0);
-      } else {
-        actualResult = nums[0] - nums[1];
-      }
-      
-      const actualResultStr = actualResult.toString();
-      
       result.forEach((digit, col) => {
         if (digit === '?') {
-          // Ensure we have the right length
-          const paddedResult = actualResultStr.padStart(result.length, '0');
-          correctAnswers[`${operands.length}-${col}`] = paddedResult[col];
+          missingPositions.push({ row: operands.length, col });
         }
       });
+      
+      // Now solve column by column from right to left
+      let carry = 0;
+      const maxLen = Math.max(...operands.map(o => o.length), result.length);
+      
+      // Pad operands to same length for easier processing
+      const paddedOps = operands.map(op => {
+        const padded = [...op];
+        while (padded.length < maxLen) padded.unshift('');
+        return padded;
+      });
+      
+      const paddedResult = [...result];
+      while (paddedResult.length < maxLen) paddedResult.unshift('');
+      
+      // Process each column from right to left
+      for (let col = maxLen - 1; col >= 0; col--) {
+        let sum = carry;
+        let unknownRow = -1;
+        let unknownCount = 0;
+        
+        // Add up known digits in this column
+        paddedOps.forEach((op, row) => {
+          if (op[col] && op[col] !== '?') {
+            sum += parseInt(op[col]);
+          } else if (op[col] === '?') {
+            unknownRow = row;
+            unknownCount++;
+          }
+        });
+        
+        const resultDigit = paddedResult[col];
+        const resultIsUnknown = resultDigit === '?';
+        if (resultIsUnknown) unknownCount++;
+        
+        // Solve if exactly one unknown in this column
+        if (unknownCount === 1) {
+          if (resultIsUnknown) {
+            // Result is the unknown
+            const digit = sum % 10;
+            // Map padded column back to original result column
+            const originalCol = col - (maxLen - result.length);
+            if (originalCol >= 0) {
+              correctAnswers[`${operands.length}-${originalCol}`] = digit.toString();
+              paddedResult[col] = digit.toString();
+            }
+          } else {
+            // One operand is the unknown
+            const targetSum = parseInt(resultDigit) + (carry > 0 ? 10 : 0);
+            const digit = (targetSum - sum + 10) % 10;
+            // Map padded column back to original operand column
+            const originalOpLen = operands[unknownRow].length;
+            const originalCol = col - (maxLen - originalOpLen);
+            if (originalCol >= 0) {
+              correctAnswers[`${unknownRow}-${originalCol}`] = digit.toString();
+              paddedOps[unknownRow][col] = digit.toString();
+              sum += digit;
+            }
+          }
+        }
+        
+        carry = Math.floor(sum / 10);
+      }
+      
+      // Don't update operands and result - keep the ? marks!
+      // Just keep the original arrays with ? marks intact
     }
   } else {
     // No question marks - calculate result and place missing digits randomly
@@ -313,26 +317,34 @@ const parseProblem = (
   }
   
   // Calculate carries AFTER solving for correct answers
-  // First, create solved version of operands (replace ALL ? with correct answers)
+  // First, create fully solved version of operands (replace ALL ? with correct answers OR original digits)
   const solvedOperands = operands.map((op, row) =>
     op.map((d, col) => {
       if (d === '?') {
         const key = `${row}-${col}`;
-        return correctAnswers[key] || '0';
+        // Use the correct answer if available, otherwise use '9' as fallback (shouldn't happen)
+        return correctAnswers[key] || '9';
       }
       return d;
     })
   );
   
-  // Debug: log the solved operands
-  console.log('Solved operands for carry calc:', solvedOperands);
+  // Also solve the result
+  const solvedResult = result.map((d, col) => {
+    if (d === '?') {
+      const key = `${operands.length}-${col}`;
+      return correctAnswers[key] || '9';
+    }
+    return d;
+  });
   
-  // Also need to include the result length when calculating max digits
-  const maxDigitsIncludingResult = Math.max(...solvedOperands.map(o => o.length), result.length);
+  // Include both operands AND solved result when determining max length
+  const maxDigitsIncludingResult = Math.max(
+    ...solvedOperands.map(o => o.length),
+    solvedResult.length
+  );
   
   carries = calculateCarries(solvedOperands, operation, maxDigitsIncludingResult);
-  
-  console.log('Calculated carries:', carries);
   
   return { operands, result, missingPositions, correctAnswers, carries };
 };
@@ -550,7 +562,7 @@ export const VerticalMath: React.FC<VerticalMathProps> = ({
             return (
               <div key={colIdx} className={`${sizeClasses.digit} flex items-center justify-center`}>
                 {carryValue > 0 && (
-                  <span className="text-sm !text-red-500 font-semibold">
+                  <span className="text-sm text-red-500 font-semibold">
                     {carryValue}
                   </span>
                 )}
@@ -618,13 +630,13 @@ const VerticalMathDemo: React.FC = () => {
           <div className="flex gap-4 mb-4">
             <button
               onClick={() => setShowFeedback1(!showFeedback1)}
-              className="px-4 py-2 !bg-green-500 text-white rounded-lg font-medium hover:bg-green-600"
+              className="px-4 py-2 !bg-green-500 text-white rounded-lg font-medium hover:!bg-green-600"
             >
               {showFeedback1 ? 'Hide' : 'Check'} Answer
             </button>
             <button
               onClick={() => setShowCarry1(!showCarry1)}
-              className="px-4 py-2 !bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600"
+              className="px-4 py-2 !bg-blue-500 text-white rounded-lg font-medium hover:!bg-blue-600"
             >
               {showCarry1 ? 'Hide' : 'Show'} Carry
             </button>
@@ -641,26 +653,25 @@ const VerticalMathDemo: React.FC = () => {
 
         {/* Example 2: Specified missing positions */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 className="text-2xl font-semibold mb-4">Example 2: 179 + 111 + 190 = 480</h3>
-          <p className="text-gray-600 mb-4">3 missing digits placed randomly</p>
+          <h3 className="text-2xl font-semibold mb-4">Example 2: 179 + ?11 + 1?0 = 48?</h3>
+          <p className="text-gray-600 mb-4">Using ? to specify exact positions</p>
           <div className="flex gap-4 mb-4">
             <button
               onClick={() => setShowFeedback2(!showFeedback2)}
-              className="px-4 py-2 !bg-green-500 text-white rounded-lg font-medium hover:bg-green-600"
+              className="px-4 py-2 !bg-green-500 text-white rounded-lg font-medium hover:!bg-green-600"
             >
               {showFeedback2 ? 'Hide' : 'Check'} Answer
             </button>
             <button
               onClick={() => setShowCarry2(!showCarry2)}
-              className="px-4 py-2 !bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600"
+              className="px-4 py-2 !bg-blue-500 text-white rounded-lg font-medium hover:!bg-blue-600"
             >
               {showCarry2 ? 'Hide' : 'Show'} Carry
             </button>
           </div>
           <VerticalMath
-            nums={[179, 111, 190, "48?"]}
+            nums={["179", "?11", "1?0", "48?"]}
             operation="add"
-            numOfDigitsMissing={3}
             showFeedback={showFeedback2}
             showCarry={showCarry2}
             size="lg"
@@ -674,7 +685,7 @@ const VerticalMathDemo: React.FC = () => {
           <div className="flex gap-4 mb-4">
             <button
               onClick={() => setShowFeedback3(!showFeedback3)}
-              className="px-4 py-2 !bg-green-500 text-white rounded-lg font-medium hover:bg-green-600"
+              className="px-4 py-2 !bg-green-500 text-white rounded-lg font-medium hover:!bg-green-600"
             >
               {showFeedback3 ? 'Hide' : 'Check'} Answer
             </button>
