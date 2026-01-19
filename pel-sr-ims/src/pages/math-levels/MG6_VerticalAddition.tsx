@@ -13,13 +13,18 @@ export interface VerticalMathProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
+interface BorrowStep {
+  value: string;
+  strikethrough: boolean;
+}
+
 interface ParsedProblem {
   operands: string[][];
   result: string[];
   missingPositions: { row: number; col: number }[];
   correctAnswers: { [key: string]: string };
   carries: number[];
-  borrows: { row: number; col: number; original: string; reduced: string }[];
+  borrows: { row: number; col: number; steps: BorrowStep[] }[];
 }
 
 // ============================================================================
@@ -52,7 +57,7 @@ const parseProblem = (
   let missingPositions: { row: number; col: number }[] = [];
   let correctAnswers: { [key: string]: string } = {};
   let carries: number[] = [];
-  let borrows: { row: number; col: number; original: string; reduced: string }[] = [];
+  let borrows: { row: number; col: number; steps: BorrowStep[] }[] = [];
 
   if (hasQuestionMarks) {
     // User specified missing positions with '?'
@@ -452,8 +457,8 @@ const calculateCarries = (operands: string[][], operation: 'add' | 'sub', maxLen
 const calculateBorrows = (
   operand1: string[],
   operand2: string[]
-): { row: number; col: number; original: string; reduced: string }[] => {
-  const borrows: { row: number; col: number; original: string; reduced: string }[] = [];
+): { row: number; col: number; steps: BorrowStep[] }[] => {
+  const borrowsByPosition: Map<string, BorrowStep[]> = new Map();
   
   // Pad operands to same length
   const maxLen = Math.max(operand1.length, operand2.length);
@@ -463,55 +468,77 @@ const calculateBorrows = (
   while (padded1.length < maxLen) padded1.unshift('0');
   while (padded2.length < maxLen) padded2.unshift('0');
   
-  // Create working copy for borrowing
-  const working = padded1.map(d => d === '?' ? '0' : d);
+  // Create working copy for borrowing (track current state of each digit)
+  const working = padded1.map((d, i) => ({
+    original: d === '?' ? '0' : d,
+    current: d === '?' ? '0' : d,
+    isUnknown: d === '?'
+  }));
   
   // Process from right to left
   for (let col = maxLen - 1; col >= 0; col--) {
-    const digit1 = parseInt(working[col]);
+    const digit1 = parseInt(working[col].current);
     const digit2 = padded2[col] === '?' ? 0 : parseInt(padded2[col]);
     
     if (digit1 < digit2) {
       // Need to borrow
       // Find the next non-zero digit to the left
       for (let borrowCol = col - 1; borrowCol >= 0; borrowCol--) {
-        const borrowDigit = parseInt(working[borrowCol]);
+        const borrowDigit = parseInt(working[borrowCol].current);
         
         if (borrowDigit > 0) {
-          // Borrow from this column
-          const originalDigit = working[borrowCol];
-          const reducedDigit = (borrowDigit - 1).toString();
-          working[borrowCol] = reducedDigit;
-          
-          // Map back to original column index (accounting for padding)
-          const originalCol = borrowCol - (maxLen - operand1.length);
-          if (originalCol >= 0 && padded1[borrowCol] !== '?') {
-            borrows.push({
-              row: 0, // First operand
-              col: originalCol,
-              original: originalDigit,
-              reduced: reducedDigit
+          // Step 1: Reduce the digit we're borrowing FROM
+          const originalCol1 = borrowCol - (maxLen - operand1.length);
+          if (originalCol1 >= 0 && !working[borrowCol].isUnknown) {
+            const key = `0-${originalCol1}`;
+            if (!borrowsByPosition.has(key)) {
+              borrowsByPosition.set(key, []);
+            }
+            // Only show the NEW value (after lending)
+            borrowsByPosition.get(key)!.push({
+              value: (borrowDigit - 1).toString(),
+              strikethrough: false
             });
           }
+          working[borrowCol].current = (borrowDigit - 1).toString();
           
-          // Add 10 to all columns between borrow column and current column
+          // Step 2: Add 10 to all columns between borrow column and current column
           for (let i = borrowCol + 1; i <= col; i++) {
-            const currentVal = parseInt(working[i]);
-            if (i < col) {
-              // Intermediate columns: add 10 then subtract 1 for next borrow
-              working[i] = '9';
-              const origCol = i - (maxLen - operand1.length);
-              if (origCol >= 0 && padded1[i] !== '?') {
-                borrows.push({
-                  row: 0,
-                  col: origCol,
-                  original: padded1[i],
-                  reduced: '9'
-                });
+            const currentVal = parseInt(working[i].current);
+            const originalColX = i - (maxLen - operand1.length);
+            
+            if (originalColX >= 0 && !working[i].isUnknown) {
+              const key = `0-${originalColX}`;
+              if (!borrowsByPosition.has(key)) {
+                borrowsByPosition.set(key, []);
               }
+              
+              if (i < col) {
+                // Intermediate columns: add 10, then subtract 1 (for lending to next column)
+                // First show (current + 10) with strikethrough
+                borrowsByPosition.get(key)!.push({
+                  value: (currentVal + 10).toString(),
+                  strikethrough: true
+                });
+                working[i].current = (currentVal + 10 - 1).toString();
+                // Then show final value without strikethrough
+                borrowsByPosition.get(key)!.push({
+                  value: working[i].current,
+                  strikethrough: false
+                });
+              } else {
+                // Target column: just add 10
+                borrowsByPosition.get(key)!.push({
+                  value: (currentVal + 10).toString(),
+                  strikethrough: false
+                });
+                working[i].current = (currentVal + 10).toString();
+              }
+            } else if (i < col) {
+              // Still need to update working state even if we don't show it
+              working[i].current = (currentVal + 10 - 1).toString();
             } else {
-              // Target column: just add 10
-              working[i] = (currentVal + 10).toString();
+              working[i].current = (currentVal + 10).toString();
             }
           }
           
@@ -520,6 +547,13 @@ const calculateBorrows = (
       }
     }
   }
+  
+  // Convert map to array format
+  const borrows: { row: number; col: number; steps: BorrowStep[] }[] = [];
+  borrowsByPosition.forEach((steps, key) => {
+    const [row, col] = key.split('-').map(Number);
+    borrows.push({ row, col, steps });
+  });
   
   return borrows;
 };
@@ -603,15 +637,24 @@ export const VerticalMath: React.FC<VerticalMathProps> = ({
       const userAnswer = inputs[key] || '';
       const isCorrect = userAnswer === correctAnswer;
       
-      // Check if this digit has a borrow mark (for subtraction)
-      const borrowMark = problem.borrows.find(b => b.row === row && b.col === col);
+      // Check if this digit has borrow marks (for subtraction)
+      const borrowData = problem.borrows.find(b => b.row === row && b.col === col);
+      const hasBorrows = borrowData && borrowData.steps.length > 0;
       
       return (
         <div className="relative">
-          {/* Borrow notation above (only if showWork and user has entered a value) */}
-          {showWork && normalizedOp === 'sub' && borrowMark && userAnswer && (
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-xs text-red-500 font-semibold">
-              {borrowMark.reduced}
+          {/* Borrow notation above (only if showWork) - show only NEW values in red */}
+          {showWork && normalizedOp === 'sub' && hasBorrows && (
+            <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 flex flex-col-reverse items-center">
+              {borrowData.steps.map((step, idx) => (
+                <div key={idx} className="text-xs text-red-500 font-semibold whitespace-nowrap leading-none mb-0.5">
+                  {step.strikethrough ? (
+                    <span className="line-through">{step.value}</span>
+                  ) : (
+                    <span>{step.value}</span>
+                  )}
+                </div>
+              ))}
             </div>
           )}
           
@@ -629,28 +672,36 @@ export const VerticalMath: React.FC<VerticalMathProps> = ({
                   ? '!bg-green-50 border-green-500'
                   : '!bg-red-50 border-red-500'
                 : '!bg-white'
-            } ${showWork && normalizedOp === 'sub' && borrowMark && userAnswer ? 'line-through' : ''}`}
+            }`}
             placeholder="?"
           />
         </div>
       );
     }
     
-    // Check if this digit has a borrow mark (for subtraction)
-    const borrowMark = problem.borrows.find(b => b.row === row && b.col === col);
+    // Check if this digit has borrow marks (for subtraction)
+    const borrowData = problem.borrows.find(b => b.row === row && b.col === col);
+    const hasBorrows = borrowData && borrowData.steps.length > 0;
     
     return digit ? (
       <div className="relative">
-        {/* Borrow notation above */}
-        {showWork && normalizedOp === 'sub' && borrowMark && (
-          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-xs text-red-500 font-semibold">
-            {borrowMark.reduced}
+        {/* Borrow notation above - show only NEW values in red */}
+        {showWork && normalizedOp === 'sub' && hasBorrows && (
+          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 flex flex-col-reverse items-center">
+            {borrowData.steps.map((step, idx) => (
+              <div key={idx} className="text-xs text-red-500 font-semibold whitespace-nowrap leading-none mb-0.5">
+                {step.strikethrough ? (
+                  <span className="line-through">{step.value}</span>
+                ) : (
+                  <span>{step.value}</span>
+                )}
+              </div>
+            ))}
           </div>
         )}
         
-        <div className={`${sizeClasses.digit} flex items-center justify-center font-bold ${
-          showWork && normalizedOp === 'sub' && borrowMark ? 'line-through' : ''
-        }`}>
+        {/* Original digit with strikethrough when showWork is on and has borrows */}
+        <div className={`${sizeClasses.digit} flex items-center justify-center font-bold ${showWork && normalizedOp === 'sub' && hasBorrows ? 'line-through' : ''}`}>
           {digit}
         </div>
       </div>
@@ -823,6 +874,7 @@ const VerticalMathDemo: React.FC = () => {
             <li>✅ <strong>Variable operands</strong> - Support any number of addends</li>
             <li>✅ <strong>Flexible missing digits</strong> - Random or specified positions</li>
             <li>✅ <strong>Carry display</strong> - Toggle to show carrying numbers</li>
+            <li>✅ <strong>Borrowing notation</strong> - Strikethrough original with new values above</li>
             <li>✅ <strong>Keyboard navigation</strong> - Tab and arrow keys between inputs</li>
             <li>✅ <strong>Visual feedback</strong> - Green for correct, red for incorrect</li>
             <li>✅ <strong>Addition & Subtraction</strong> - Both operations supported</li>
