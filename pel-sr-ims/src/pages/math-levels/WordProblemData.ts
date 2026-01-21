@@ -13,6 +13,7 @@ export interface PersonData {
 export interface UnitData {
   singular: string;
   plural: string;
+  category: 'food' | 'object' | 'money' | 'abstract'; // Category for verb matching
 }
 
 export interface KeywordData {
@@ -40,43 +41,63 @@ export const PEOPLE: PersonData[] = [
 ];
 
 // ============================================================================
-// UNITS (singular and plural forms)
+// UNITS (singular, plural, and category)
 // ============================================================================
 
 export const UNITS: UnitData[] = [
-  { singular: 'piece of candy', plural: 'pieces of candy' },
-  { singular: 'cookie', plural: 'cookies' },
-  { singular: 'apple', plural: 'apples' },
-  { singular: 'toy', plural: 'toys' },
-  { singular: 'book', plural: 'books' },
-  { singular: 'pencil', plural: 'pencils' },
-  { singular: 'sticker', plural: 'stickers' },
-  { singular: 'marble', plural: 'marbles' },
-  { singular: 'crayon', plural: 'crayons' },
-  { singular: 'ball', plural: 'balls' },
-  { singular: 'flower', plural: 'flowers' },
-  { singular: 'dollar', plural: 'dollars' },
-  { singular: 'point', plural: 'points' },
-  { singular: 'card', plural: 'cards' },
-  { singular: 'stamp', plural: 'stamps' },
+  { singular: 'piece of candy', plural: 'pieces of candy', category: 'food' },
+  { singular: 'cookie', plural: 'cookies', category: 'food' },
+  { singular: 'apple', plural: 'apples', category: 'food' },
+  { singular: 'toy', plural: 'toys', category: 'object' },
+  { singular: 'book', plural: 'books', category: 'object' },
+  { singular: 'pencil', plural: 'pencils', category: 'object' },
+  { singular: 'sticker', plural: 'stickers', category: 'object' },
+  { singular: 'marble', plural: 'marbles', category: 'object' },
+  { singular: 'crayon', plural: 'crayons', category: 'object' },
+  { singular: 'ball', plural: 'balls', category: 'object' },
+  { singular: 'flower', plural: 'flowers', category: 'object' },
+  { singular: 'dollar', plural: 'dollars', category: 'money' },
+  { singular: 'coin', plural: 'coins', category: 'money' },
+  { singular: 'point', plural: 'points', category: 'abstract' },
+  { singular: 'card', plural: 'cards', category: 'object' },
+  { singular: 'stamp', plural: 'stamps', category: 'object' },
 ];
 
 // ============================================================================
-// KEY WORDS (for each operation)
+// KEY WORDS (categorized by context)
 // ============================================================================
 
-export const KEY_WORDS: KeywordData = {
-  addition: [
+export interface KeywordsByContext {
+  joining: string[]; // For "How many does X have [keyword]?"
+  increasing: string[]; // Alternative phrasing contexts
+}
+
+export const ADDITION_KEYWORDS: KeywordsByContext = {
+  joining: [
     'in total',
     'altogether',
-    'combined',
     'in all',
+    'combined',
+    'together',
+    'now',
   ],
-  subtraction: [
-    'left',
-    'remaining',
-    'left over',
+  increasing: [
+    'now',
+    'after that',
+    'in the end',
   ],
+};
+
+export const SUBTRACTION_KEYWORDS = [
+  'left',
+  'remaining',
+  'left over',
+  'now',
+];
+
+export const KEY_WORDS = {
+  addition: ADDITION_KEYWORDS.joining, // Default to joining for backward compatibility
+  subtraction: SUBTRACTION_KEYWORDS,
   multiplication: [
     'in total',
     'altogether',
@@ -90,31 +111,45 @@ export const KEY_WORDS: KeywordData = {
 };
 
 // ============================================================================
-// ACTION VERBS (for problem scenarios)
+// ACTION VERBS (linked to unit categories)
 // ============================================================================
 
-export interface ActionVerbs {
-  addition: string[];
-  subtraction: string[];
+export interface ActionVerbsByCategory {
+  food: {
+    addition: string[];
+    subtraction: string[];
+  };
+  object: {
+    addition: string[];
+    subtraction: string[];
+  };
+  money: {
+    addition: string[];
+    subtraction: string[];
+  };
+  abstract: {
+    addition: string[];
+    subtraction: string[];
+  };
 }
 
-export const ACTION_VERBS: ActionVerbs = {
-  addition: [
-    'gets',
-    'finds',
-    'receives',
-    'buys',
-    'earns',
-    'wins',
-  ],
-  subtraction: [
-    'eats',
-    'uses',
-    'gives away',
-    'loses',
-    'sells',
-    'donates',
-  ],
+export const ACTION_VERBS: ActionVerbsByCategory = {
+  food: {
+    addition: ['get', 'find', 'receive', 'buy', 'bake'],
+    subtraction: ['eat', 'share', 'give away', 'drop'],
+  },
+  object: {
+    addition: ['get', 'find', 'receive', 'buy', 'win'],
+    subtraction: ['lose', 'give away', 'sell', 'donate', 'break'],
+  },
+  money: {
+    addition: ['earn', 'find', 'receive', 'win', 'get'],
+    subtraction: ['spend', 'lose', 'give away', 'donate', 'pay'],
+  },
+  abstract: {
+    addition: ['earn', 'score', 'get', 'win', 'gain'],
+    subtraction: ['lose', 'give away', 'use', 'spend'],
+  },
 };
 
 // ============================================================================
@@ -127,6 +162,67 @@ export const ACTION_VERBS: ActionVerbs = {
 export function getRandomItem<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)];
 }
+
+/**
+ * Get appropriate action verb based on unit category and operation
+ */
+export function getActionVerb(unit: UnitData, operation: 'addition' | 'subtraction'): string {
+  return getRandomItem(ACTION_VERBS[unit.category][operation]);
+}
+
+// ============================================================================
+// SENTENCE TEMPLATES
+// ============================================================================
+
+export interface SentenceTemplate {
+  template: string; // Use placeholders: {name}, {pronoun}, {num1}, {unit1}, {verb}, {num2}, {unitPlural}, {keyword}
+  context: 'joining' | 'increasing'; // Context determines which keywords are appropriate
+}
+
+export const ADDITION_TEMPLATES: SentenceTemplate[] = [
+  // JOINING/TOTALING context - combining two separate quantities
+  {
+    template: '{name} has {num1} {unit1} and {verb} {num2} more. How many {unitPlural} does {pronoun} have {keyword}?',
+    context: 'joining'
+  },
+  {
+    template: '{name} {verb} {num2} {unitPlural}. {Pronoun} already has {num1}. How many {unitPlural} does {pronoun} have {keyword}?',
+    context: 'joining'
+  },
+  {
+    template: '{name} has {num1} {unit1}. {Pronoun} {verb} {num2} more {unitPlural}. How many {unitPlural} does {pronoun} have {keyword}?',
+    context: 'joining'
+  },
+
+  // INCREASING context - starting amount grows
+  {
+    template: '{name} has {num1} {unit1}. {Pronoun} then {verb} {num2} more. How many {unitPlural} does {pronoun} have {keyword}?',
+    context: 'increasing'
+  },
+  {
+    template: '{name} starts with {num1} {unit1} and {verb} {num2} more. How many {unitPlural} does {pronoun} have {keyword}?',
+    context: 'increasing'
+  },
+];
+
+export const SUBTRACTION_TEMPLATES: SentenceTemplate[] = [
+  {
+    template: '{name} has {num1} {unit1} and {verb} {num2} of them. How many {unitPlural} does {pronoun} have {keyword}?',
+    context: 'joining' // Using 'joining' as default context for subtraction
+  },
+  {
+    template: '{name} has {num1} {unit1}. {Pronoun} then {verb} {num2}. How many {unitPlural} does {pronoun} have {keyword}?',
+    context: 'joining'
+  },
+  {
+    template: '{name} starts with {num1} {unit1} and {verb} {num2} of them. How many {unitPlural} does {pronoun} have {keyword}?',
+    context: 'joining'
+  },
+  {
+    template: '{name} has {num1} {unit1} but {verb} {num2}. How many {unitPlural} does {pronoun} have {keyword}?',
+    context: 'joining'
+  },
+];
 
 /**
  * Get unit form based on count (singular if 1, plural otherwise)

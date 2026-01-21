@@ -3,12 +3,15 @@ import {
   PEOPLE,
   UNITS,
   KEY_WORDS,
-  ACTION_VERBS,
+  ADDITION_KEYWORDS,
+  SUBTRACTION_KEYWORDS,
+  ADDITION_TEMPLATES,
+  SUBTRACTION_TEMPLATES,
   getRandomItem,
   getUnitForm,
-  PersonData,
-  UnitData,
-} from './WordProblemData';
+  getActionVerb,
+} from "./WordProblemData";
+import type { PersonData, UnitData, SentenceTemplate } from "./WordProblemData";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -59,54 +62,127 @@ const calculateAnswer = (nums: number[], op: 'add' | 'sub' | 'mult' | 'div'): nu
   return 0;
 };
 
+const conjugateVerb = (verb: string): string => {
+  // Handle multi-word verbs (e.g., "give away" → "gives away")
+  const words = verb.split(' ');
+  
+  if (words.length > 1) {
+    // Only conjugate the first word
+    const firstWord = words[0];
+    const conjugatedFirst = conjugateSingleWord(firstWord);
+    return [conjugatedFirst, ...words.slice(1)].join(' ');
+  }
+  
+  return conjugateSingleWord(verb);
+};
+
+const conjugateSingleWord = (word: string): string => {
+  // Conjugate single word for third person singular (he/she)
+  if (word.endsWith('y') && !['ay', 'ey', 'oy', 'uy'].some(v => word.endsWith(v))) {
+    return word.slice(0, -1) + 'ies'; // carry → carries
+  }
+  if (word.endsWith('s') || word.endsWith('sh') || word.endsWith('ch') || 
+      word.endsWith('x') || word.endsWith('z')) {
+    return word + 'es'; // pass → passes
+  }
+  return word + 's'; // get → gets
+};
+
 const generateProblemText = (
   person: PersonData,
   unit: UnitData,
   nums: number[],
   op: 'add' | 'sub' | 'mult' | 'div',
   actionVerb: string,
-  keyword: string
-): string => {
+  template?: SentenceTemplate
+): { text: string; keyword: string } => {
   const name = person.name;
   const pronoun = person.pronoun;
+  const capitalizedPronoun = pronoun.charAt(0).toUpperCase() + pronoun.slice(1); // He/She
   
+  if (op === 'add' && nums.length === 2) {
+    const [num1, num2] = nums;
+    const selectedTemplate = template || getRandomItem(ADDITION_TEMPLATES);
+    const unit1 = getUnitForm(unit, num1);
+    const conjugatedVerb = conjugateVerb(actionVerb);
+    
+    // Select keyword based on template context
+    const keyword = selectedTemplate.context === 'joining' 
+      ? getRandomItem(ADDITION_KEYWORDS.joining)
+      : getRandomItem(ADDITION_KEYWORDS.increasing);
+    
+    const text = selectedTemplate.template
+      .replace('{name}', name)
+      .replace(/{Pronoun}/g, capitalizedPronoun)
+      .replace(/{pronoun}/g, pronoun)
+      .replace('{num1}', num1.toString())
+      .replace('{unit1}', unit1)
+      .replace(/{verb}/g, conjugatedVerb)
+      .replace('{num2}', num2.toString())
+      .replace(/{unitPlural}/g, unit.plural)
+      .replace('{keyword}', keyword);
+    
+    return { text, keyword };
+  }
+  
+  if (op === 'sub' && nums.length === 2) {
+    const [num1, num2] = nums;
+    const selectedTemplate = template || getRandomItem(SUBTRACTION_TEMPLATES);
+    const unit1 = getUnitForm(unit, num1);
+    const conjugatedVerb = conjugateVerb(actionVerb);
+    
+    // Subtraction uses standard keywords
+    const keyword = getRandomItem(SUBTRACTION_KEYWORDS);
+    
+    const text = selectedTemplate.template
+      .replace('{name}', name)
+      .replace(/{Pronoun}/g, capitalizedPronoun)
+      .replace(/{pronoun}/g, pronoun)
+      .replace('{num1}', num1.toString())
+      .replace('{unit1}', unit1)
+      .replace(/{verb}/g, conjugatedVerb)
+      .replace('{num2}', num2.toString())
+      .replace(/{unitPlural}/g, unit.plural)
+      .replace('{keyword}', keyword);
+    
+    return { text, keyword };
+  }
+  
+  // Fallback for multiple numbers (can be expanded later)
   if (op === 'add') {
-    if (nums.length === 2) {
-      const [num1, num2] = nums;
-      const unit1 = getUnitForm(unit, num1);
-      const unit2 = getUnitForm(unit, num2);
-      return `${name} has ${num1} ${unit1} and ${actionVerb} ${num2} more. How many ${unit.plural} does ${pronoun} have ${keyword}?`;
-    } else {
-      // Multiple addends: "Tom has 4 cookies, gets 3 more, and finds 2 more. How many cookies does he have in total?"
-      const parts: string[] = [];
-      parts.push(`${name} has ${nums[0]} ${getUnitForm(unit, nums[0])}`);
-      for (let i = 1; i < nums.length; i++) {
-        const connector = i === nums.length - 1 ? 'and' : '';
-        parts.push(`${connector} ${actionVerb} ${nums[i]} more`.trim());
-      }
-      return `${parts.join(', ')}. How many ${unit.plural} does ${pronoun} have ${keyword}?`;
+    const parts: string[] = [];
+    parts.push(`${name} has ${nums[0]} ${getUnitForm(unit, nums[0])}`);
+    const conjugatedVerb = conjugateVerb(actionVerb);
+    for (let i = 1; i < nums.length; i++) {
+      const connector = i === nums.length - 1 ? 'and' : '';
+      parts.push(`${connector} ${conjugatedVerb} ${nums[i]} more`.trim());
     }
+    const keyword = getRandomItem(ADDITION_KEYWORDS.joining);
+    return { 
+      text: `${parts.join(', ')}. How many ${unit.plural} does ${pronoun} have ${keyword}?`,
+      keyword
+    };
   }
   
   if (op === 'sub') {
-    if (nums.length === 2) {
-      const [num1, num2] = nums;
-      const unit1 = getUnitForm(unit, num1);
-      return `${name} has ${num1} ${unit1} and ${pronoun} decides to ${actionVerb} ${num2} of them. How many ${unit.plural} does ${pronoun} have ${keyword}?`;
-    } else {
-      // Multiple subtractions: "Tom has 12 cookies and eats 3 of them, then gives away 2. How many cookies does he have left?"
-      const parts: string[] = [];
-      parts.push(`${name} has ${nums[0]} ${getUnitForm(unit, nums[0])} and ${actionVerb} ${nums[1]} of them`);
-      for (let i = 2; i < nums.length; i++) {
-        const connector = i === nums.length - 1 ? 'then' : ',';
-        parts.push(`${connector} ${actionVerb} ${nums[i]} more`.trim());
-      }
-      return `${parts.join(', ')}. How many ${unit.plural} does ${pronoun} have ${keyword}?`;
+    const parts: string[] = [];
+    const conjugatedVerb = conjugateVerb(actionVerb);
+    parts.push(`${name} has ${nums[0]} ${getUnitForm(unit, nums[0])} and ${conjugatedVerb} ${nums[1]} of them`);
+    for (let i = 2; i < nums.length; i++) {
+      parts.push(`then ${conjugatedVerb} ${nums[i]} more`);
     }
+    const keyword = getRandomItem(SUBTRACTION_KEYWORDS);
+    return {
+      text: `${parts.join(', ')}. How many ${unit.plural} does ${pronoun} have ${keyword}?`,
+      keyword
+    };
   }
   
-  // Placeholder for mult/div (can be expanded later)
-  return `${name} has ${nums[0]} ${getUnitForm(unit, nums[0])}. [Problem text for ${op} to be implemented]`;
+  const keyword = 'total';
+  return {
+    text: `${name} has ${nums[0]} ${getUnitForm(unit, nums[0])}. [Problem text for ${op} to be implemented]`,
+    keyword
+  };
 };
 
 // ============================================================================
@@ -118,7 +194,7 @@ interface FillableInputProps {
   onChange: (value: string) => void;
   correctAnswer: string;
   showFeedback: boolean;
-  width?: number; // width in characters
+  width?: number;
   helpText?: string;
   showHelp?: boolean;
 }
@@ -134,6 +210,9 @@ const FillableInput: React.FC<FillableInputProps> = ({
 }) => {
   const isCorrect = value.trim().toLowerCase() === correctAnswer.toLowerCase();
   
+  // Add extra padding to width to ensure content fits
+  const adjustedWidth = width + 2;
+  
   return (
     <span className="inline-flex flex-col items-center mx-1">
       <input
@@ -141,14 +220,14 @@ const FillableInput: React.FC<FillableInputProps> = ({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={`border-b-2 border-gray-800 text-center font-semibold bg-transparent 
-          focus:outline-none focus:border-blue-400 transition-colors px-1 ${
+          focus:outline-none focus:border-blue-400 transition-colors px-2 ${
           showFeedback
             ? isCorrect
               ? 'border-green-500 bg-green-50'
               : 'border-red-500 bg-red-50'
             : ''
         }`}
-        style={{ width: `${width}ch` }}
+        style={{ width: `${adjustedWidth}ch` }}
       />
       {showHelp && helpText && (
         <span className="text-xs text-gray-500 mt-1">({helpText})</span>
@@ -169,17 +248,15 @@ export const WordProblem: React.FC<WordProblemProps> = ({
 }) => {
   const normalizedOp = normalizeOperation(operation);
   
-  // Generate problem data (memoized so it doesn't change on re-render)
   const problemData: ProblemData = useMemo(() => {
     const person = getRandomItem(PEOPLE);
     const unit = getRandomItem(UNITS);
-    const keywordArray = KEY_WORDS[normalizedOp === 'add' ? 'addition' : 
-                                   normalizedOp === 'sub' ? 'subtraction' :
-                                   normalizedOp === 'mult' ? 'multiplication' : 'division'];
-    const keyword = getRandomItem(keywordArray);
-    const actionVerb = normalizedOp === 'add' ? getRandomItem(ACTION_VERBS.addition) :
-                       normalizedOp === 'sub' ? getRandomItem(ACTION_VERBS.subtraction) : 'uses';
-    const problemText = generateProblemText(person, unit, nums, normalizedOp, actionVerb, keyword);
+    
+    // Get appropriate action verb based on unit category and operation
+    const actionVerb = normalizedOp === 'add' ? getActionVerb(unit, 'addition') :
+                       normalizedOp === 'sub' ? getActionVerb(unit, 'subtraction') : 'uses';
+    
+    const { text: problemText, keyword } = generateProblemText(person, unit, nums, normalizedOp, actionVerb);
     const answer = calculateAnswer(nums, normalizedOp);
     const operationSymbol = getOperationSymbol(normalizedOp);
     
@@ -193,14 +270,13 @@ export const WordProblem: React.FC<WordProblemProps> = ({
       operationSymbol,
       normalizedOp,
     };
-  }, [nums, normalizedOp]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - only generate once on mount
   
-  // State for equation inputs
   const [equationInputs, setEquationInputs] = useState<string[]>(
-    Array(nums.length + nums.length - 1 + 1).fill('') // nums + operators + result
+    Array(nums.length + nums.length - 1 + 1).fill('')
   );
   
-  // State for sentence inputs
   const [nameInput, setNameInput] = useState('');
   const [resultNumberInput, setResultNumberInput] = useState('');
   const [unitInputs, setUnitInputs] = useState<string[]>(['', '']);
@@ -208,24 +284,24 @@ export const WordProblem: React.FC<WordProblemProps> = ({
     Array(problemData.keyword.split(' ').length).fill('')
   );
   
-  // Check if equation is correct (allowing commutative property for add/mult)
   const checkEquation = (): boolean => {
-    // Extract numbers and operators from inputs
     const inputNumbers: number[] = [];
     const inputOperators: string[] = [];
     
     for (let i = 0; i < equationInputs.length; i++) {
       if (i % 2 === 0) {
-        // Number position
         const num = parseInt(equationInputs[i]);
         if (!isNaN(num)) inputNumbers.push(num);
       } else {
-        // Operator position
         inputOperators.push(equationInputs[i]);
       }
     }
     
-    // For add/mult, check if numbers match (any order)
+    // Check if we have the right number of inputs
+    if (inputNumbers.length !== nums.length + 1) return false; // +1 for result
+    if (inputOperators.length !== nums.length - 1) return false;
+    
+    // For add/mult, check if numbers match (any order) - commutative property
     if (normalizedOp === 'add' || normalizedOp === 'mult') {
       const sortedNums = [...nums].sort((a, b) => a - b);
       const sortedInputNums = [...inputNumbers.slice(0, -1)].sort((a, b) => a - b);
@@ -243,15 +319,12 @@ export const WordProblem: React.FC<WordProblemProps> = ({
     return numbersMatch && operatorsMatch && resultMatches;
   };
   
-  const isEquationCorrect = showFeedback && checkEquation();
-  
   return (
     <div className="max-w-4xl mx-auto p-6">
-      {/* Instructions */}
       <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded">
         <p className="text-gray-800">
           Solve the following word problem. Show your work and include units in your answers.{' '}
-          <span className="underline font-semibold">Underline the key words</span> that indicate this is a{' '}
+          <span className="underline font-semibold">Underline the key words</span> that indicate this is{' '}
           {normalizedOp === 'add' ? 'an addition' : 
            normalizedOp === 'sub' ? 'a subtraction' :
            normalizedOp === 'mult' ? 'a multiplication' : 'a division'} problem.{' '}
@@ -259,13 +332,11 @@ export const WordProblem: React.FC<WordProblemProps> = ({
         </p>
       </div>
       
-      {/* Word Problem */}
       <div className="mb-8">
         <div className="text-xl font-medium mb-4">
           (1) {problemData.problemText}
         </div>
         
-        {/* Equation with fillable blanks */}
         <div className="flex items-center justify-start gap-2 my-6 flex-wrap">
           {nums.map((num, idx) => (
             <React.Fragment key={idx}>
@@ -332,8 +403,8 @@ export const WordProblem: React.FC<WordProblemProps> = ({
         </div>
       </div>
       
-      {/* Answer Sentence */}
-      <div className="flex flex-wrap items-end gap-1 text-xl">
+      {/* Fixed sentence alignment - all items aligned on baseline */}
+      <div className="flex flex-wrap items-baseline gap-1 text-xl">
         <FillableInput
           value={nameInput}
           onChange={setNameInput}
@@ -389,13 +460,12 @@ export const WordProblem: React.FC<WordProblemProps> = ({
 };
 
 // ============================================================================
-// DEMO COMPONENT
+// DEMO COMPONENT (Default Export)
 // ============================================================================
 
 const WordProblemDemo: React.FC = () => {
   const [showFeedback1, setShowFeedback1] = useState(false);
   const [showFeedback2, setShowFeedback2] = useState(false);
-  const [showFeedback3, setShowFeedback3] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8">
@@ -403,7 +473,6 @@ const WordProblemDemo: React.FC = () => {
         <h1 className="text-4xl font-bold text-gray-800 mb-2">Word Problem Generator</h1>
         <p className="text-gray-600 mb-8">Interactive word problems with fillable blanks</p>
 
-        {/* Example 1: Simple Subtraction */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h3 className="text-2xl font-semibold mb-4">Example 1: Subtraction (2 numbers)</h3>
           <div className="flex justify-center mb-4">
@@ -423,7 +492,6 @@ const WordProblemDemo: React.FC = () => {
           />
         </div>
 
-        {/* Example 2: Simple Addition */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h3 className="text-2xl font-semibold mb-4">Example 2: Addition (2 numbers)</h3>
           <div className="flex justify-center mb-4">
@@ -441,41 +509,6 @@ const WordProblemDemo: React.FC = () => {
             showFeedback={showFeedback2}
             showHelp={true}
           />
-        </div>
-
-        {/* Example 3: Multiple Addends */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 className="text-2xl font-semibold mb-4">Example 3: Addition (3 numbers)</h3>
-          <div className="flex justify-center mb-4">
-            <button
-              onClick={() => setShowFeedback3(!showFeedback3)}
-              className="px-6 py-2 !bg-green-500 text-white rounded-lg font-medium 
-                hover:!bg-green-600 transition-colors"
-            >
-              {showFeedback3 ? 'Hide' : 'Check'} Answer
-            </button>
-          </div>
-          <WordProblem
-            operation="add"
-            nums={[5, 3, 2]}
-            showFeedback={showFeedback3}
-            showHelp={true}
-          />
-        </div>
-
-        {/* Features */}
-        <div className="mt-8 bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Features</h2>
-          <ul className="space-y-2 text-gray-700">
-            <li>✅ <strong>Randomized content</strong> - Names, pronouns, units, and keywords change each time</li>
-            <li>✅ <strong>Multiple operands</strong> - Supports 2+ numbers for addition/subtraction</li>
-            <li>✅ <strong>Fillable equation</strong> - Students fill in all parts of the math equation</li>
-            <li>✅ <strong>Sentence completion</strong> - Appropriately sized blanks for each word</li>
-            <li>✅ <strong>Visual feedback</strong> - Green for correct, red for incorrect</li>
-            <li>✅ <strong>Help labels</strong> - Optional hints below each blank (toggle with showHelp)</li>
-            <li>✅ <strong>Grammar handling</strong> - Automatic singular/plural unit forms</li>
-            <li>✅ <strong>Commutative property</strong> - Addition accepts any order of numbers</li>
-          </ul>
         </div>
       </div>
     </div>
