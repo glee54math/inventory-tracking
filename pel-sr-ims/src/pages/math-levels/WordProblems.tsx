@@ -14,6 +14,21 @@ import {
 import type { PersonData, UnitData, SentenceTemplate } from "./WordProblemData";
 
 // ============================================================================
+// FILE STRUCTURE
+// ============================================================================
+// 1. TYPE DEFINITIONS - Interfaces for props and internal data
+// 2. UTILITY FUNCTIONS - Helper functions for operations and text generation
+//    - normalizeOperation: Convert operation aliases to standard form
+//    - getOperationSymbol: Get math symbol for operation
+//    - calculateAnswer: Compute the correct answer
+//    - conjugateVerb: Handle verb conjugation (including multi-word verbs)
+//    - generateProblemText: Build problem text from template
+// 3. FILLABLE INPUT COMPONENT - Reusable input with feedback
+// 4. WORD PROBLEM COMPONENT - Main component for rendering problems
+// 5. DEMO COMPONENT - Example usage with multiple problems
+// ============================================================================
+
+// ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
 
@@ -25,6 +40,8 @@ export interface WordProblemProps {
   nums: number[];
   showFeedback?: boolean;
   showHelp?: boolean;
+  onCheckAnswer?: () => void; // Optional callback for check answer button
+  showCheckButton?: boolean; // Whether to show the check answer button inline
 }
 
 interface ProblemData {
@@ -245,9 +262,15 @@ export const WordProblem: React.FC<WordProblemProps> = ({
   nums,
   showFeedback = false,
   showHelp = true,
+  onCheckAnswer,
+  showCheckButton = false,
 }) => {
   const normalizedOp = normalizeOperation(operation);
   
+  // ========================================================================
+  // PROBLEM DATA GENERATION
+  // Generates random problem data once on mount (useMemo with empty deps)
+  // ========================================================================
   const problemData: ProblemData = useMemo(() => {
     const person = getRandomItem(PEOPLE);
     const unit = getRandomItem(UNITS);
@@ -273,10 +296,17 @@ export const WordProblem: React.FC<WordProblemProps> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps - only generate once on mount
   
+  // ========================================================================
+  // COMPONENT STATE
+  // All user inputs are stored here
+  // ========================================================================
+  
+  // Equation inputs: [num1, op1, num2, op2, ..., result]
   const [equationInputs, setEquationInputs] = useState<string[]>(
     Array(nums.length + nums.length - 1 + 1).fill('')
   );
   
+  // Sentence completion inputs
   const [nameInput, setNameInput] = useState('');
   const [resultNumberInput, setResultNumberInput] = useState('');
   const [unitInputs, setUnitInputs] = useState<string[]>(['', '']);
@@ -284,6 +314,10 @@ export const WordProblem: React.FC<WordProblemProps> = ({
     Array(problemData.keyword.split(' ').length).fill('')
   );
   
+  // ========================================================================
+  // VALIDATION LOGIC
+  // Checks if user's equation is correct (handles commutative property)
+  // ========================================================================
   const checkEquation = (): boolean => {
     const inputNumbers: number[] = [];
     const inputOperators: string[] = [];
@@ -321,6 +355,9 @@ export const WordProblem: React.FC<WordProblemProps> = ({
   
   return (
     <div className="max-w-4xl mx-auto p-6">
+      {/* ====================================================================== */}
+      {/* INSTRUCTION BOX */}
+      {/* ====================================================================== */}
       <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded">
         <p className="text-gray-800">
           Solve the following word problem. Show your work and include units in your answers.{' '}
@@ -332,14 +369,22 @@ export const WordProblem: React.FC<WordProblemProps> = ({
         </p>
       </div>
       
+      {/* ====================================================================== */}
+      {/* WORD PROBLEM TEXT */}
+      {/* ====================================================================== */}
       <div className="mb-8">
         <div className="text-xl font-medium mb-4">
           (1) {problemData.problemText}
         </div>
         
-        <div className="flex items-center justify-start gap-2 my-6 flex-wrap">
+        {/* ================================================================== */}
+        {/* EQUATION INPUT BOXES */}
+        {/* Left margin added with ml-8 */}
+        {/* ================================================================== */}
+        <div className="flex items-center justify-start gap-4 my-6 flex-wrap ml-8">
           {nums.map((num, idx) => (
             <React.Fragment key={idx}>
+              {/* Number input box */}
               <input
                 type="text"
                 value={equationInputs[idx * 2]}
@@ -357,6 +402,7 @@ export const WordProblem: React.FC<WordProblemProps> = ({
                     : ''
                 }`}
               />
+              {/* Operator circle (only between numbers, not after last number) */}
               {idx < nums.length - 1 && (
                 <>
                   <div className="w-12 h-12 rounded-full border-2 border-gray-800 flex items-center justify-center text-xl font-bold bg-white">
@@ -382,7 +428,9 @@ export const WordProblem: React.FC<WordProblemProps> = ({
               )}
             </React.Fragment>
           ))}
+          {/* Equals sign */}
           <span className="text-2xl font-bold">=</span>
+          {/* Result input box */}
           <input
             type="text"
             value={equationInputs[equationInputs.length - 1]}
@@ -403,8 +451,12 @@ export const WordProblem: React.FC<WordProblemProps> = ({
         </div>
       </div>
       
-      {/* Fixed sentence alignment - all items aligned on baseline */}
-      <div className="flex flex-wrap items-baseline gap-1 text-xl">
+      {/* ====================================================================== */}
+      {/* ANSWER SENTENCE WITH FILLABLE BLANKS + CHECK ANSWER BUTTON */}
+      {/* Left margin added with ml-8, button inline on same row */}
+      {/* ====================================================================== */}
+      <div className="flex flex-wrap items-baseline gap-1 text-xl ml-8">
+        {/* Name input */}
         <FillableInput
           value={nameInput}
           onChange={setNameInput}
@@ -415,6 +467,7 @@ export const WordProblem: React.FC<WordProblemProps> = ({
           showHelp={showHelp}
         />
         <span>has</span>
+        {/* Result number input */}
         <FillableInput
           value={resultNumberInput}
           onChange={setResultNumberInput}
@@ -424,6 +477,7 @@ export const WordProblem: React.FC<WordProblemProps> = ({
           helpText={showHelp ? 'number' : undefined}
           showHelp={showHelp}
         />
+        {/* Units input */}
         <FillableInput
           value={unitInputs[0]}
           onChange={(val) => {
@@ -437,6 +491,7 @@ export const WordProblem: React.FC<WordProblemProps> = ({
           helpText={showHelp ? 'units' : undefined}
           showHelp={showHelp}
         />
+        {/* Keyword inputs (may be multiple words) */}
         {problemData.keyword.split(' ').map((word, idx) => (
           <FillableInput
             key={idx}
@@ -454,6 +509,17 @@ export const WordProblem: React.FC<WordProblemProps> = ({
           />
         ))}
         <span>.</span>
+        
+        {/* Check Answer Button - Inline with sentence */}
+        {showCheckButton && onCheckAnswer && (
+          <button
+            onClick={onCheckAnswer}
+            className="ml-20 px-4 py-1 !bg-green-500 text-white text-base rounded-lg font-medium 
+              hover:!bg-green-600 transition-colors"
+          >
+            {showFeedback ? 'Hide' : 'Check'} Answer
+          </button>
+        )}
       </div>
     </div>
   );
@@ -470,44 +536,43 @@ const WordProblemDemo: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8">
       <div className="max-w-5xl mx-auto">
+        {/* ================================================================== */}
+        {/* PAGE HEADER */}
+        {/* ================================================================== */}
         <h1 className="text-4xl font-bold text-gray-800 mb-2">Word Problem Generator</h1>
         <p className="text-gray-600 mb-8">Interactive word problems with fillable blanks</p>
 
+        {/* ================================================================== */}
+        {/* EXAMPLE 1: SUBTRACTION */}
+        {/* ================================================================== */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h3 className="text-2xl font-semibold mb-4">Example 1: Subtraction (2 numbers)</h3>
-          <div className="flex justify-center mb-4">
-            <button
-              onClick={() => setShowFeedback1(!showFeedback1)}
-              className="px-6 py-2 !bg-green-500 text-white rounded-lg font-medium 
-                hover:!bg-green-600 transition-colors"
-            >
-              {showFeedback1 ? 'Hide' : 'Check'} Answer
-            </button>
-          </div>
+          
+          {/* Word Problem Component with inline Check Answer button */}
           <WordProblem
             operation="subtraction"
             nums={[12, 4]}
             showFeedback={showFeedback1}
             showHelp={true}
+            showCheckButton={true}
+            onCheckAnswer={() => setShowFeedback1(!showFeedback1)}
           />
         </div>
 
+        {/* ================================================================== */}
+        {/* EXAMPLE 2: ADDITION */}
+        {/* ================================================================== */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h3 className="text-2xl font-semibold mb-4">Example 2: Addition (2 numbers)</h3>
-          <div className="flex justify-center mb-4">
-            <button
-              onClick={() => setShowFeedback2(!showFeedback2)}
-              className="px-6 py-2 !bg-green-500 text-white rounded-lg font-medium 
-                hover:!bg-green-600 transition-colors"
-            >
-              {showFeedback2 ? 'Hide' : 'Check'} Answer
-            </button>
-          </div>
+          
+          {/* Word Problem Component with inline Check Answer button */}
           <WordProblem
             operation="addition"
             nums={[4, 3]}
             showFeedback={showFeedback2}
             showHelp={true}
+            showCheckButton={true}
+            onCheckAnswer={() => setShowFeedback2(!showFeedback2)}
           />
         </div>
       </div>
