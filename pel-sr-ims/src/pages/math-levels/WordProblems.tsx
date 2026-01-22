@@ -5,8 +5,10 @@ import {
   KEY_WORDS,
   ADDITION_KEYWORDS,
   SUBTRACTION_KEYWORDS,
+  MULTIPLICATION_KEYWORDS,
   ADDITION_TEMPLATES,
   SUBTRACTION_TEMPLATES,
+  MULTIPLICATION_TEMPLATES,
   getRandomItem,
   getUnitForm,
   getActionVerb,
@@ -192,6 +194,60 @@ const generateProblemText = (
     return { text, keyword, segments };
   }
   
+  if (op === 'mult' && nums.length === 2) {
+    const [num1, num2] = nums;
+    const selectedTemplate = template || getRandomItem(MULTIPLICATION_TEMPLATES);
+    
+    // Select keyword based on template context
+    const keyword = selectedTemplate.context === 'equalGroups' 
+      ? getRandomItem(MULTIPLICATION_KEYWORDS.equalGroups)
+      : selectedTemplate.context === 'scaling'
+      ? getRandomItem(MULTIPLICATION_KEYWORDS.scaling)
+      : getRandomItem(MULTIPLICATION_KEYWORDS.arrays);
+    
+    const text = selectedTemplate.template
+      .replace('{name}', name)
+      .replace(/{Pronoun}/g, capitalizedPronoun)
+      .replace(/{pronoun}/g, pronoun)
+      .replace('{num1}', num1.toString())
+      .replace('{num2}', num2.toString())
+      .replace(/{unitPlural}/g, unit.plural)
+      .replace('{keyword}', keyword);
+    
+    // Create segments for labeled display - multiplication doesn't always have name
+    // For templates without {name}, create simpler segments
+    const hasName = selectedTemplate.template.includes('{name}');
+    
+    if (hasName) {
+      // Templates like: "{name} has {num1} groups of {num2} {unitPlural}"
+      const segments = [
+        { text: '(1) ' },
+        { text: name, label: '(name)' },
+        { text: ` has ${num1} groups of ${num2} ` },
+        { text: unit.plural, label: '(units)' },
+        { text: `. How many ` },
+        { text: unit.plural, label: '(units)' },
+        { text: ` does ${pronoun} have ` },
+        { text: keyword, label: '(key word)' },
+        { text: '?' }
+      ];
+      return { text, keyword, segments };
+    } else {
+      // Templates like: "There are {num1} baskets. Each basket has {num2} {unitPlural}"
+      const segments = [
+        { text: '(1) There are ' },
+        { text: `${num1} baskets. Each basket has ${num2} ` },
+        { text: unit.plural, label: '(units)' },
+        { text: `. How many ` },
+        { text: unit.plural, label: '(units)' },
+        { text: ` are there ` },
+        { text: keyword, label: '(key word)' },
+        { text: '?' }
+      ];
+      return { text, keyword, segments };
+    }
+  }
+  
   // Fallback for multiple numbers (can be expanded later)
   if (op === 'add') {
     const parts: string[] = [];
@@ -309,8 +365,11 @@ export const WordProblem: React.FC<WordProblemProps> = ({
     const unit = getRandomItem(UNITS);
     
     // Get appropriate action verb based on unit category and operation
+    // Note: Multiplication typically doesn't use action verbs
     const actionVerb = normalizedOp === 'add' ? getActionVerb(unit, 'addition') :
-                       normalizedOp === 'sub' ? getActionVerb(unit, 'subtraction') : 'uses';
+                       normalizedOp === 'sub' ? getActionVerb(unit, 'subtraction') :
+                       normalizedOp === 'mult' ? '' : // Multiplication doesn't need verbs
+                       'uses';
     
     const { text: problemText, keyword, segments } = generateProblemText(person, unit, nums, normalizedOp, actionVerb);
     const answer = calculateAnswer(nums, normalizedOp);
@@ -394,12 +453,12 @@ export const WordProblem: React.FC<WordProblemProps> = ({
       {/* ====================================================================== */}
       <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded">
         <p className="text-gray-800">
-          Solve the following word problem. Show your work and include units in your answers.{' '}
-          <span className="underline font-semibold">Underline the key words</span> that indicate this is{' '}
+          Solve the following word problem. Fill in the blanks to show your work. Then complete the sentence that answers the question.{' '}
+          {/* <span className="underline font-semibold">Underline the key words</span> that indicate this is{' '}
           {normalizedOp === 'add' ? 'an addition' : 
            normalizedOp === 'sub' ? 'a subtraction' :
            normalizedOp === 'mult' ? 'a multiplication' : 'a division'} problem.{' '}
-          Box the units in the question.
+          Box the units in the question. */}
         </p>
       </div>
       
@@ -512,7 +571,7 @@ export const WordProblem: React.FC<WordProblemProps> = ({
               </React.Fragment>
             ))}
             {/* Spacer for equals sign */}
-            <div style={{ width: '2rem' }}></div>
+            <div className="w-4.25"></div>
             {/* Centered (answer) label under result box */}
             <div className="w-20 flex justify-center">
               <span className="text-xs text-red-500">(answer)</span>
@@ -605,6 +664,7 @@ export const WordProblem: React.FC<WordProblemProps> = ({
 const WordProblemDemo: React.FC = () => {
   const [showFeedback1, setShowFeedback1] = useState(false);
   const [showFeedback2, setShowFeedback2] = useState(false);
+  const [showFeedback3, setShowFeedback3] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8">
@@ -641,11 +701,28 @@ const WordProblemDemo: React.FC = () => {
           {/* Word Problem Component with inline Check Answer button */}
           <WordProblem
             operation="addition"
-            nums={[4, 3]}
+            nums={[4, 3, 2]}
             showFeedback={showFeedback2}
             showHelp={true}
             showCheckButton={true}
             onCheckAnswer={() => setShowFeedback2(!showFeedback2)}
+          />
+        </div>
+
+        {/* ================================================================== */}
+        {/* EXAMPLE 3: MULTIPLICATION */}
+        {/* ================================================================== */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-2xl font-semibold mb-4">Example 3: Multiplication (2 numbers)</h3>
+          
+          {/* Word Problem Component with inline Check Answer button */}
+          <WordProblem
+            operation="multiplication"
+            nums={[3, 4]}
+            showFeedback={showFeedback3}
+            showHelp={true}
+            showCheckButton={true}
+            onCheckAnswer={() => setShowFeedback3(!showFeedback3)}
           />
         </div>
       </div>
