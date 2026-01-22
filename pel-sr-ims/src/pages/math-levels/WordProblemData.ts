@@ -135,7 +135,7 @@ export interface ActionVerbsByCategory {
 
 export const ACTION_VERBS: ActionVerbsByCategory = {
   food: {
-    addition: ['get', 'find', 'receive', 'buy', 'bake'],
+    addition: ['get', 'find', 'receive', 'buy'],
     subtraction: ['eat', 'share', 'give away', 'drop'],
   },
   object: {
@@ -181,44 +181,44 @@ export interface SentenceTemplate {
 
 export const ADDITION_TEMPLATES: SentenceTemplate[] = [
   // JOINING/TOTALING context - combining two separate quantities
-  {
+  { 
     template: '{name} has {num1} {unit1} and {verb} {num2} more. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'joining'
   },
-  {
+  { 
     template: '{name} {verb} {num2} {unitPlural}. {Pronoun} already has {num1}. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'joining'
   },
-  {
+  { 
     template: '{name} has {num1} {unit1}. {Pronoun} {verb} {num2} more {unitPlural}. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'joining'
   },
-
+  
   // INCREASING context - starting amount grows
-  {
+  { 
     template: '{name} has {num1} {unit1}. {Pronoun} then {verb} {num2} more. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'increasing'
   },
-  {
+  { 
     template: '{name} starts with {num1} {unit1} and {verb} {num2} more. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'increasing'
   },
 ];
 
 export const SUBTRACTION_TEMPLATES: SentenceTemplate[] = [
-  {
+  { 
     template: '{name} has {num1} {unit1} and {verb} {num2} of them. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'joining' // Using 'joining' as default context for subtraction
   },
-  {
+  { 
     template: '{name} has {num1} {unit1}. {Pronoun} then {verb} {num2}. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'joining'
   },
-  {
+  { 
     template: '{name} starts with {num1} {unit1} and {verb} {num2} of them. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'joining'
   },
-  {
+  { 
     template: '{name} has {num1} {unit1} but {verb} {num2}. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'joining'
   },

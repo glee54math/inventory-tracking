@@ -140,13 +140,15 @@ const generateProblemText = (
       .replace(/{unitPlural}/g, unit.plural)
       .replace('{keyword}', keyword);
     
-    // Create segments for labeled display
+    // Create segments for labeled display - mark ALL instances of name, units, and keywords
     const segments = [
       { text: '(1) ' },
       { text: name, label: '(name)' },
       { text: ` has ${num1} ` },
       { text: unit1, label: '(units)' },
-      { text: ` and ${conjugatedVerb} ${num2} more. How many ${unit.plural} does ${pronoun} have ` },
+      { text: ` and ${conjugatedVerb} ${num2} more. How many ` },
+      { text: unit.plural, label: '(units)' }, // Second instance of units
+      { text: ` does ${pronoun} have ` },
       { text: keyword, label: '(key word)' },
       { text: '?' }
     ];
@@ -174,13 +176,15 @@ const generateProblemText = (
       .replace(/{unitPlural}/g, unit.plural)
       .replace('{keyword}', keyword);
     
-    // Create segments for labeled display - need to parse the template
+    // Create segments for labeled display - mark ALL instances
     const segments = [
       { text: '(1) ' },
       { text: name, label: '(name)' },
       { text: ` has ${num1} ` },
       { text: unit1, label: '(units)' },
-      { text: ` and ${conjugatedVerb} ${num2} of them. How many ${unit.plural} does ${pronoun} have ` },
+      { text: ` and ${conjugatedVerb} ${num2} of them. How many ` },
+      { text: unit.plural, label: '(units)' }, // Second instance of units
+      { text: ` does ${pronoun} have ` },
       { text: keyword, label: '(key word)' },
       { text: '?' }
     ];
@@ -406,10 +410,10 @@ export const WordProblem: React.FC<WordProblemProps> = ({
         {/* Problem text with labels underneath key parts */}
         <div className="text-xl font-medium mb-4">
           {showHelp ? (
-            // Show segmented text with labels - properly spaced
+            // Show segmented text with labels - properly spaced and underlined
             problemData.problemSegments.map((segment, idx) => (
               <span key={idx} className="inline-flex flex-col align-top">
-                <span className="whitespace-pre">{segment.text}</span>
+                <span className={`whitespace-pre ${segment.label ? 'underline' : ''}`}>{segment.text}</span>
                 {segment.label && (
                   <span className="text-xs text-red-500 text-center whitespace-nowrap">{segment.label}</span>
                 )}
@@ -424,8 +428,9 @@ export const WordProblem: React.FC<WordProblemProps> = ({
         {/* ================================================================== */}
         {/* EQUATION INPUT BOXES */}
         {/* Left margin added with ml-8, gap increased to gap-4 */}
+        {/* Using mt-6 instead of my-6 to avoid bottom margin pushing (answer) down */}
         {/* ================================================================== */}
-        <div className="flex items-center justify-start gap-4 my-6 flex-wrap ml-8">
+        <div className="flex items-center justify-start gap-4 mt-6 flex-wrap ml-8">
           {nums.map((num, idx) => (
             <React.Fragment key={idx}>
               {/* Number input box */}
@@ -474,35 +479,51 @@ export const WordProblem: React.FC<WordProblemProps> = ({
           ))}
           {/* Equals sign */}
           <span className="text-2xl font-bold">=</span>
-          {/* Result input box with (answer) label */}
-          <div className="inline-flex flex-col items-center">
-            <input
-              type="text"
-              value={equationInputs[equationInputs.length - 1]}
-              onChange={(e) => {
-                const newInputs = [...equationInputs];
-                newInputs[equationInputs.length - 1] = e.target.value;
-                setEquationInputs(newInputs);
-              }}
-              className={`w-20 h-12 border-2 border-gray-800 text-center text-xl font-bold
-                focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors ${
-                showFeedback
-                  ? parseInt(equationInputs[equationInputs.length - 1]) === problemData.answer
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-red-500 bg-red-50'
-                  : ''
-              }`}
-            />
-            {showHelp && (
-              <span className="text-xs text-red-500 mt-1">(answer)</span>
-            )}
-          </div>
+          {/* Result input box */}
+          <input
+            type="text"
+            value={equationInputs[equationInputs.length - 1]}
+            onChange={(e) => {
+              const newInputs = [...equationInputs];
+              newInputs[equationInputs.length - 1] = e.target.value;
+              setEquationInputs(newInputs);
+            }}
+            className={`w-20 h-12 border-2 border-gray-800 text-center text-xl font-bold
+              focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors ${
+              showFeedback
+                ? parseInt(equationInputs[equationInputs.length - 1]) === problemData.answer
+                  ? 'border-green-500 bg-green-50'
+                  : 'border-red-500 bg-red-50'
+                : ''
+            }`}
+          />
         </div>
+        
+        {/* (answer) label on separate line below equation, centered under result box */}
+        {showHelp && (
+          <div className="flex justify-start ml-8 mt-1 gap-4">
+            {/* Dynamically create spacers for each number box and operator */}
+            {nums.map((_, idx) => (
+              <React.Fragment key={idx}>
+                {/* Spacer for number box (80px wide) */}
+                <div className="w-20"></div>
+                {/* Spacer for operator circle (48px wide) - only between numbers */}
+                {idx < nums.length - 1 && <div className="w-12"></div>}
+              </React.Fragment>
+            ))}
+            {/* Spacer for equals sign */}
+            <div style={{ width: '2rem' }}></div>
+            {/* Centered (answer) label under result box */}
+            <div className="w-20 flex justify-center">
+              <span className="text-xs text-red-500">(answer)</span>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* ====================================================================== */}
-      {/* ANSWER SENTENCE WITH FILLABLE BLANKS */}
-      {/* Left margin added with ml-8 */}
+      {/* ANSWER SENTENCE WITH FILLABLE BLANKS + CHECK ANSWER BUTTON */}
+      {/* Left margin added with ml-8, button on same line */}
       {/* ====================================================================== */}
       <div className="flex flex-wrap items-baseline gap-1 text-xl ml-8">
         {/* Name input */}
@@ -558,20 +579,21 @@ export const WordProblem: React.FC<WordProblemProps> = ({
           />
         ))}
         <span>.</span>
-      </div>
         
-      {/* Check Answer Button - Right aligned, same left margin as sentence */}
-      {showCheckButton && onCheckAnswer && (
-        <div className="flex justify-end mt-2 ml-8">
-          <button
-            onClick={onCheckAnswer}
-            className="px-4 py-1 !bg-green-500 text-white text-base rounded-lg font-medium 
-              hover:!bg-green-600 transition-colors"
-          >
-            {showFeedback ? 'Hide' : 'Check'} Answer
-          </button>
-        </div>
-      )}
+        {/* Check Answer Button - On same line, pushed to right with flex-grow spacer */}
+        {showCheckButton && onCheckAnswer && (
+          <>
+            <div className="flex-grow"></div>
+            <button
+              onClick={onCheckAnswer}
+              className="px-4 py-1 !bg-green-500 text-white text-base rounded-lg font-medium 
+                hover:!bg-green-600 transition-colors self-center"
+            >
+              {showFeedback ? 'Hide' : 'Check'} Answer
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 };
