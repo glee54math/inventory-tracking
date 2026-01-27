@@ -250,19 +250,41 @@ const generateProblemText = (
   
   // Fallback for multiple numbers (can be expanded later)
   if (op === 'add') {
-    const parts: string[] = [];
-    parts.push(`${name} has ${nums[0]} ${getUnitForm(unit, nums[0])}`);
     const conjugatedVerb = conjugateVerb(actionVerb);
+    const keyword = getRandomItem(ADDITION_KEYWORDS.joining);
+    
+    // Build segments for proper labeling
+    const segments: { text: string; label?: string }[] = [
+      { text: '(1) ' },
+      { text: name, label: '(name)' },
+      { text: ` has ${nums[0]} ` },
+      { text: getUnitForm(unit, nums[0]), label: '(units)' },
+    ];
+    
+    // Add each additional number with verb
+    for (let i = 1; i < nums.length; i++) {
+      const connector = i === nums.length - 1 ? ', and' : ',';
+      segments.push({ text: `${connector} ${conjugatedVerb} ${nums[i]} more` });
+    }
+    
+    segments.push({ text: `. How many ` });
+    segments.push({ text: unit.plural, label: '(units)' });
+    segments.push({ text: ` does ${pronoun} have ` });
+    segments.push({ text: keyword, label: '(key word)' });
+    segments.push({ text: '?' });
+    
+    const text = `${name} has ${nums[0]} ${getUnitForm(unit, nums[0])}`;
+    const parts: string[] = [];
     for (let i = 1; i < nums.length; i++) {
       const connector = i === nums.length - 1 ? 'and' : '';
       parts.push(`${connector} ${conjugatedVerb} ${nums[i]} more`.trim());
     }
-    const keyword = getRandomItem(ADDITION_KEYWORDS.joining);
-    const text = `${parts.join(', ')}. How many ${unit.plural} does ${pronoun} have ${keyword}?`;
+    const fullText = `${text}, ${parts.join(', ')}. How many ${unit.plural} does ${pronoun} have ${keyword}?`;
+    
     return { 
-      text,
+      text: fullText,
       keyword,
-      segments: [{ text: `(1) ${text}` }]
+      segments
     };
   }
   
@@ -453,12 +475,7 @@ export const WordProblem: React.FC<WordProblemProps> = ({
       {/* ====================================================================== */}
       <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded">
         <p className="text-gray-800">
-          Solve the following word problem. Fill in the blanks to show your work. Then complete the sentence that answers the question.{' '}
-          {/* <span className="underline font-semibold">Underline the key words</span> that indicate this is{' '}
-          {normalizedOp === 'add' ? 'an addition' : 
-           normalizedOp === 'sub' ? 'a subtraction' :
-           normalizedOp === 'mult' ? 'a multiplication' : 'a division'} problem.{' '}
-          Box the units in the question. */}
+          Solve the following word problem. Fill in the blanks to show your work. Then complete the sentence that answers the question.
         </p>
       </div>
       
@@ -467,12 +484,12 @@ export const WordProblem: React.FC<WordProblemProps> = ({
       {/* ====================================================================== */}
       <div className="mb-8">
         {/* Problem text with labels underneath key parts */}
-        <div className="text-xl font-medium mb-4">
+        <div className="text-xl font-medium mb-4 overflow-wrap-anywhere">
           {showHelp ? (
             // Show segmented text with labels - properly spaced and underlined
             problemData.problemSegments.map((segment, idx) => (
               <span key={idx} className="inline-flex flex-col align-top">
-                <span className={`whitespace-pre ${segment.label ? 'underline' : ''}`}>{segment.text}</span>
+                <span className={`whitespace-pre-wrap ${segment.label ? 'underline' : ''}`}>{segment.text}</span>
                 {segment.label && (
                   <span className="text-xs text-red-500 text-center whitespace-nowrap">{segment.label}</span>
                 )}
@@ -480,7 +497,7 @@ export const WordProblem: React.FC<WordProblemProps> = ({
             ))
           ) : (
             // Show plain text without labels
-            <span>{problemData.problemText}</span>
+            <span className="break-words">{problemData.problemText}</span>
           )}
         </div>
         
@@ -570,8 +587,8 @@ export const WordProblem: React.FC<WordProblemProps> = ({
                 {idx < nums.length - 1 && <div className="w-12"></div>}
               </React.Fragment>
             ))}
-            {/* Spacer for equals sign */}
-            <div className="w-4.25"></div>
+            {/* Spacer for equals sign - custom width to match actual equals sign width */}
+            <div style={{ width: '1.0625rem' }}></div> {/* 17px = 4.25 * 4px */}
             {/* Centered (answer) label under result box */}
             <div className="w-20 flex justify-center">
               <span className="text-xs text-red-500">(answer)</span>
