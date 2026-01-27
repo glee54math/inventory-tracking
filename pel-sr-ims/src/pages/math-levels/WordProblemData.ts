@@ -72,6 +72,12 @@ export interface KeywordsByContext {
   increasing: string[]; // Alternative phrasing contexts
 }
 
+export interface MultiplicationKeywordsByContext {
+  equalGroups: string[]; // For equal groups/repeated addition
+  scaling: string[]; // For making things larger
+  arrays: string[]; // For rows/columns arrangements
+}
+
 export const ADDITION_KEYWORDS: KeywordsByContext = {
   joining: [
     'in total',
@@ -95,14 +101,28 @@ export const SUBTRACTION_KEYWORDS = [
   'now',
 ];
 
-export const KEY_WORDS = {
-  addition: ADDITION_KEYWORDS.joining, // Default to joining for backward compatibility
-  subtraction: SUBTRACTION_KEYWORDS,
-  multiplication: [
+export const MULTIPLICATION_KEYWORDS: MultiplicationKeywordsByContext = {
+  equalGroups: [
+    'in total',
+    'in all',
+    'altogether',
+  ],
+  scaling: [
     'in total',
     'altogether',
     'in all',
   ],
+  arrays: [
+    'in total',
+    'in all',
+    'altogether',
+  ],
+};
+
+export const KEY_WORDS = {
+  addition: ADDITION_KEYWORDS.joining, // Default to joining for backward compatibility
+  subtraction: SUBTRACTION_KEYWORDS,
+  multiplication: MULTIPLICATION_KEYWORDS.equalGroups,
   division: [
     'each',
     'per group',
@@ -176,51 +196,83 @@ export function getActionVerb(unit: UnitData, operation: 'addition' | 'subtracti
 
 export interface SentenceTemplate {
   template: string; // Use placeholders: {name}, {pronoun}, {num1}, {unit1}, {verb}, {num2}, {unitPlural}, {keyword}
-  context: 'joining' | 'increasing'; // Context determines which keywords are appropriate
+  context: 'joining' | 'increasing' | 'equalGroups' | 'scaling' | 'arrays'; // Context determines which keywords are appropriate
 }
 
 export const ADDITION_TEMPLATES: SentenceTemplate[] = [
   // JOINING/TOTALING context - combining two separate quantities
-  { 
+  {
     template: '{name} has {num1} {unit1} and {verb} {num2} more. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'joining'
   },
-  { 
+  {
     template: '{name} {verb} {num2} {unitPlural}. {Pronoun} already has {num1}. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'joining'
   },
-  { 
+  {
     template: '{name} has {num1} {unit1}. {Pronoun} {verb} {num2} more {unitPlural}. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'joining'
   },
-  
+
   // INCREASING context - starting amount grows
-  { 
+  {
     template: '{name} has {num1} {unit1}. {Pronoun} then {verb} {num2} more. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'increasing'
   },
-  { 
+  {
     template: '{name} starts with {num1} {unit1} and {verb} {num2} more. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'increasing'
   },
 ];
 
 export const SUBTRACTION_TEMPLATES: SentenceTemplate[] = [
-  { 
+  {
     template: '{name} has {num1} {unit1} and {verb} {num2} of them. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'joining' // Using 'joining' as default context for subtraction
   },
-  { 
+  {
     template: '{name} has {num1} {unit1}. {Pronoun} then {verb} {num2}. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'joining'
   },
-  { 
+  {
     template: '{name} starts with {num1} {unit1} and {verb} {num2} of them. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'joining'
   },
-  { 
+  {
     template: '{name} has {num1} {unit1} but {verb} {num2}. How many {unitPlural} does {pronoun} have {keyword}?',
     context: 'joining'
+  },
+];
+
+export const MULTIPLICATION_TEMPLATES: SentenceTemplate[] = [
+  // EQUAL GROUPS context - repeated addition
+  {
+    template: '{name} has {num1} groups of {num2} {unitPlural}. How many {unitPlural} does {pronoun} have {keyword}?',
+    context: 'equalGroups'
+  },
+  {
+    template: '{name} has {num1} bags with {num2} {unitPlural} in each bag. How many {unitPlural} does {pronoun} have {keyword}?',
+    context: 'equalGroups'
+  },
+  {
+    template: '{name} buys {num1} boxes. Each box has {num2} {unitPlural}. How many {unitPlural} does {pronoun} have {keyword}?',
+    context: 'equalGroups'
+  },
+  {
+    template: 'There are {num1} baskets. Each basket has {num2} {unitPlural}. How many {unitPlural} are there {keyword}?',
+    context: 'equalGroups'
+  },
+
+  // SCALING context - making things larger (times/doubled/tripled)
+  {
+    template: '{name} has {num2} {unitPlural}. {Pronoun} gets {num1} times as many. How many {unitPlural} does {pronoun} have {keyword}?',
+    context: 'scaling'
+  },
+
+  // ARRAYS context - rows and columns
+  {
+    template: '{name} arranges {unitPlural} in {num1} rows with {num2} in each row. How many {unitPlural} are there {keyword}?',
+    context: 'arrays'
   },
 ];
 
