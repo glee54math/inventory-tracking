@@ -115,54 +115,57 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
             </div>
 
             {/* Levels */}
-            <div id="levels-dropdown" ref={levelsDropdownRef} className="mb-3">
-                <p className="text-xs text-center">
-                    All Levels
-                </p>
-                <button
-                    id="level-dropdown-button"
-                    onClick={() => setIsLevelsButtonPressed(!isLevelsButtonPressed)}
-                    className={sideBarButtonCSS}
-                >
-                    Levels
-                </button>
-                {isLevelsButtonPressed && (
-                    <ul id="level-dropdown-button-list" className="absolute mt-2 w-32 max-h-48 overflow-y-auto bg-white border border-gray-300 rounded">
-                        {levelsArray.map((level:string, index) => (
-                            <li 
-                                id={level+"-button-redirect"}
-                                key={level+"-button-redirect"}
-                                className="rounded">
-                                <button
-                                    onClick={() => {
-                                        // return level pressed
-                                        console.log(level + " was pressed on Sidebar.");
-                                        navigate(`/levels/${level}`);
-                                        // close the dropdown
-                                        setIsLevelsButtonPressed(false);
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm hover:!bg-gray-200 rounded"
-                                >
-                                    {level}
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
+            {nameOfWorker === "Mr. Lee" &&
+                <>
+                    <div id="levels-dropdown" ref={levelsDropdownRef} className="mb-3">
+                        <p className="text-xs text-center">
+                            All Levels
+                        </p>
+                        <button
+                            id="level-dropdown-button"
+                            onClick={() => setIsLevelsButtonPressed(!isLevelsButtonPressed)}
+                            className={sideBarButtonCSS}
+                        >
+                            Levels
+                        </button>
+                        {isLevelsButtonPressed && (
+                            <ul id="level-dropdown-button-list" className="absolute mt-2 w-32 max-h-48 overflow-y-auto bg-white border border-gray-300 rounded">
+                                {levelsArray.map((level:string, index) => (
+                                    <li 
+                                        id={level+"-button-redirect"}
+                                        key={level+"-button-redirect"}
+                                        className="rounded">
+                                        <button
+                                            onClick={() => {
+                                                // return level pressed
+                                                console.log(level + " was pressed on Sidebar.");
+                                                navigate(`/levels/${level}`);
+                                                // close the dropdown
+                                                setIsLevelsButtonPressed(false);
+                                            }}
+                                            className="w-full text-left px-4 py-2 text-sm hover:!bg-gray-200 rounded"
+                                        >
+                                            {level}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
 
-            {/* Presentation */}
-            <div id="presentation-slides" className="mb-3 w-full mx-1/2">
-                <p id="presentation-slides-text-on-top-of-button" className="text-xs text-center">
-                    Presentation 
-                </p>
-                <button
-                    // Will go to slides; different tsx files that link together
-                    className={sideBarButtonCSS}
-                >
-                    Slides
-                </button>
-            </div>
+                    {/* Presentation */}
+                    <div id="presentation-slides" className="mb-3 w-full mx-1/2">
+                        <p id="presentation-slides-text-on-top-of-button" className="text-xs text-center">
+                            Presentation 
+                        </p>
+                        <button
+                            // Will go to slides; different tsx files that link together
+                            className={sideBarButtonCSS}
+                        >
+                            Slides
+                        </button>
+                    </div>
+                </>}
         </div>
     )
 }

@@ -313,3 +313,127 @@ export async function assignHWToStudent(student: Student, hwPackets: string[]) {
     console.log(`✅ Updated hwkAssigned for ${student.firstName} ${student.lastName}`);
   }
 }
+// Worker Management Functions
+export async function createNewWorker(firstName: string, lastName: string, location: string = "san-ramon"): Promise<boolean> {
+  // Generate initials from first and last name
+  const initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+  const tempPIN = '';
+
+  // Create new worker object (pin will be empty string initially)
+  const newWorker: Worker = {
+    firstName,
+    lastName,
+    initials,
+  };
+
+  try {
+    // Get the workers document for the specified location
+    const workersDocRef = doc(db, "workers", location);
+    const workersSnap = await getDoc(workersDocRef);
+
+    if (!workersSnap.exists()) {
+      // If document doesn't exist, create it with the new worker
+      await setDoc(workersDocRef, {
+        workers: [{ ...newWorker, pin: "" }]
+      });
+      console.log(`✅ Created workers document and added ${firstName} ${lastName} (${initials})`);
+      return true;
+    }
+
+    // Document exists, get current workers array
+    const data = workersSnap.data();
+    const currentWorkers = data.workers as Worker[];
+
+    // Check if worker with same initials already exists
+    const existingWorker = currentWorkers.find((w: Worker) => w.initials === initials);
+    if (existingWorker) {
+      console.log(`❌ Worker with initials ${initials} already exists`);
+      return false;
+    }
+
+    // Add new worker to the array
+    const updatedWorkers = [...currentWorkers, { ...newWorker, pin: "" }];
+
+    // Update the document
+    await updateDoc(workersDocRef, {
+      workers: updatedWorkers
+    });
+
+    console.log(`✅ Added ${firstName} ${lastName} (${initials}) to ${location} workers`);
+    return true;
+  } catch (error) {
+    console.error("Error creating worker:", error);
+    return false;
+  }
+}
+
+// PIN Authentication Functions
+export async function checkWorkerHasPin(workerInitials: string): Promise<boolean> {
+  // Check if worker has a PIN set in the database
+  const querySnapshot = await getDocs(collection(db, "workers"));
+  
+  for (const docSnap of querySnapshot.docs) {
+    const data = docSnap.data();
+    const workers = data.workers as Worker[];
+    
+    if (Array.isArray(workers)) {
+      const worker = workers.find((w: Worker) => w.initials === workerInitials);
+      if (worker) {
+        return !!(worker as any).pin; // Check if pin field exists and is truthy
+      }
+    }
+  }
+  
+  return false;
+}
+
+export async function createWorkerPin(workerInitials: string, pin: string): Promise<boolean> {
+  // Create a PIN for a worker
+  const querySnapshot = await getDocs(collection(db, "workers"));
+  
+  for (const docSnap of querySnapshot.docs) {
+    const data = docSnap.data();
+    const workers = data.workers as Worker[];
+    
+    if (Array.isArray(workers)) {
+      const workerIndex = workers.findIndex((w: Worker) => w.initials === workerInitials);
+      if (workerIndex !== -1) {
+        // Update the worker object with the PIN
+        workers[workerIndex] = {
+          ...workers[workerIndex],
+          pin: pin
+        } as any;
+        
+        // Update the document
+        await updateDoc(docSnap.ref, {
+          workers: workers
+        });
+        
+        console.log(`✅ PIN created for ${workerInitials}`);
+        return true;
+      }
+    }
+  }
+  
+  console.log(`❌ Worker ${workerInitials} not found`);
+  return false;
+}
+
+export async function verifyWorkerPin(workerInitials: string, pin: string): Promise<boolean> {
+  // Verify a worker's PIN
+  const querySnapshot = await getDocs(collection(db, "workers"));
+  
+  for (const docSnap of querySnapshot.docs) {
+    const data = docSnap.data();
+    const workers = data.workers as Worker[];
+    
+    if (Array.isArray(workers)) {
+      const worker = workers.find((w: Worker) => w.initials === workerInitials);
+      if (worker) {
+        return (worker as any).pin === pin;
+      }
+    }
+  }
+  
+  return false;
+}
