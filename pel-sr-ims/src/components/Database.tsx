@@ -1,95 +1,249 @@
 // Database.tsx
-// Database Table for Students
+// Database Table for Students with Column Filters
 
 // imports
 import { useEffect, useState } from "react";
 import { loadStudentsFromDB } from "../utils/inventoryService";
 import type { Student } from "../utils/types";
 
-// Props if Needed
-
-
 // Component
 export default function Database() {
     // states
     const [students, setStudents] = useState<Student[]>([]);
+    const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
     const [studentProps, setStudentProps] = useState<string[]>([]);
-    
-
+    const [filters, setFilters] = useState<Record<string, string>>({});
 
     useEffect(() => {
         // load students
         const getStudents = async() => {
-            setStudents(await loadStudentsFromDB("san-ramon"));
-            // console.log(students);
-            const ind = students.findIndex((student) => student.firstName === "Dylan");
-            setStudentProps((Object.keys(students[ind])).sort());
-            // console.log((students["subjects_startDate_Map"]));
+            const loadedStudents = await loadStudentsFromDB("san-ramon");
+            setStudents(loadedStudents);
+            
+            if (loadedStudents.length > 0) {
+                // Get properties from first student
+                const props = Object.keys(loadedStudents[0]).sort();
+                setStudentProps(props);
+                
+                // Initialize filters for each property
+                const initialFilters: Record<string, string> = {};
+                props.forEach(prop => {
+                    initialFilters[prop] = "";
+                });
+                setFilters(initialFilters);
+            }
         };
         getStudents();
-    }, [students]);
+    }, []);
+
+    // Filter students whenever filters or students change
+    useEffect(() => {
+        if (students.length === 0) return;
+
+        const filtered = students.filter((student) => {
+            // Check each filter
+            return studentProps.every((property) => {
+                const filterValue = filters[property]?.toLowerCase().trim();
+                
+                // If no filter for this property, include the student
+                if (!filterValue) return true;
+
+                const studentValue = student[property];
+
+                // Handle undefined values
+                if (studentValue === undefined || studentValue === null) {
+                    return false;
+                }
+
+                // Handle string values
+                if (typeof studentValue === "string") {
+                    return studentValue.toLowerCase().includes(filterValue);
+                }
+
+                // Handle array values (like hwkAssigned)
+                if (Array.isArray(studentValue)) {
+                    return studentValue.some((item) =>
+                        String(item).toLowerCase().includes(filterValue)
+                    );
+                }
+
+                // Handle object values (like subjects_startDate_Map)
+                if (typeof studentValue === "object") {
+                    // Search in both keys (subjects) and values (dates)
+                    return Object.entries(studentValue).some(([key, value]) =>
+                        key.toLowerCase().includes(filterValue) ||
+                        String(value).toLowerCase().includes(filterValue)
+                    );
+                }
+
+                // Default: convert to string and search
+                return String(studentValue).toLowerCase().includes(filterValue);
+            });
+        });
+
+        setFilteredStudents(filtered);
+    }, [filters, students, studentProps]);
+
+    // Handle filter input changes
+    const handleFilterChange = (property: string, value: string) => {
+        setFilters((prev) => ({
+            ...prev,
+            [property]: value,
+        }));
+    };
+
+    // Clear all filters
+    const clearAllFilters = () => {
+        const clearedFilters: Record<string, string> = {};
+        studentProps.forEach(prop => {
+            clearedFilters[prop] = "";
+        });
+        setFilters(clearedFilters);
+    };
+
+    // Check if any filters are active
+    const hasActiveFilters = Object.values(filters).some(f => f.trim() !== "");
 
     return (
-        <table className="w-[40%] opacity-100 bg-white p-2 border overflow-auto w-full max-w-full">
-            <thead>
-                <tr key="student-props">
-                    {studentProps.map((property: string) => (
-                        <th
-                            key={property}
-                            className="border border-gray-400 px-2 py-1 text-left relative h-20 w-16 text-sm"
-                        >
-                            {property.split(/_|\B(?=[A-Z])/).join(" ")}
-                        </th>
-                    ))}
-                </tr>
-            </thead>
-            <tbody>
-                {students.map((student: Student) => (
-                    <tr key={student.firstName + student.lastName}>
-                        {studentProps.map((property: string) => (
-                            // if it's an array, then I want to print the contents.
-                            (Array.isArray(student[property]) && (
-                                <td 
-                                    key={student.firstName + property} 
-                                    className="border border-gray-400 px-2 py-1 text-xs"
-                                >
-                                    {student[property].join(", ")}
-                                </td>
-                            )) ||
-                            ((typeof student[property] === "string") && (
-                                <td 
-                                    key={student.firstName + property} 
-                                    className="border border-gray-400 px-2 py-1 text-xs"
-                                >
-                                    {student[property]}
-                                </td>
-                            )) ||
-                            ((typeof student[property] === "object") && (
-                                // map, needs to be broken down. 
-                                <td 
-                                    key={student.firstName + property} 
-                                    className="border border-gray-400 px-2 py-1 text-xs"
-                                >
-                                    {Object.entries(student[property]).map( ([subject, date]) => (
-                                        <div key={subject+"-join-date"}>
-                                            {subject + ": " + date}
-                                        </div>
-                                    ))}
-                                </td>
-                            )) ||
-                            ((typeof student[property] === "undefined") && (
-                                <td 
-                                    key={student.firstName + property} 
-                                    className="border border-gray-400 px-2 py-1 text-xs"
-                                >
-                                    This means that it's empty.
-                                </td>
-                            ))
-                        ))}
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-    )
-}
+        <div className="w-full">
+            {/* Clear Filters Button */}
+            {hasActiveFilters && (
+                <div className="mb-2 flex justify-end">
+                    <button
+                        onClick={clearAllFilters}
+                        className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                    >
+                        Clear All Filters
+                    </button>
+                </div>
+            )}
 
+            {/* Results Count */}
+            <div className="mb-2 text-sm text-gray-600">
+                Showing {filteredStudents.length} of {students.length} students
+            </div>
+
+            {/* Table */}
+            <div className="overflow-auto w-full max-w-full border">
+                <table className="w-full bg-white">
+                    <thead>
+                        {/* Column Headers */}
+                        <tr>
+                            {studentProps.map((property: string) => (
+                                <th
+                                    key={property}
+                                    className="border border-gray-400 px-2 py-1 text-left bg-gray-100"
+                                >
+                                    <div className="flex flex-col gap-1">
+                                        <span className="font-semibold text-sm">
+                                            {property.split(/_|\B(?=[A-Z])/).join(" ")}
+                                        </span>
+                                    </div>
+                                </th>
+                            ))}
+                        </tr>
+                        {/* Filter Inputs Row */}
+                        <tr>
+                            {studentProps.map((property: string) => (
+                                <th
+                                    key={`filter-${property}`}
+                                    className="border border-gray-400 px-2 py-1 bg-gray-50"
+                                >
+                                    <input
+                                        type="text"
+                                        value={filters[property] || ""}
+                                        onChange={(e) => handleFilterChange(property, e.target.value)}
+                                        placeholder="Filter..."
+                                        className="w-full px-1 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                                    />
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredStudents.length === 0 ? (
+                            <tr>
+                                <td
+                                    colSpan={studentProps.length}
+                                    className="border border-gray-400 px-2 py-4 text-center text-gray-500"
+                                >
+                                    No students match the current filters
+                                </td>
+                            </tr>
+                        ) : (
+                            filteredStudents.map((student: Student) => (
+                                <tr key={student.firstName + student.lastName}>
+                                    {studentProps.map((property: string) => {
+                                        const value = student[property];
+
+                                        // Handle arrays
+                                        if (Array.isArray(value)) {
+                                            return (
+                                                <td
+                                                    key={student.firstName + property}
+                                                    className="border border-gray-400 px-2 py-1 text-xs"
+                                                >
+                                                    {value.join(", ")}
+                                                </td>
+                                            );
+                                        }
+
+                                        // Handle strings
+                                        if (typeof value === "string") {
+                                            return (
+                                                <td
+                                                    key={student.firstName + property}
+                                                    className="border border-gray-400 px-2 py-1 text-xs"
+                                                >
+                                                    {value}
+                                                </td>
+                                            );
+                                        }
+
+                                        // Handle objects (like subjects_startDate_Map)
+                                        if (typeof value === "object" && value !== null) {
+                                            return (
+                                                <td
+                                                    key={student.firstName + property}
+                                                    className="border border-gray-400 px-2 py-1 text-xs"
+                                                >
+                                                    {Object.entries(value).map(([subject, date]) => (
+                                                        <div key={subject + "-join-date"}>
+                                                            {subject + ": " + date}
+                                                        </div>
+                                                    ))}
+                                                </td>
+                                            );
+                                        }
+
+                                        // Handle undefined/null
+                                        if (value === undefined || value === null) {
+                                            return (
+                                                <td
+                                                    key={student.firstName + property}
+                                                    className="border border-gray-400 px-2 py-1 text-xs text-gray-400"
+                                                >
+                                                    Empty
+                                                </td>
+                                            );
+                                        }
+
+                                        // Fallback for other types
+                                        return (
+                                            <td
+                                                key={student.firstName + property}
+                                                className="border border-gray-400 px-2 py-1 text-xs"
+                                            >
+                                                {String(value)}
+                                            </td>
+                                        );
+                                    })}
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+}
