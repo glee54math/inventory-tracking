@@ -14,6 +14,65 @@ export default function Database() {
     const [studentProps, setStudentProps] = useState<string[]>([]);
     const [filters, setFilters] = useState<Record<string, string>>({});
 
+    // Helper function to organize homework assignments
+    const organizeHomework = (hwkArray: string[]) => {
+        if (!hwkArray || hwkArray.length === 0) return null;
+
+        // Group by subject type and level
+        const organized: Record<string, Record<string, string[]>> = {
+            Math: {},
+            English: {}
+        };
+
+        hwkArray.forEach((hwk) => {
+            // Parse homework string (e.g., "MG6 81-90" or "EG3 1-10")
+            const match = hwk.match(/^([A-Z]+)(\d+)\s+(.+)$/);
+            if (match) {
+                const [, prefix, level, range] = match;
+                const subject = prefix.startsWith('M') ? 'Math' : 'English';
+                const levelKey = `${prefix}${level}`;
+
+                if (!organized[subject][levelKey]) {
+                    organized[subject][levelKey] = [];
+                }
+                organized[subject][levelKey].push(range);
+            }
+        });
+
+        return organized;
+    };
+
+    // Helper function to render organized homework
+    const renderHomework = (hwkArray: string[]) => {
+        const organized = organizeHomework(hwkArray);
+        if (!organized) return "No homework assigned";
+
+        return (
+            <div className="space-y-2">
+                {Object.entries(organized).map(([subject, levels]) => {
+                    // Skip if no levels for this subject
+                    if (Object.keys(levels).length === 0) return null;
+
+                    return (
+                        <div key={subject} className="mb-2">
+                            <div className="font-semibold text-blue-700">{subject}:</div>
+                            {Object.entries(levels)
+                                .sort(([a], [b]) => a.localeCompare(b)) // Sort levels alphabetically
+                                .map(([level, ranges]) => (
+                                    <div key={level} className="ml-2 mb-1">
+                                        <span className="font-medium text-gray-700">{level}:</span>
+                                        <span className="ml-1 text-gray-600">
+                                            {ranges.join(", ")}
+                                        </span>
+                                    </div>
+                                ))}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
+
     useEffect(() => {
         // load students
         const getStudents = async() => {
@@ -132,7 +191,9 @@ export default function Database() {
                             {studentProps.map((property: string) => (
                                 <th
                                     key={property}
-                                    className="border border-gray-400 px-2 py-1 text-left bg-gray-100"
+                                    className={`border border-gray-400 px-2 py-1 text-left bg-gray-100 ${
+                                        property === "hwkAssigned" ? "min-w-[300px]" : ""
+                                    }`}
                                 >
                                     <div className="flex flex-col gap-1">
                                         <span className="font-semibold text-sm">
@@ -147,7 +208,9 @@ export default function Database() {
                             {studentProps.map((property: string) => (
                                 <th
                                     key={`filter-${property}`}
-                                    className="border border-gray-400 px-2 py-1 bg-gray-50"
+                                    className={`border border-gray-400 px-2 py-1 bg-gray-50 ${
+                                        property === "hwkAssigned" ? "min-w-[300px]" : ""
+                                    }`}
                                 >
                                     <input
                                         type="text"
@@ -181,9 +244,14 @@ export default function Database() {
                                             return (
                                                 <td
                                                     key={student.firstName + property}
-                                                    className="border border-gray-400 px-2 py-1 text-xs"
+                                                    className={`border border-gray-400 px-2 py-1 text-xs ${
+                                                        property === "hwkAssigned" ? "min-w-[300px]" : ""
+                                                    }`}
                                                 >
-                                                    {value.join(", ")}
+                                                    {property === "hwkAssigned" 
+                                                        ? renderHomework(value)
+                                                        : value.join(", ")
+                                                    }
                                                 </td>
                                             );
                                         }
