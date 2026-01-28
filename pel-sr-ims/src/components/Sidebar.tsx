@@ -165,6 +165,20 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                             Slides
                         </button>
                     </div>
+
+                    {/* Dashboard - Only for Mr. Lee */}
+                    <div id="dashboard-button" className="mb-3 w-full mx-1/2">
+                        <p className="text-xs text-center">
+                            Progress Dashboard
+                        </p>
+                        <button
+                            id="dashboard"
+                            onClick={() => navigate('/dashboard')}
+                            className={sideBarButtonCSS}
+                        >
+                            Dashboard 📊
+                        </button>
+                    </div>
                 </>}
         </div>
     )
