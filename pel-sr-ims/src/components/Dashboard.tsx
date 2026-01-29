@@ -10,6 +10,7 @@ import {
 } from "../utils/progressService";
 import type { Student, StudentProgress, SubjectProgress } from "../utils/types";
 import ProgressGraph from "./ProgressGraph";
+import HistoricalDataForm from "./HistoricalDataForm";
 import { MATH_LEVELS, ENGLISH_LEVELS } from "../utils/types";
 
 export default function Dashboard() {
@@ -326,19 +327,12 @@ export default function Dashboard() {
 
           {/* Historical Data Form */}
           {showHistoricalDataForm && (
-            <div className="bg-yellow-50 p-6 rounded shadow mb-6 border border-yellow-300">
-              <h3 className="text-lg font-semibold mb-4">
-                Add Historical Level Data (Pre-April 2025)
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                This feature is for manually entering level completion dates for
-                students who started before the app was created. You only need to do
-                this once per student.
-              </p>
-              <p className="text-sm font-medium text-red-600">
-                Coming soon: Form to manually input level start/end dates
-              </p>
-            </div>
+            <HistoricalDataForm
+              student={selectedStudent}
+              currentMathLevel={studentProgress.mathProgress?.currentLevel}
+              currentEnglishLevel={studentProgress.englishProgress?.currentLevel}
+              onSave={handleRefreshProgress}
+            />
           )}
 
           {/* Subject Toggle and View Controls */}

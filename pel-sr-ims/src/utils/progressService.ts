@@ -224,24 +224,38 @@ export function calculateRemainingLevels(
 
 /**
  * Build complete student progress from logs and student data
+ * Prioritizes historical data over log data when available
  */
 export async function buildStudentProgress(
   student: Student,
   location: string = "san-ramon"
 ): Promise<StudentProgress> {
+  // Import historical progress service
+  const { loadHistoricalProgress } = await import("./historicalProgressService");
+  
   // Try to load existing progress first
   const existingProgress = await loadStudentProgress(student.firstName, student.lastName, location);
   
-  // Build homework history from logs
+  // Load historical progress data
+  const historicalData = await loadHistoricalProgress(student.firstName, student.lastName, location);
+  
+  console.log(`Historical data for ${student.firstName}:`, historicalData);
+
+  // Build homework history from logs (as fallback)
   const hwkHistory = await buildHwkHistoryFromLogs(student.firstName);
 
   console.log(`Found ${hwkHistory.length} homework assignments for ${student.firstName}`);
 
-  // Build progress for each subject
-  const mathStartDate = student.subjects_startDate_Map?.Math
+  // Determine program start dates (prioritize historical data)
+  const mathStartDate = historicalData?.mathProgramStartDate
+    ? new Date(historicalData.mathProgramStartDate)
+    : student.subjects_startDate_Map?.Math
     ? new Date(student.subjects_startDate_Map.Math)
     : new Date();
-  const englishStartDate = student.subjects_startDate_Map?.English
+    
+  const englishStartDate = historicalData?.englishProgramStartDate
+    ? new Date(historicalData.englishProgramStartDate)
+    : student.subjects_startDate_Map?.English
     ? new Date(student.subjects_startDate_Map.English)
     : new Date();
 
@@ -254,17 +268,66 @@ export async function buildStudentProgress(
   let englishProgress: SubjectProgress | undefined;
 
   // Build Math Progress
-  if (mathHwk.length > 0) {
-    const levelHistory = buildLevelProgressFromHwkHistory(
-      hwkHistory,
-      "Math",
-      mathStartDate
-    );
+  const hasHistoricalMathData = historicalData?.mathLevels && historicalData.mathLevels.length > 0;
+  const hasMathHwkData = mathHwk.length > 0;
+
+  if (hasHistoricalMathData || hasMathHwkData) {
+    let levelHistory: LevelProgress[] = [];
+    let currentLevel = "MK1";
+
+    if (hasHistoricalMathData) {
+      // Use historical data - convert to LevelProgress format
+      console.log("Using historical Math data");
+      levelHistory = historicalData!.mathLevels!.map((entry) => ({
+        level: entry.level,
+        startDate: new Date(entry.startDate),
+        endDate: new Date(entry.endDate),
+        estimatedCompletion: new Date(entry.endDate),
+        pagesCompleted: PAGES_PER_LEVEL,
+        isComplete: true,
+      }));
+
+      // If there's also log data, use it to determine CURRENT level
+      if (hasMathHwkData) {
+        console.log("Also checking log data for current Math level");
+        const logLevelHistory = buildLevelProgressFromHwkHistory(
+          hwkHistory,
+          "Math",
+          mathStartDate
+        );
+        
+        if (logLevelHistory.length > 0) {
+          // Current level is the last one from logs
+          const currentFromLogs = logLevelHistory[logLevelHistory.length - 1];
+          currentLevel = currentFromLogs.level;
+          
+          // Only add the current level from logs (not historical ones)
+          const historicalLevels = levelHistory.map(l => l.level);
+          if (!historicalLevels.includes(currentLevel)) {
+            levelHistory.push(currentFromLogs);
+          }
+        } else {
+          // No current level from logs, so current is last historical
+          currentLevel = levelHistory[levelHistory.length - 1]?.level || "MK1";
+        }
+      } else {
+        // No log data, so current level is last historical level
+        currentLevel = levelHistory[levelHistory.length - 1]?.level || "MK1";
+      }
+    } else {
+      // Fallback to log data only
+      console.log("Using log data for Math");
+      levelHistory = buildLevelProgressFromHwkHistory(
+        hwkHistory,
+        "Math",
+        mathStartDate
+      );
+      currentLevel = levelHistory[levelHistory.length - 1]?.level || "MK1";
+    }
     
     if (levelHistory.length === 0) {
-      console.log("No level history built for Math despite having homework");
+      console.log("No level history built for Math");
     } else {
-      const currentLevel = levelHistory[levelHistory.length - 1]?.level || "MK1";
       const lastLevelEnd =
         levelHistory[levelHistory.length - 1]?.endDate ||
         levelHistory[levelHistory.length - 1]?.startDate ||
@@ -302,15 +365,65 @@ export async function buildStudentProgress(
   }
 
   // Build English Progress
-  if (englishHwk.length > 0) {
-    const levelHistory = buildLevelProgressFromHwkHistory(
-      hwkHistory,
-      "English",
-      englishStartDate
-    );
+  const hasHistoricalEnglishData = historicalData?.englishLevels && historicalData.englishLevels.length > 0;
+  const hasEnglishHwkData = englishHwk.length > 0;
+
+  if (hasHistoricalEnglishData || hasEnglishHwkData) {
+    let levelHistory: LevelProgress[] = [];
+    let currentLevel = "EK1";
+
+    if (hasHistoricalEnglishData) {
+      // Use historical data - convert to LevelProgress format
+      console.log("Using historical English data");
+      levelHistory = historicalData!.englishLevels!.map((entry) => ({
+        level: entry.level,
+        startDate: new Date(entry.startDate),
+        endDate: new Date(entry.endDate),
+        estimatedCompletion: new Date(entry.endDate),
+        pagesCompleted: PAGES_PER_LEVEL,
+        isComplete: true,
+      }));
+
+      // If there's also log data, use it to determine CURRENT level
+      if (hasEnglishHwkData) {
+        console.log("Also checking log data for current English level");
+        const logLevelHistory = buildLevelProgressFromHwkHistory(
+          hwkHistory,
+          "English",
+          englishStartDate
+        );
+        
+        if (logLevelHistory.length > 0) {
+          // Current level is the last one from logs
+          const currentFromLogs = logLevelHistory[logLevelHistory.length - 1];
+          currentLevel = currentFromLogs.level;
+          
+          // Only add the current level from logs (not historical ones)
+          const historicalLevels = levelHistory.map(l => l.level);
+          if (!historicalLevels.includes(currentLevel)) {
+            levelHistory.push(currentFromLogs);
+          }
+        } else {
+          // No current level from logs, so current is last historical
+          currentLevel = levelHistory[levelHistory.length - 1]?.level || "EK1";
+        }
+      } else {
+        // No log data, so current level is last historical level
+        currentLevel = levelHistory[levelHistory.length - 1]?.level || "EK1";
+      }
+    } else {
+      // Fallback to log data only
+      console.log("Using log data for English");
+      levelHistory = buildLevelProgressFromHwkHistory(
+        hwkHistory,
+        "English",
+        englishStartDate
+      );
+      currentLevel = levelHistory[levelHistory.length - 1]?.level || "EK1";
+    }
     
     if (levelHistory.length === 0) {
-      console.log("No level history built for English despite having homework");
+      console.log("No level history built for English");
     } else {
       const currentLevel = levelHistory[levelHistory.length - 1]?.level || "EK1";
       const lastLevelEnd =
