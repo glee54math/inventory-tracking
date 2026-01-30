@@ -50,8 +50,8 @@ export default function ParentLogin() {
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 overflow-auto z-50">
-      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+    <div className="fixed inset-0 flex items-center justify-center !bg-gradient-to-br from-blue-50 to-indigo-100 p-4 overflow-auto z-50">
+      <div className="!bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
@@ -64,7 +64,7 @@ export default function ParentLogin() {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="!bg-red-50 border !border-red-200 text-red-700 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )}
@@ -81,7 +81,7 @@ export default function ParentLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border !border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="your.email@example.com"
               />
             </div>
@@ -95,7 +95,7 @@ export default function ParentLogin() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border !border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="••••••••"
               />
             </div>
@@ -103,7 +103,7 @@ export default function ParentLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full !bg-blue-600 text-white py-2 rounded-lg font-semibold !hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
@@ -112,7 +112,7 @@ export default function ParentLogin() {
           <div className="text-center">
             <button
               onClick={() => navigate("/parent-registration")}
-              className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition"
+              className="w-full !bg-green-600 text-white py-2 rounded-lg font-semibold !hover:bg-green-700 transition"
             >
               Create New Account
             </button>
@@ -122,10 +122,10 @@ export default function ParentLogin() {
         {/* Divider */}
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
+            <div className="w-full !border-t !border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            <span className="px-2 !bg-white text-gray-500">Or continue with</span>
           </div>
         </div>
 
@@ -133,7 +133,7 @@ export default function ParentLogin() {
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 py-2 rounded-lg font-semibold hover:bg-gray-50 transition disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-3 !bg-white border !border-gray-300 py-2 rounded-lg font-semibold !hover:bg-gray-50 transition disabled:opacity-50"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
@@ -234,13 +234,13 @@ function PasswordResetForm({ onBack }: { onBack: () => void }) {
         </p>
 
         {message && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4">
+          <div className="bg-green-50 border !border-green-200 text-green-700 px-4 py-3 rounded mb-4">
             {message}
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-50 border !border-red-200 text-red-700 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )}
@@ -255,7 +255,7 @@ function PasswordResetForm({ onBack }: { onBack: () => void }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border !border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="your.email@example.com"
             />
           </div>
@@ -263,7 +263,7 @@ function PasswordResetForm({ onBack }: { onBack: () => void }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+            className="w-full !bg-blue-600 text-white py-2 rounded-lg font-semibold !hover:bg-blue-700 transition disabled:opacity-50"
           >
             {loading ? "Sending..." : "Send Reset Link"}
           </button>
