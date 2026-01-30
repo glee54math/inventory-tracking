@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 // import { loadLog } from "../utils/inventoryService";
-import type { LogEntry } from "../utils/types";
-import { collection, getDocs, query, orderBy, limit, onSnapshot } from "firebase/firestore";
-import { db } from "../utils/firebase";
+import type { LogEntry } from "../../utils/types";
+import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { db } from "../../utils/firebase";
 
 function Log() {
   const [actionLog, setActionLog] = useState<LogEntry[]>([]);

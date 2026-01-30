@@ -1,14 +1,14 @@
 // HistoricalDataForm.tsx - Form for entering historical level completion data
 
 import { useState, useEffect } from "react";
-import type { Student } from "../utils/types";
-import { MATH_LEVELS, ENGLISH_LEVELS } from "../utils/types";
+import type { Student } from "../../utils/types";
+import { MATH_LEVELS, ENGLISH_LEVELS } from "../../utils/types";
 import {
   saveHistoricalProgress,
   loadHistoricalProgress,
   type HistoricalLevelEntry,
   type HistoricalProgressData,
-} from "../utils/historicalProgressService";
+} from "../../utils/historicalProgressService";
 
 interface HistoricalDataFormProps {
   student: Student;

@@ -1,6 +1,6 @@
 // import { useState } from "react";
 // import { useActionContext } from "./ActionContext";
-import type { Subsection, InventoryData } from "../utils/types";
+import type { Subsection, InventoryData } from "../../utils/types";
 
 interface InventoryProps {
   data: InventoryData;

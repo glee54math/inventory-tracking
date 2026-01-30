@@ -17,7 +17,7 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
     const profileDropdownRef = useRef<HTMLDivElement|null>(null);
     const levelsDropdownRef = useRef<HTMLDivElement | null>(null);
     const [isLevelsButtonPressed, setIsLevelsButtonPressed] = useState<boolean>(false);
-    const [levelsArray, setLevelsArray] = useState<string[]>(
+    const [levelsArray] = useState<string[]>(
         [
             "MK1", "MK2", "MK3", "MK4",
             "MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11", 
@@ -130,7 +130,7 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                         </button>
                         {isLevelsButtonPressed && (
                             <ul id="level-dropdown-button-list" className="absolute mt-2 w-32 max-h-48 overflow-y-auto bg-white border border-gray-300 rounded">
-                                {levelsArray.map((level:string, index) => (
+                                {levelsArray.map((level:string) => (
                                     <li 
                                         id={level+"-button-redirect"}
                                         key={level+"-button-redirect"}
@@ -176,9 +176,26 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                             onClick={() => navigate('/dashboard')}
                             className={sideBarButtonCSS}
                         >
-                            Dashboard 📊
+                            Dashboard
                         </button>
                     </div>
+
+                    {/* Parent Portal */}
+                    <div id="parent-portal-button" className="mb-3 w-full mx-1/2">
+                        <p className="text-xs text-center">
+                            Parent Login
+                        </p>
+                        <button
+                            id="parent-login"
+                            onClick={() => navigate('/parent-login')}
+                            className={sideBarButtonCSS}
+                        >
+                            Parent Portal
+                        </button>
+                    </div>
+
+
+                    {/* Student Portal */}
                 </>}
         </div>
     )

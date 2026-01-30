@@ -1,17 +1,17 @@
 // Dashboard.tsx - Main dashboard for tracking student progress (FIXED VERSION)
 
 import { useEffect, useState } from "react";
-import { loadStudentsFromDB } from "../utils/inventoryService";
+import { loadStudentsFromDB } from "../../utils/inventoryService";
 import {
   buildStudentProgress,
   saveStudentProgress,
   loadStudentProgress,
   updateCustomPace,
-} from "../utils/progressService";
-import type { Student, StudentProgress, SubjectProgress } from "../utils/types";
+} from "../../utils/progressService";
+import type { Student, StudentProgress, SubjectProgress } from "../../utils/types";
 import ProgressGraph from "./ProgressGraph";
 import HistoricalDataForm from "./HistoricalDataForm";
-import { MATH_LEVELS, ENGLISH_LEVELS } from "../utils/types";
+// import { MATH_LEVELS, ENGLISH_LEVELS } from "../utils/types";
 
 export default function Dashboard() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -168,15 +168,21 @@ export default function Dashboard() {
         <label className="block text-sm font-medium mb-2">Select Student:</label>
         <select
           className="w-full p-2 border border-gray-300 rounded"
-          value={selectedStudent?.firstName || ""}
+          value={selectedStudent ? `${selectedStudent.firstName}-${selectedStudent.lastName}` : ""}
           onChange={(e) => {
-            const student = students.find((s) => s.firstName === e.target.value);
+            const [firstName, lastName] = e.target.value.split("-");
+            const student = students.find(
+              (s) => s.firstName === firstName && s.lastName === lastName
+            );
             if (student) handleStudentSelect(student);
           }}
         >
           <option value="">-- Select a Student --</option>
           {students.map((student) => (
-            <option key={student.firstName + student.lastName} value={student.firstName}>
+            <option
+              key={student.firstName + student.lastName}
+              value={`${student.firstName}-${student.lastName}`}
+            >
               {student.firstName} {student.lastName}
             </option>
           ))}

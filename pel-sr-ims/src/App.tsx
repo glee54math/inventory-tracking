@@ -1,25 +1,24 @@
 import { useEffect, useState } from "react";
 import { useRef } from "react";
 import "./App.css";
-import WorkerLogin from "./components/WorkerLogin";
-import Sidebar from "./components/Sidebar";
-import Inventory from "./components/Inventory";
+import WorkerLogin from "./components/inventory_app/WorkerLogin";
+import Sidebar from "./components/inventory_app/Sidebar";
+import Inventory from "./components/inventory_app/Inventory";
 import {
   // saveInventory,
   // loadInventory,
   // loadAllInventories,
   determinePacketsNeededToBeOrdered,
 } from "./utils/inventoryService";
-import Log from "./components/Log";
+import Log from "./components/inventory_app/Log";
 // import data from "./assets/data.json";
 // import dataMath from "./assets/dataMath.json";
 import type { InventoryData, InsufficientSubsection } from "./utils/types";
-import ActionContainer from "./components/ActionContainer";
+import ActionContainer from "./components/inventory_app/ActionContainer";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "./utils/firebase";
-import { useNameContext } from "./components/NameContext";
-import Database from "./components/Database";
-import AppRoutes from "./routes/AppRoutes";
+import { useNameContext } from "./components/inventory_app/NameContext";
+import Database from "./components/inventory_app/Database";
 
 type InventoryType =
   | "Back Math"

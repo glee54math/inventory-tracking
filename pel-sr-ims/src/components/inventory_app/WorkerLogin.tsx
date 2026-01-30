@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { loadWorkersFromDB, checkWorkerHasPin, createWorkerPin, verifyWorkerPin, createNewWorker } from "../utils/inventoryService";
-import type { Worker } from "../utils/types";
+import { loadWorkersFromDB, checkWorkerHasPin, createWorkerPin, verifyWorkerPin, createNewWorker } from "../../utils/inventoryService";
+import type { Worker } from "../../utils/types";
 import { useNameContext } from "./NameContext";
 
 type LoginStep = "selectWorker" | "enterPin" | "createPin" | "confirmPin" | "addNewWorker";

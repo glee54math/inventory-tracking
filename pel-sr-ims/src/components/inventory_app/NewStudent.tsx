@@ -9,8 +9,8 @@
         subjects_startDate_Map: Record<string, Date>;
         hwkAssigned: string[]; // This will probably be changed 
 */
-import type { Student } from "../utils/types";
-import { addNewStudentToDatabase } from "../utils/inventoryService";
+import type { Student } from "../../utils/types";
+import { addNewStudentToDatabase } from "../../utils/inventoryService";
 import { useState } from "react";
 
 interface NewStudentFormProps {

@@ -1,11 +1,11 @@
 import { useState } from "react";
-import type { Student, SubmittedAction } from "../utils/types";
+import type { Student, SubmittedAction } from "../../utils/types";
 import Action from "./Action";
 import {
   assignHWToStudent,
   updateInventoryFromActions,
   updateLogFromActions,
-} from "../utils/inventoryService";
+} from "../../utils/inventoryService";
 import { NewStudentForm } from "./NewStudent";
 
 interface ActionContainerProps {

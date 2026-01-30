@@ -90,6 +90,38 @@ export interface Worker {
   pin?: string;
 }
 
+//Types for Parent Portal
+
+export interface Parent {
+  uid: string; // Firebase Auth UID
+  email: string;
+  firstName: string;
+  lastName: string;
+  parentType: "father" | "mother" | "guardian";
+  children: string[]; // array of studentIds (firstName-lastName)
+  accountClaimed: boolean;
+  createdAt: Date;
+  lastLogin?: Date;
+}
+
+export interface ParentRegistrationData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  parentType: "father" | "mother" | "guardian";
+}
+
+export interface ChildSearchResult {
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  father?: string;
+  mother?: string;
+  joinDate?: string;
+  matchScore: number; // for sorting relevance
+}
+
 // Level sequences for progression tracking
 export const MATH_LEVELS = [
   "MK1", "MK2", "MK3", "MK4",

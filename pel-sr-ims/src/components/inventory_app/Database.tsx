@@ -3,8 +3,8 @@
 
 // imports
 import { useEffect, useState } from "react";
-import { loadStudentsFromDB } from "../utils/inventoryService";
-import type { Student } from "../utils/types";
+import { loadStudentsFromDB } from "../../utils/inventoryService";
+import type { Student } from "../../utils/types";
 
 // Component
 export default function Database() {

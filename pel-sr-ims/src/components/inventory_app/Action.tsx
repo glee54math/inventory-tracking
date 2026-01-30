@@ -1,7 +1,7 @@
-import type { MovementType, Student, SubmittedAction } from "../utils/types";
-import dataMath from "../assets/dataMath.json";
-import dataEnglish from "../assets/data.json";
-import { loadInventory, loadStudentsFromDB } from "../utils/inventoryService";
+import type { MovementType, Student, SubmittedAction } from "../../utils/types";
+import dataMath from "../../assets/dataMath.json";
+import dataEnglish from "../../assets/data.json";
+import { loadInventory, loadStudentsFromDB } from "../../utils/inventoryService";
 import { useEffect, useState } from "react";
 import { NewStudentForm } from "./NewStudent";
 

@@ -1,6 +1,6 @@
 // ProgressGraph.tsx - Visual representation of student progress over time
 
-import { useState } from "react";
+// import { useState } from "react";
 import {
   LineChart,
   Line,
@@ -12,8 +12,8 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import type { SubjectProgress, LevelProgress } from "../utils/types";
-import { MATH_LEVELS, ENGLISH_LEVELS } from "../utils/types";
+import type { SubjectProgress, } from "../../utils/types";
+import { MATH_LEVELS, ENGLISH_LEVELS } from "../../utils/types";
 
 interface ProgressGraphProps {
   subjectProgress: SubjectProgress;

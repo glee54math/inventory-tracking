@@ -1,30 +1,79 @@
-import { Routes, Route } from "react-router-dom";
+// AppRoutes.tsx - Updated with protected routes and parent portal
+
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "../components/AuthContext";
 
 // Pages
 import LevelsPage from "../pages/LevelsPage";
 import App from "../App";
-import Dashboard from "../components/Dashboard";
-// import Inventory from "../components/Inventory";
-// import Database from "../components/Database";
+import Dashboard from "../components/student_progress_dashboard/Dashboard";
+import ParentLogin from "../components/ParentLogin";
+import ParentRegistration from "../components/ParentRegistration";
+import ParentDashboard from "../components/ParentDashboard";
+import ProtectedRoute from "../routes/ProtectedRoutes";
 
 export default function AppRoutes() {
-    
-    return (
-        <Routes>
-            {/* Auth */}
-            <Route path={"/"} element={<App />} />
-            {/* <Route path={baseInventoryURL+"/login"} element={<WorkerLogin />} /> */}
-            {/* ^^ will eventually replace the WorkerLogin state. Will need to rethink NameContext too  */}
+  const { currentUser, userRole } = useAuth();
 
-            {/* Core app
-            <Route path="/inventory" element={<Inventory data={data}/>} />
-            <Route path="/database" element={<Database />} /> */}
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/parent-login" element={<ParentLogin />} />
+      <Route path="/parent-registration" element={<ParentRegistration />} />
 
-            {/* Dashboard */}
-            <Route path="/dashboard" element={<Dashboard />} />
+      {/* Protected Parent Routes */}
+      <Route
+        path="/parent-dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["parent"]}>
+            <ParentDashboard />
+          </ProtectedRoute>
+        }
+      />
 
-            {/* Levels (dynamic) */}
-            <Route path={"/levels/:levelId"} element={<LevelsPage />} />
-        </Routes>
-    );
+      {/* Protected Admin/Worker Routes */}
+      <Route
+        path="/"
+        element={
+          currentUser && (userRole === "admin" || userRole === "worker") ? (
+            <App />
+          ) : currentUser && userRole === "parent" ? (
+            <Navigate to="/parent-dashboard" replace />
+          ) : (
+            <App />
+          )
+        }
+      />
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/levels/:levelId"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "worker"]}>
+            <LevelsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Fallback - redirect based on role */}
+      <Route
+        path="*"
+        element={
+          currentUser && userRole === "parent" ? (
+            <Navigate to="/parent-dashboard" replace />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+    </Routes>
+  );
 }
