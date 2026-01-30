@@ -160,7 +160,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 p-6">
+    <div className="fixed inset-0 bg-gray-50 p-6 overflow-auto z-50">
       <h1 className="text-3xl font-bold mb-6">Student Progress Dashboard</h1>
 
       {/* Student Selector */}
