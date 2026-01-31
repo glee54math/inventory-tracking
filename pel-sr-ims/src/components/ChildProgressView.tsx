@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { loadStudentProgress } from "../utils/progressService";
 // import { loadHistoricalProgress } from "../utils/historicalProgressService";
-import ProgressGraph from "../components/student_progress_dashboard/Dashboard";
+import ProgressGraph from "../components/student_progress_dashboard/ProgressGraph";
 import type { Student, StudentProgress } from "../utils/types";
 
 interface ChildProgressViewProps {

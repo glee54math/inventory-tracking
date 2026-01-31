@@ -145,7 +145,7 @@ export const MakeTenStrategy: React.FC<MakeTenStrategyProps> = ({
 
     const containerRect = containerRef.current.getBoundingClientRect();
     
-    const getCenter = (ref: React.RefObject<HTMLDivElement>) => {
+    const getCenter = (ref: React.RefObject<HTMLDivElement | null>) => {
       if (!ref.current) return { x: 0, y: 0 };
       const rect = ref.current.getBoundingClientRect();
       return {
@@ -154,14 +154,14 @@ export const MakeTenStrategy: React.FC<MakeTenStrategyProps> = ({
       };
     };
     
-    const getBottom = (ref: React.RefObject<HTMLDivElement>) => {
+    const getBottom = (ref: React.RefObject<HTMLDivElement | null>) => {
       const center = getCenter(ref);
       if (!ref.current) return center;
       center.y += ref.current.getBoundingClientRect().height / 2;
       return center;
     };
     
-    const getTop = (ref: React.RefObject<HTMLDivElement>) => {
+    const getTop = (ref: React.RefObject<HTMLDivElement | null>) => {
       const center = getCenter(ref);
       if (!ref.current) return center;
       center.y -= ref.current.getBoundingClientRect().height / 2;

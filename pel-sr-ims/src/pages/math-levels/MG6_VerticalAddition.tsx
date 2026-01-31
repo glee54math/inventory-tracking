@@ -54,8 +54,8 @@ const parseProblem = (
   
   let operands: string[][];
   let result: string[];
-  let missingPositions: { row: number; col: number }[] = [];
-  let correctAnswers: { [key: string]: string } = {};
+  const missingPositions: { row: number; col: number }[] = [];
+  const correctAnswers: { [key: string]: string } = {};
   let carries: number[] = [];
   let borrows: { row: number; col: number; steps: BorrowStep[] }[] = [];
 
@@ -659,7 +659,7 @@ export const VerticalMath: React.FC<VerticalMathProps> = ({
           )}
           
           <input
-            ref={el => inputRefs.current[key] = el}
+            ref={el => { inputRefs.current[key] = el; }}
             type="text"
             maxLength={1}
             value={userAnswer}

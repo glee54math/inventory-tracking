@@ -1,14 +1,14 @@
-import { doc, getDoc, getDocs, setDoc, collection, addDoc, deleteField, updateDoc, query, where, orderBy, } from "firebase/firestore";
+import { doc, getDoc, getDocs, setDoc, collection, addDoc, updateDoc, query, where, orderBy, } from "firebase/firestore";
 import { db } from "./firebase";
 import type { LogEntry, SubmittedAction } from "./types";
-import type { InventoryData, Subsection, InsufficientSubsection, Worker, Student} from "./types";
+import type { InventoryData, Subsection, InsufficientSubsection, Worker, Student } from "./types";
 
 // subject_Location = math_back, math_front, english_back, english_front
 // Upload your local JSON to Firestore
 export const saveInventory = async (data: object, subject_Location: string) => {
-    const ref = doc(db,"inventory",subject_Location); 
-    await setDoc(ref, data) 
-    console.log("Saved!");
+  const ref = doc(db, "inventory", subject_Location);
+  await setDoc(ref, data)
+  console.log("Saved!");
 }
 
 export async function loadAllInventories() {
@@ -35,7 +35,7 @@ export async function loadInventory(subject_Location: string) {
     return {}; // return empty object
   }
 
-  return docSnap.data(); 
+  return docSnap.data();
 }
 
 export async function loadLog() {
@@ -48,7 +48,7 @@ export async function loadLog() {
     documents[doc.id] = doc.data() as LogEntry;
   })
 
-  return documents; 
+  return documents;
 };
 
 export const saveLog = async (logEntry: LogEntry) => {
@@ -58,7 +58,7 @@ export const saveLog = async (logEntry: LogEntry) => {
 };
 
 
-export async function updateInventoryFromActions( submittedActions: SubmittedAction[]) {
+export async function updateInventoryFromActions(submittedActions: SubmittedAction[]) {
   // SubmittedAction has subject, level, subsection[], movementType(AtoB), numOfCopies
   // movementType = BackToFront, BackToStudent, FrontToBack, FrontToStudent, ShipmentToBack, ShipmentToFront
   // Determine the inventories involved
@@ -91,14 +91,14 @@ export async function updateInventoryFromActions( submittedActions: SubmittedAct
           inventoryTo = await loadInventory(`${action.subject?.toLowerCase()}_front`);
           break;
       }
-     
+
       // inventoryFrom[level][subsection] -= numOfCopies
       // inventoryTo[level][subsection] += numOfCopies
-    
+
       if (inventoryFrom) {
         // This finds the object in JSON data based on the section "range".
-        const objFoundBySection: Subsection | undefined = inventoryFrom[action.level]?.find((subsection: Subsection) => subsection.range===section);
-        
+        const objFoundBySection: Subsection | undefined = inventoryFrom[action.level]?.find((subsection: Subsection) => subsection.range === section);
+
         // Once found, the count is subtracted by the number of Copies based on the section "range".
         if (objFoundBySection) {
           objFoundBySection.count -= action.movementNumOfCopiesMap[section];
@@ -106,27 +106,27 @@ export async function updateInventoryFromActions( submittedActions: SubmittedAct
       }
       if (inventoryTo) {
         // This finds the object in JSON data based on the section "range".
-        const objFoundBySection: Subsection | undefined = inventoryTo[action.level]?.find((subsection: Subsection) => subsection.range===section);
+        const objFoundBySection: Subsection | undefined = inventoryTo[action.level]?.find((subsection: Subsection) => subsection.range === section);
 
         // Once found, the count is subtracted by the number of Copies based on the section "range".
         if (objFoundBySection) {
           objFoundBySection.count += action.movementNumOfCopiesMap[section];
         }
       }
-    
+
 
       // Update database of both inventoryFrom and inventoryTo
       // movementType = BackToFront, BackToStudent, FrontToBack, FrontToStudent, ShipmentToBack, ShipmentToFront
       // inventory names are of the form: (subject)_(location); all lowercase
       const movementType = action.movementMap[action.selectedSubsections[index]];
-      const fromFrontBackOrShipment = movementType.substring(0,movementType.indexOf("To"))
-      const toFrontBackOrStudent = movementType.substring(movementType.indexOf("To")+2)
+      const fromFrontBackOrShipment = movementType.substring(0, movementType.indexOf("To"))
+      const toFrontBackOrStudent = movementType.substring(movementType.indexOf("To") + 2)
       console.log(movementType, fromFrontBackOrShipment, toFrontBackOrStudent, index);
       if (inventoryFrom && fromFrontBackOrShipment !== 'Shipment') {
-        saveInventory(inventoryFrom,`${action.subject?.toLowerCase()}_${fromFrontBackOrShipment.toLowerCase()}`);
+        saveInventory(inventoryFrom, `${action.subject?.toLowerCase()}_${fromFrontBackOrShipment.toLowerCase()}`);
       }
       if (inventoryTo && toFrontBackOrStudent !== 'Student') {
-        saveInventory(inventoryTo,`${action.subject?.toLowerCase()}_${toFrontBackOrStudent.toLowerCase()}`);
+        saveInventory(inventoryTo, `${action.subject?.toLowerCase()}_${toFrontBackOrStudent.toLowerCase()}`);
       }
       index++;
     }
@@ -145,8 +145,8 @@ export async function updateLogFromActions(workerName: string, submittedActions:
       const logEntry: LogEntry = {
         timeStamp: logTime,
         userID: workerName,
-        eventType: `Adding ${action} To Log`,
-        message: `${numOfCopies} ${numOfCopies===1?"copy":"copies"} of ${action.level} ${range} from ${movementAction} ${studentFirstName?"for "+studentFirstName:""}`
+        eventType: `Adding ${action} To Log by ${workerName}`,
+        message: `${numOfCopies} ${numOfCopies === 1 ? "copy" : "copies"} of ${action.level} ${range} from ${movementAction} ${studentFirstName ? "for " + studentFirstName : ""} | Done by: ${workerName}`
       };
 
       await saveLog(logEntry); // call new version
@@ -168,7 +168,7 @@ export async function loadWorkersFromDB() {
     }
   });
   // console.log(workers["san-ramon"])
-  return workers; 
+  return workers;
 }
 
 export async function determinePacketsNeededToBeOrdered() {
@@ -183,13 +183,13 @@ export async function determinePacketsNeededToBeOrdered() {
   const mathLevels = Object.keys(frontMath);
   for (const level of mathLevels) {
     for (const range of frontMath[level]) {
-      const backMathCount = backMathAndFinal[level].find((subsection: Subsection) => subsection.range===range.range)?.count || 0;
+      const backMathCount = backMathAndFinal[level].find((subsection: Subsection) => subsection.range === range.range)?.count || 0;
       const frontMathCount = range.count;
       if (backMathCount + frontMathCount < 8) {
         insufficient.push({
           level,
           range: (range.range),
-          missingCount:(8-(backMathCount+frontMathCount))
+          missingCount: (8 - (backMathCount + frontMathCount))
         });
       }
       else {
@@ -201,17 +201,17 @@ export async function determinePacketsNeededToBeOrdered() {
       }
     }
   }
-  
+
   const englishLevels = Object.keys(frontEnglish);
   for (const level of englishLevels) {
     for (const range of frontEnglish[level]) {
-      const backEnglishCount = backEnglishAndFinal[level].find((subsection: Subsection) => subsection.range===range.range)?.count || 0;
+      const backEnglishCount = backEnglishAndFinal[level].find((subsection: Subsection) => subsection.range === range.range)?.count || 0;
       const frontEnglishCount = range.count;
       if (backEnglishCount + frontEnglishCount < 8) {
         insufficient.push({
           level,
           range: (range.range),
-          missingCount:(8-(backEnglishCount+frontEnglishCount))
+          missingCount: (8 - (backEnglishCount + frontEnglishCount))
         });
       }
       else {
@@ -228,7 +228,7 @@ export async function determinePacketsNeededToBeOrdered() {
 }
 
 export async function loadStudentsFromDB(place: string) {
-  const collectionRef = collection(db,"students", place,"students");  // place = san-ramon
+  const collectionRef = collection(db, "students", place, "students");  // place = san-ramon
   const q = query(
     collectionRef,
     orderBy("firstName", "asc"),
@@ -246,7 +246,7 @@ export async function loadStudentsFromDB(place: string) {
 }
 
 export async function addNewStudentToDatabase(place: string, student: Student) {
-  const studentsCollectionRef = collection(db,"students", place,"students");
+  const studentsCollectionRef = collection(db, "students", place, "students");
   await addDoc(studentsCollectionRef, student); // somehow it's not PROPERLY adding subjects startDate
   console.log(student.firstName + student.lastName + " was added.");
 }
@@ -287,8 +287,8 @@ export async function assignHWToStudent(student: Student, hwPackets: string[]) {
   // find student from within database
   const q = query(
     collection(db, "students", "san-ramon", "students"),
-    where('firstName','==',student.firstName),
-    where('lastName','==',student.lastName)
+    where('firstName', '==', student.firstName),
+    where('lastName', '==', student.lastName)
   );
 
   // if nothing is found or if more than one is found.
@@ -297,7 +297,7 @@ export async function assignHWToStudent(student: Student, hwPackets: string[]) {
     console.log("The size of your search is NOT 1")
     return;
   }
-   
+
   for (const docSnap of qSnapShot.docs) {
     // Get current homework assigned (if missing, default to empty array)
     const currentHW = (docSnap.data().hwkAssigned ?? []) as string[];
@@ -371,11 +371,11 @@ export async function createNewWorker(firstName: string, lastName: string, locat
 export async function checkWorkerHasPin(workerInitials: string): Promise<boolean> {
   // Check if worker has a PIN set in the database
   const querySnapshot = await getDocs(collection(db, "workers"));
-  
+
   for (const docSnap of querySnapshot.docs) {
     const data = docSnap.data();
     const workers = data.workers as Worker[];
-    
+
     if (Array.isArray(workers)) {
       const worker = workers.find((w: Worker) => w.initials === workerInitials);
       if (worker) {
@@ -383,18 +383,18 @@ export async function checkWorkerHasPin(workerInitials: string): Promise<boolean
       }
     }
   }
-  
+
   return false;
 }
 
 export async function createWorkerPin(workerInitials: string, pin: string): Promise<boolean> {
   // Create a PIN for a worker
   const querySnapshot = await getDocs(collection(db, "workers"));
-  
+
   for (const docSnap of querySnapshot.docs) {
     const data = docSnap.data();
     const workers = data.workers as Worker[];
-    
+
     if (Array.isArray(workers)) {
       const workerIndex = workers.findIndex((w: Worker) => w.initials === workerInitials);
       if (workerIndex !== -1) {
@@ -403,18 +403,18 @@ export async function createWorkerPin(workerInitials: string, pin: string): Prom
           ...workers[workerIndex],
           pin: pin
         } as any;
-        
+
         // Update the document
         await updateDoc(docSnap.ref, {
           workers: workers
         });
-        
+
         console.log(`✅ PIN created for ${workerInitials}`);
         return true;
       }
     }
   }
-  
+
   console.log(`❌ Worker ${workerInitials} not found`);
   return false;
 }
@@ -422,11 +422,11 @@ export async function createWorkerPin(workerInitials: string, pin: string): Prom
 export async function verifyWorkerPin(workerInitials: string, pin: string): Promise<boolean> {
   // Verify a worker's PIN
   const querySnapshot = await getDocs(collection(db, "workers"));
-  
+
   for (const docSnap of querySnapshot.docs) {
     const data = docSnap.data();
     const workers = data.workers as Worker[];
-    
+
     if (Array.isArray(workers)) {
       const worker = workers.find((w: Worker) => w.initials === workerInitials);
       if (worker) {
@@ -434,6 +434,6 @@ export async function verifyWorkerPin(workerInitials: string, pin: string): Prom
       }
     }
   }
-  
+
   return false;
 }

@@ -125,7 +125,7 @@ export default function ProgressGraph({
               dataKey="date"
               type="number"
               domain={["dataMin", "dataMax"]}
-              tickFormatter={(timestamp) =>
+              tickFormatter={(timestamp: any) =>
                 new Date(timestamp).toLocaleDateString(undefined, {
                   month: "short",
                   year: "2-digit",
@@ -141,7 +141,7 @@ export default function ProgressGraph({
               dataKey="levelIndex"
               type="number"
               domain={[0, levels.length - 1]}
-              tickFormatter={(index) => levels[index] || ""}
+              tickFormatter={(index: number) => levels[index] || ""}
               label={{
                 value: "Level",
                 angle: -90,

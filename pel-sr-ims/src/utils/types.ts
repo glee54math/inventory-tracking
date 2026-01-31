@@ -1,6 +1,8 @@
 // types.ts - Updated with Progress Tracking Types
 
 // Existing Types
+export type MovementType = "BackToFront" | "BackToStudent" | "FrontToBack" | "FrontToStudent" | "ShipmentToBack" | "ShipmentToFront";
+
 export interface Student {
   firstName: string;
   lastName: string;
@@ -57,15 +59,12 @@ export type LogEntry = {
 };
 
 export interface SubmittedAction {
-  subject?: string;
+  subject?: string | null;
   level: string;
   selectedSubsections: string[];
   movementMap: Record<string, string>;
   movementNumOfCopiesMap: Record<string, number>;
-  toStudent: {
-    firstName: string;
-    lastName: string;
-  };
+  toStudent: Student;
 }
 
 export interface InventoryData {
