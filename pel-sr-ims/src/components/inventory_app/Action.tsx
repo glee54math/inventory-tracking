@@ -35,11 +35,10 @@ function Action({ index, data, onChange }: ActionProps) {
 
     setBackInventoryValues(back);
     setFrontInventoryValues(front);
-    // front and backInventory values are in a Record and can be retrieved by map[level]
-    console.log(subject, level); // good
-    console.log(back, front);
-    console.log(backInventoryValues[data.level][0]["count"], frontInventoryValues[data.level][0]["count"]); // this return empty.
     
+    console.log("Loaded inventory for", subject, level);
+    console.log("Back:", back);
+    console.log("Front:", front);
   }
 
   const toggleSubsection = (range: string) => {
@@ -243,7 +242,10 @@ function Action({ index, data, onChange }: ActionProps) {
                 name="english-level"
                 id={`english-level-${index}`}
                 value={data.level}
-                onChange={(e) => handleLevelChange(e.target.value)}
+                onChange={(e) => {
+                  handleLevelChange(e.target.value)
+                  toggleFrontBackInvValues("english", e.target.value)
+                }}
                 className="border px-1 py-1 rounded field-sizing-content"
               >
                 <option value="">Select Level</option>
@@ -334,9 +336,11 @@ function Action({ index, data, onChange }: ActionProps) {
 
                   {data.selectedSubsections.includes(range) && (
                     <div className="flex flex-row whitespace-nowrap">
-                      <p className="text-xs m-1">
-                        {"B: " + backInventoryValues[data.level][(Number(range.substring(0,range.indexOf("-")))-1)/10]["count"] + "  F: " + frontInventoryValues[data.level][(Number(range.substring(0,range.indexOf("-")))-1)/10]["count"]}
-                      </p>
+                      {backInventoryValues[data.level] && frontInventoryValues[data.level] && (
+                        <p className="text-xs m-1">
+                          {"B: " + (backInventoryValues[data.level][(Number(range.substring(0,range.indexOf("-")))-1)/10]?.count ?? 0) + "  F: " + (frontInventoryValues[data.level][(Number(range.substring(0,range.indexOf("-")))-1)/10]?.count ?? 0)}
+                        </p>
+                      )}
                       <select
                         name={`${range}-movement-${index}`}
                         id={`${range}-movement-${index}`}
