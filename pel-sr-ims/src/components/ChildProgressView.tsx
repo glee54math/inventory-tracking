@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { loadStudentProgress } from "../utils/progressService";
 // import { loadHistoricalProgress } from "../utils/historicalProgressService";
-import ProgressGraph from "../components/student_progress_dashboard/ProgressGraph";
+import ProgressGraph from "./student_progress_dashboard/ProgressGraph";  // ← CORRECTED: Use your existing ProgressGraph component
 import type { Student, StudentProgress } from "../utils/types";
 
 interface ChildProgressViewProps {
@@ -170,28 +170,36 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {progressData.mathProgress.levelHistory.map((level) => (
-                  <tr key={level.level} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 font-medium">{level.level}</td>
-                    <td className="px-4 py-2 text-gray-600">
-                      {level.startDate.toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-2">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          level.isComplete
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {level.isComplete ? 'Completed' : 'In Progress'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 text-gray-600">
-                      {level.pagesCompleted} / 110
-                    </td>
-                  </tr>
-                ))}
+                {progressData.mathProgress.levelHistory.map((level) => {
+                  // Determine status
+                  let status = 'In Progress';
+                  let statusColor = 'bg-yellow-100 text-yellow-800';
+                  
+                  if (level.isComplete) {
+                    status = 'Completed';
+                    statusColor = 'bg-green-100 text-green-800';
+                  } else if (level.pagesCompleted === 0) {
+                    status = 'Not Started';
+                    statusColor = 'bg-red-50 text-red-700';
+                  }
+                  
+                  return (
+                    <tr key={level.level} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 font-medium">{level.level}</td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {level.startDate.toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-2">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${statusColor}`}>
+                          {status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {level.pagesCompleted} / 110
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -264,28 +272,36 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {progressData.englishProgress.levelHistory.map((level) => (
-                  <tr key={level.level} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 font-medium">{level.level}</td>
-                    <td className="px-4 py-2 text-gray-600">
-                      {level.startDate.toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-2">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          level.isComplete
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {level.isComplete ? 'Completed' : 'In Progress'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 text-gray-600">
-                      {level.pagesCompleted} / 110
-                    </td>
-                  </tr>
-                ))}
+                {progressData.englishProgress.levelHistory.map((level) => {
+                  // Determine status
+                  let status = 'In Progress';
+                  let statusColor = 'bg-yellow-100 text-yellow-800';
+                  
+                  if (level.isComplete) {
+                    status = 'Completed';
+                    statusColor = 'bg-green-100 text-green-800';
+                  } else if (level.pagesCompleted === 0) {
+                    status = 'Not Started';
+                    statusColor = 'bg-red-50 text-red-700';
+                  }
+                  
+                  return (
+                    <tr key={level.level} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 font-medium">{level.level}</td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {level.startDate.toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-2">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${statusColor}`}>
+                          {status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {level.pagesCompleted} / 110
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
