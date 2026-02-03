@@ -11,7 +11,8 @@ import {
 import type { Student, StudentProgress, SubjectProgress } from "../../utils/types";
 import ProgressGraph from "./ProgressGraph";
 import HistoricalDataForm from "./HistoricalDataForm";
-// import { MATH_LEVELS, ENGLISH_LEVELS } from "../utils/types";
+import StudentDiagnostic from "./HistoricalDataDiagnostics";
+import { MATH_LEVELS, ENGLISH_LEVELS } from "../../utils/types";
 
 export default function Dashboard() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -26,6 +27,7 @@ export default function Dashboard() {
   const [showPaceEditor, setShowPaceEditor] = useState(false);
   const [customPaceMap, setCustomPaceMap] = useState<Record<string, number>>({});
   const [showHistoricalDataForm, setShowHistoricalDataForm] = useState(false);
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
 
   useEffect(() => {
     loadStudents();
@@ -160,12 +162,20 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-50 p-6 overflow-auto z-50 !bg-gray-200">
+    <div className="fixed inset-0 bg-gray-50 p-6 overflow-auto z-50">
       <h1 className="text-3xl font-bold mb-6">Student Progress Dashboard</h1>
 
       {/* Student Selector */}
       <div className="bg-white p-4 rounded shadow mb-6">
-        <label className="block text-sm font-medium mb-2">Select Student:</label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-medium">Select Student:</label>
+          <button
+            onClick={() => setShowDiagnostic(!showDiagnostic)}
+            className="px-3 py-1 !bg-orange-500 text-white text-sm rounded hover:!bg-orange-600"
+          >
+            {showDiagnostic ? "Hide" : "Show"} Diagnostic Tool
+          </button>
+        </div>
         <select
           className="w-full p-2 border border-gray-300 rounded"
           value={selectedStudent ? `${selectedStudent.firstName}-${selectedStudent.lastName}` : ""}
@@ -188,6 +198,13 @@ export default function Dashboard() {
           ))}
         </select>
       </div>
+
+      {/* Diagnostic Tool */}
+      {showDiagnostic && (
+        <div className="mb-6">
+          <StudentDiagnostic />
+        </div>
+      )}
 
       {/* Error Display */}
       {error && (

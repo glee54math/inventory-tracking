@@ -74,7 +74,8 @@ export function getNextLevel(currentLevel: string, subject: "Math" | "English"):
  * Only looks at FrontToStudent and BackToStudent movements
  */
 export async function buildHwkHistoryFromLogs(
-  studentFirstName: string
+  studentFirstName: string,
+  studentLastName: string
 ): Promise<HomeworkHistoryEntry[]> {
   const logsRef = collection(db, "logs");
   const q = query(logsRef, orderBy("timeStamp", "asc"));
@@ -95,8 +96,10 @@ export async function buildHwkHistoryFromLogs(
       return;
     }
 
-    // Check if this is for the target student
-    if (!message.includes(`for ${studentFirstName}`)) {
+    // Check if this is for the target student - use FULL NAME to avoid partial matches
+    // e.g., "Zac" would match both "Zac Sun" and "Zachary Carillo"
+    const fullName = `${studentFirstName} ${studentLastName}`;
+    if (!message.includes(`for ${fullName}`)) {
       return;
     }
 
@@ -161,6 +164,27 @@ export function buildLevelProgressFromHwkHistory(
     } else if (currentLevel === hwk.level) {
       // Continue in same level
       pagesCompleted += 10;
+    } else if (currentLevel === null) {
+      // First homework assignment but not "1-10" - start tracking anyway
+      currentLevel = hwk.level;
+      currentLevelStart = hwk.dateAssigned;
+      // Parse the range to estimate pages completed (e.g., "41-50" means at least 40 pages done)
+      const startPage = parseInt(hwk.range.split("-")[0]);
+      pagesCompleted = startPage; // They've at least done pages up to this point
+    } else if (currentLevel !== hwk.level) {
+      // Level changed but no "1-10" detected - close current and start new
+      levelProgress.push({
+        level: currentLevel,
+        startDate: currentLevelStart!,
+        endDate: hwk.dateAssigned,
+        estimatedCompletion: hwk.dateAssigned,
+        pagesCompleted: PAGES_PER_LEVEL,
+        isComplete: true,
+      });
+      
+      currentLevel = hwk.level;
+      currentLevelStart = hwk.dateAssigned;
+      pagesCompleted = parseInt(hwk.range.split("-")[0]);
     }
   }
 
@@ -242,7 +266,7 @@ export async function buildStudentProgress(
   console.log(`Historical data for ${student.firstName}:`, historicalData);
 
   // Build homework history from logs (as fallback)
-  const hwkHistory = await buildHwkHistoryFromLogs(student.firstName);
+  const hwkHistory = await buildHwkHistoryFromLogs(student.firstName, student.lastName);
 
   console.log(`Found ${hwkHistory.length} homework assignments for ${student.firstName}`);
 
