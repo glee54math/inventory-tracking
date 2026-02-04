@@ -140,13 +140,14 @@ export async function updateLogFromActions(workerName: string, submittedActions:
     for (const range of action.selectedSubsections) {
       const numOfCopies = action.movementNumOfCopiesMap[range];
       const movementAction = action.movementMap[range];
-      const studentFirstName = action.toStudent.firstName
+      const studentFirstName = action.toStudent.firstName;
+      const studentLastName = action.toStudent.lastName;
 
       const logEntry: LogEntry = {
         timeStamp: logTime,
         userID: workerName,
         eventType: `Adding ${action} To Log by ${workerName}`,
-        message: `${numOfCopies} ${numOfCopies === 1 ? "copy" : "copies"} of ${action.level} ${range} from ${movementAction} ${studentFirstName ? "for " + studentFirstName : ""} | Done by: ${workerName}`
+        message: `${numOfCopies} ${numOfCopies === 1 ? "copy" : "copies"} of ${action.level} ${range} from ${movementAction} ${studentFirstName ? "for " + (studentFirstName + " " + studentLastName) : ""} | Done by: ${workerName}`
       };
 
       await saveLog(logEntry); // call new version

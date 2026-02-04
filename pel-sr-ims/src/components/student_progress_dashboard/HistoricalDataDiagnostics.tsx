@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { loadStudentsFromDB } from "../../utils/inventoryService";
-import { buildHwkHistoryFromLogs } from "../../utils/progressService";
+import { buildHwkHistoryFromAssignments } from "../../utils/progressService";
 import type { Student } from "../../utils/types";
 
 export default function StudentDiagnostic() {
@@ -28,13 +28,13 @@ export default function StudentDiagnostic() {
       // Check subjects_startDate_Map
       const hasMapData = student.subjects_startDate_Map || {};
       
-      // Check homework history from logs
-      const hwkHistory = await buildHwkHistoryFromLogs(student.firstName, student.lastName);
+      // Check homework from hwkAssigned field
+      const hwkAssigned = student.hwkAssigned || [];
+      const hwkHistory = buildHwkHistoryFromAssignments(hwkAssigned);
       const mathHwk = hwkHistory.filter((h) => h.subject === "Math");
       const englishHwk = hwkHistory.filter((h) => h.subject === "English");
 
-      // Check hwkAssigned field
-      const hwkAssigned = student.hwkAssigned || [];
+      // Separate hwkAssigned by subject for display
       const mathAssigned = hwkAssigned.filter((hw) => hw.startsWith("M"));
       const englishAssigned = hwkAssigned.filter((hw) => hw.startsWith("E"));
 
@@ -45,27 +45,24 @@ export default function StudentDiagnostic() {
         hasEnglishStartDate: !!hasMapData.English,
         mathStartDate: hasMapData.Math || "MISSING",
         englishStartDate: hasMapData.English || "MISSING",
-        logsFound: {
-          totalLogs: hwkHistory.length,
-          mathLogs: mathHwk.length,
-          englishLogs: englishHwk.length,
-        },
-        hwkAssignedField: {
-          total: hwkAssigned.length,
-          mathCount: mathAssigned.length,
-          englishCount: englishAssigned.length,
+        hwkAssignedAnalysis: {
+          totalAssignments: hwkAssigned.length,
+          mathCount: mathHwk.length,
+          englishCount: englishHwk.length,
           mathSample: mathAssigned.slice(0, 3),
           englishSample: englishAssigned.slice(0, 3),
+          mathCurrentLevel: mathHwk.length > 0 ? mathHwk[mathHwk.length - 1].level : "None",
+          englishCurrentLevel: englishHwk.length > 0 ? englishHwk[englishHwk.length - 1].level : "None",
         },
         issues: [],
       };
 
       // Identify issues
       if (!hasMapData.Math && mathHwk.length > 0) {
-        info.issues.push("❌ Math homework found in logs but no Math start date in subjects_startDate_Map");
+        info.issues.push("❌ Math homework found in hwkAssigned but no Math start date in subjects_startDate_Map");
       }
       if (!hasMapData.English && englishHwk.length > 0) {
-        info.issues.push("❌ English homework found in logs but no English start date in subjects_startDate_Map");
+        info.issues.push("❌ English homework found in hwkAssigned but no English start date in subjects_startDate_Map");
       }
       if (mathAssigned.length > 0 && !hasMapData.Math) {
         info.issues.push("❌ Math homework in hwkAssigned but no Math start date");
@@ -87,11 +84,11 @@ export default function StudentDiagnostic() {
 
     const fixes: string[] = [];
     
-    if (diagnosticInfo.logsFound.mathLogs > 0 && !diagnosticInfo.hasMathStartDate) {
-      fixes.push(`Math start date: Set to earliest Math log date or estimated program start`);
+    if (diagnosticInfo.hwkAssignedAnalysis.mathCount > 0 && !diagnosticInfo.hasMathStartDate) {
+      fixes.push(`Math start date: Set to program start date or estimated start based on current level`);
     }
-    if (diagnosticInfo.logsFound.englishLogs > 0 && !diagnosticInfo.hasEnglishStartDate) {
-      fixes.push(`English start date: Set to earliest English log date or estimated program start`);
+    if (diagnosticInfo.hwkAssignedAnalysis.englishCount > 0 && !diagnosticInfo.hasEnglishStartDate) {
+      fixes.push(`English start date: Set to program start date or estimated start based on current level`);
     }
 
     return fixes.join("\n");
@@ -184,31 +181,31 @@ export default function StudentDiagnostic() {
             </div>
           </div>
 
-          {/* Log Data */}
+          {/* hwkAssigned Analysis */}
           <div className="bg-gray-50 p-4 rounded border border-gray-200">
-            <h4 className="font-semibold mb-2">Homework Logs Found:</h4>
+            <h4 className="font-semibold mb-2">Homework Assignments (hwkAssigned):</h4>
             <div className="space-y-1 text-sm">
-              <p>Total logs: {diagnosticInfo.logsFound.totalLogs}</p>
-              <p>Math logs: {diagnosticInfo.logsFound.mathLogs}</p>
-              <p>English logs: {diagnosticInfo.logsFound.englishLogs}</p>
-            </div>
-          </div>
-
-          {/* hwkAssigned Field */}
-          <div className="bg-gray-50 p-4 rounded border border-gray-200">
-            <h4 className="font-semibold mb-2">hwkAssigned Field:</h4>
-            <div className="space-y-1 text-sm">
-              <p>Total assigned: {diagnosticInfo.hwkAssignedField.total}</p>
-              <p>Math count: {diagnosticInfo.hwkAssignedField.mathCount}</p>
-              <p>English count: {diagnosticInfo.hwkAssignedField.englishCount}</p>
-              {diagnosticInfo.hwkAssignedField.mathSample.length > 0 && (
-                <p className="text-xs text-gray-600">
-                  Math sample: {diagnosticInfo.hwkAssignedField.mathSample.join(", ")}
+              <p>Total assignments: {diagnosticInfo.hwkAssignedAnalysis.totalAssignments}</p>
+              <p>Math assignments: {diagnosticInfo.hwkAssignedAnalysis.mathCount}</p>
+              <p>English assignments: {diagnosticInfo.hwkAssignedAnalysis.englishCount}</p>
+              {diagnosticInfo.hwkAssignedAnalysis.mathCount > 0 && (
+                <p className="text-blue-600">
+                  Math current level: <span className="font-semibold">{diagnosticInfo.hwkAssignedAnalysis.mathCurrentLevel}</span>
                 </p>
               )}
-              {diagnosticInfo.hwkAssignedField.englishSample.length > 0 && (
+              {diagnosticInfo.hwkAssignedAnalysis.englishCount > 0 && (
+                <p className="text-green-600">
+                  English current level: <span className="font-semibold">{diagnosticInfo.hwkAssignedAnalysis.englishCurrentLevel}</span>
+                </p>
+              )}
+              {diagnosticInfo.hwkAssignedAnalysis.mathSample.length > 0 && (
                 <p className="text-xs text-gray-600">
-                  English sample: {diagnosticInfo.hwkAssignedField.englishSample.join(", ")}
+                  Math sample: {diagnosticInfo.hwkAssignedAnalysis.mathSample.join(", ")}
+                </p>
+              )}
+              {diagnosticInfo.hwkAssignedAnalysis.englishSample.length > 0 && (
+                <p className="text-xs text-gray-600">
+                  English sample: {diagnosticInfo.hwkAssignedAnalysis.englishSample.join(", ")}
                 </p>
               )}
             </div>
