@@ -22,3 +22,43 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# ============================================
+# Security - Configuration files with credentials
+# ============================================
+# IMPORTANT: These files contain sensitive passwords/API keys
+# DO NOT remove these lines!
+
+# Admin credentials config
+src/utils/config.ts
+utils/config.ts
+config.ts
+
+# Any file with "important-values" in the name
+*important-values*
+
+# Environment variables (if you use .env files)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ============================================
+# Firebase (optional but recommended)
+# ============================================
+.firebase/
+.firebaserc
+firebase-debug.log
+firestore-debug.log
+
+# ============================================
+# Additional build outputs
+# ============================================
+build/
+coverage/
+
+# ============================================
+# OS files
+# ============================================
+Thumbs.db

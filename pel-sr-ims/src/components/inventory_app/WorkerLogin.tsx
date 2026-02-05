@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { loadWorkersFromDB, checkWorkerHasPin, createWorkerPin, verifyWorkerPin, createNewWorker } from "../../utils/inventoryService";
 import type { Worker } from "../../utils/types";
 import { useNameContext } from "./NameContext";
+import { signInWithEmail } from "../../utils/authService";
+import { auth } from "../../utils/firebase";
+import { getAdminEmail, getAdminPassword } from "../../utils/config";
 
 type LoginStep = "selectWorker" | "enterPin" | "createPin" | "confirmPin" | "addNewWorker";
 
@@ -66,6 +69,39 @@ export default function WorkerLogin() {
     setError("");
   };
 
+  /**
+   * Sign in to Firebase Auth as Mr. Lee
+   * This enables access to protected admin routes like /dashboard
+   */
+  const signInAsAdmin = async () => {
+    console.log(auth.currentUser?.email, getAdminEmail())
+    try {
+      // Check if already signed in
+      if (auth.currentUser) {
+        console.log("✅ Already signed into Firebase as:", auth.currentUser.email);
+        return;
+      }
+
+      // Sign in with admin credentials from config
+      const adminEmail = getAdminEmail();
+      const adminPassword = getAdminPassword();
+      
+      // LOG WHAT WE'RE TRYING
+      console.log("🔍 Attempting sign-in with:");
+      console.log("   Email:", adminEmail);
+      console.log("   Password length:", adminPassword.length, "characters");
+      console.log("   Password starts with:", adminPassword.substring(0, 4) + "...");
+      
+      await signInWithEmail(adminEmail, adminPassword);
+      console.log("✅ Signed into Firebase Auth as admin");
+    } catch (err) {
+      console.error("❌ Failed to sign into Firebase Auth:", err);
+      // Don't block the worker login if Firebase auth fails
+      // The worker can still use the system, just not protected routes
+      setError("Note: Admin features may be limited. Please check your credentials.");
+    }
+  };
+
   const handlePinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -84,6 +120,11 @@ export default function WorkerLogin() {
         
         if (isValid) {
           setNameOfWorker(selectedWorker);
+          
+          // If Mr. Lee is logging in, also sign into Firebase Auth
+          if (selectedWorker === "Mr. Lee") {
+            await signInAsAdmin();
+          }
         } else {
           setError("Incorrect PIN. Please try again.");
           setPin("");
@@ -122,6 +163,11 @@ export default function WorkerLogin() {
       
       if (success) {
         setNameOfWorker(selectedWorker);
+        
+        // If Mr. Lee is logging in, also sign into Firebase Auth
+        if (selectedWorker === "Mr. Lee") {
+          await signInAsAdmin();
+        }
       } else {
         setError("Failed to create PIN. Please try again.");
       }
@@ -215,141 +261,116 @@ export default function WorkerLogin() {
             PEL
           </h1>
           <p className="text-blue-100 text-lg font-medium">
-            Worker Portal
+            Worker Login Portal
           </p>
         </div>
 
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-white/20">
-          {/* Worker Selection */}
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8">
+          {/* Select Worker */}
           {loginStep === "selectWorker" && (
             <div className="space-y-6">
               <div>
-                <label 
-                  htmlFor="worker-select" 
-                  className="block text-sm font-semibold text-gray-700 mb-3"
-                >
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
                   Select Your Name
                 </label>
                 <select
-                  id="worker-select"
                   value={selectedWorker}
                   onChange={(e) => handleWorkerSelect(e.target.value)}
                   disabled={isLoading}
                   className="w-full px-4 py-4 rounded-xl border-2 border-gray-200 text-gray-800 text-base
                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                    appearance-none bg-white cursor-pointer transition-all duration-200
-                    hover:border-blue-300 disabled:opacity-50 disabled:cursor-not-allowed
-                    shadow-sm"
+                    transition-all duration-200 shadow-sm
+                    disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <option value="">Choose worker...</option>
-                  {workersList.map((worker: Worker) => (
+                  <option value="">Choose a worker...</option>
+                  {workersList.map((worker) => (
                     <option key={worker.initials} value={worker.initials}>
-                      {worker.firstName} {worker.lastName}
+                      {worker.firstName} {worker.lastName} ({worker.initials})
                     </option>
                   ))}
                 </select>
               </div>
-              
-              {isLoading && (
-                <div className="text-center">
-                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {error}
                 </div>
               )}
 
-              {/* Add New Worker Button */}
-              <div className="pt-4 border-t border-gray-200">
-                <button
-                  onClick={handleShowAddWorker}
-                  disabled={isLoading}
-                  className="w-full bg-white border-2 border-blue-500 text-blue-600 py-3 rounded-xl
-                    font-semibold text-base shadow-sm hover:bg-blue-50
-                    transform hover:scale-[1.02] active:scale-[0.98]
-                    transition-all duration-200
-                    disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  + Add New Worker
-                </button>
-              </div>
+              {isLoading && (
+                <div className="text-center text-gray-600">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              )}
+
+              <button
+                onClick={handleShowAddWorker}
+                className="w-full !bg-gray-100 text-gray-700 py-3 rounded-xl
+                  font-medium text-base hover:!bg-gray-200
+                  transition-all duration-200
+                  focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+              >
+                + Add New Worker
+              </button>
             </div>
           )}
 
-          {/* Add New Worker Form */}
+          {/* Add New Worker */}
           {loginStep === "addNewWorker" && (
             <form onSubmit={handleAddNewWorker} className="space-y-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-800">Add New Worker</h2>
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  ← Back
-                </button>
-              </div>
-
               <div>
-                <label htmlFor="first-name" className="block text-sm font-semibold text-gray-700 mb-2">
-                  First Name
-                </label>
-                <input
-                  id="first-name"
-                  type="text"
-                  value={newWorkerFirstName}
-                  onChange={(e) => setNewWorkerFirstName(e.target.value)}
-                  disabled={isLoading}
-                  placeholder="Enter first name"
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-800
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                    transition-all duration-200 shadow-sm
-                    disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="last-name" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Last Name
-                </label>
-                <input
-                  id="last-name"
-                  type="text"
-                  value={newWorkerLastName}
-                  onChange={(e) => setNewWorkerLastName(e.target.value)}
-                  disabled={isLoading}
-                  placeholder="Enter last name"
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-800
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                    transition-all duration-200 shadow-sm
-                    disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="location" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Location
-                </label>
-                <select
-                  id="location"
-                  value={newWorkerLocation}
-                  onChange={(e) => setNewWorkerLocation(e.target.value)}
-                  disabled={isLoading}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-800
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                    appearance-none bg-white cursor-pointer transition-all duration-200
-                    disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                >
-                  <option value="san-ramon">San Ramon</option>
-                  {/* Add more locations as needed */}
-                </select>
-              </div>
-
-              {newWorkerFirstName && newWorkerLastName && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-sm text-blue-800">
-                    📝 Initials will be: <strong>{(newWorkerFirstName.charAt(0) + newWorkerLastName.charAt(0)).toUpperCase()}</strong>
-                  </p>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Add New Worker
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    ← Back
+                  </button>
                 </div>
-              )}
+                
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={newWorkerFirstName}
+                    onChange={(e) => setNewWorkerFirstName(e.target.value)}
+                    placeholder="First Name"
+                    disabled={isLoading}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-800
+                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                      transition-all duration-200 shadow-sm
+                      disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                  
+                  <input
+                    type="text"
+                    value={newWorkerLastName}
+                    onChange={(e) => setNewWorkerLastName(e.target.value)}
+                    placeholder="Last Name"
+                    disabled={isLoading}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-800
+                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                      transition-all duration-200 shadow-sm
+                      disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+
+                  <select
+                    value={newWorkerLocation}
+                    onChange={(e) => setNewWorkerLocation(e.target.value)}
+                    disabled={isLoading}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-800
+                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                      transition-all duration-200 shadow-sm
+                      disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="san-ramon">San Ramon</option>
+                    <option value="dublin">Dublin</option>
+                  </select>
+                </div>
+              </div>
 
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
@@ -360,7 +381,7 @@ export default function WorkerLogin() {
               <button
                 type="submit"
                 disabled={isLoading || !newWorkerFirstName.trim() || !newWorkerLastName.trim()}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl
+                className="w-full !bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl
                   font-semibold text-lg shadow-lg hover:shadow-xl
                   transform hover:scale-[1.02] active:scale-[0.98]
                   transition-all duration-200
@@ -422,7 +443,7 @@ export default function WorkerLogin() {
               <button
                 type="submit"
                 disabled={pin.length !== 4 || isLoading}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl
+                className="w-full !bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl
                   font-semibold text-lg shadow-lg hover:shadow-xl
                   transform hover:scale-[1.02] active:scale-[0.98]
                   transition-all duration-200
@@ -453,7 +474,7 @@ export default function WorkerLogin() {
                     ← Back
                   </button>
                 </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="!bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                   <p className="text-sm text-blue-800">
                     🔒 First time login detected. Please create a 4-digit PIN for future logins.
                   </p>
@@ -489,7 +510,7 @@ export default function WorkerLogin() {
               <button
                 type="submit"
                 disabled={pin.length !== 4 || isLoading}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl
+                className="w-full !bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl
                   font-semibold text-lg shadow-lg hover:shadow-xl
                   transform hover:scale-[1.02] active:scale-[0.98]
                   transition-all duration-200
@@ -551,7 +572,7 @@ export default function WorkerLogin() {
               <button
                 type="submit"
                 disabled={confirmPinValue.length !== 4 || isLoading}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl
+                className="w-full !bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl
                   font-semibold text-lg shadow-lg hover:shadow-xl
                   transform hover:scale-[1.02] active:scale-[0.98]
                   transition-all duration-200
