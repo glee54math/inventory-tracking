@@ -1,6 +1,6 @@
 // ProgressGraph.tsx - Visual representation of student progress over time
 
-// import { useState } from "react";
+import { useState } from "react";
 import {
   LineChart,
   Line,
@@ -24,19 +24,25 @@ export default function ProgressGraph({
   subjectProgress,
   showTimeline,
 }: ProgressGraphProps) {
+  const [showMonthsSinceProgramStart, setShowMonthsSinceProgramStart] = useState(false);
+  
   const levels =
     subjectProgress.subject === "Math" ? MATH_LEVELS : ENGLISH_LEVELS;
 
-  // Generate Y-axis ticks (every other level)
+  // Get program start date
+  const programStartDate = subjectProgress.programStartDate;
+
+  // Generate Y-axis ticks (show all levels)
   const getYAxisTicks = () => {
     const ticks: number[] = [];
-    for (let i = 0; i < levels.length; i += 2) {
+    // Show every level
+    for (let i = 0; i < levels.length; i++) {
       ticks.push(i);
     }
     return ticks;
   };
 
-  // Generate X-axis ticks based on 3.3 month intervals
+  // Generate X-axis ticks based on 3 month intervals
   const getXAxisTicks = (minDate: number, maxDate: number) => {
     const ticks: number[] = [];
     const startDate = new Date(minDate);
@@ -47,7 +53,7 @@ export default function ProgressGraph({
     
     let currentDate = new Date(startDate);
     const msPerMonth = 30.44 * 24 * 60 * 60 * 1000; // Average days per month
-    const tickInterval = 3.3 * msPerMonth; // 3.3 months in milliseconds
+    const tickInterval = 3 * msPerMonth; // 3 months in milliseconds
     
     while (currentDate.getTime() <= endDate.getTime()) {
       ticks.push(currentDate.getTime());
@@ -123,6 +129,13 @@ export default function ProgressGraph({
     xAxisTicks = getXAxisTicks(minDate, maxDate);
   }
 
+  // Calculate months since program start
+  const getMonthsSinceProgramStart = (timestamp: number): number => {
+    const msPerMonth = 30.44 * 24 * 60 * 60 * 1000;
+    const monthsDiff = (timestamp - programStartDate.getTime()) / msPerMonth;
+    return Math.round(monthsDiff * 10) / 10; // Round to 1 decimal
+  };
+
   // Custom tooltip for timeline view
   const TimelineTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -158,29 +171,35 @@ export default function ProgressGraph({
 
   if (showTimeline) {
     return (
-      <div className="w-full h-[400px]">
+      <div className="w-full h-[450px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={timelineData}>
+          <LineChart data={timelineData} margin={{ top: 5, right: 30, left: 20, bottom: 60 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="date"
               type="number"
               domain={["dataMin", "dataMax"]}
               ticks={xAxisTicks}
-              tickFormatter={(timestamp: any) =>
-                new Date(timestamp).toLocaleDateString(undefined, {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })
-              }
+              tickFormatter={(timestamp: any) => {
+                if (showMonthsSinceProgramStart) {
+                  return getMonthsSinceProgramStart(timestamp).toString();
+                } else {
+                  return new Date(timestamp).toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  });
+                }
+              }}
               angle={-45}
               textAnchor="end"
               height={80}
+              onClick={() => setShowMonthsSinceProgramStart(!showMonthsSinceProgramStart)}
+              style={{ cursor: 'pointer' }}
               label={{
-                value: "Date",
+                value: showMonthsSinceProgramStart ? "Months Since Program Start" : "Date",
                 position: "insideBottom",
-                offset: -10,
+                offset: -20,
               }}
             />
             <YAxis
@@ -189,14 +208,19 @@ export default function ProgressGraph({
               domain={[0, levels.length - 1]}
               ticks={getYAxisTicks()}
               tickFormatter={(index: number) => levels[index] || ""}
+              width={60}
               label={{
                 value: "Level",
                 angle: -90,
                 position: "insideLeft",
+                offset: 10,
               }}
             />
             <Tooltip content={<TimelineTooltip />} />
-            <Legend />
+            <Legend 
+              verticalAlign="top"
+              wrapperStyle={{ paddingBottom: '20px' }}
+            />
             <Line
               type="monotone"
               dataKey="levelIndex"
@@ -223,6 +247,11 @@ export default function ProgressGraph({
             />
           </LineChart>
         </ResponsiveContainer>
+        
+        {/* Instructions for toggling */}
+        <div className="text-center mt-2 text-sm text-gray-500">
+          Click on X-axis to toggle between dates and months since program start
+        </div>
       </div>
     );
   } else {
