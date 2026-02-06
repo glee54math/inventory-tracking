@@ -13,6 +13,9 @@ interface StudentProgressPanelProps {
   showHistoricalDataForm: boolean;
   showPaceEditor: boolean;
   onTogglePaceEditor: () => void;
+  customPaceMap: Record<string, number>;
+  onPaceChange: (level: string, months: number) => void;
+  onSavePace: () => void;
 }
 
 export default function StudentProgressPanel({
@@ -24,6 +27,9 @@ export default function StudentProgressPanel({
   showHistoricalDataForm,
   showPaceEditor,
   onTogglePaceEditor,
+  customPaceMap,
+  onPaceChange,
+  onSavePace,
 }: StudentProgressPanelProps) {
   const [showTimeline, setShowTimeline] = useState(true);
   const [activeSubject, setActiveSubject] = useState<"Math" | "English">("Math");
@@ -37,6 +43,16 @@ export default function StudentProgressPanel({
     return activeSubject === "Math"
       ? studentProgress?.mathProgress
       : studentProgress?.englishProgress;
+  };
+
+  // Get remaining levels for the active subject
+  const getRemainingLevels = () => {
+    const progress = getActiveProgress();
+    if (!progress) return [];
+    
+    return progress.levelHistory
+      .filter((lp) => !lp.isComplete)
+      .map((lp) => lp.level);
   };
 
   return (
@@ -279,6 +295,55 @@ export default function StudentProgressPanel({
                     })}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {/* Inline Pace Editor */}
+          {showPaceEditor && getRemainingLevels().length > 0 && (
+            <div className="bg-white p-6 rounded shadow mb-6">
+              <h3 className="text-xl font-semibold mb-2">
+                Adjust Pace for Remaining Levels
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Set custom completion times (in months) for upcoming levels. Leave blank to use default pace (3.3 months).
+              </p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {getRemainingLevels().map((level) => (
+                  <div key={level} className="border rounded p-3">
+                    <label className="block font-semibold text-sm mb-1">{level}</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      step="0.1"
+                      placeholder="3.3"
+                      value={customPaceMap[level] || ""}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value) || 0;
+                        onPaceChange(level, value);
+                      }}
+                      className="w-full p-2 border rounded text-sm"
+                    />
+                    <span className="text-xs text-gray-500">months</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={onSavePace}
+                  className="px-4 py-2 !bg-green-500 text-white rounded hover:!bg-green-600"
+                >
+                  Save Custom Pace
+                </button>
+                <button
+                  onClick={onTogglePaceEditor}
+                  className="px-4 py-2 !bg-gray-200 rounded hover:!bg-gray-300"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           )}
