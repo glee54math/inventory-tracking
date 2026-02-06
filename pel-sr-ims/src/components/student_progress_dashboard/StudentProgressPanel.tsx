@@ -39,6 +39,11 @@ export default function StudentProgressPanel({
   const [isGraphExpanded, setIsGraphExpanded] = useState(true);
   const [isLevelHistoryExpanded, setIsLevelHistoryExpanded] = useState(true);
 
+  // Drag and drop state
+  const [sectionOrder, setSectionOrder] = useState<string[]>(['graph', 'levelHistory', 'paceEditor']);
+  const [draggedSection, setDraggedSection] = useState<string | null>(null);
+  const [dragOverSection, setDragOverSection] = useState<string | null>(null);
+
   const formatDate = (date: Date | undefined) => {
     if (!date) return "N/A";
     return new Date(date).toLocaleDateString();
@@ -60,6 +65,248 @@ export default function StudentProgressPanel({
       .map((lp) => lp.level);
   };
 
+  // Drag handlers
+  const handleDragStart = (section: string) => (e: React.DragEvent) => {
+    setDraggedSection(section);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (section: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    if (draggedSection && draggedSection !== section) {
+      setDragOverSection(section);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverSection(null);
+  };
+
+  const handleDrop = (targetSection: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    
+    if (!draggedSection || draggedSection === targetSection) {
+      setDraggedSection(null);
+      setDragOverSection(null);
+      return;
+    }
+
+    const newOrder = [...sectionOrder];
+    const draggedIndex = newOrder.indexOf(draggedSection);
+    const targetIndex = newOrder.indexOf(targetSection);
+
+    // Swap the sections
+    [newOrder[draggedIndex], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[draggedIndex]];
+
+    setSectionOrder(newOrder);
+    setDraggedSection(null);
+    setDragOverSection(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedSection(null);
+    setDragOverSection(null);
+  };
+
+  // Render draggable sections
+  const renderGraphSection = () => (
+    <div
+      key="graph"
+      draggable
+      onDragStart={handleDragStart('graph')}
+      onDragOver={handleDragOver('graph')}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop('graph')}
+      onDragEnd={handleDragEnd}
+      className={`bg-white rounded shadow mb-6 transition-all duration-200 ${
+        draggedSection === 'graph' ? 'opacity-60' : ''
+      } ${
+        dragOverSection === 'graph' ? 'border-2 border-dashed border-blue-500' : ''
+      }`}
+      style={{ cursor: draggedSection ? 'grabbing' : 'grab' }}
+    >
+      {/* Clickable Header */}
+      <div 
+        className="p-6 pb-4 cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-between"
+        onClick={() => setIsGraphExpanded(!isGraphExpanded)}
+      >
+        <h3 className="text-xl font-semibold">
+          {activeSubject} Progress {showTimeline ? "(Timeline View)" : "(Level Progression)"}
+        </h3>
+        <span className="text-2xl text-gray-500 select-none">
+          {isGraphExpanded ? '▼' : '▶'}
+        </span>
+      </div>
+
+      {/* Collapsible Content */}
+      {isGraphExpanded && (
+        <div className="px-6 pb-6">
+          {getActiveProgress() && (
+            <ProgressGraph
+              subjectProgress={getActiveProgress()!}
+              showTimeline={showTimeline}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderLevelHistorySection = () => (
+    <div
+      key="levelHistory"
+      draggable
+      onDragStart={handleDragStart('levelHistory')}
+      onDragOver={handleDragOver('levelHistory')}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop('levelHistory')}
+      onDragEnd={handleDragEnd}
+      className={`bg-white rounded shadow mb-6 transition-all duration-200 ${
+        draggedSection === 'levelHistory' ? 'opacity-60' : ''
+      } ${
+        dragOverSection === 'levelHistory' ? 'border-2 border-dashed border-blue-500' : ''
+      }`}
+      style={{ cursor: draggedSection ? 'grabbing' : 'grab' }}
+    >
+      {/* Clickable Header */}
+      <div 
+        className="p-6 pb-4 cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-between"
+        onClick={() => setIsLevelHistoryExpanded(!isLevelHistoryExpanded)}
+      >
+        <h3 className="text-xl font-semibold">Level History</h3>
+        <span className="text-2xl text-gray-500 select-none">
+          {isLevelHistoryExpanded ? '▼' : '▶'}
+        </span>
+      </div>
+
+      {/* Collapsible Content */}
+      {isLevelHistoryExpanded && getActiveProgress() && (
+        <div className="px-6 pb-6">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 p-2 text-left">Level</th>
+                  <th className="border border-gray-300 p-2 text-left">Start Date</th>
+                  <th className="border border-gray-300 p-2 text-left">Est. Completion</th>
+                  <th className="border border-gray-300 p-2 text-left">Pages Completed</th>
+                  <th className="border border-gray-300 p-2 text-left">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {getActiveProgress()!.levelHistory.map((level) => {
+                  let status = 'In Progress';
+                  let statusColor = '!bg-yellow-100 text-yellow-800';
+                  
+                  if (level.isComplete) {
+                    status = 'Completed';
+                    statusColor = '!bg-green-100 text-green-800';
+                  } else if ((level.pagesCompleted || 0) === 0) {
+                    status = 'Not Started';
+                    statusColor = '!bg-red-50 text-red-700';
+                  }
+                  
+                  return (
+                    <tr key={level.level} className="hover:bg-gray-50">
+                      <td className="border border-gray-300 p-2 font-medium">{level.level}</td>
+                      <td className="border border-gray-300 p-2">{formatDate(level.startDate)}</td>
+                      <td className="border border-gray-300 p-2">
+                        {formatDate(level.estimatedCompletion)}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        {level.pagesCompleted || 0} / 110
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${statusColor}`}>
+                          {status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderPaceEditorSection = () => {
+    if (!showPaceEditor || getRemainingLevels().length === 0) return null;
+    
+    return (
+      <div
+        key="paceEditor"
+        draggable
+        onDragStart={handleDragStart('paceEditor')}
+        onDragOver={handleDragOver('paceEditor')}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop('paceEditor')}
+        onDragEnd={handleDragEnd}
+        className={`bg-white rounded shadow mb-6 transition-all duration-200 ${
+          draggedSection === 'paceEditor' ? 'opacity-60' : ''
+        } ${
+          dragOverSection === 'paceEditor' ? 'border-2 border-dashed border-blue-500' : ''
+        }`}
+        style={{ cursor: draggedSection ? 'grabbing' : 'grab' }}
+      >
+        <div className="p-6">
+          <h3 className="text-xl font-semibold mb-2">
+            Adjust Pace for Remaining Levels
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Set custom completion times (in months) for upcoming levels. Leave blank to use default pace (3.3 months).
+          </p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {getRemainingLevels().map((level) => (
+              <div key={level} className="border rounded p-3">
+                <label className="block font-semibold text-sm mb-1">{level}</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  step="0.1"
+                  placeholder="3.3"
+                  value={customPaceMap[level] || ""}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value) || 0;
+                    onPaceChange(level, value);
+                  }}
+                  className="w-full p-2 border rounded text-sm"
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <span className="text-xs text-gray-500">months</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSavePace();
+              }}
+              className="px-4 py-2 !bg-green-500 text-white rounded hover:!bg-green-600"
+            >
+              Save Custom Pace
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onTogglePaceEditor();
+              }}
+              className="px-4 py-2 !bg-gray-200 rounded hover:!bg-gray-300"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div>
       {/* Student Info & Metrics - Collapsible */}
@@ -75,8 +322,8 @@ export default function StudentProgressPanel({
           >
             {student.firstName} {student.lastName}
           </h2>
-          <span className="text-2xl text-gray-500">
-            {isStudentInfoExpanded ? '∧' : '∨'}
+          <span className="text-2xl text-gray-500 select-none">
+            {isStudentInfoExpanded ? '▼' : '▶'}
           </span>
         </div>
 
@@ -270,150 +517,19 @@ export default function StudentProgressPanel({
             </div>
           </div>
 
-          {/* Progress Graph - Collapsible */}
-          <div className="bg-white rounded shadow mb-6">
-            {/* Clickable Header */}
-            <div 
-              className="p-6 pb-4 cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-between"
-              onClick={() => setIsGraphExpanded(!isGraphExpanded)}
-            >
-              <h3 className="text-xl font-semibold">
-                {activeSubject} Progress {showTimeline ? "(Timeline View)" : "(Level Progression)"}
-              </h3>
-              <span className="text-2xl text-gray-500">
-                {isGraphExpanded ? '∧' : '∨'}
-              </span>
-            </div>
-
-            {/* Collapsible Content */}
-            {isGraphExpanded && (
-              <div className="px-6 pb-6">
-                {getActiveProgress() && (
-                  <ProgressGraph
-                    subjectProgress={getActiveProgress()!}
-                    showTimeline={showTimeline}
-                  />
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Level History Table - Collapsible */}
-          {getActiveProgress() && (
-            <div className="bg-white rounded shadow mb-6">
-              {/* Clickable Header */}
-              <div 
-                className="p-6 pb-4 cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-between"
-                onClick={() => setIsLevelHistoryExpanded(!isLevelHistoryExpanded)}
-              >
-                <h3 className="text-xl font-semibold">Level History</h3>
-                <span className="text-2xl text-gray-500">
-                  {isLevelHistoryExpanded ? '∧' : '∨'}
-                </span>
-              </div>
-
-              {/* Collapsible Content */}
-              {isLevelHistoryExpanded && (
-                <div className="px-6 pb-6">
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="border border-gray-300 p-2 text-left">Level</th>
-                          <th className="border border-gray-300 p-2 text-left">Start Date</th>
-                          <th className="border border-gray-300 p-2 text-left">Est. Completion</th>
-                          <th className="border border-gray-300 p-2 text-left">Pages Completed</th>
-                          <th className="border border-gray-300 p-2 text-left">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {getActiveProgress()!.levelHistory.map((level) => {
-                          // Determine status
-                          let status = 'In Progress';
-                          let statusColor = '!bg-yellow-100 text-yellow-800';
-                          
-                          if (level.isComplete) {
-                            status = 'Completed';
-                            statusColor = '!bg-green-100 text-green-800';
-                          } else if ((level.pagesCompleted || 0) === 0) {
-                            status = 'Not Started';
-                            statusColor = '!bg-red-50 text-red-700';
-                          }
-                          
-                          return (
-                            <tr key={level.level} className="hover:bg-gray-50">
-                              <td className="border border-gray-300 p-2 font-medium">{level.level}</td>
-                              <td className="border border-gray-300 p-2">{formatDate(level.startDate)}</td>
-                              <td className="border border-gray-300 p-2">
-                                {formatDate(level.estimatedCompletion)}
-                              </td>
-                              <td className="border border-gray-300 p-2">
-                                {level.pagesCompleted || 0} / 110
-                              </td>
-                              <td className="border border-gray-300 p-2">
-                                <span className={`px-2 py-1 rounded text-xs font-semibold ${statusColor}`}>
-                                  {status}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Inline Pace Editor */}
-          {showPaceEditor && getRemainingLevels().length > 0 && (
-            <div className="bg-white p-6 rounded shadow mb-6">
-              <h3 className="text-xl font-semibold mb-2">
-                Adjust Pace for Remaining Levels
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Set custom completion times (in months) for upcoming levels. Leave blank to use default pace (3.3 months).
-              </p>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {getRemainingLevels().map((level) => (
-                  <div key={level} className="border rounded p-3">
-                    <label className="block font-semibold text-sm mb-1">{level}</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="50"
-                      step="0.1"
-                      placeholder="3.3"
-                      value={customPaceMap[level] || ""}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value) || 0;
-                        onPaceChange(level, value);
-                      }}
-                      className="w-full p-2 border rounded text-sm"
-                    />
-                    <span className="text-xs text-gray-500">months</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex gap-3 mt-4">
-                <button
-                  onClick={onSavePace}
-                  className="px-4 py-2 !bg-green-500 text-white rounded hover:!bg-green-600"
-                >
-                  Save Custom Pace
-                </button>
-                <button
-                  onClick={onTogglePaceEditor}
-                  className="px-4 py-2 !bg-gray-200 rounded hover:!bg-gray-300"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Draggable Sections - Rendered in Custom Order */}
+          {sectionOrder.map((sectionId) => {
+            switch (sectionId) {
+              case 'graph':
+                return renderGraphSection();
+              case 'levelHistory':
+                return renderLevelHistorySection();
+              case 'paceEditor':
+                return renderPaceEditorSection();
+              default:
+                return null;
+            }
+          })}
         </>
       )}
     </div>
