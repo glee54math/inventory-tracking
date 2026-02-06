@@ -27,6 +27,39 @@ export default function ProgressGraph({
   const levels =
     subjectProgress.subject === "Math" ? MATH_LEVELS : ENGLISH_LEVELS;
 
+  // Generate Y-axis ticks (every other level)
+  const getYAxisTicks = () => {
+    const ticks: number[] = [];
+    for (let i = 0; i < levels.length; i += 2) {
+      ticks.push(i);
+    }
+    return ticks;
+  };
+
+  // Generate X-axis ticks based on 3.3 month intervals
+  const getXAxisTicks = (minDate: number, maxDate: number) => {
+    const ticks: number[] = [];
+    const startDate = new Date(minDate);
+    const endDate = new Date(maxDate);
+    
+    // Start from the beginning of the month
+    startDate.setDate(1);
+    
+    let currentDate = new Date(startDate);
+    const msPerMonth = 30.44 * 24 * 60 * 60 * 1000; // Average days per month
+    const tickInterval = 3.3 * msPerMonth; // 3.3 months in milliseconds
+    
+    while (currentDate.getTime() <= endDate.getTime()) {
+      ticks.push(currentDate.getTime());
+      currentDate = new Date(currentDate.getTime() + tickInterval);
+    }
+    
+    // Add one more tick beyond the end for better visualization
+    ticks.push(currentDate.getTime());
+    
+    return ticks;
+  };
+
   // Prepare data for timeline view (X-axis = time, Y-axis = level)
   const prepareTimelineData = () => {
     const data: any[] = [];
@@ -82,6 +115,14 @@ export default function ProgressGraph({
     ? prepareLevelProgressionData()
     : [];
 
+  // Calculate X-axis domain and ticks for timeline
+  let xAxisTicks: number[] = [];
+  if (showTimeline && timelineData.length > 0) {
+    const minDate = Math.min(...timelineData.map(d => d.date));
+    const maxDate = Math.max(...timelineData.map(d => d.date));
+    xAxisTicks = getXAxisTicks(minDate, maxDate);
+  }
+
   // Custom tooltip for timeline view
   const TimelineTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -125,22 +166,28 @@ export default function ProgressGraph({
               dataKey="date"
               type="number"
               domain={["dataMin", "dataMax"]}
+              ticks={xAxisTicks}
               tickFormatter={(timestamp: any) =>
                 new Date(timestamp).toLocaleDateString(undefined, {
                   month: "short",
-                  year: "2-digit",
+                  day: "numeric",
+                  year: "numeric",
                 })
               }
+              angle={-45}
+              textAnchor="end"
+              height={80}
               label={{
                 value: "Date",
                 position: "insideBottom",
-                offset: -5,
+                offset: -10,
               }}
             />
             <YAxis
               dataKey="levelIndex"
               type="number"
               domain={[0, levels.length - 1]}
+              ticks={getYAxisTicks()}
               tickFormatter={(index: number) => levels[index] || ""}
               label={{
                 value: "Level",

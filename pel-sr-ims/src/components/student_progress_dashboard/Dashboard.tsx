@@ -256,28 +256,33 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
-        <select
-          className="w-full p-2 border border-gray-300 rounded"
-          value={selectedStudent ? `${selectedStudent.firstName}-${selectedStudent.lastName}` : ""}
-          onChange={(e) => {
-            const [firstName, lastName] = e.target.value.split("-");
-            const student = students.find(
-              (s) => s.firstName === firstName && s.lastName === lastName
-            );
-            if (student) handleStudentSelect(student);
-          }}
-        >
-          <option value="">-- Select a Student --</option>
-          {students.map((student) => (
-            <option
-              key={student.firstName + student.lastName}
-              value={`${student.firstName}-${student.lastName}`}
-              style={{ filter: blurName1 ? 'blur(5px)' : 'none' }}
-            >
-              {student.firstName} {student.lastName}
-            </option>
-          ))}
-        </select>
+        {!blurName1 ? (
+          <select
+            className="w-full p-2 border border-gray-300 rounded"
+            value={selectedStudent ? `${selectedStudent.firstName}-${selectedStudent.lastName}` : ""}
+            onChange={(e) => {
+              const [firstName, lastName] = e.target.value.split("-");
+              const student = students.find(
+                (s) => s.firstName === firstName && s.lastName === lastName
+              );
+              if (student) handleStudentSelect(student);
+            }}
+          >
+            <option value="">-- Select a Student --</option>
+            {students.map((student) => (
+              <option
+                key={student.firstName + student.lastName}
+                value={`${student.firstName}-${student.lastName}`}
+              >
+                {student.firstName} {student.lastName}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <div className="w-full p-2 border border-gray-300 rounded bg-gray-50 text-gray-500 text-center">
+            Student name is blurred (Unblur to change selection)
+          </div>
+        )}
       </div>
 
       {/* Student 2 Selector (Comparison Mode) */}
@@ -300,38 +305,43 @@ export default function Dashboard() {
               </button>
             )}
           </div>
-          <select
-            className="w-full p-2 border border-gray-300 rounded"
-            value={selectedStudent2 ? `${selectedStudent2.firstName}-${selectedStudent2.lastName}` : ""}
-            onChange={(e) => {
-              if (!e.target.value) {
-                handleStudent2Select(null);
-                return;
-              }
-              const [firstName, lastName] = e.target.value.split("-");
-              const student = students.find(
-                (s) => s.firstName === firstName && s.lastName === lastName
-              );
-              handleStudent2Select(student || null);
-            }}
-          >
-            <option value="">-- Select a Student to Compare --</option>
-            {students
-              .filter(s => 
-                selectedStudent 
-                  ? `${s.firstName}${s.lastName}` !== `${selectedStudent.firstName}${selectedStudent.lastName}`
-                  : true
-              )
-              .map((student) => (
-                <option
-                  key={student.firstName + student.lastName}
-                  value={`${student.firstName}-${student.lastName}`}
-                  style={{ filter: blurName2 ? 'blur(5px)' : 'none' }}
-                >
-                  {student.firstName} {student.lastName}
-                </option>
-              ))}
-          </select>
+          {!blurName2 ? (
+            <select
+              className="w-full p-2 border border-gray-300 rounded"
+              value={selectedStudent2 ? `${selectedStudent2.firstName}-${selectedStudent2.lastName}` : ""}
+              onChange={(e) => {
+                if (!e.target.value) {
+                  handleStudent2Select(null);
+                  return;
+                }
+                const [firstName, lastName] = e.target.value.split("-");
+                const student = students.find(
+                  (s) => s.firstName === firstName && s.lastName === lastName
+                );
+                handleStudent2Select(student || null);
+              }}
+            >
+              <option value="">-- Select a Student to Compare --</option>
+              {students
+                .filter(s => 
+                  selectedStudent 
+                    ? `${s.firstName}${s.lastName}` !== `${selectedStudent.firstName}${selectedStudent.lastName}`
+                    : true
+                )
+                .map((student) => (
+                  <option
+                    key={student.firstName + student.lastName}
+                    value={`${student.firstName}-${student.lastName}`}
+                  >
+                    {student.firstName} {student.lastName}
+                  </option>
+                ))}
+            </select>
+          ) : (
+            <div className="w-full p-2 border border-gray-300 rounded bg-gray-50 text-gray-500 text-center">
+              Student 2 name is blurred (Unblur to change selection)
+            </div>
+          )}
         </div>
       )}
 
