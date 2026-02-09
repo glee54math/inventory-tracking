@@ -438,3 +438,86 @@ export async function verifyWorkerPin(workerInitials: string, pin: string): Prom
 
   return false;
 }
+// Log Reassignment Functions
+export async function canEditLogEntry(logTimestamp: Date): Promise<boolean> {
+  // Check if log entry is within 4 hours of creation
+  const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
+  return logTimestamp >= fourHoursAgo;
+}
+
+export async function reassignLogEntry(
+  logId: string,
+  newWorkerInitials: string,
+  reassignedBy: string
+): Promise<boolean> {
+  // Reassign a log entry to a different worker
+  // Creates an audit trail by adding a new log entry
+  try {
+    const logDocRef = doc(db, "logs", logId);
+    const logSnap = await getDoc(logDocRef);
+
+    if (!logSnap.exists()) {
+      console.error("Log entry not found");
+      return false;
+    }
+
+    const logData = logSnap.data();
+    const originalWorker = logData.userID;
+    
+    // Check if entry is within 4 hours
+    const logTimestamp = logData.timeStamp.toDate();
+    const canEdit = await canEditLogEntry(logTimestamp);
+    
+    if (!canEdit) {
+      console.error("Log entry is older than 4 hours and cannot be edited");
+      return false;
+    }
+
+    // Update the log entry with new worker
+    await updateDoc(logDocRef, {
+      userID: newWorkerInitials,
+      reassignedFrom: originalWorker,
+      reassignedBy: reassignedBy,
+      reassignedAt: new Date(),
+    });
+
+    // Create audit log entry
+    const auditLogEntry: LogEntry = {
+      timeStamp: new Date(),
+      userID: reassignedBy,
+      eventType: "Log Reassignment",
+      message: `Reassigned action from ${originalWorker} to ${newWorkerInitials}: "${logData.message}"`,
+    };
+
+    await saveLog(auditLogEntry);
+
+    console.log(`✅ Log entry reassigned from ${originalWorker} to ${newWorkerInitials}`);
+    return true;
+  } catch (error) {
+    console.error("Error reassigning log entry:", error);
+    return false;
+  }
+}
+
+export async function getLogEntryById(logId: string): Promise<LogEntry | null> {
+  // Helper function to get a specific log entry
+  try {
+    const logDocRef = doc(db, "logs", logId);
+    const logSnap = await getDoc(logDocRef);
+
+    if (!logSnap.exists()) {
+      return null;
+    }
+
+    const data = logSnap.data();
+    return {
+      timeStamp: data.timeStamp.toDate(),
+      userID: data.userID,
+      eventType: data.eventType,
+      message: data.message,
+    };
+  } catch (error) {
+    console.error("Error fetching log entry:", error);
+    return null;
+  }
+}

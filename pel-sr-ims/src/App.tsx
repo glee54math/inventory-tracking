@@ -5,20 +5,17 @@ import WorkerLogin from "./components/inventory_app/WorkerLogin";
 import Sidebar from "./components/inventory_app/Sidebar";
 import Inventory from "./components/inventory_app/Inventory";
 import {
-  // saveInventory,
-  // loadInventory,
-  // loadAllInventories,
   determinePacketsNeededToBeOrdered,
 } from "./utils/inventoryService";
 import Log from "./components/inventory_app/Log";
-// import data from "./assets/data.json";
-// import dataMath from "./assets/dataMath.json";
 import type { InventoryData, InsufficientSubsection } from "./utils/types";
 import ActionContainer from "./components/inventory_app/ActionContainer";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "./utils/firebase";
 import { useNameContext } from "./components/inventory_app/NameContext";
 import Database from "./components/inventory_app/Database";
+import { useIdleDetection } from "./components/inventory_app/useIdleDetection";
+import IdleWarningModal from "./components/inventory_app/idleWarningModal";
 
 type InventoryType =
   | "Back Math"
@@ -29,7 +26,6 @@ type InventoryType =
 function restructure(lowStock: InsufficientSubsection[]): InventoryData {
   const result: InventoryData = {};
 
-  // console.log(lowStock);
   for (const { level, range, missingCount } of lowStock) {
     if (!result[level]) {
       result[level] = [];
@@ -52,13 +48,37 @@ function App() {
   const [inventoriesVisibility, setInventoriesVisibility] = useState<
     Record<string, boolean>
   >({});
-  // const [userLoggedIn, setUserLoggedIn] = useState<string>(""); // pivoted to NameContext
-  const {nameOfWorker} = useNameContext();
+  const { nameOfWorker, setNameOfWorker } = useNameContext();
   const [insufficientPackets, setInsufficientPackets] = useState<
     InsufficientSubsection[]
   >([]);
   const [showInsufficient, setShowInsufficient] = useState<boolean>(false);
   const [showStudentDatabase, setShowStudentDatabase] = useState<boolean>(false);
+
+  // Idle detection - only active when user is logged in
+  const handleIdle = () => {
+    // Log out the user
+    setNameOfWorker("");
+  };
+
+  const {
+    isWarning,
+    resetTimer,
+    remainingSeconds,
+  } = useIdleDetection({
+    onIdle: handleIdle,
+    idleTime: 150000, // 2.5 minutes = 150,000 ms
+    warningTime: 30000, // 30 seconds = 30,000 ms
+    enabled: nameOfWorker !== "", // Only enable when logged in
+  });
+
+  const handleStayLoggedIn = () => {
+    resetTimer();
+  };
+
+  const handleLogout = () => {
+    setNameOfWorker("");
+  };
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "inventory"), (snapshot) => {
@@ -72,27 +92,20 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Keep this in case we need to hard upload.
-  // const handleUpload = async () => {
-  //   saveInventory(data, "english_front");
-  //   saveInventory(data, "english_back");
-  //   saveInventory(dataMath, "math_back");
-  //   saveInventory(dataMath, "math_front");
-  //   alert("Uploaded!");
-  // };
-
   const [logHeight, setLogHeight] = useState(250);
   const isDragging = useRef(false);
 
   const handleMouseDown = () => {
     isDragging.current = true;
-  }
+  };
+  
   useEffect(() => {
     const handleMovement = (e: MouseEvent) => {
-    if(!isDragging.current) return;
-    const newHeight = window.innerHeight - e.clientY - 32;
-    setLogHeight(Math.max(150, newHeight));
-    };  
+      if (!isDragging.current) return;
+      const newHeight = window.innerHeight - e.clientY - 32;
+      setLogHeight(Math.max(150, newHeight));
+    };
+    
     const handleMouseUp = () => {
       isDragging.current = false;
     };
@@ -102,16 +115,15 @@ function App() {
     return () => {
       window.removeEventListener("mousemove", handleMovement);
       window.removeEventListener("mouseup", handleMouseUp);
-  };
-}, []);
+    };
+  }, []);
 
   return (
     <div className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-auto">
-      {/* Makeshift Login Screen */}
-      {nameOfWorker === "" && (
-        <WorkerLogin />
-      )}
+      {/* Login Screen */}
+      {nameOfWorker === "" && <WorkerLogin />}
 
+      {/* Main Dashboard */}
       {nameOfWorker && (
         <div
           id="dashboard"
@@ -119,12 +131,11 @@ function App() {
         >
           {/* Sidebar */}
           <div className="bg-gray-100 p-2 min-w-[60px] border w-fit">
-            <Sidebar 
-              showInventory = {showInventory}
-              toggleInventory={() => setShowInventory(prev => !prev)}
-              toggleStudentDatabase={() => setShowStudentDatabase(prev => !prev)}
+            <Sidebar
+              showInventory={showInventory}
+              toggleInventory={() => setShowInventory((prev) => !prev)}
+              toggleStudentDatabase={() => setShowStudentDatabase((prev) => !prev)}
             />
-            
           </div>
 
           {/* Inventory Panel || Student Database Panel */}
@@ -135,7 +146,6 @@ function App() {
                 : "w-0 opacity-0 !p-0 !border-none pointer-events-none"
             }`}
           >
-
             {/* Inventories */}
             {showInventory && !showStudentDatabase && (
               <div className="overflow-auto w-full max-w-full">
@@ -152,17 +162,14 @@ function App() {
                     >
                       {name} Inventory {inventoriesVisibility[name] ? "▼" : "▶"}
                     </button>
-                    {inventoriesVisibility[name] && (
-                      <Inventory data={inventory} />
-                    )}
+                    {inventoriesVisibility[name] && <Inventory data={inventory} />}
                   </div>
                 ))}
-                
+
                 {/* Amount Needed to Be Ordered */}
                 <div id="insufficient-packets">
                   <button
                     onClick={async () => {
-                      //fetch data before setting state
                       const temp = await determinePacketsNeededToBeOrdered();
                       setShowInsufficient((prev) => !prev);
                       setInsufficientPackets(temp);
@@ -187,8 +194,6 @@ function App() {
                 <Database />
               </div>
             )}
-
-            
           </div>
 
           {/* Right Panel */}
@@ -202,18 +207,18 @@ function App() {
                 <h2 className="font-bold mb-2 text-center w-full">Actions</h2>
               </div>
               <div className="max-h-[70vh] flex flex-col">
-                <ActionContainer workerName={nameOfWorker}/>
+                <ActionContainer workerName={nameOfWorker} />
               </div>
             </div>
-                  
-           
-            <div className="relative w-full bg-white border"
+
+            <div
+              className="relative w-full bg-white border"
               style={{ height: `${logHeight}px`, minHeight: "100px" }}
             >
-
-              <div className="absolute top-0 left-0 w-full h-2 cursor-row-resize bg-gray-300 z-10"
-                onMouseDown={handleMouseDown}>
-              </div>
+              <div
+                className="absolute top-0 left-0 w-full h-2 cursor-row-resize bg-gray-300 z-10"
+                onMouseDown={handleMouseDown}
+              ></div>
 
               <div className="pt-2 h-full overflow-auto">
                 <h2 className="font-bold mb-2 text-center">Log</h2>
@@ -223,7 +228,16 @@ function App() {
           </div>
         </div>
       )}
-      {/* <AppRoutes /> */}
+
+      {/* Idle Warning Modal */}
+      {isWarning && nameOfWorker && (
+        <IdleWarningModal
+          workerName={nameOfWorker}
+          remainingSeconds={remainingSeconds}
+          onConfirm={handleStayLoggedIn}
+          onLogout={handleLogout}
+        />
+      )}
     </div>
   );
 }

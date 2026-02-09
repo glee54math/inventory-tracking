@@ -7,14 +7,22 @@ import {
   updateLogFromActions,
 } from "../../utils/inventoryService";
 import { NewStudentForm } from "./NewStudent";
+import SubmissionConfirmModal from "./submissionConfirmModal";
+import WorkerSwitchModal from "./WorkerSwitchModal";
+import { useNameContext } from "./NameContext";
 
 interface ActionContainerProps {
   workerName: string;
 }
 
-function ActionContainer({workerName}:ActionContainerProps) {
+function ActionContainer({ workerName }: ActionContainerProps) {
   const [actionList, setActionList] = useState<SubmittedAction[]>([]);
-  const [newStudentFormPopUp, setNewStudentFormPopUp]= useState<boolean>(false);
+  const [newStudentFormPopUp, setNewStudentFormPopUp] = useState<boolean>(false);
+  const [showSubmissionConfirm, setShowSubmissionConfirm] = useState<boolean>(false);
+  const [showWorkerSwitch, setShowWorkerSwitch] = useState<boolean>(false);
+  const [pendingSubmission, setPendingSubmission] = useState<boolean>(false);
+  
+  const { setNameOfWorker } = useNameContext();
 
   const createNewAction = () => {
     const newAction: SubmittedAction = {
@@ -42,8 +50,8 @@ function ActionContainer({workerName}:ActionContainerProps) {
     setActionList((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const submitAllActions = async () => {
-    // Filter out incomplete actions
+  const initiateSubmission = () => {
+    // Filter out incomplete actions first
     const completeActions = actionList.filter(
       (action) =>
         action.subject &&
@@ -57,17 +65,44 @@ function ActionContainer({workerName}:ActionContainerProps) {
       return;
     }
 
+    // Show confirmation modal
+    setShowSubmissionConfirm(true);
+  };
+
+  const handleConfirmedSubmission = async () => {
+    setShowSubmissionConfirm(false);
+    setPendingSubmission(true);
+
+    // Filter out incomplete actions
+    const completeActions = actionList.filter(
+      (action) =>
+        action.subject &&
+        action.level &&
+        action.selectedSubsections.length > 0 &&
+        Object.keys(action.movementMap).length > 0 &&
+        Object.keys(action.movementNumOfCopiesMap).length > 0
+    );
+
+    if (completeActions.length === 0) {
+      setPendingSubmission(false);
+      return;
+    }
+
     try {
       // Submit to database
       await updateInventoryFromActions(completeActions);
       await updateLogFromActions(workerName, completeActions);
+      
       for (const action of completeActions) {
-        // need to filter the actions that are back/frontToStudent
+        // Filter actions that are back/frontToStudent
         const filteredToStudentHWPackets = action.selectedSubsections.filter((range) => {
           return action.movementMap[range].includes("ToStudent");
         });
+        
         if (filteredToStudentHWPackets.length !== 0) {
-          const studentHWPacketsToDatabase = filteredToStudentHWPackets.map((packet) => action.level + " " + packet);
+          const studentHWPacketsToDatabase = filteredToStudentHWPackets.map(
+            (packet) => action.level + " " + packet
+          );
           await assignHWToStudent(action.toStudent, studentHWPacketsToDatabase);
         }
       }
@@ -76,7 +111,34 @@ function ActionContainer({workerName}:ActionContainerProps) {
       setActionList([]);
     } catch (error) {
       console.error("Error submitting actions:", error);
+    } finally {
+      setPendingSubmission(false);
     }
+  };
+
+  const handleWorkerSwitch = (newWorkerInitials: string) => {
+    setNameOfWorker(newWorkerInitials);
+    setShowWorkerSwitch(false);
+    
+    // After switching, proceed with submission
+    setTimeout(() => {
+      handleConfirmedSubmission();
+    }, 100);
+  };
+
+  const handleSwitchWorkerForSubmission = () => {
+    setShowSubmissionConfirm(false);
+    setShowWorkerSwitch(true);
+  };
+
+  const handleCancelSubmission = () => {
+    setShowSubmissionConfirm(false);
+    setPendingSubmission(false);
+  };
+
+  const handleCancelWorkerSwitch = () => {
+    setShowWorkerSwitch(false);
+    setPendingSubmission(false);
   };
 
   return (
@@ -117,35 +179,58 @@ function ActionContainer({workerName}:ActionContainerProps) {
 
         {actionList.length > 0 && (
           <button
-            onClick={submitAllActions}
-            className="border outline-1 outline-green-500 rounded bg-green-200 px-4 py-2 hover:!bg-green-300"
+            onClick={initiateSubmission}
+            disabled={pendingSubmission}
+            className="border outline-1 outline-green-500 rounded bg-green-200 px-4 py-2 hover:!bg-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Submit All Actions
+            {pendingSubmission ? "Submitting..." : "Submit All Actions"}
           </button>
         )}
 
         {actionList.length > 0 && (
           <button
             onClick={() => setActionList([])}
-            className="border outline-1 outline-red-500 rounded bg-red-200 px-4 py-2 hover:!bg-red-300"
+            disabled={pendingSubmission}
+            className="border outline-1 outline-red-500 rounded bg-red-200 px-4 py-2 hover:!bg-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Clear All
           </button>
         )}
 
         <button
-          onClick={() => { setNewStudentFormPopUp(true)}}
+          onClick={() => {
+            setNewStudentFormPopUp(true);
+          }}
           className="border outline-1 outline-purple-500 rounded bg-purple-200 px-4 py-2 hover:!bg-purple-300"
         >
-          Add New Student          
+          Add New Student
         </button>
-        
+
         {newStudentFormPopUp && (
-          <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50"> 
+          <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50">
             <NewStudentForm onClose={() => setNewStudentFormPopUp(false)} />
           </div>
         )}
       </div>
+
+      {/* Submission Confirmation Modal */}
+      {showSubmissionConfirm && (
+        <SubmissionConfirmModal
+          currentWorker={workerName}
+          onConfirm={handleConfirmedSubmission}
+          onSwitchWorker={handleSwitchWorkerForSubmission}
+          onCancel={handleCancelSubmission}
+        />
+      )}
+
+      {/* Worker Switch Modal */}
+      {showWorkerSwitch && (
+        <WorkerSwitchModal
+          currentWorker={workerName}
+          onWorkerSwitch={handleWorkerSwitch}
+          onCancel={handleCancelWorkerSwitch}
+        />
+      )}
     </div>
   );
 }
