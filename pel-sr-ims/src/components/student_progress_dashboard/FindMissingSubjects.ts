@@ -1,8 +1,8 @@
 // fixMissingSubjects.ts - Utility to fix students with missing subject start dates
 
 import { collection, getDocs, doc, updateDoc, query, where } from "firebase/firestore";
-import { db } from "./firebase";
-import type { Student } from "./types";
+import { db } from "../../utils/firebase";
+import type { Student } from "../../utils/types";
 
 /**
  * Find students with missing subject start dates but have homework assigned
