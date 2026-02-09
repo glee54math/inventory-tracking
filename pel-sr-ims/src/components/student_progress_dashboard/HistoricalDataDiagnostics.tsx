@@ -54,7 +54,7 @@ export default function StudentDiagnostic() {
           mathCurrentLevel: mathHwk.length > 0 ? mathHwk[mathHwk.length - 1].level : "None",
           englishCurrentLevel: englishHwk.length > 0 ? englishHwk[englishHwk.length - 1].level : "None",
         },
-        issues: [],
+        issues: [] as string[],
       };
 
       // Identify issues
