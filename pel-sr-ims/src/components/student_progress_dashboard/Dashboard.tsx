@@ -8,7 +8,8 @@ import {
   loadStudentProgress,
   updateCustomPace,
 } from "../../utils/progressService";
-import type { Student, StudentProgress } from "../../utils/types";
+import { loadHistoricalProgress } from "../../utils/historicalProgressService";
+import type { Student, StudentProgress, GradeSkip } from "../../utils/types";
 import StudentProgressPanel from "./StudentProgressPanel";
 import HistoricalDataForm from "./HistoricalDataForm";
 import StudentDiagnostic from "./HistoricalDataDiagnostics";
@@ -23,6 +24,8 @@ export default function Dashboard() {
   const [blurName1, setBlurName1] = useState(false);
   const [showHistoricalDataForm1, setShowHistoricalDataForm1] = useState(false);
   const [showPaceEditor1, setShowPaceEditor1] = useState(false);
+  const [startingGrade1, setStartingGrade1] = useState<string | undefined>(undefined);
+  const [gradeSkips1, setGradeSkips1] = useState<GradeSkip[]>([]);
   
   // Student 2 (comparison)
   const [selectedStudent2, setSelectedStudent2] = useState<Student | null>(null);
@@ -30,6 +33,8 @@ export default function Dashboard() {
   const [blurName2, setBlurName2] = useState(false);
   const [showHistoricalDataForm2, setShowHistoricalDataForm2] = useState(false);
   const [showPaceEditor2, setShowPaceEditor2] = useState(false);
+  const [startingGrade2, setStartingGrade2] = useState<string | undefined>(undefined);
+  const [gradeSkips2, setGradeSkips2] = useState<GradeSkip[]>([]);
   
   // Comparison mode
   const [comparisonMode, setComparisonMode] = useState(false);
@@ -81,6 +86,20 @@ export default function Dashboard() {
 
       setStudentProgress(progress);
 
+      // Load grade data from historical progress
+      const historicalData = await loadHistoricalProgress(
+        student.firstName,
+        student.lastName
+      );
+      
+      if (historicalData) {
+        setStartingGrade1(historicalData.startingGrade);
+        setGradeSkips1(historicalData.gradeSkips || []);
+      } else {
+        setStartingGrade1(undefined);
+        setGradeSkips1([]);
+      }
+
       if (!progress.mathProgress && !progress.englishProgress) {
         setError("No homework history found for this student. Assign some homework first!");
       }
@@ -109,6 +128,8 @@ export default function Dashboard() {
     if (!student) {
       setSelectedStudent2(null);
       setStudentProgress2(null);
+      setStartingGrade2(undefined);
+      setGradeSkips2([]);
       return;
     }
 
@@ -131,6 +152,20 @@ export default function Dashboard() {
       }
 
       setStudentProgress2(progress);
+
+      // Load grade data from historical progress
+      const historicalData = await loadHistoricalProgress(
+        student.firstName,
+        student.lastName
+      );
+      
+      if (historicalData) {
+        setStartingGrade2(historicalData.startingGrade);
+        setGradeSkips2(historicalData.gradeSkips || []);
+      } else {
+        setStartingGrade2(undefined);
+        setGradeSkips2([]);
+      }
 
       if (!progress.mathProgress && !progress.englishProgress) {
         setError("No homework history found for student 2.");
@@ -391,6 +426,8 @@ export default function Dashboard() {
                 }));
               }}
               onSavePace={handleSaveCustomPace}
+              startingGrade={startingGrade1}
+              gradeSkips={gradeSkips1}
             />
 
             {/* Historical Data Form for Student 1 */}
@@ -424,6 +461,8 @@ export default function Dashboard() {
                   }));
                 }}
                 onSavePace={handleSaveCustomPace}
+                startingGrade={startingGrade2}
+                gradeSkips={gradeSkips2}
               />
 
               {/* Historical Data Form for Student 2 */}

@@ -7,6 +7,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
+import type { GradeSkip } from "./types";
 
 export interface HistoricalLevelEntry {
   level: string;
@@ -18,10 +19,12 @@ export interface HistoricalProgressData {
   studentId: string;
   firstName: string;
   lastName: string;
+  startingGrade?: string; // Grade when they first started (K, 1, 2, ..., 12)
   mathProgramStartDate?: string;
   englishProgramStartDate?: string;
   mathLevels?: HistoricalLevelEntry[];
   englishLevels?: HistoricalLevelEntry[];
+  gradeSkips?: GradeSkip[]; // Track when student skipped grades
   lastUpdated: Date;
 }
 
@@ -47,6 +50,13 @@ export async function saveHistoricalProgress(
     lastName: data.lastName,
     lastUpdated: new Date(),
   };
+
+  if (data.startingGrade) cleanData.startingGrade = data.startingGrade;
+  if (data.mathProgramStartDate) cleanData.mathProgramStartDate = data.mathProgramStartDate;
+  if (data.englishProgramStartDate) cleanData.englishProgramStartDate = data.englishProgramStartDate;
+  if (data.mathLevels) cleanData.mathLevels = data.mathLevels;
+  if (data.englishLevels) cleanData.englishLevels = data.englishLevels;
+  if (data.gradeSkips) cleanData.gradeSkips = data.gradeSkips;
 
   if (data.mathProgramStartDate) {
     cleanData.mathProgramStartDate = data.mathProgramStartDate;
@@ -100,10 +110,12 @@ export async function loadHistoricalProgress(
     studentId: data.studentId,
     firstName: data.firstName,
     lastName: data.lastName,
+    startingGrade: data.startingGrade,
     mathProgramStartDate: data.mathProgramStartDate,
     englishProgramStartDate: data.englishProgramStartDate,
     mathLevels: data.mathLevels,
     englishLevels: data.englishLevels,
+    gradeSkips: data.gradeSkips,
     lastUpdated,
   };
 }

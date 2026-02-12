@@ -23,10 +23,12 @@ export default function HistoricalDataForm({
   currentEnglishLevel,
   onSave,
 }: HistoricalDataFormProps) {
+  const [startingGrade, setStartingGrade] = useState<string>("");
   const [mathStartDate, setMathStartDate] = useState<string>("");
   const [englishStartDate, setEnglishStartDate] = useState<string>("");
   const [mathLevels, setMathLevels] = useState<HistoricalLevelEntry[]>([]);
   const [englishLevels, setEnglishLevels] = useState<HistoricalLevelEntry[]>([]);
+  const [gradeSkips, setGradeSkips] = useState<{gradeSkipped: string, subject: string, effectiveDate: string}[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -58,10 +60,12 @@ export default function HistoricalDataForm({
         );
 
         if (existingData) {
+          setStartingGrade(existingData.startingGrade || "");
           setMathStartDate(existingData.mathProgramStartDate || "");
           setEnglishStartDate(existingData.englishProgramStartDate || "");
           setMathLevels(existingData.mathLevels || []);
           setEnglishLevels(existingData.englishLevels || []);
+          setGradeSkips(existingData.gradeSkips || []);
         }
       } catch (err) {
         console.error("Error loading historical data:", err);
@@ -259,10 +263,16 @@ export default function HistoricalDataForm({
         studentId: `${student.firstName}-${student.lastName}`,
         firstName: student.firstName,
         lastName: student.lastName,
+        startingGrade: startingGrade || undefined,
         mathProgramStartDate: mathStartDate || undefined,
         englishProgramStartDate: englishStartDate || undefined,
         mathLevels: mathLevels.length > 0 ? mathLevels : undefined,
         englishLevels: englishLevels.length > 0 ? englishLevels : undefined,
+        gradeSkips: gradeSkips.length > 0 ? gradeSkips.map(skip => ({
+          gradeSkipped: skip.gradeSkipped,
+          subject: skip.subject as "Math" | "English",
+          effectiveDate: skip.effectiveDate,
+        })) : undefined,
         lastUpdated: new Date(),
       };
 
@@ -302,6 +312,39 @@ export default function HistoricalDataForm({
           {successMessage}
         </div>
       )}
+
+      {/* Starting Grade */}
+      <div className="mb-8 bg-white p-4 rounded border border-gray-300">
+        <h4 className="text-md font-semibold mb-3">Student Grade Information</h4>
+        <div className="flex items-center gap-4">
+          <label className="text-sm font-medium">
+            Starting Grade:
+          </label>
+          <select
+            value={startingGrade}
+            onChange={(e) => setStartingGrade(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded"
+          >
+            <option value="">Select grade...</option>
+            <option value="K">Kindergarten</option>
+            <option value="1">1st Grade</option>
+            <option value="2">2nd Grade</option>
+            <option value="3">3rd Grade</option>
+            <option value="4">4th Grade</option>
+            <option value="5">5th Grade</option>
+            <option value="6">6th Grade</option>
+            <option value="7">7th Grade</option>
+            <option value="8">8th Grade</option>
+            <option value="9">9th Grade</option>
+            <option value="10">10th Grade</option>
+            <option value="11">11th Grade</option>
+            <option value="12">12th Grade</option>
+          </select>
+          <span className="text-sm text-gray-600">
+            (Grade when they first started at PEL)
+          </span>
+        </div>
+      </div>
 
       {/* Math Section */}
       {currentMathLevel && (

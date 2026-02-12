@@ -1,7 +1,7 @@
 // StudentProgressPanel.tsx - Reusable student progress panel
 
 import { useState } from "react";
-import type { Student, StudentProgress, SubjectProgress } from "../../utils/types";
+import type { Student, StudentProgress, SubjectProgress, GradeSkip } from "../../utils/types";
 import ProgressGraph from "./ProgressGraph";
 
 interface StudentProgressPanelProps {
@@ -16,6 +16,8 @@ interface StudentProgressPanelProps {
   customPaceMap: Record<string, number>;
   onPaceChange: (level: string, months: number) => void;
   onSavePace: () => void;
+  startingGrade?: string;
+  gradeSkips?: GradeSkip[];
 }
 
 export default function StudentProgressPanel({
@@ -30,6 +32,8 @@ export default function StudentProgressPanel({
   customPaceMap,
   onPaceChange,
   onSavePace,
+  startingGrade,
+  gradeSkips = [],
 }: StudentProgressPanelProps) {
   const [showTimeline, setShowTimeline] = useState(true);
   const [activeSubject, setActiveSubject] = useState<"Math" | "English">("Math");
@@ -145,6 +149,8 @@ export default function StudentProgressPanel({
             <ProgressGraph
               subjectProgress={getActiveProgress()!}
               showTimeline={showTimeline}
+              startingGrade={startingGrade}
+              gradeSkips={gradeSkips}
             />
           )}
         </div>

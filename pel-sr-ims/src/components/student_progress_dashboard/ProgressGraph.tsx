@@ -1,6 +1,6 @@
 // ProgressGraph.tsx - Visual representation of student progress over time
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -11,18 +11,25 @@ import {
   Legend,
   ResponsiveContainer,
   ReferenceLine,
+  Scatter,
+  ScatterChart,
 } from "recharts";
-import type { SubjectProgress, } from "../../utils/types";
+import type { SubjectProgress, GradeSkip } from "../../utils/types";
 import { MATH_LEVELS, ENGLISH_LEVELS } from "../../utils/types";
+import { calculateGradeLevelLine } from "../../utils/gradeProgressService";
 
 interface ProgressGraphProps {
   subjectProgress: SubjectProgress;
-  showTimeline: boolean; // true = timeline view, false = level progression view
+  showTimeline: boolean;
+  startingGrade?: string;
+  gradeSkips?: GradeSkip[];
 }
 
 export default function ProgressGraph({
   subjectProgress,
   showTimeline,
+  startingGrade,
+  gradeSkips = [],
 }: ProgressGraphProps) {
   const [showMonthsSinceProgramStart, setShowMonthsSinceProgramStart] = useState(false);
   
@@ -31,6 +38,25 @@ export default function ProgressGraph({
 
   // Get program start date
   const programStartDate = subjectProgress.programStartDate;
+  
+  // Calculate grade level points
+  const gradeLevelPoints = useMemo(() => {
+    if (!startingGrade || !programStartDate) return [];
+    
+    try {
+      const points = calculateGradeLevelLine(
+        startingGrade,
+        programStartDate,
+        subjectProgress.subject,
+        gradeSkips
+      );
+      console.log("Grade level points:", points);
+      return points;
+    } catch (error) {
+      console.error("Error calculating grade level line:", error);
+      return [];
+    }
+  }, [startingGrade, programStartDate, subjectProgress.subject, gradeSkips]);
 
   // Generate Y-axis ticks (show all levels)
   const getYAxisTicks = () => {
@@ -243,8 +269,34 @@ export default function ProgressGraph({
                     : "#9ca3af";
                 return <circle cx={cx} cy={cy} r={4} fill={color} />;
               }}
-              name="Progress"
+              name="Student Progress"
             />
+            
+            {/* TEST 2: Orange line WITH dots connecting all grade level points */}
+            {gradeLevelPoints.length > 0 && (() => {
+              const gradeLineData = gradeLevelPoints.map(point => ({
+                date: point.date.getTime(),
+                levelIndex: point.isPartialLevel ? point.levelIndex : levels.indexOf(point.level),
+                level: point.level,
+              }));
+              
+              console.log("Grade line data being rendered:", gradeLineData);
+              
+              return (
+                <Line
+                  data={gradeLineData}
+                  type="monotone"
+                  dataKey="levelIndex"
+                  stroke="#FF8C00"
+                  strokeWidth={3}
+                  strokeDasharray="5 5"
+                  dot={{ fill: "#FF8C00", r: 4 }}
+                  name="Expected (Grade Level)"
+                  isAnimationActive={false}
+                />
+              );
+            })()}
+            
             {/* Add reference line for today */}
             <ReferenceLine
               x={new Date().getTime()}
