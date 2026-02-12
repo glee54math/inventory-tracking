@@ -73,7 +73,8 @@ export default function ProgressGraph({
     subjectProgress.levelHistory.forEach((lp) => {
       const levelIndex = levels.indexOf(lp.level);
 
-      // Add start point
+      // ONLY add start point (no end point)
+      // This creates a smooth diagonal line instead of step-ladder
       data.push({
         date: lp.startDate.getTime(),
         dateLabel: lp.startDate.toLocaleDateString(),
@@ -82,18 +83,24 @@ export default function ProgressGraph({
         type: lp.isComplete ? "completed" : "current",
         monthsToComplete: lp.customMonthsToComplete,
       });
+    });
 
-      // Add end point
-      const endDate = lp.endDate || lp.estimatedCompletion;
+    // Add final point for the last level's completion
+    // This ensures the graph extends to the projected end
+    const lastLevel = subjectProgress.levelHistory[subjectProgress.levelHistory.length - 1];
+    if (lastLevel) {
+      const endDate = lastLevel.endDate || lastLevel.estimatedCompletion;
+      const levelIndex = levels.indexOf(lastLevel.level);
+      
       data.push({
         date: endDate.getTime(),
         dateLabel: endDate.toLocaleDateString(),
-        level: lp.level,
+        level: lastLevel.level,
         levelIndex: levelIndex,
-        type: lp.isComplete ? "completed" : "projected",
-        monthsToComplete: lp.customMonthsToComplete,
+        type: lastLevel.isComplete ? "completed" : "projected",
+        monthsToComplete: lastLevel.customMonthsToComplete,
       });
-    });
+    }
 
     return data.sort((a, b) => a.date - b.date);
   };
