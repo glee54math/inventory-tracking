@@ -39,31 +39,44 @@ export default function ProgressGraph({
   // Get program start date
   const programStartDate = subjectProgress.programStartDate;
   
-  // Calculate student's end date (MH6 or last level)
+  // Calculate student's end date from their last level (works for Math or English)
   // Add a small buffer (1 month) so the orange line extends slightly past the blue line's last point
   const studentEndDate = useMemo(() => {
-    const mh6Level = subjectProgress.levelHistory.find(lp => lp.level === "MH6");
     const lastLevel = subjectProgress.levelHistory[subjectProgress.levelHistory.length - 1];
     
-    let endDate: Date;
-    if (mh6Level) {
-      endDate = mh6Level.endDate || mh6Level.estimatedCompletion;
-    } else if (lastLevel) {
-      endDate = lastLevel.endDate || lastLevel.estimatedCompletion;
-    } else {
-      endDate = subjectProgress.estimatedCompletionDate;
+    if (!lastLevel) {
+      // Fallback to estimated completion if no level history exists
+      const bufferedDate = new Date(subjectProgress.estimatedCompletionDate);
+      bufferedDate.setMonth(bufferedDate.getMonth() + 3);
+      return bufferedDate;
     }
+    
+    // Use the last level's end date (actual or estimated)
+    const endDate = lastLevel.endDate || lastLevel.estimatedCompletion;
     
     // Add 1 month buffer so orange line extends slightly beyond blue line's last point
     const bufferedDate = new Date(endDate);
-    bufferedDate.setMonth(bufferedDate.getMonth() + 3);
+    bufferedDate.setMonth(bufferedDate.getMonth() + 1);
+    
+    console.log("Student end date:", bufferedDate.toLocaleDateString(), "from level:", lastLevel.level);
     
     return bufferedDate;
   }, [subjectProgress]);
   
   // Calculate grade level points
   const gradeLevelPoints = useMemo(() => {
-    if (!startingGrade || !programStartDate) return [];
+    if (!startingGrade || !programStartDate) {
+      console.log("Missing startingGrade or programStartDate:", { startingGrade, programStartDate });
+      return [];
+    }
+    
+    console.log("Calculating grade level line:", {
+      startingGrade,
+      programStartDate: programStartDate.toLocaleDateString(),
+      subject: subjectProgress.subject,
+      gradeSkips,
+      studentEndDate: studentEndDate.toLocaleDateString()
+    });
     
     try {
       const points = calculateGradeLevelLine(
@@ -73,13 +86,13 @@ export default function ProgressGraph({
         gradeSkips,
         studentEndDate  // Pass the end date to stop calculation
       );
-      console.log("Grade level points (stopped at student end date):", points);
+      console.log("Grade level points calculated:", points.length, "points");
       return points;
     } catch (error) {
       console.error("Error calculating grade level line:", error);
       return [];
     }
-  }, [startingGrade, programStartDate, subjectProgress.subject, gradeSkips]);
+  }, [startingGrade, programStartDate, subjectProgress.subject, gradeSkips, studentEndDate]);
 
   // Generate Y-axis ticks (show all levels)
   const getYAxisTicks = () => {
