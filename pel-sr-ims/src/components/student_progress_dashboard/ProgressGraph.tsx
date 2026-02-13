@@ -39,6 +39,28 @@ export default function ProgressGraph({
   // Get program start date
   const programStartDate = subjectProgress.programStartDate;
   
+  // Calculate student's end date (MH6 or last level)
+  // Add a small buffer (1 month) so the orange line extends slightly past the blue line's last point
+  const studentEndDate = useMemo(() => {
+    const mh6Level = subjectProgress.levelHistory.find(lp => lp.level === "MH6");
+    const lastLevel = subjectProgress.levelHistory[subjectProgress.levelHistory.length - 1];
+    
+    let endDate: Date;
+    if (mh6Level) {
+      endDate = mh6Level.endDate || mh6Level.estimatedCompletion;
+    } else if (lastLevel) {
+      endDate = lastLevel.endDate || lastLevel.estimatedCompletion;
+    } else {
+      endDate = subjectProgress.estimatedCompletionDate;
+    }
+    
+    // Add 1 month buffer so orange line extends slightly beyond blue line's last point
+    const bufferedDate = new Date(endDate);
+    bufferedDate.setMonth(bufferedDate.getMonth() + 3);
+    
+    return bufferedDate;
+  }, [subjectProgress]);
+  
   // Calculate grade level points
   const gradeLevelPoints = useMemo(() => {
     if (!startingGrade || !programStartDate) return [];
@@ -48,9 +70,10 @@ export default function ProgressGraph({
         startingGrade,
         programStartDate,
         subjectProgress.subject,
-        gradeSkips
+        gradeSkips,
+        studentEndDate  // Pass the end date to stop calculation
       );
-      console.log("Grade level points:", points);
+      console.log("Grade level points (stopped at student end date):", points);
       return points;
     } catch (error) {
       console.error("Error calculating grade level line:", error);
@@ -173,11 +196,23 @@ export default function ProgressGraph({
   const TimelineTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
+      
+      // Check if this is a grade level point (orange line)
+      const isGradeLevel = data.type === "grade-level";
+      
       return (
         <div className="bg-white p-2 border border-gray-300 rounded shadow">
           <p className="font-semibold">{data.level}</p>
+          {isGradeLevel && data.gradePosition && (
+            <p className="text-sm text-orange-600">{data.gradePosition}</p>
+          )}
           <p className="text-sm">{data.dateLabel}</p>
-          <p className="text-xs text-gray-600 capitalize">{data.type}</p>
+          {!isGradeLevel && (
+            <p className="text-xs text-gray-600 capitalize">{data.type}</p>
+          )}
+          {data.monthsToComplete && (
+            <p className="text-xs text-blue-600">Custom pace set</p>
+          )}
         </div>
       );
     }
@@ -249,11 +284,46 @@ export default function ProgressGraph({
                 offset: 10,
               }}
             />
-            <Tooltip content={<TimelineTooltip />} />
+            <Tooltip 
+              content={<TimelineTooltip />}
+              cursor={{ stroke: '#3b82f6', strokeWidth: 1 }}
+            />
             <Legend 
               verticalAlign="top"
               wrapperStyle={{ paddingBottom: '20px' }}
             />
+            
+            {/* Orange grade level line - already calculated up to student's end date */}
+            {gradeLevelPoints.length > 0 && (() => {
+              // No filtering needed - points already stop at student's end date
+              const gradeLineData = gradeLevelPoints.map(point => ({
+                date: point.date.getTime(),
+                levelIndex: point.isPartialLevel ? point.levelIndex : levels.indexOf(point.level),
+                level: point.level,
+                grade: point.grade,
+                gradePosition: point.gradePosition,
+                type: "grade-level", // Mark as grade level for tooltip
+              }));
+              
+              console.log("Grade line data (pre-calculated to student end):", gradeLineData);
+              
+              return (
+                <Line
+                  data={gradeLineData}
+                  type="monotone"
+                  dataKey="levelIndex"
+                  stroke="#FF8C00"
+                  strokeWidth={3}
+                  strokeDasharray="5 5"
+                  dot={{ fill: "#FF8C00", r: 4 }}
+                  name="Expected (Grade Level)"
+                  isAnimationActive={false}
+                  activeDot={false}  // Disable active dot on hover for orange line
+                />
+              );
+            })()}
+            
+            {/* Blue student progress line - RENDER LAST for hover priority */}
             <Line
               type="monotone"
               dataKey="levelIndex"
@@ -269,33 +339,9 @@ export default function ProgressGraph({
                     : "#9ca3af";
                 return <circle cx={cx} cy={cy} r={4} fill={color} />;
               }}
+              activeDot={{ r: 6 }}  // Make active dot bigger on hover
               name="Student Progress"
             />
-            
-            {/* TEST 2: Orange line WITH dots connecting all grade level points */}
-            {gradeLevelPoints.length > 0 && (() => {
-              const gradeLineData = gradeLevelPoints.map(point => ({
-                date: point.date.getTime(),
-                levelIndex: point.isPartialLevel ? point.levelIndex : levels.indexOf(point.level),
-                level: point.level,
-              }));
-              
-              console.log("Grade line data being rendered:", gradeLineData);
-              
-              return (
-                <Line
-                  data={gradeLineData}
-                  type="monotone"
-                  dataKey="levelIndex"
-                  stroke="#FF8C00"
-                  strokeWidth={3}
-                  strokeDasharray="5 5"
-                  dot={{ fill: "#FF8C00", r: 4 }}
-                  name="Expected (Grade Level)"
-                  isAnimationActive={false}
-                />
-              );
-            })()}
             
             {/* Add reference line for today */}
             <ReferenceLine
