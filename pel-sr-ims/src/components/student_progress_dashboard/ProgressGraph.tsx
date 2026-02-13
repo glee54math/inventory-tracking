@@ -47,7 +47,7 @@ export default function ProgressGraph({
     if (!lastLevel) {
       // Fallback to estimated completion if no level history exists
       const bufferedDate = new Date(subjectProgress.estimatedCompletionDate);
-      bufferedDate.setMonth(bufferedDate.getMonth() + 3);
+      bufferedDate.setMonth(bufferedDate.getMonth() + 1);
       return bufferedDate;
     }
     
@@ -58,7 +58,7 @@ export default function ProgressGraph({
     const bufferedDate = new Date(endDate);
     bufferedDate.setMonth(bufferedDate.getMonth() + 1);
     
-    console.log("Student end date:", bufferedDate.toLocaleDateString(), "from level:", lastLevel.level);
+    // console.log("Student end date:", bufferedDate.toLocaleDateString(), "from level:", lastLevel.level);
     
     return bufferedDate;
   }, [subjectProgress]);
@@ -66,17 +66,17 @@ export default function ProgressGraph({
   // Calculate grade level points
   const gradeLevelPoints = useMemo(() => {
     if (!startingGrade || !programStartDate) {
-      console.log("Missing startingGrade or programStartDate:", { startingGrade, programStartDate });
+      // console.log("Missing startingGrade or programStartDate:", { startingGrade, programStartDate });
       return [];
     }
     
-    console.log("Calculating grade level line:", {
-      startingGrade,
-      programStartDate: programStartDate.toLocaleDateString(),
-      subject: subjectProgress.subject,
-      gradeSkips,
-      studentEndDate: studentEndDate.toLocaleDateString()
-    });
+    // console.log("Calculating grade level line:", {
+    //   startingGrade,
+    //   programStartDate: programStartDate.toLocaleDateString(),
+    //   subject: subjectProgress.subject,
+    //   gradeSkips,
+    //   studentEndDate: studentEndDate.toLocaleDateString()
+    // });
     
     try {
       const points = calculateGradeLevelLine(
@@ -86,7 +86,7 @@ export default function ProgressGraph({
         gradeSkips,
         studentEndDate  // Pass the end date to stop calculation
       );
-      console.log("Grade level points calculated:", points.length, "points");
+      // console.log("Grade level points calculated:", points.length, "points");
       return points;
     } catch (error) {
       console.error("Error calculating grade level line:", error);
@@ -207,29 +207,29 @@ export default function ProgressGraph({
 
   // Custom tooltip for timeline view
   const TimelineTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      
-      // Check if this is a grade level point (orange line)
-      const isGradeLevel = data.type === "grade-level";
-      
-      return (
-        <div className="bg-white p-2 border border-gray-300 rounded shadow">
-          <p className="font-semibold">{data.level}</p>
-          {isGradeLevel && data.gradePosition && (
-            <p className="text-sm text-orange-600">{data.gradePosition}</p>
-          )}
-          <p className="text-sm">{data.dateLabel}</p>
-          {!isGradeLevel && (
-            <p className="text-xs text-gray-600 capitalize">{data.type}</p>
-          )}
-          {data.monthsToComplete && (
-            <p className="text-xs text-blue-600">Custom pace set</p>
-          )}
-        </div>
-      );
-    }
-    return null;
+    if (!active || !payload || !payload.length) return null;
+    
+    const data = payload[0].payload;
+    const isGradeLevel = data.type === "grade-level";
+    
+    return (
+      <div className="bg-white p-3 border-2 border-gray-400 rounded shadow-lg">
+        <p className={`text-xs font-semibold mb-1 ${isGradeLevel ? 'text-orange-600' : 'text-blue-600'}`}>
+          {isGradeLevel ? 'Expected (Grade Level)' : 'Student Progress'}
+        </p>
+        <p className="font-bold text-lg">{data.level}</p>
+        {isGradeLevel && data.gradePosition && (
+          <p className="text-sm text-orange-600 mt-1">{data.gradePosition}</p>
+        )}
+        <p className="text-sm mt-1">{data.dateLabel}</p>
+        {!isGradeLevel && data.type && (
+          <p className="text-xs text-gray-600 capitalize mt-1">{data.type}</p>
+        )}
+        {!isGradeLevel && data.monthsToComplete && (
+          <p className="text-xs text-blue-600 mt-1">Custom pace</p>
+        )}
+      </div>
+    );
   };
 
   // Custom tooltip for level progression view
@@ -300,6 +300,8 @@ export default function ProgressGraph({
             <Tooltip 
               content={<TimelineTooltip />}
               cursor={{ stroke: '#3b82f6', strokeWidth: 1 }}
+              allowEscapeViewBox={{ x: true, y: true }}
+              offset={10}
             />
             <Legend 
               verticalAlign="top"
@@ -318,7 +320,7 @@ export default function ProgressGraph({
                 type: "grade-level", // Mark as grade level for tooltip
               }));
               
-              console.log("Grade line data (pre-calculated to student end):", gradeLineData);
+              // console.log("Grade line data (pre-calculated to student end):", gradeLineData);
               
               return (
                 <Line
@@ -332,6 +334,7 @@ export default function ProgressGraph({
                   name="Expected (Grade Level)"
                   isAnimationActive={false}
                   activeDot={false}  // Disable active dot on hover for orange line
+                  hide={false}  // Keep visible in legend
                 />
               );
             })()}
@@ -352,7 +355,7 @@ export default function ProgressGraph({
                     : "#9ca3af";
                 return <circle cx={cx} cy={cy} r={4} fill={color} />;
               }}
-              activeDot={{ r: 6 }}  // Make active dot bigger on hover
+              activeDot={{ r: 6, strokeWidth: 2, stroke: "#3b82f6" }}  // Bigger active dot
               name="Student Progress"
             />
             

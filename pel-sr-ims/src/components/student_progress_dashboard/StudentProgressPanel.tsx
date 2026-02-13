@@ -466,16 +466,16 @@ export default function StudentProgressPanel({
       {/* Subject Toggle and View Controls */}
       {(studentProgress.mathProgress || studentProgress.englishProgress) && (
         <>
-          <div className="bg-white p-4 rounded shadow mb-6">
-            <div className="flex gap-4 items-center">
-              <span className="font-medium">Subject:</span>
+          <div className="bg-white p-4 rounded shadow mb-6 overflow-x-auto">
+            <div className="flex gap-4 items-center min-w-max">
+              <span className="font-medium whitespace-nowrap">Subject:</span>
               {studentProgress.mathProgress && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setActiveSubject("Math");
                   }}
-                  className={`px-4 py-2 rounded ${
+                  className={`px-4 py-2 rounded whitespace-nowrap ${
                     activeSubject === "Math"
                       ? "!bg-blue-500 text-white"
                       : "!bg-gray-200 hover:!bg-gray-300"
@@ -490,7 +490,7 @@ export default function StudentProgressPanel({
                     e.stopPropagation();
                     setActiveSubject("English");
                   }}
-                  className={`px-4 py-2 rounded ${
+                  className={`px-4 py-2 rounded whitespace-nowrap ${
                     activeSubject === "English"
                       ? "!bg-green-500 text-white"
                       : "!bg-gray-200 hover:!bg-gray-300"
@@ -500,13 +500,13 @@ export default function StudentProgressPanel({
                 </button>
               )}
 
-              <span className="ml-auto font-medium">View:</span>
+              <span className="ml-auto font-medium whitespace-nowrap">View:</span>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowTimeline(!showTimeline);
                 }}
-                className="px-4 py-2 !bg-purple-500 text-white rounded hover:!bg-purple-600"
+                className="px-4 py-2 !bg-purple-500 text-white rounded hover:!bg-purple-600 whitespace-nowrap"
               >
                 {showTimeline ? "Switch to Level Progression" : "Switch to Timeline View"}
               </button>
@@ -516,7 +516,7 @@ export default function StudentProgressPanel({
                   e.stopPropagation();
                   onTogglePaceEditor();
                 }}
-                className="px-4 py-2 !bg-orange-500 text-white rounded hover:!bg-orange-600"
+                className="px-4 py-2 !bg-orange-500 text-white rounded hover:!bg-orange-600 whitespace-nowrap"
               >
                 Adjust Pace
               </button>
