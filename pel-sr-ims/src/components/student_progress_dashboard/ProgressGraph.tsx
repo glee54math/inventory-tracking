@@ -32,6 +32,7 @@ export default function ProgressGraph({
   gradeSkips = [],
 }: ProgressGraphProps) {
   const [showMonthsSinceProgramStart, setShowMonthsSinceProgramStart] = useState(false);
+  const [activeTooltipLine, setActiveTooltipLine] = useState<'blue' | 'orange'>('blue'); // Radio toggle for which line to show tooltip
   
   const levels =
     subjectProgress.subject === "Math" ? MATH_LEVELS : ENGLISH_LEVELS;
@@ -58,7 +59,7 @@ export default function ProgressGraph({
     const bufferedDate = new Date(endDate);
     bufferedDate.setMonth(bufferedDate.getMonth() + 1);
     
-    // console.log("Student end date:", bufferedDate.toLocaleDateString(), "from level:", lastLevel.level);
+    console.log("Student end date:", bufferedDate.toLocaleDateString(), "from level:", lastLevel.level);
     
     return bufferedDate;
   }, [subjectProgress]);
@@ -66,17 +67,17 @@ export default function ProgressGraph({
   // Calculate grade level points
   const gradeLevelPoints = useMemo(() => {
     if (!startingGrade || !programStartDate) {
-      // console.log("Missing startingGrade or programStartDate:", { startingGrade, programStartDate });
+      console.log("Missing startingGrade or programStartDate:", { startingGrade, programStartDate });
       return [];
     }
     
-    // console.log("Calculating grade level line:", {
-    //   startingGrade,
-    //   programStartDate: programStartDate.toLocaleDateString(),
-    //   subject: subjectProgress.subject,
-    //   gradeSkips,
-    //   studentEndDate: studentEndDate.toLocaleDateString()
-    // });
+    console.log("Calculating grade level line:", {
+      startingGrade,
+      programStartDate: programStartDate.toLocaleDateString(),
+      subject: subjectProgress.subject,
+      gradeSkips,
+      studentEndDate: studentEndDate.toLocaleDateString()
+    });
     
     try {
       const points = calculateGradeLevelLine(
@@ -86,7 +87,7 @@ export default function ProgressGraph({
         gradeSkips,
         studentEndDate  // Pass the end date to stop calculation
       );
-      // console.log("Grade level points calculated:", points.length, "points");
+      console.log("Grade level points calculated:", points.length, "points");
       return points;
     } catch (error) {
       console.error("Error calculating grade level line:", error);
@@ -205,11 +206,22 @@ export default function ProgressGraph({
     return Math.round(monthsDiff * 10) / 10; // Round to 1 decimal
   };
 
-  // Custom tooltip for timeline view
+  // Custom tooltip that only shows data for the active line
   const TimelineTooltip = ({ active, payload }: any) => {
     if (!active || !payload || !payload.length) return null;
     
-    const data = payload[0].payload;
+    // Filter payload to only show the active line
+    const activePayload = payload.find((p: any) => {
+      if (activeTooltipLine === 'blue') {
+        return p.dataKey === 'levelIndex' && p.payload.type !== 'grade-level';
+      } else {
+        return p.payload.type === 'grade-level';
+      }
+    });
+    
+    if (!activePayload) return null;
+    
+    const data = activePayload.payload;
     const isGradeLevel = data.type === "grade-level";
     
     return (
@@ -221,7 +233,7 @@ export default function ProgressGraph({
         {isGradeLevel && data.gradePosition && (
           <p className="text-sm text-orange-600 mt-1">{data.gradePosition}</p>
         )}
-        <p className="text-sm mt-1">{data.dateLabel}</p>
+        <p className="text-sm mt-1">{data.dateLabel || new Date(data.date).toLocaleDateString()}</p>
         {!isGradeLevel && data.type && (
           <p className="text-xs text-gray-600 capitalize mt-1">{data.type}</p>
         )}
@@ -250,9 +262,41 @@ export default function ProgressGraph({
     return null;
   };
 
+
   if (showTimeline) {
     return (
       <div className="w-full h-[450px]">
+        {/* Custom clickable legend */}
+        <div className="flex justify-center gap-4 mb-4">
+          <button
+            onClick={() => setActiveTooltipLine('orange')}
+            className={`flex items-center gap-2 px-3 py-1 rounded cursor-pointer transition-colors ${
+              activeTooltipLine === 'orange' 
+                ? 'bg-orange-100 border-2 border-orange-500' 
+                : 'bg-white border-2 border-gray-200 hover:bg-gray-50'
+            }`}
+          >
+            <span className="text-orange-600">─ ─ ─</span>
+            <span className={`text-sm ${activeTooltipLine === 'orange' ? 'font-semibold text-orange-600' : 'text-gray-600'}`}>
+              Expected (Grade Level)
+            </span>
+          </button>
+          
+          <button
+            onClick={() => setActiveTooltipLine('blue')}
+            className={`flex items-center gap-2 px-3 py-1 rounded cursor-pointer transition-colors ${
+              activeTooltipLine === 'blue' 
+                ? 'bg-blue-100 border-2 border-blue-500' 
+                : 'bg-white border-2 border-gray-200 hover:bg-gray-50'
+            }`}
+          >
+            <span className="text-blue-600">───</span>
+            <span className={`text-sm ${activeTooltipLine === 'blue' ? 'font-semibold text-blue-600' : 'text-gray-600'}`}>
+              Student Progress
+            </span>
+          </button>
+        </div>
+        
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={timelineData} margin={{ top: 5, right: 30, left: 20, bottom: 60 }}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -297,18 +341,9 @@ export default function ProgressGraph({
                 offset: 10,
               }}
             />
-            <Tooltip 
-              content={<TimelineTooltip />}
-              cursor={{ stroke: '#3b82f6', strokeWidth: 1 }}
-              allowEscapeViewBox={{ x: true, y: true }}
-              offset={10}
-            />
-            <Legend 
-              verticalAlign="top"
-              wrapperStyle={{ paddingBottom: '20px' }}
-            />
+            <Tooltip content={<TimelineTooltip />} />
             
-            {/* Orange grade level line - already calculated up to student's end date */}
+            {/* Orange grade level line - always visible, toggle hover with hide prop */}
             {gradeLevelPoints.length > 0 && (() => {
               // No filtering needed - points already stop at student's end date
               const gradeLineData = gradeLevelPoints.map(point => ({
@@ -320,7 +355,7 @@ export default function ProgressGraph({
                 type: "grade-level", // Mark as grade level for tooltip
               }));
               
-              // console.log("Grade line data (pre-calculated to student end):", gradeLineData);
+              console.log("Grade line data (pre-calculated to student end):", gradeLineData);
               
               return (
                 <Line
@@ -333,13 +368,12 @@ export default function ProgressGraph({
                   dot={{ fill: "#FF8C00", r: 4 }}
                   name="Expected (Grade Level)"
                   isAnimationActive={false}
-                  activeDot={false}  // Disable active dot on hover for orange line
-                  hide={false}  // Keep visible in legend
+                  activeDot={activeTooltipLine === 'orange' ? { r: 6, fill: "#FF8C00" } : false}
                 />
               );
             })()}
             
-            {/* Blue student progress line - RENDER LAST for hover priority */}
+            {/* Blue student progress line - conditionally hide from tooltip */}
             <Line
               type="monotone"
               dataKey="levelIndex"
@@ -355,7 +389,7 @@ export default function ProgressGraph({
                     : "#9ca3af";
                 return <circle cx={cx} cy={cy} r={4} fill={color} />;
               }}
-              activeDot={{ r: 6, strokeWidth: 2, stroke: "#3b82f6" }}  // Bigger active dot
+              activeDot={activeTooltipLine === 'blue' ? { r: 8, strokeWidth: 2, stroke: "#3b82f6" } : false}
               name="Student Progress"
             />
             
