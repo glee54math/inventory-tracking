@@ -187,6 +187,9 @@ export default function ProgressGraph({
   };
 
   const timelineData = showTimeline ? prepareTimelineData() : [];
+  
+  // Create separate blue line data (same as timelineData)
+  const blueLineData = timelineData;
   const levelProgressionData = !showTimeline
     ? prepareLevelProgressionData()
     : [];
@@ -373,8 +376,9 @@ export default function ProgressGraph({
               );
             })()}
             
-            {/* Blue student progress line - conditionally hide from tooltip */}
+            {/* Blue student progress line - now has its own data prop */}
             <Line
+              data={blueLineData}
               type="monotone"
               dataKey="levelIndex"
               stroke="#3b82f6"
