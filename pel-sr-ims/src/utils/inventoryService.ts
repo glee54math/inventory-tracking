@@ -463,11 +463,11 @@ export async function reassignLogEntry(
 
     const logData = logSnap.data();
     const originalWorker = logData.userID;
-    
+
     // Check if entry is within 4 hours
     const logTimestamp = logData.timeStamp.toDate();
     const canEdit = await canEditLogEntry(logTimestamp);
-    
+
     if (!canEdit) {
       console.error("Log entry is older than 4 hours and cannot be edited");
       return false;
@@ -520,4 +520,113 @@ export async function getLogEntryById(logId: string): Promise<LogEntry | null> {
     console.error("Error fetching log entry:", error);
     return null;
   }
+}
+
+// ─────────────────────────────────────────────
+// Inventory Flag Functions
+// ─────────────────────────────────────────────
+
+// Firebase document structure:
+// Collection: "inventory_flags"
+// Document ID: e.g. "math_back" | "math_front" | "english_back" | "english_front"
+// Document shape: { [level]: { [range]: true } }
+// e.g. { "MG4": { "1-10": true, "41-50": true } }
+
+export interface InventoryFlag {
+  subject: string;       // "Math" | "English"
+  level: string;         // e.g. "MG4"
+  range: string;         // e.g. "1-10"
+  side: "Back" | "Front"; // which inventory
+}
+
+/**
+ * Load all flags for a given subject_location (e.g. "math_back").
+ * Returns a nested map: { [level]: { [range]: true } }
+ */
+export async function loadInventoryFlags(
+  subject_location: string
+): Promise<Record<string, Record<string, boolean>>> {
+  const docRef = doc(db, "inventory_flags", subject_location);
+  const docSnap = await getDoc(docRef);
+
+  if (!docSnap.exists()) {
+    return {};
+  }
+
+  return docSnap.data() as Record<string, Record<string, boolean>>;
+}
+
+/**
+ * Toggle a flag for a specific level + range in a given subject_location.
+ * If currently flagged, it removes it. If not flagged, it sets it.
+ */
+export async function toggleInventoryFlag(
+  subject_location: string,
+  level: string,
+  range: string
+): Promise<boolean> {
+  const docRef = doc(db, "inventory_flags", subject_location);
+  const docSnap = await getDoc(docRef);
+
+  const currentData: Record<string, Record<string, boolean>> = docSnap.exists()
+    ? (docSnap.data() as Record<string, Record<string, boolean>>)
+    : {};
+
+  const levelFlags = currentData[level] ?? {};
+  const isCurrentlyFlagged = !!levelFlags[range];
+
+  if (isCurrentlyFlagged) {
+    // Remove the flag
+    const updatedLevelFlags = { ...levelFlags };
+    delete updatedLevelFlags[range];
+    await setDoc(
+      docRef,
+      { ...currentData, [level]: updatedLevelFlags },
+      { merge: false }
+    );
+    console.log(`🏳️ Unflagged: ${subject_location} > ${level} > ${range}`);
+    return false; // new state: not flagged
+  } else {
+    // Set the flag
+    await setDoc(
+      docRef,
+      { ...currentData, [level]: { ...levelFlags, [range]: true } },
+      { merge: false }
+    );
+    console.log(`🚩 Flagged: ${subject_location} > ${level} > ${range}`);
+    return true; // new state: flagged
+  }
+}
+
+/**
+ * Load ALL flagged inventory items across all four inventories.
+ * Returns a flat array of InventoryFlag objects for easy display in a summary table.
+ */
+export async function loadAllInventoryFlags(): Promise<InventoryFlag[]> {
+  const locations = [
+    { key: "math_back", subject: "Math", side: "Back" as const },
+    { key: "math_front", subject: "Math", side: "Front" as const },
+    { key: "english_back", subject: "English", side: "Back" as const },
+    { key: "english_front", subject: "English", side: "Front" as const },
+  ];
+
+  const allFlags: InventoryFlag[] = [];
+
+  for (const loc of locations) {
+    const flagData = await loadInventoryFlags(loc.key);
+    for (const level of Object.keys(flagData)) {
+      for (const range of Object.keys(flagData[level])) {
+        if (flagData[level][range]) {
+          allFlags.push({
+            subject: loc.subject,
+            level,
+            range,
+            side: loc.side,
+          });
+        }
+      }
+    }
+  }
+
+  return allFlags;
 }

@@ -1,7 +1,7 @@
 import type { MovementType, Student, SubmittedAction } from "../../utils/types";
 import dataMath from "../../assets/dataMath.json";
 import dataEnglish from "../../assets/data.json";
-import { loadInventory, loadStudentsFromDB } from "../../utils/inventoryService";
+import { loadInventory, loadStudentsFromDB, loadInventoryFlags, toggleInventoryFlag } from "../../utils/inventoryService";
 import { useEffect, useState } from "react";
 import { NewStudentForm } from "./NewStudent";
 
@@ -21,6 +21,12 @@ function Action({ index, data, onChange }: ActionProps) {
   const [backInventoryValues, setBackInventoryValues] = useState<Record<string, Record<string,number>[]>>({});
   const [frontInventoryValues, setFrontInventoryValues] = useState<Record<string, Record<string,number>[]>>({});
 
+  // Flags: { [range]: boolean } for each side
+  const [backFlags, setBackFlags] = useState<Record<string, boolean>>({});
+  const [frontFlags, setFrontFlags] = useState<Record<string, boolean>>({});
+  // Tracks which flags are currently being saved to Firebase
+  const [togglingFlags, setTogglingFlags] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     const getStudents = async () => {
       setAllStudents(await loadStudentsFromDB("san-ramon"));
@@ -29,17 +35,51 @@ function Action({ index, data, onChange }: ActionProps) {
   }, []);
 
   const toggleFrontBackInvValues = async (subject: string, level: string) => {
-    // get back and front Inventory values
-    const back = await loadInventory(subject.toLowerCase()+"_back");
-    const front = await loadInventory(subject.toLowerCase()+"_front");
+    const subjectLower = subject.toLowerCase();
+    const [back, front, backFlagData, frontFlagData] = await Promise.all([
+      loadInventory(`${subjectLower}_back`),
+      loadInventory(`${subjectLower}_front`),
+      loadInventoryFlags(`${subjectLower}_back`),
+      loadInventoryFlags(`${subjectLower}_front`),
+    ]);
 
     setBackInventoryValues(back);
     setFrontInventoryValues(front);
-    
+
+    // Load flags for the selected level only
+    setBackFlags(backFlagData[level] ?? {});
+    setFrontFlags(frontFlagData[level] ?? {});
+
     console.log("Loaded inventory for", subject, level);
-    console.log("Back:", back);
-    console.log("Front:", front);
   }
+
+  const handleFlagToggle = async (side: "back" | "front", range: string) => {
+    if (!data.subject || !data.level) return;
+
+    const flagKey = `${side}-${range}`;
+    if (togglingFlags.has(flagKey)) return; // already in progress
+
+    setTogglingFlags((prev) => new Set(prev).add(flagKey));
+
+    try {
+      const subject_location = `${data.subject.toLowerCase()}_${side}`;
+      const newState = await toggleInventoryFlag(subject_location, data.level, range);
+
+      if (side === "back") {
+        setBackFlags((prev) => ({ ...prev, [range]: newState }));
+      } else {
+        setFrontFlags((prev) => ({ ...prev, [range]: newState }));
+      }
+    } catch (err) {
+      console.error("Failed to toggle flag:", err);
+    } finally {
+      setTogglingFlags((prev) => {
+        const next = new Set(prev);
+        next.delete(flagKey);
+        return next;
+      });
+    }
+  };
 
   const toggleSubsection = (range: string) => {
     const isSelected = data.selectedSubsections.includes(range);
@@ -130,6 +170,8 @@ function Action({ index, data, onChange }: ActionProps) {
       movementNumOfCopiesMap: {},
       toStudent: {} as Student,
     });
+    setBackFlags({});
+    setFrontFlags({});
   };
 
   const handleLevelChange = (newLevel: string) => {
@@ -141,7 +183,8 @@ function Action({ index, data, onChange }: ActionProps) {
       movementNumOfCopiesMap: {},
       toStudent: {} as Student,
     });
-    // retrieve backend data for level
+    setBackFlags({});
+    setFrontFlags({});
   };
 
   const handleToStudentChange = (studentName: string) => {
@@ -160,6 +203,28 @@ function Action({ index, data, onChange }: ActionProps) {
       toStudent: temp[0]
     })
   }
+
+  // Helper: render a flag button for a given side and range
+  const FlagButton = ({ side, range }: { side: "back" | "front"; range: string }) => {
+    const isFlagged = side === "back" ? !!backFlags[range] : !!frontFlags[range];
+    const isToggling = togglingFlags.has(`${side}-${range}`);
+
+    return (
+      <button
+        type="button"
+        title={isFlagged ? `Unflag ${side} inventory for ${range}` : `Flag ${side} inventory for ${range} as needing adjustment`}
+        onClick={() => handleFlagToggle(side, range)}
+        disabled={isToggling}
+        className={`
+          text-sm leading-none px-0.5 rounded transition-all
+          ${isToggling ? "opacity-40 cursor-wait" : "cursor-pointer hover:scale-110"}
+          ${isFlagged ? "" : "grayscale opacity-40 hover:opacity-70"}
+        `}
+      >
+        🚩
+      </button>
+    );
+  };
 
   return (
     <div>
@@ -256,17 +321,6 @@ function Action({ index, data, onChange }: ActionProps) {
                 ))}
               </select>
             )}
-
-            {/* Inventory Values
-            {data.level !== "" && (
-              <div className="flex flex-col gap-3 mt-3">
-                {subsections.map((section: string) => (
-                  <p className="text-xs">
-                    {"B: " + backInventoryValues[section] + " F: " + frontInventoryValues[section]}
-                  </p>
-                ))}
-              </div>
-            )} */}
           </div>
           
           {/* Subsections */}
@@ -335,11 +389,21 @@ function Action({ index, data, onChange }: ActionProps) {
                   {range}
 
                   {data.selectedSubsections.includes(range) && (
-                    <div className="flex flex-row whitespace-nowrap">
+                    <div className="flex flex-row whitespace-nowrap items-center">
                       {backInventoryValues[data.level] && frontInventoryValues[data.level] && (
-                        <p className="text-xs m-1">
-                          {"B: " + (backInventoryValues[data.level][(Number(range.substring(0,range.indexOf("-")))-1)/10]?.count ?? 0) + "  F: " + (frontInventoryValues[data.level][(Number(range.substring(0,range.indexOf("-")))-1)/10]?.count ?? 0)}
-                        </p>
+                        <div className="flex items-center gap-0.5 text-xs m-1">
+                          {/* Back flag — left of B value */}
+                          <FlagButton side="back" range={range} />
+                          <span>
+                            {"B: " + (backInventoryValues[data.level][(Number(range.substring(0,range.indexOf("-")))-1)/10]?.count ?? 0)}
+                          </span>
+                          <span className="mx-1 text-gray-300">|</span>
+                          <span>
+                            {"F: " + (frontInventoryValues[data.level][(Number(range.substring(0,range.indexOf("-")))-1)/10]?.count ?? 0)}
+                          </span>
+                          {/* Front flag — right of F value */}
+                          <FlagButton side="front" range={range} />
+                        </div>
                       )}
                       <select
                         name={`${range}-movement-${index}`}

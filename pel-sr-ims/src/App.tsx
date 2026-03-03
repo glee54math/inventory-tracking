@@ -16,6 +16,7 @@ import { useNameContext } from "./components/inventory_app/NameContext";
 import Database from "./components/inventory_app/Database";
 import { useIdleDetection } from "./components/inventory_app/useIdleDetection";
 import IdleWarningModal from "./components/inventory_app/idleWarningModal";
+import FlaggedInventorySummary from "./components/inventory_app/FlaggedInventorySummary"
 
 type InventoryType =
   | "Back Math"
@@ -54,6 +55,7 @@ function App() {
   >([]);
   const [showInsufficient, setShowInsufficient] = useState<boolean>(false);
   const [showStudentDatabase, setShowStudentDatabase] = useState<boolean>(false);
+  const [showFlaggedSections, setShowFlaggedSections] = useState<boolean>(false);
 
   // Idle detection - only active when user is logged in
   const handleIdle = () => {
@@ -182,6 +184,24 @@ function App() {
                   {showInsufficient && (
                     <div id="insufficient-packets-table">
                       <Inventory data={restructure(insufficientPackets)} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Panel containing all flagged levels and subsections */}
+                <div id="flagged-sections">
+                  <button
+                    onClick={async () => {
+                      setShowFlaggedSections((prev) => !prev);
+                    }}
+                    className="font-bold mb-2 text-center w-full px-1 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
+                  >
+                    Flagged Sections {showFlaggedSections ? "▼" : "▶"}
+                  </button>
+
+                  {showFlaggedSections && (
+                    <div id="flagged-sections-table" className="p-2">
+                      <FlaggedInventorySummary />
                     </div>
                   )}
                 </div>
