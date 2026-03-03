@@ -213,7 +213,7 @@ function Action({ index, data, onChange }: ActionProps) {
       <button
         type="button"
         title={isFlagged ? `Unflag ${side} inventory for ${range}` : `Flag ${side} inventory for ${range} as needing adjustment`}
-        onClick={() => handleFlagToggle(side, range)}
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleFlagToggle(side, range); }}
         disabled={isToggling}
         className={`
           text-sm leading-none px-0.5 rounded transition-all

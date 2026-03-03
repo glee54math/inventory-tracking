@@ -16,7 +16,7 @@ import { useNameContext } from "./components/inventory_app/NameContext";
 import Database from "./components/inventory_app/Database";
 import { useIdleDetection } from "./components/inventory_app/useIdleDetection";
 import IdleWarningModal from "./components/inventory_app/idleWarningModal";
-import FlaggedInventorySummary from "./components/inventory_app/FlaggedInventorySummary"
+import FlaggedInventorySummary from "./components/inventory_app/FlaggedInventorySummary";
 
 type InventoryType =
   | "Back Math"
@@ -56,10 +56,11 @@ function App() {
   const [showInsufficient, setShowInsufficient] = useState<boolean>(false);
   const [showStudentDatabase, setShowStudentDatabase] = useState<boolean>(false);
   const [showFlaggedSections, setShowFlaggedSections] = useState<boolean>(false);
+  // Increment to trigger a re-fetch inside FlaggedInventorySummary
+  const [flagRefreshKey, setFlagRefreshKey] = useState<number>(0);
 
   // Idle detection - only active when user is logged in
   const handleIdle = () => {
-    // Log out the user
     setNameOfWorker("");
   };
 
@@ -69,9 +70,9 @@ function App() {
     remainingSeconds,
   } = useIdleDetection({
     onIdle: handleIdle,
-    idleTime: 150000, // 2.5 minutes = 150,000 ms
-    warningTime: 30000, // 30 seconds = 30,000 ms
-    enabled: nameOfWorker !== "", // Only enable when logged in
+    idleTime: 150000,
+    warningTime: 30000,
+    enabled: nameOfWorker !== "",
   });
 
   const handleStayLoggedIn = () => {
@@ -100,14 +101,14 @@ function App() {
   const handleMouseDown = () => {
     isDragging.current = true;
   };
-  
+
   useEffect(() => {
     const handleMovement = (e: MouseEvent) => {
       if (!isDragging.current) return;
       const newHeight = window.innerHeight - e.clientY - 32;
       setLogHeight(Math.max(150, newHeight));
     };
-    
+
     const handleMouseUp = () => {
       isDragging.current = false;
     };
@@ -188,20 +189,29 @@ function App() {
                   )}
                 </div>
 
-                {/* Panel containing all flagged levels and subsections */}
+                {/* Flagged Sections */}
                 <div id="flagged-sections">
-                  <button
-                    onClick={async () => {
-                      setShowFlaggedSections((prev) => !prev);
-                    }}
-                    className="font-bold mb-2 text-center w-full px-1 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
-                  >
-                    Flagged Sections {showFlaggedSections ? "▼" : "▶"}
-                  </button>
+                  <div className="flex items-center gap-1 mb-2">
+                    <button
+                      onClick={() => setShowFlaggedSections((prev) => !prev)}
+                      className="font-bold text-center flex-1 px-1 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
+                    >
+                      Flagged Sections {showFlaggedSections ? "▼" : "▶"}
+                    </button>
+                    {showFlaggedSections && (
+                      <button
+                        onClick={() => setFlagRefreshKey((prev) => prev + 1)}
+                        title="Refresh flagged sections"
+                        className="text-sm text-center rounded border hover:!bg-blue-100"
+                      >
+                        🔄
+                      </button>
+                    )}
+                  </div>
 
                   {showFlaggedSections && (
-                    <div id="flagged-sections-table" className="p-2">
-                      <FlaggedInventorySummary />
+                    <div id="flagged-sections-table">
+                      <FlaggedInventorySummary refreshKey={flagRefreshKey} />
                     </div>
                   )}
                 </div>
