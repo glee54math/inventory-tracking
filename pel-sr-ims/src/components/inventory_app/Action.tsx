@@ -34,6 +34,15 @@ function Action({ index, data, onChange }: ActionProps) {
     getStudents();
   }, []);
 
+  // Auto-load inventory values and flags whenever subject + level are both set.
+  // This ensures auto-created actions (from cell edits) show B/F values and flags
+  // without requiring the user to manually change the level dropdown.
+  useEffect(() => {
+    if (data.subject && data.level) {
+      toggleFrontBackInvValues(data.subject, data.level);
+    }
+  }, [data.subject, data.level]);
+
   const toggleFrontBackInvValues = async (subject: string, level: string) => {
     const subjectLower = subject.toLowerCase();
     const [back, front, backFlagData, frontFlagData] = await Promise.all([
@@ -252,6 +261,13 @@ function Action({ index, data, onChange }: ActionProps) {
               <select
                 name="Student"
                 id={`subject-${index}`}
+                value={
+                  data.toStudent?.firstName && data.toStudent?.lastName !== undefined
+                    ? data.toStudent.firstName + " " + data.toStudent.lastName
+                    : data.toStudent?.firstName
+                    ? data.toStudent.firstName
+                    : ""
+                }
                 onChange={(e) =>
                   handleToStudentChange(e.target.value)
                 }

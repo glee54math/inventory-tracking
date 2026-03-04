@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Student, SubmittedAction } from "../../utils/types";
 import Action from "./Action";
 import {
@@ -10,19 +10,191 @@ import { NewStudentForm } from "./NewStudent";
 import SubmissionConfirmModal from "./submissionConfirmModal";
 import WorkerSwitchModal from "./WorkerSwitchModal";
 import { useNameContext } from "./NameContext";
+import type { CellEdit } from "./Inventory";
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+/**
+ * Parse an inventory display name like "Back Math" or "Front English" into
+ * { subject: "Math" | "English", side: "Back" | "Front" }
+ */
+function parseInventoryName(
+  inventoryName: string
+): { subject: "Math" | "English"; side: "Back" | "Front" } | null {
+  const lower = inventoryName.toLowerCase();
+  const subject = lower.includes("math")
+    ? "Math"
+    : lower.includes("english")
+    ? "English"
+    : null;
+  const side = lower.includes("back")
+    ? "Back"
+    : lower.includes("front")
+    ? "Front"
+    : null;
+
+  if (!subject || !side) return null;
+  return { subject: subject as "Math" | "English", side: side as "Back" | "Front" };
+}
+
+/**
+ * Given a side and direction of change, determine the movement type.
+ * delta > 0 → shipment in; delta < 0 → out to dummy student
+ */
+function movementTypeFromEdit(
+  side: "Back" | "Front",
+  delta: number
+): string {
+  if (delta > 0) {
+    return side === "Back" ? "ShipmentToBack" : "ShipmentToFront";
+  } else {
+    return side === "Back" ? "BackToStudent" : "FrontToStudent";
+  }
+}
+
+const DUMMY_STUDENT: Student = {
+  firstName: "ATestStud",
+  lastName: "",
+} as Student;
+
+// ─── Component ───────────────────────────────────────────────────────────────
 
 interface ActionContainerProps {
   workerName: string;
+  pendingCellEdits?: CellEdit[];
+  onCellEditsConsumed?: () => void;
 }
 
-function ActionContainer({ workerName }: ActionContainerProps) {
+function ActionContainer({
+  workerName,
+  pendingCellEdits = [],
+  onCellEditsConsumed,
+}: ActionContainerProps) {
   const [actionList, setActionList] = useState<SubmittedAction[]>([]);
   const [newStudentFormPopUp, setNewStudentFormPopUp] = useState<boolean>(false);
   const [showSubmissionConfirm, setShowSubmissionConfirm] = useState<boolean>(false);
   const [showWorkerSwitch, setShowWorkerSwitch] = useState<boolean>(false);
   const [pendingSubmission, setPendingSubmission] = useState<boolean>(false);
-  
+
   const { setNameOfWorker } = useNameContext();
+
+  // ── Merge incoming cell edits into the action list ───────────────────────
+  useEffect(() => {
+    if (!pendingCellEdits || pendingCellEdits.length === 0) return;
+
+    setActionList((prevList) => {
+      let updated = [...prevList];
+
+      for (const edit of pendingCellEdits) {
+        const parsed = parseInventoryName(edit.inventoryName);
+        if (!parsed) continue;
+
+        const { subject, side } = parsed;
+        const netDelta = edit.delta;
+
+        if (netDelta === 0) {
+          // Net zero — remove this range from any matching action
+          updated = updated
+            .map((action) => {
+              if (action.subject !== subject || action.level !== edit.level)
+                return action;
+              const newSubsections = action.selectedSubsections.filter(
+                (r) => r !== edit.range
+              );
+              const newMovementMap = { ...action.movementMap };
+              const newCopiesMap = { ...action.movementNumOfCopiesMap };
+              delete newMovementMap[edit.range];
+              delete newCopiesMap[edit.range];
+              return {
+                ...action,
+                selectedSubsections: newSubsections,
+                movementMap: newMovementMap,
+                movementNumOfCopiesMap: newCopiesMap,
+              };
+            })
+            .filter((a) => a.selectedSubsections.length > 0);
+          continue;
+        }
+
+        const movement = movementTypeFromEdit(side, netDelta);
+        const absDelta = Math.abs(netDelta);
+
+        // Helper: determine which side ("Back" | "Front") an action's movements
+        // belong to, based on its existing movement types.
+        const actionSide = (action: SubmittedAction): "Back" | "Front" | "mixed" => {
+          const movements = Object.values(action.movementMap);
+          if (movements.length === 0) return side; // empty action — treat as same side
+          const isBack = movements.every(
+            (m) => m === "BackToFront" || m === "BackToStudent" || m === "ShipmentToBack"
+          );
+          const isFront = movements.every(
+            (m) => m === "FrontToBack" || m === "FrontToStudent" || m === "ShipmentToFront"
+          );
+          if (isBack) return "Back";
+          if (isFront) return "Front";
+          return "mixed";
+        };
+
+        // Merge into an existing action only when it shares subject + level AND
+        // was created from the same inventory side (Back vs Front). This prevents
+        // a Back-inventory edit from overwriting a Front-inventory edit for the
+        // same level + range — those must stay as separate actions.
+        const existingIndex = updated.findIndex(
+          (action) =>
+            action.subject === subject &&
+            action.level === edit.level &&
+            actionSide(action) === side
+        );
+
+        if (existingIndex !== -1) {
+          const existing = updated[existingIndex];
+          const newSubsections = existing.selectedSubsections.includes(edit.range)
+            ? existing.selectedSubsections
+            : [...existing.selectedSubsections, edit.range];
+
+          // Keep DUMMY_STUDENT if any range (existing or incoming) is ToStudent
+          const needsDummy =
+            movement.includes("ToStudent") ||
+            existing.selectedSubsections.some((r) =>
+              existing.movementMap[r]?.includes("ToStudent")
+            );
+
+          updated[existingIndex] = {
+            ...existing,
+            selectedSubsections: newSubsections,
+            movementMap: {
+              ...existing.movementMap,
+              [edit.range]: movement,
+            },
+            movementNumOfCopiesMap: {
+              ...existing.movementNumOfCopiesMap,
+              [edit.range]: absDelta,
+            },
+            toStudent: needsDummy ? DUMMY_STUDENT : existing.toStudent,
+          };
+        } else {
+          // No same-side action yet for this subject + level — create one
+          const newAction: SubmittedAction = {
+            subject: subject,
+            level: edit.level,
+            movementMap: { [edit.range]: movement },
+            movementNumOfCopiesMap: { [edit.range]: absDelta },
+            selectedSubsections: [edit.range],
+            toStudent: movement.includes("ToStudent")
+              ? DUMMY_STUDENT
+              : ({} as Student),
+          };
+          updated = [...updated, newAction];
+        }
+      }
+
+      return updated;
+    });
+
+    onCellEditsConsumed?.();
+  }, [pendingCellEdits]);
+
+  // ─────────────────────────────────────────────────────────────────────────
 
   const createNewAction = () => {
     const newAction: SubmittedAction = {
@@ -33,14 +205,10 @@ function ActionContainer({ workerName }: ActionContainerProps) {
       selectedSubsections: [],
       toStudent: {} as Student,
     };
-
     setActionList((prev) => [...prev, newAction]);
   };
 
-  const handleActionChange = (
-    index: number,
-    updatedAction: SubmittedAction
-  ) => {
+  const handleActionChange = (index: number, updatedAction: SubmittedAction) => {
     setActionList((prev) =>
       prev.map((action, i) => (i === index ? updatedAction : action))
     );
@@ -51,7 +219,6 @@ function ActionContainer({ workerName }: ActionContainerProps) {
   };
 
   const initiateSubmission = () => {
-    // Filter out incomplete actions first
     const completeActions = actionList.filter(
       (action) =>
         action.subject &&
@@ -60,12 +227,7 @@ function ActionContainer({ workerName }: ActionContainerProps) {
         Object.keys(action.movementMap).length > 0 &&
         Object.keys(action.movementNumOfCopiesMap).length > 0
     );
-
-    if (completeActions.length === 0) {
-      return;
-    }
-
-    // Show confirmation modal
+    if (completeActions.length === 0) return;
     setShowSubmissionConfirm(true);
   };
 
@@ -73,7 +235,6 @@ function ActionContainer({ workerName }: ActionContainerProps) {
     setShowSubmissionConfirm(false);
     setPendingSubmission(true);
 
-    // Filter out incomplete actions
     const completeActions = actionList.filter(
       (action) =>
         action.subject &&
@@ -89,16 +250,13 @@ function ActionContainer({ workerName }: ActionContainerProps) {
     }
 
     try {
-      // Submit to database
       await updateInventoryFromActions(completeActions);
       await updateLogFromActions(workerName, completeActions);
-      
+
       for (const action of completeActions) {
-        // Filter actions that are back/frontToStudent
-        const filteredToStudentHWPackets = action.selectedSubsections.filter((range) => {
-          return action.movementMap[range].includes("ToStudent");
-        });
-        
+        const filteredToStudentHWPackets = action.selectedSubsections.filter(
+          (range) => action.movementMap[range].includes("ToStudent")
+        );
         if (filteredToStudentHWPackets.length !== 0) {
           const studentHWPacketsToDatabase = filteredToStudentHWPackets.map(
             (packet) => action.level + " " + packet
@@ -107,7 +265,6 @@ function ActionContainer({ workerName }: ActionContainerProps) {
         }
       }
 
-      // Clear the action list after successful submission
       setActionList([]);
     } catch (error) {
       console.error("Error submitting actions:", error);
@@ -119,8 +276,6 @@ function ActionContainer({ workerName }: ActionContainerProps) {
   const handleWorkerSwitch = (newWorkerInitials: string) => {
     setNameOfWorker(newWorkerInitials);
     setShowWorkerSwitch(false);
-    
-    // After switching, proceed with submission
     setTimeout(() => {
       handleConfirmedSubmission();
     }, 100);
@@ -146,7 +301,8 @@ function ActionContainer({ workerName }: ActionContainerProps) {
       <div className="mb-4">
         {actionList.length === 0 && (
           <p className="text-gray-500">
-            No actions created yet. Click "Create New Action" to start.
+            No actions created yet. Click "Create New Action" to start, or edit
+            a cell in an Inventory table to auto-generate one.
           </p>
         )}
       </div>
@@ -162,9 +318,7 @@ function ActionContainer({ workerName }: ActionContainerProps) {
           <Action
             index={index}
             data={action}
-            onChange={(updatedAction) =>
-              handleActionChange(index, updatedAction)
-            }
+            onChange={(updatedAction) => handleActionChange(index, updatedAction)}
           />
         </div>
       ))}
@@ -198,9 +352,7 @@ function ActionContainer({ workerName }: ActionContainerProps) {
         )}
 
         <button
-          onClick={() => {
-            setNewStudentFormPopUp(true);
-          }}
+          onClick={() => setNewStudentFormPopUp(true)}
           className="border outline-1 outline-purple-500 rounded bg-purple-200 px-4 py-2 hover:!bg-purple-300"
         >
           Add New Student
@@ -213,7 +365,6 @@ function ActionContainer({ workerName }: ActionContainerProps) {
         )}
       </div>
 
-      {/* Submission Confirmation Modal */}
       {showSubmissionConfirm && (
         <SubmissionConfirmModal
           currentWorker={workerName}
@@ -223,7 +374,6 @@ function ActionContainer({ workerName }: ActionContainerProps) {
         />
       )}
 
-      {/* Worker Switch Modal */}
       {showWorkerSwitch && (
         <WorkerSwitchModal
           currentWorker={workerName}

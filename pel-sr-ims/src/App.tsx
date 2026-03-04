@@ -10,6 +10,7 @@ import {
 import Log from "./components/inventory_app/Log";
 import type { InventoryData, InsufficientSubsection } from "./utils/types";
 import ActionContainer from "./components/inventory_app/ActionContainer";
+import type { CellEdit } from "./components/inventory_app/Inventory";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "./utils/firebase";
 import { useNameContext } from "./components/inventory_app/NameContext";
@@ -31,11 +32,7 @@ function restructure(lowStock: InsufficientSubsection[]): InventoryData {
     if (!result[level]) {
       result[level] = [];
     }
-
-    result[level].push({
-      range,
-      count: missingCount,
-    });
+    result[level].push({ range, count: missingCount });
   }
 
   return result;
@@ -56,19 +53,38 @@ function App() {
   const [showInsufficient, setShowInsufficient] = useState<boolean>(false);
   const [showStudentDatabase, setShowStudentDatabase] = useState<boolean>(false);
   const [showFlaggedSections, setShowFlaggedSections] = useState<boolean>(false);
-  // Increment to trigger a re-fetch inside FlaggedInventorySummary
   const [flagRefreshKey, setFlagRefreshKey] = useState<number>(0);
 
-  // Idle detection - only active when user is logged in
+  // ── Cell edit queue ───────────────────────────────────────────────────────
+  // When the user edits a cell in any Inventory, we accumulate CellEdits here
+  // and pass them down to ActionContainer, which merges them into its action list.
+  const [pendingCellEdits, setPendingCellEdits] = useState<CellEdit[]>([]);
+
+  const handleCellEdit = (edit: CellEdit) => {
+    setPendingCellEdits((prev) => {
+      // Replace any existing queued edit for the same inventory+level+range
+      const filtered = prev.filter(
+        (e) =>
+          !(
+            e.inventoryName === edit.inventoryName &&
+            e.level === edit.level &&
+            e.range === edit.range
+          )
+      );
+      return [...filtered, edit];
+    });
+  };
+
+  const handleCellEditsConsumed = () => {
+    setPendingCellEdits([]);
+  };
+  // ─────────────────────────────────────────────────────────────────────────
+
   const handleIdle = () => {
     setNameOfWorker("");
   };
 
-  const {
-    isWarning,
-    resetTimer,
-    remainingSeconds,
-  } = useIdleDetection({
+  const { isWarning, resetTimer, remainingSeconds } = useIdleDetection({
     onIdle: handleIdle,
     idleTime: 150000,
     warningTime: 30000,
@@ -86,7 +102,6 @@ function App() {
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "inventory"), (snapshot) => {
       const newInventories: Record<string, InventoryData> = {};
-
       snapshot.forEach((doc) => {
         newInventories[doc.id] = doc.data();
       });
@@ -108,11 +123,9 @@ function App() {
       const newHeight = window.innerHeight - e.clientY - 32;
       setLogHeight(Math.max(150, newHeight));
     };
-
     const handleMouseUp = () => {
       isDragging.current = false;
     };
-
     window.addEventListener("mousemove", handleMovement);
     window.addEventListener("mouseup", handleMouseUp);
     return () => {
@@ -120,6 +133,20 @@ function App() {
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, []);
+
+  // Map Firestore doc IDs (e.g. "math_back") to display names (e.g. "Back Math")
+  // The Inventory component needs the display name to determine movement type.
+  const toDisplayName = (firestoreId: string): string => {
+    // "math_back" -> "Back Math", "english_front" -> "Front English"
+    const parts = firestoreId.split("_");
+    if (parts.length === 2) {
+      const [subject, side] = parts;
+      return `${side.charAt(0).toUpperCase() + side.slice(1)} ${
+        subject.charAt(0).toUpperCase() + subject.slice(1)
+      }`;
+    }
+    return firestoreId;
+  };
 
   return (
     <div className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-auto">
@@ -137,7 +164,9 @@ function App() {
             <Sidebar
               showInventory={showInventory}
               toggleInventory={() => setShowInventory((prev) => !prev)}
-              toggleStudentDatabase={() => setShowStudentDatabase((prev) => !prev)}
+              toggleStudentDatabase={() =>
+                setShowStudentDatabase((prev) => !prev)
+              }
             />
           </div>
 
@@ -152,22 +181,32 @@ function App() {
             {/* Inventories */}
             {showInventory && !showStudentDatabase && (
               <div className="overflow-auto w-full max-w-full">
-                {Object.entries(inventories).map(([name, inventory]) => (
-                  <div key={name} className="p-2 gap-4">
-                    <button
-                      onClick={() =>
-                        setInventoriesVisibility((prev) => ({
-                          ...prev,
-                          [name]: !prev[name],
-                        }))
-                      }
-                      className="font-bold mb-2 text-center w-full px-1 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
-                    >
-                      {name} Inventory {inventoriesVisibility[name] ? "▼" : "▶"}
-                    </button>
-                    {inventoriesVisibility[name] && <Inventory data={inventory} />}
-                  </div>
-                ))}
+                {Object.entries(inventories).map(([firestoreId, inventory]) => {
+                  const displayName = toDisplayName(firestoreId);
+                  return (
+                    <div key={firestoreId} className="p-2 gap-4">
+                      <button
+                        onClick={() =>
+                          setInventoriesVisibility((prev) => ({
+                            ...prev,
+                            [firestoreId]: !prev[firestoreId],
+                          }))
+                        }
+                        className="font-bold mb-2 text-center w-full px-1 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
+                      >
+                        {displayName} Inventory{" "}
+                        {inventoriesVisibility[firestoreId] ? "▼" : "▶"}
+                      </button>
+                      {inventoriesVisibility[firestoreId] && (
+                        <Inventory
+                          data={inventory}
+                          inventoryName={displayName}
+                          onCellEdit={handleCellEdit}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
 
                 {/* Amount Needed to Be Ordered */}
                 <div id="insufficient-packets">
@@ -179,11 +218,12 @@ function App() {
                     }}
                     className="font-bold mb-2 text-center w-full px-1 py-1 rounded hover:!bg-green-300 hover:!border-blue-300"
                   >
-                    Packets That Need To Be Ordered {showInsufficient ? "▼" : "▶"}
+                    Packets That Need To Be Ordered{" "}
+                    {showInsufficient ? "▼" : "▶"}
                   </button>
-
                   {showInsufficient && (
                     <div id="insufficient-packets-table">
+                      {/* No onCellEdit here — this is read-only derived data */}
                       <Inventory data={restructure(insufficientPackets)} />
                     </div>
                   )}
@@ -208,7 +248,6 @@ function App() {
                       </button>
                     )}
                   </div>
-
                   {showFlaggedSections && (
                     <div id="flagged-sections-table">
                       <FlaggedInventorySummary refreshKey={flagRefreshKey} />
@@ -237,7 +276,11 @@ function App() {
                 <h2 className="font-bold mb-2 text-center w-full">Actions</h2>
               </div>
               <div className="max-h-[70vh] flex flex-col">
-                <ActionContainer workerName={nameOfWorker} />
+                <ActionContainer
+                  workerName={nameOfWorker}
+                  pendingCellEdits={pendingCellEdits}
+                  onCellEditsConsumed={handleCellEditsConsumed}
+                />
               </div>
             </div>
 
@@ -249,7 +292,6 @@ function App() {
                 className="absolute top-0 left-0 w-full h-2 cursor-row-resize bg-gray-300 z-10"
                 onMouseDown={handleMouseDown}
               ></div>
-
               <div className="pt-2 h-full overflow-auto">
                 <h2 className="font-bold mb-2 text-center">Log</h2>
                 <Log />
