@@ -54,6 +54,8 @@ function App() {
   const [showStudentDatabase, setShowStudentDatabase] = useState<boolean>(false);
   const [showFlaggedSections, setShowFlaggedSections] = useState<boolean>(false);
   const [flagRefreshKey, setFlagRefreshKey] = useState<number>(0);
+  // Incremented after each successful submission to reset Inventory cell edit state
+  const [inventoryResetKey, setInventoryResetKey] = useState<number>(0);
 
   // ── Cell edit queue ───────────────────────────────────────────────────────
   // When the user edits a cell in any Inventory, we accumulate CellEdits here
@@ -202,6 +204,7 @@ function App() {
                           data={inventory}
                           inventoryName={displayName}
                           onCellEdit={handleCellEdit}
+                          resetKey={inventoryResetKey}
                         />
                       )}
                     </div>
@@ -280,6 +283,7 @@ function App() {
                   workerName={nameOfWorker}
                   pendingCellEdits={pendingCellEdits}
                   onCellEditsConsumed={handleCellEditsConsumed}
+                  onSubmitSuccess={() => setInventoryResetKey((k) => k + 1)}
                 />
               </div>
             </div>

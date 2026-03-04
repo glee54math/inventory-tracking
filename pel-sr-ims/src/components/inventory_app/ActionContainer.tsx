@@ -63,12 +63,14 @@ interface ActionContainerProps {
   workerName: string;
   pendingCellEdits?: CellEdit[];
   onCellEditsConsumed?: () => void;
+  onSubmitSuccess?: () => void;
 }
 
 function ActionContainer({
   workerName,
   pendingCellEdits = [],
   onCellEditsConsumed,
+  onSubmitSuccess,
 }: ActionContainerProps) {
   const [actionList, setActionList] = useState<SubmittedAction[]>([]);
   const [newStudentFormPopUp, setNewStudentFormPopUp] = useState<boolean>(false);
@@ -266,6 +268,7 @@ function ActionContainer({
       }
 
       setActionList([]);
+      onSubmitSuccess?.();
     } catch (error) {
       console.error("Error submitting actions:", error);
     } finally {

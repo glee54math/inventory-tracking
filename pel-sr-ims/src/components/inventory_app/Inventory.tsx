@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Subsection, InventoryData } from "../../utils/types";
 
 export interface CellEdit {
@@ -12,9 +12,10 @@ interface InventoryProps {
   data: InventoryData;
   inventoryName?: string;
   onCellEdit?: (edit: CellEdit) => void;
+  resetKey?: number;
 }
 
-function Inventory({ data, inventoryName, onCellEdit }: InventoryProps) {
+function Inventory({ data, inventoryName, onCellEdit, resetKey }: InventoryProps) {
   const levels = Object.keys(data);
   const subsections: Subsection[] = Object.values(data)[0] ?? [];
 
@@ -26,6 +27,15 @@ function Inventory({ data, inventoryName, onCellEdit }: InventoryProps) {
   const [accumulatedDeltas, setAccumulatedDeltas] = useState<Record<string, number>>({});
   // True original values captured on first click, before any edits: "level__range" -> originalCount
   const [originalValues, setOriginalValues] = useState<Record<string, number>>({});
+
+  // When parent signals a successful submission, clear all local edit state
+  // so cells return to their normal color based on the fresh Firestore values.
+  useEffect(() => {
+    if (resetKey === undefined) return;
+    setAccumulatedDeltas({});
+    setOriginalValues({});
+    setEditingCell(null);
+  }, [resetKey]);
 
   const cellKey = (level: string, range: string) => `${level}__${range}`;
 
