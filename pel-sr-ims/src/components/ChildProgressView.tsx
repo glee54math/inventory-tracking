@@ -106,8 +106,8 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
                 onClick={() => setShowMathTimeline(true)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                   showMathTimeline
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? '!bg-blue-600 text-white'
+                    : '!bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
                 Timeline
@@ -116,8 +116,8 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
                 onClick={() => setShowMathTimeline(false)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                   !showMathTimeline
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? '!bg-blue-600 text-white'
+                    : '!bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
                 By Level
@@ -155,6 +155,7 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
           <ProgressGraph
             subjectProgress={progressData.mathProgress}
             showTimeline={showMathTimeline}
+            startingGrade={student.startingGrade}
           />
 
           {/* Level History Table */}
@@ -216,8 +217,8 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
                 onClick={() => setShowEnglishTimeline(true)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                   showEnglishTimeline
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? '!bg-green-600 text-white'
+                    : '!bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
                 Timeline
@@ -226,8 +227,8 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
                 onClick={() => setShowEnglishTimeline(false)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                   !showEnglishTimeline
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? '!bg-green-600 text-white'
+                    : '!bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
                 By Level
