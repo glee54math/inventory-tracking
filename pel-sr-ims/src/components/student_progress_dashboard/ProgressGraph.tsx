@@ -1,6 +1,6 @@
 // ProgressGraph.tsx - Visual representation of student progress over time
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   LineChart,
   Line,
@@ -59,25 +59,14 @@ export default function ProgressGraph({
     const bufferedDate = new Date(endDate);
     bufferedDate.setMonth(bufferedDate.getMonth() + 1);
     
-    console.log("Student end date:", bufferedDate.toLocaleDateString(), "from level:", lastLevel.level);
-    
     return bufferedDate;
   }, [subjectProgress]);
   
   // Calculate grade level points
   const gradeLevelPoints = useMemo(() => {
     if (!startingGrade || !programStartDate) {
-      console.log("Missing startingGrade or programStartDate:", { startingGrade, programStartDate });
       return [];
     }
-    
-    console.log("Calculating grade level line:", {
-      startingGrade,
-      programStartDate: programStartDate.toLocaleDateString(),
-      subject: subjectProgress.subject,
-      gradeSkips,
-      studentEndDate: studentEndDate.toLocaleDateString()
-    });
     
     try {
       const points = calculateGradeLevelLine(
@@ -87,7 +76,6 @@ export default function ProgressGraph({
         gradeSkips,
         studentEndDate  // Pass the end date to stop calculation
       );
-      console.log("Grade level points calculated:", points.length, "points");
       return points;
     } catch (error) {
       console.error("Error calculating grade level line:", error);
@@ -186,13 +174,18 @@ export default function ProgressGraph({
     });
   };
 
-  const timelineData = showTimeline ? prepareTimelineData() : [];
+  const timelineData = useMemo(() => {
+    if (!showTimeline) return [];
+    return prepareTimelineData();
+  }, [showTimeline, subjectProgress]); // Watch entire subjectProgress object
   
   // Create separate blue line data (same as timelineData)
   const blueLineData = timelineData;
-  const levelProgressionData = !showTimeline
-    ? prepareLevelProgressionData()
-    : [];
+  
+  const levelProgressionData = useMemo(() => {
+    if (showTimeline) return [];
+    return prepareLevelProgressionData();
+  }, [showTimeline, subjectProgress]); // Watch entire subjectProgress object
 
   // Calculate X-axis domain and ticks for timeline
   let xAxisTicks: number[] = [];
@@ -210,7 +203,7 @@ export default function ProgressGraph({
   };
 
   // Custom tooltip that only shows data for the active line
-  const TimelineTooltip = ({ active, payload }: any) => {
+  const TimelineTooltip = useCallback(({ active, payload }: any) => {
     if (!active || !payload || !payload.length) return null;
     
     // Filter payload to only show the active line
@@ -245,7 +238,7 @@ export default function ProgressGraph({
         )}
       </div>
     );
-  };
+  }, [activeTooltipLine]);
 
   // Custom tooltip for level progression view
   const LevelProgressionTooltip = ({ active, payload }: any) => {
@@ -275,8 +268,8 @@ export default function ProgressGraph({
             onClick={() => setActiveTooltipLine('orange')}
             className={`flex items-center gap-2 px-3 py-1 rounded cursor-pointer transition-colors ${
               activeTooltipLine === 'orange' 
-                ? 'bg-orange-100 border-2 border-orange-500' 
-                : 'bg-white border-2 border-gray-200 hover:bg-gray-50'
+                ? '!bg-orange-100 border-2 border-orange-500' 
+                : '!bg-white border-2 border-gray-200 hover:bg-gray-50'
             }`}
           >
             <span className="text-orange-600">─ ─ ─</span>
@@ -289,8 +282,8 @@ export default function ProgressGraph({
             onClick={() => setActiveTooltipLine('blue')}
             className={`flex items-center gap-2 px-3 py-1 rounded cursor-pointer transition-colors ${
               activeTooltipLine === 'blue' 
-                ? 'bg-blue-100 border-2 border-blue-500' 
-                : 'bg-white border-2 border-gray-200 hover:bg-gray-50'
+                ? '!bg-blue-100 border-2 border-blue-500' 
+                : '!bg-white border-2 border-gray-200 hover:bg-gray-50'
             }`}
           >
             <span className="text-blue-600">───</span>
@@ -357,8 +350,6 @@ export default function ProgressGraph({
                 gradePosition: point.gradePosition,
                 type: "grade-level", // Mark as grade level for tooltip
               }));
-              
-              console.log("Grade line data (pre-calculated to student end):", gradeLineData);
               
               return (
                 <Line

@@ -18,6 +18,8 @@ interface StudentProgressPanelProps {
   onSavePace: () => void;
   startingGrade?: string;
   gradeSkips?: GradeSkip[];
+  activeSubject?: "Math" | "English";
+  onSubjectChange?: (subject: "Math" | "English") => void;
 }
 
 export default function StudentProgressPanel({
@@ -34,9 +36,15 @@ export default function StudentProgressPanel({
   onSavePace,
   startingGrade,
   gradeSkips = [],
+  activeSubject: propActiveSubject,
+  onSubjectChange,
 }: StudentProgressPanelProps) {
   const [showTimeline, setShowTimeline] = useState(true);
-  const [activeSubject, setActiveSubject] = useState<"Math" | "English">("Math");
+  
+  // Use prop if provided, otherwise use local state
+  const [localActiveSubject, setLocalActiveSubject] = useState<"Math" | "English">("Math");
+  const activeSubject = propActiveSubject !== undefined ? propActiveSubject : localActiveSubject;
+  const setActiveSubject = onSubjectChange || setLocalActiveSubject;
   
   // Collapsible section states
   const [isStudentInfoExpanded, setIsStudentInfoExpanded] = useState(true);

@@ -219,10 +219,31 @@ export default function Dashboard() {
 
     setLoading(true);
     try {
+      // Get the current subject's progress
+      const progress = activeSubject === "Math" 
+        ? studentProgress.mathProgress 
+        : studentProgress.englishProgress;
+      
+      if (!progress) {
+        alert("No progress data for selected subject");
+        setLoading(false);
+        return;
+      }
+      
+      // Filter to only this subject's levels
+      const subjectLevels = new Set(progress.levelHistory.map(lp => lp.level));
+      const filteredPaceMap: Record<string, number> = {};
+      
+      for (const level in customPaceMap) {
+        if (subjectLevels.has(level)) {
+          filteredPaceMap[level] = customPaceMap[level];
+        }
+      }
+      
       await updateCustomPace(
         studentProgress.studentId,
         activeSubject,
-        customPaceMap
+        filteredPaceMap
       );
 
       const updatedProgress = await loadStudentProgress(
@@ -428,6 +449,8 @@ export default function Dashboard() {
               onSavePace={handleSaveCustomPace}
               startingGrade={startingGrade1}
               gradeSkips={gradeSkips1}
+              activeSubject={activeSubject}
+              onSubjectChange={setActiveSubject}
             />
 
             {/* Historical Data Form for Student 1 */}
