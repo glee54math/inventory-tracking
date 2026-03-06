@@ -10,7 +10,7 @@ export interface Student {
   mother: string;
   startingGrade?: string; // Grade when they first started (K, 1, 2, ..., 12)
   subjects_startDate_Map: Record<string, string>; // [subject]: Date as string
-  hwkAssigned?: string[]; // Legacy field - kept for backward compatibility
+  hwkAssigned?: string[] | HomeworkAssignment[]; // Array of assignments (supports both old string[] and new format with dates)
   hwkHistory?: HomeworkHistoryEntry[]; // New field for detailed homework tracking
   [key: string]: any;
 }
@@ -19,6 +19,11 @@ export interface GradeSkip {
   gradeSkipped: string; // e.g., "6" for 6th grade math
   subject: "Math" | "English";
   effectiveDate: string; // ISO date string when skip takes effect
+}
+
+export interface HomeworkAssignment {
+  assignment: string; // e.g., "MG7 1-10"
+  dateAssigned: string; // ISO date string when assignment was made (from log timestamp)
 }
 
 export interface HomeworkHistoryEntry {
