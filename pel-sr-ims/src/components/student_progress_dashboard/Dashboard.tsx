@@ -441,10 +441,18 @@ export default function Dashboard() {
               onTogglePaceEditor={() => setShowPaceEditor1(!showPaceEditor1)}
               customPaceMap={customPaceMap}
               onPaceChange={(level, months) => {
-                setCustomPaceMap(prev => ({
-                  ...prev,
-                  [level]: months
-                }));
+                setCustomPaceMap(prev => {
+                  // If months is 0, null, or undefined, remove from map
+                  if (!months || months <= 0) {
+                    const { [level]: _, ...rest } = prev;
+                    return rest;
+                  }
+                  // Otherwise set the value
+                  return {
+                    ...prev,
+                    [level]: months
+                  };
+                });
               }}
               onSavePace={handleSaveCustomPace}
               startingGrade={startingGrade1}

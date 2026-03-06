@@ -18,8 +18,6 @@ interface StudentProgressPanelProps {
   onSavePace: () => void;
   startingGrade?: string;
   gradeSkips?: GradeSkip[];
-  activeSubject?: "Math" | "English";
-  onSubjectChange?: (subject: "Math" | "English") => void;
 }
 
 export default function StudentProgressPanel({
@@ -36,15 +34,9 @@ export default function StudentProgressPanel({
   onSavePace,
   startingGrade,
   gradeSkips = [],
-  activeSubject: propActiveSubject,
-  onSubjectChange,
 }: StudentProgressPanelProps) {
   const [showTimeline, setShowTimeline] = useState(true);
-  
-  // Use prop if provided, otherwise use local state
-  const [localActiveSubject, setLocalActiveSubject] = useState<"Math" | "English">("Math");
-  const activeSubject = propActiveSubject !== undefined ? propActiveSubject : localActiveSubject;
-  const setActiveSubject = onSubjectChange || setLocalActiveSubject;
+  const [activeSubject, setActiveSubject] = useState<"Math" | "English">("Math");
   
   // Collapsible section states
   const [isStudentInfoExpanded, setIsStudentInfoExpanded] = useState(true);
@@ -285,8 +277,9 @@ export default function StudentProgressPanel({
                   placeholder="3.3"
                   value={customPaceMap[level] || ""}
                   onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    onPaceChange(level, value);
+                    const value = parseFloat(e.target.value);
+                    // If empty/invalid, send 0 which Dashboard will interpret as "delete"
+                    onPaceChange(level, isNaN(value) ? 0 : value);
                   }}
                   className="w-full p-2 border rounded text-sm"
                   onClick={(e) => e.stopPropagation()}

@@ -276,28 +276,32 @@ export async function buildStudentProgress(
         if (newLevels.length > 0) {
           console.log(`Found ${newLevels.length} new Math levels in hwkAssigned:`, newLevels);
 
-          // Add the new levels as current work (in progress)
-          // Use the end date of last historical level as start for new work
+          // Add the new levels
+          // Start from the day after last historical level ended
           const lastHistoricalDate = levelHistory[levelHistory.length - 1].endDate || new Date();
+          let currentDate = new Date(lastHistoricalDate.getTime() + (24 * 60 * 60 * 1000));
 
           newLevels.forEach((level, index) => {
             const levelHwk = mathHwk.filter(h => h.level === level);
             const pagesCompleted = levelHwk.length * 10;
 
-            // Estimate dates for new levels
-            const startDate = index === 0
-              ? new Date(lastHistoricalDate.getTime() + (24 * 60 * 60 * 1000)) // Next day after historical
-              : new Date(levelHistory[levelHistory.length - 1].estimatedCompletion);
-
+            const startDate = new Date(currentDate);
             const estimatedCompletion = new Date(startDate.getTime() + (DEFAULT_MONTHS_PER_LEVEL * 30 * 24 * 60 * 60 * 1000));
 
+            // Only the LAST level is in progress, all others are complete
+            const isLastLevel = index === newLevels.length - 1;
+            
             levelHistory.push({
               level,
               startDate,
               estimatedCompletion,
               pagesCompleted,
-              isComplete: false, // These are in progress
+              isComplete: !isLastLevel, // Complete if not the last level
+              endDate: isLastLevel ? undefined : estimatedCompletion, // Set endDate for completed levels
             });
+            
+            // Next level starts the day after this one ends
+            currentDate = new Date(estimatedCompletion.getTime() + (24 * 60 * 60 * 1000));
           });
 
           currentLevel = newLevels[newLevels.length - 1];
@@ -407,28 +411,32 @@ export async function buildStudentProgress(
         if (newLevels.length > 0) {
           console.log(`Found ${newLevels.length} new English levels in hwkAssigned:`, newLevels);
 
-          // Add the new levels as current work (in progress)
-          // Use the end date of last historical level as start for new work
+          // Add the new levels
+          // Start from the day after last historical level ended
           const lastHistoricalDate = levelHistory[levelHistory.length - 1].endDate || new Date();
+          let currentDate = new Date(lastHistoricalDate.getTime() + (24 * 60 * 60 * 1000));
 
           newLevels.forEach((level, index) => {
             const levelHwk = englishHwk.filter(h => h.level === level);
             const pagesCompleted = levelHwk.length * 10;
 
-            // Estimate dates for new levels
-            const startDate = index === 0
-              ? new Date(lastHistoricalDate.getTime() + (24 * 60 * 60 * 1000)) // Next day after historical
-              : new Date(levelHistory[levelHistory.length - 1].estimatedCompletion);
-
+            const startDate = new Date(currentDate);
             const estimatedCompletion = new Date(startDate.getTime() + (DEFAULT_MONTHS_PER_LEVEL * 30 * 24 * 60 * 60 * 1000));
 
+            // Only the LAST level is in progress, all others are complete
+            const isLastLevel = index === newLevels.length - 1;
+            
             levelHistory.push({
               level,
               startDate,
               estimatedCompletion,
               pagesCompleted,
-              isComplete: false, // These are in progress
+              isComplete: !isLastLevel, // Complete if not the last level
+              endDate: isLastLevel ? undefined : estimatedCompletion, // Set endDate for completed levels
             });
+            
+            // Next level starts the day after this one ends
+            currentDate = new Date(estimatedCompletion.getTime() + (24 * 60 * 60 * 1000));
           });
 
           currentLevel = newLevels[newLevels.length - 1];
