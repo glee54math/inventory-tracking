@@ -19,7 +19,7 @@ interface StudentProgressPanelProps {
   startingGrade?: string;
   gradeSkips?: GradeSkip[];
   activeSubject?: string;
-  onSubjectChange?: () => void;
+  setActiveSubject?: React.Dispatch<React.SetStateAction<'Math'|'English'>>;
 }
 
 export default function StudentProgressPanel({
@@ -36,11 +36,11 @@ export default function StudentProgressPanel({
   onSavePace,
   startingGrade,
   gradeSkips = [],
-  activeStubject,
-  onSubjectChange,
+  activeSubject,
+  setActiveSubject,
 }: StudentProgressPanelProps) {
   const [showTimeline, setShowTimeline] = useState(true);
-  const [activeSubject, setActiveSubject] = useState<"Math" | "English">("Math");
+  // const [activeSubject, setActiveSubject] = useState<"Math" | "English">("Math");
   
   // Collapsible section states
   const [isStudentInfoExpanded, setIsStudentInfoExpanded] = useState(true);

@@ -458,7 +458,7 @@ export default function Dashboard() {
               startingGrade={startingGrade1}
               gradeSkips={gradeSkips1}
               activeSubject={activeSubject}
-              onSubjectChange={setActiveSubject}
+              setActiveSubject={setActiveSubject}
             />
 
             {/* Historical Data Form for Student 1 */}
