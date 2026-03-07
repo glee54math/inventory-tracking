@@ -44,6 +44,7 @@ export default function Dashboard() {
   const [customPaceMap, setCustomPaceMap] = useState<Record<string, number>>({});
   const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [activeSubject, setActiveSubject] = useState<"Math" | "English">("Math");
+  const [activeSubject2, setActiveSubject2] = useState<"Math" | "English">("Math");
 
   useEffect(() => {
     loadStudents();
@@ -494,6 +495,8 @@ export default function Dashboard() {
                 onSavePace={handleSaveCustomPace}
                 startingGrade={startingGrade2}
                 gradeSkips={gradeSkips2}
+                activeSubject={activeSubject2}
+                setActiveSubject={setActiveSubject2}
               />
 
               {/* Historical Data Form for Student 2 */}
