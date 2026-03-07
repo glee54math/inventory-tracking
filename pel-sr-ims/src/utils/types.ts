@@ -23,7 +23,7 @@ export interface GradeSkip {
 
 export interface HomeworkAssignment {
   assignment: string; // e.g., "MG7 1-10"
-  dateAssigned: string; // ISO date string when assignment was made (from log timestamp)
+  dateAssigned: Date; // Date when assignment was made (from log timestamp)
 }
 
 export interface HomeworkHistoryEntry {

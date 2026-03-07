@@ -261,7 +261,12 @@ function ActionContainer({
         );
         if (filteredToStudentHWPackets.length !== 0) {
           const studentHWPacketsToDatabase = filteredToStudentHWPackets.map(
-            (packet) => action.level + " " + packet
+            (packet) => (
+              {
+                assignment: action.level + " " + packet,
+                dateAssigned: new Date(),
+              }
+            )
           );
           await assignHWToStudent(action.toStudent, studentHWPacketsToDatabase);
         }

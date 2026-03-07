@@ -1,7 +1,7 @@
 import { doc, getDoc, getDocs, setDoc, collection, addDoc, updateDoc, query, where, orderBy, } from "firebase/firestore";
 import { db } from "./firebase";
 import type { LogEntry, SubmittedAction } from "./types";
-import type { InventoryData, Subsection, InsufficientSubsection, Worker, Student } from "./types";
+import type { InventoryData, Subsection, InsufficientSubsection, Worker, Student, HomeworkAssignment} from "./types";
 
 // subject_Location = math_back, math_front, english_back, english_front
 // Upload your local JSON to Firestore
@@ -284,7 +284,7 @@ export async function migrateStudentsArrayToSubcollection() {
   // console.log("🧹 Old students array removed from san-ramon doc");
 }
 
-export async function assignHWToStudent(student: Student, hwPackets: string[]) {
+export async function assignHWToStudent(student: Student, hwPackets: HomeworkAssignment[]) {
   // find student from within database
   const q = query(
     collection(db, "students", "san-ramon", "students"),
@@ -301,7 +301,7 @@ export async function assignHWToStudent(student: Student, hwPackets: string[]) {
 
   for (const docSnap of qSnapShot.docs) {
     // Get current homework assigned (if missing, default to empty array)
-    const currentHW = (docSnap.data().hwkAssigned ?? []) as string[];
+    const currentHW = (docSnap.data().hwkAssigned ?? []) as HomeworkAssignment[];
 
     // Merge new hw packets with existing ones (avoid duplicates if needed)
     const updatedHW = [...currentHW, ...hwPackets];
