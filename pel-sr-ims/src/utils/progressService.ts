@@ -17,6 +17,7 @@ import type {
   SubjectProgress,
   LevelProgress,
   HomeworkHistoryEntry,
+  HomeworkAssignment,
   LogEntry,
 } from "./types";
 import {
@@ -75,19 +76,34 @@ export function getNextLevel(currentLevel: string, subject: "Math" | "English"):
  * hwkAssigned format: ["MG10 71-80", "EG7 31-40", ...]
  */
 export function buildHwkHistoryFromAssignments(
-  hwkAssigned: string[]
+  hwkAssigned: string[] | HomeworkAssignment[]
 ): HomeworkHistoryEntry[] {
   const hwkHistory: HomeworkHistoryEntry[] = [];
 
-  hwkAssigned.forEach((assignment) => {
-    const parsed = parseAssignment(assignment);
-    if (!parsed) return;
+  
+  hwkAssigned.forEach((hwkAssignment) => {
 
+    let parsed;
+    let assignmentObj : HomeworkAssignment;
+    if (typeof(hwkAssignment) === 'string') {
+      assignmentObj = {
+        assignment: hwkAssignment,
+        dateAssigned: new Date(), // We hope this is not the case AFTER running the script and changing the Actions!
+      }
+      parsed = parseAssignment(hwkAssignment);
+    } else {
+      assignmentObj = hwkAssignment;
+      parsed = parseAssignment(hwkAssignment.assignment)
+    }
+  
+    if (!parsed) return;
+// typeof(assignment === 'object' && parseAssignment(assignment.assignment)
+    
     // We don't have exact dates from hwkAssigned, so we use a placeholder
     // Historical data entry should be used for accurate dates
     hwkHistory.push({
-      assignment,
-      dateAssigned: new Date(), // Placeholder - use historical data for real dates
+      assignment: assignmentObj.assignment,
+      dateAssigned: assignmentObj.dateAssigned, // This now pulls the date Assigned from hwkAssigned if there
       level: parsed.level,
       range: parsed.range,
       subject: parsed.subject,

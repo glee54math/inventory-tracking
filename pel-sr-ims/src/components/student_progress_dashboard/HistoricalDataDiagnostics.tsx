@@ -35,8 +35,15 @@ export default function StudentDiagnostic() {
       const englishHwk = hwkHistory.filter((h) => h.subject === "English");
 
       // Separate hwkAssigned by subject for display
-      const mathAssigned = hwkAssigned.filter((hw) => hw.startsWith("M"));
-      const englishAssigned = hwkAssigned.filter((hw) => hw.startsWith("E"));
+      const mathAssigned = hwkAssigned.filter((hw) => (
+        (typeof(hw) === 'string') && hw.startsWith("M") ||
+        (typeof(hw) === 'object') && hw.assignment.startsWith("M")
+      ));
+
+      const englishAssigned = hwkAssigned.filter((hw) => (
+        (typeof(hw) === 'string') && hw.startsWith("E") ||
+        (typeof(hw) === 'object') && hw.assignment.startsWith("E")
+      )); 
 
       const info = {
         studentName: `${student.firstName} ${student.lastName}`,

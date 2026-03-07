@@ -23,9 +23,16 @@ export async function findStudentsWithMissingSubjects(location: string = "san-ra
     const student = docSnap.data() as Student;
     const hwkAssigned = student.hwkAssigned || [];
     
-    const hasMathHwk = hwkAssigned.some((hw) => hw.startsWith("M"));
-    const hasEnglishHwk = hwkAssigned.some((hw) => hw.startsWith("E"));
-    
+    const hasMathHwk = hwkAssigned.some((hw) => (
+      ((typeof(hw) === 'string') && hw.startsWith("M")) ||
+      ((typeof(hw) === 'object') && hw.assignment.startsWith("M"))
+    ));
+
+    const hasEnglishHwk = hwkAssigned.some((hw) => (
+      ((typeof(hw) === 'string') && hw.startsWith("E")) ||
+      ((typeof(hw) === 'object') && hw.assignment.startsWith("E"))
+    ));
+
     const subjectsMap = student.subjects_startDate_Map || {};
     const missingMath = !subjectsMap.Math && hasMathHwk;
     const missingEnglish = !subjectsMap.English && hasEnglishHwk;

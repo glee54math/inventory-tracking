@@ -18,6 +18,8 @@ interface StudentProgressPanelProps {
   onSavePace: () => void;
   startingGrade?: string;
   gradeSkips?: GradeSkip[];
+  activeSubject?: string;
+  onSubjectChange?: () => void;
 }
 
 export default function StudentProgressPanel({
@@ -34,6 +36,8 @@ export default function StudentProgressPanel({
   onSavePace,
   startingGrade,
   gradeSkips = [],
+  activeStubject,
+  onSubjectChange,
 }: StudentProgressPanelProps) {
   const [showTimeline, setShowTimeline] = useState(true);
   const [activeSubject, setActiveSubject] = useState<"Math" | "English">("Math");
