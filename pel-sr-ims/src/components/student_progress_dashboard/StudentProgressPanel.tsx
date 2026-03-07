@@ -18,8 +18,8 @@ interface StudentProgressPanelProps {
   onSavePace: () => void;
   startingGrade?: string;
   gradeSkips?: GradeSkip[];
-  activeSubject?: string;
-  setActiveSubject?: React.Dispatch<React.SetStateAction<'Math'|'English'>>;
+  activeSubject: string;
+  setActiveSubject: React.Dispatch<React.SetStateAction<'Math'|'English'>>;
 }
 
 export default function StudentProgressPanel({
