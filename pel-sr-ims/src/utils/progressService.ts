@@ -76,7 +76,7 @@ export function getNextLevel(currentLevel: string, subject: "Math" | "English"):
  * hwkAssigned format: ["MG10 71-80", "EG7 31-40", ...]
  */
 export function buildHwkHistoryFromAssignments(
-  hwkAssigned: string[] | HomeworkAssignment[]
+  hwkAssigned: (string | HomeworkAssignment)[]
 ): HomeworkHistoryEntry[] {
   const hwkHistory: HomeworkHistoryEntry[] = [];
 

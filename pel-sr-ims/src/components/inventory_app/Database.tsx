@@ -15,18 +15,35 @@ export default function Database() {
     const [filters, setFilters] = useState<Record<string, string>>({});
 
     // Helper function to organize homework assignments
-    const organizeHomework = (hwkArray: string[]) => {
+    const organizeHomework = (hwkArray: (string | { assignment: string; dateAssigned: any })[]) => {
         if (!hwkArray || hwkArray.length === 0) return null;
 
         // Group by subject type and level
-        const organized: Record<string, Record<string, string[]>> = {
+        const organized: Record<string, Record<string, Array<{ range: string; date?: string }>>> = {
             Math: {},
             English: {}
         };
 
         hwkArray.forEach((hwk) => {
+            let assignment: string;
+            let dateStr: string | undefined;
+
+            // Handle both string and HomeworkAssignment object formats
+            if (typeof hwk === 'string') {
+                assignment = hwk;
+                dateStr = undefined;
+            } else {
+                assignment = hwk.assignment;
+                // Handle Firestore Timestamp or Date object
+                if (hwk.dateAssigned) {
+                    const date = hwk.dateAssigned.toDate ? hwk.dateAssigned.toDate() : new Date(hwk.dateAssigned);
+                    // Format as M/D/YY
+                    dateStr = `${date.getMonth() + 1}/${date.getDate()}/${String(date.getFullYear()).slice(-2)}`;
+                }
+            }
+
             // Parse homework string (e.g., "MG6 81-90" or "EG3 1-10")
-            const match = hwk.match(/^([A-Z]+)(\d+)\s+(.+)$/);
+            const match = assignment.match(/^([A-Z]+)(\d+[A-Z]*)\s+(.+)$/);
             if (match) {
                 const [, prefix, level, range] = match;
                 const subject = prefix.startsWith('M') ? 'Math' : 'English';
@@ -35,7 +52,7 @@ export default function Database() {
                 if (!organized[subject][levelKey]) {
                     organized[subject][levelKey] = [];
                 }
-                organized[subject][levelKey].push(range);
+                organized[subject][levelKey].push({ range, date: dateStr });
             }
         });
 
@@ -43,7 +60,7 @@ export default function Database() {
     };
 
     // Helper function to render organized homework
-    const renderHomework = (hwkArray: string[]) => {
+    const renderHomework = (hwkArray: (string | { assignment: string; dateAssigned: any })[]) => {
         const organized = organizeHomework(hwkArray);
         if (!organized) return "No homework assigned";
 
@@ -58,11 +75,17 @@ export default function Database() {
                             <div className="font-semibold text-blue-700">{subject}:</div>
                             {Object.entries(levels)
                                 .sort(([a], [b]) => a.localeCompare(b)) // Sort levels alphabetically
-                                .map(([level, ranges]) => (
+                                .map(([level, rangesWithDates]) => (
                                     <div key={level} className="ml-2 mb-1">
                                         <span className="font-medium text-gray-700">{level}:</span>
                                         <span className="ml-1 text-gray-600">
-                                            {ranges.join(", ")}
+                                            {rangesWithDates.map((item, idx) => (
+                                                <span key={idx}>
+                                                    {idx > 0 && ", "}
+                                                    {item.range}
+                                                    {item.date && ` (${item.date})`}
+                                                </span>
+                                            ))}
                                         </span>
                                     </div>
                                 ))}

@@ -10,7 +10,7 @@ export interface Student {
   mother: string;
   startingGrade?: string; // Grade when they first started (K, 1, 2, ..., 12)
   subjects_startDate_Map: Record<string, string>; // [subject]: Date as string
-  hwkAssigned?: string[] | HomeworkAssignment[]; // Array of assignments (supports both old string[] and new format with dates)
+  hwkAssigned?: (string | HomeworkAssignment)[]; // Array of assignments (supports both old string[] and new format with dates)
   hwkHistory?: HomeworkHistoryEntry[]; // New field for detailed homework tracking
   [key: string]: any;
 }

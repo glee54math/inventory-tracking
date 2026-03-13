@@ -301,7 +301,7 @@ export async function assignHWToStudent(student: Student, hwPackets: HomeworkAss
 
   for (const docSnap of qSnapShot.docs) {
     // Get current homework assigned (if missing, default to empty array)
-    const currentHW = (docSnap.data().hwkAssigned ?? []) as HomeworkAssignment[];
+    const currentHW = (docSnap.data().hwkAssigned ?? []) as (string | HomeworkAssignment)[];
 
     // Merge new hw packets with existing ones (avoid duplicates if needed)
     const updatedHW = [...currentHW, ...hwPackets];
