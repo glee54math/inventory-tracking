@@ -9,6 +9,7 @@ import {
   query,
   orderBy,
   where,
+  Timestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import type {
@@ -209,6 +210,37 @@ export function calculateRemainingLevels(
   return remainingLevels;
 }
 
+export function toDate(value: any): Date {
+  // Already a Date
+  if (value instanceof Date) {
+    return value;
+  }
+  
+  // Firestore Timestamp (has toDate() method or seconds property)
+  if (value && typeof value === 'object') {
+    // Firestore Timestamp has toDate() method
+    if (typeof value.toDate === 'function') {
+      return value.toDate();
+    }
+    // Or has seconds property (Timestamp structure)
+    if (value.seconds !== undefined) {
+      return new Date(value.seconds * 1000);
+    }
+  }
+  
+  // ISO string or timestamp number
+  if (typeof value === 'string' || typeof value === 'number') {
+    const date = new Date(value);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+  
+  // Fallback to current date
+  console.warn('toDate: Could not convert value to Date, using current date:', value);
+  return new Date();
+}
+
 /**
  * Build complete student progress from logs and student data
  * Prioritizes historical data over log data when available
@@ -304,9 +336,9 @@ export async function buildStudentProgress(
                 levelAssignments[0].dateAssigned
               );
               levelStartDates[level] = earliestDate;
-              console.log(`  ${level} first assigned: ${earliestDate.toLocaleDateString()}`);
+              // console.log(`  ${level} first assigned: ${earliestDate.toDateString()}`);
             } else {
-              console.log(`  ${level} has NO assignments in hwkAssigned`);
+              // console.log(`  ${level} has NO assignments in hwkAssigned`);
             }
           });
 
@@ -314,7 +346,7 @@ export async function buildStudentProgress(
 
           // Start from the day after last historical level ended
           const lastHistoricalDate = levelHistory[levelHistory.length - 1].endDate || new Date();
-          let currentStartDate = new Date(lastHistoricalDate.getTime() + (24 * 60 * 60 * 1000));
+          let currentStartDate = new Date(toDate(lastHistoricalDate).getTime() + (24 * 60 * 60 * 1000));
 
           newLevels.forEach((level, index) => {
             const levelHwk = mathHwk.filter(h => h.level === level);
@@ -329,15 +361,15 @@ export async function buildStudentProgress(
             if (index === 0) {
               // First new level - always cascade from last historical level
               startDate = new Date(currentStartDate);
-              console.log(`  ${level} starts: ${startDate.toLocaleDateString()} (cascaded from last historical)`);
-            } else if (assignmentDate && assignmentDate.getTime() >= currentStartDate.getTime()) {
+              // console.log(`  ${level} starts: ${startDate.toLocaleDateString()} (cascaded from last historical)`);
+            } else if (assignmentDate && toDate(assignmentDate).getTime() >= currentStartDate.getTime()) {
               // Use the actual assignment date (when student started this level)
               startDate = new Date(assignmentDate);
-              console.log(`  ${level} starts: ${startDate.toLocaleDateString()} (from assignment date)`);
+              // console.log(`  ${level} starts: ${startDate.toLocaleDateString()} (from assignment date)`);
             } else {
               // No assignment or assignment is before current - cascade
               startDate = new Date(currentStartDate);
-              console.log(`  ${level} starts: ${startDate.toLocaleDateString()} (cascaded from previous)`);
+              // console.log(`  ${level} starts: ${startDate.toLocaleDateString()} (cascaded from previous)`);
             }
 
             // Determine end date:
@@ -356,24 +388,24 @@ export async function buildStudentProgress(
                 // Next level was assigned - that's when this level ended AND when next level started
                 endDate = nextLevelFirstAssignment;
                 estimatedCompletion = endDate;
-                console.log(`  ${level} ended: ${endDate.toLocaleDateString()} (when ${nextLevel} was first assigned)`);
+                // console.log(`  ${level} ended: ${endDate.toLocaleDateString()} (when ${nextLevel} was first assigned)`);
 
                 // IMPORTANT: Next level starts when it was first assigned
                 currentStartDate = new Date(nextLevelFirstAssignment);
               } else {
                 // No assignment for next level - estimate this level's completion
-                estimatedCompletion = new Date(startDate.getTime() + (DEFAULT_MONTHS_PER_LEVEL * 30 * 24 * 60 * 60 * 1000));
+                estimatedCompletion = new Date(toDate(startDate).getTime() + (DEFAULT_MONTHS_PER_LEVEL * 30 * 24 * 60 * 60 * 1000));
                 endDate = estimatedCompletion;
-                console.log(`  ${level} estimated end: ${estimatedCompletion.toLocaleDateString()} (no next assignment)`);
+                // console.log(`  ${level} estimated end: ${estimatedCompletion.toLocaleDateString()} (no next assignment)`);
 
                 // Next level starts day after estimated end
-                currentStartDate = new Date(estimatedCompletion.getTime() + (24 * 60 * 60 * 1000));
+                currentStartDate = new Date(toDate(estimatedCompletion).getTime() + (24 * 60 * 60 * 1000));
               }
             } else {
               // Last level (in progress) - estimate completion
-              estimatedCompletion = new Date(startDate.getTime() + (DEFAULT_MONTHS_PER_LEVEL * 30 * 24 * 60 * 60 * 1000));
+              estimatedCompletion = new Date(toDate(startDate).getTime() + (DEFAULT_MONTHS_PER_LEVEL * 30 * 24 * 60 * 60 * 1000));
               endDate = undefined;
-              console.log(`  ${level} in progress, estimated completion: ${estimatedCompletion.toLocaleDateString()}`);
+              // console.log(`  ${level} in progress, estimated completion: ${estimatedCompletion.toLocaleDateString()}`);
             }
 
             levelHistory.push({
@@ -386,7 +418,7 @@ export async function buildStudentProgress(
             });
 
             // Update default start for next iteration (in case next level has no assignment date)
-            currentStartDate = new Date(estimatedCompletion.getTime() + (24 * 60 * 60 * 1000));
+            currentStartDate = new Date(toDate(estimatedCompletion).getTime() + (24 * 60 * 60 * 1000));
           });
 
           currentLevel = newLevels[newLevels.length - 1];
@@ -513,7 +545,7 @@ export async function buildStudentProgress(
 
           // Start from the day after last historical level ended
           const lastHistoricalDate = levelHistory[levelHistory.length - 1].endDate || new Date();
-          let currentStartDate = new Date(lastHistoricalDate.getTime() + (24 * 60 * 60 * 1000));
+          let currentStartDate = new Date(toDate(lastHistoricalDate).getTime() + (24 * 60 * 60 * 1000));
 
           newLevels.forEach((level, index) => {
             const levelHwk = englishHwk.filter(h => h.level === level);
@@ -523,20 +555,20 @@ export async function buildStudentProgress(
             // - FIRST level: ALWAYS cascade from historical (day after last historical ended)
             // - Subsequent levels: Use assignment date if available
             let startDate: Date;
-            const assignmentDate = levelStartDates[level];
+            const assignmentDate = toDate(levelStartDates[level]);
 
             if (index === 0) {
               // First new level - always cascade from last historical level
               startDate = new Date(currentStartDate);
-              console.log(`  ${level} starts: ${startDate.toLocaleDateString()} (cascaded from last historical)`);
+              // console.log(`  ${level} starts: ${startDate.toLocaleDateString()} (cascaded from last historical)`);
             } else if (assignmentDate && assignmentDate.getTime() >= currentStartDate.getTime()) {
               // Use the actual assignment date (when student started this level)
               startDate = new Date(assignmentDate);
-              console.log(`  ${level} starts: ${startDate.toLocaleDateString()} (from assignment date)`);
+              // console.log(`  ${level} starts: ${startDate.toLocaleDateString()} (from assignment date)`);
             } else {
               // No assignment or assignment is before current - cascade
               startDate = new Date(currentStartDate);
-              console.log(`  ${level} starts: ${startDate.toLocaleDateString()} (cascaded from previous)`);
+              // console.log(`  ${level} starts: ${startDate.toLocaleDateString()} (cascaded from previous)`);
             }
 
             // Determine end date:
@@ -555,7 +587,7 @@ export async function buildStudentProgress(
                 // Next level was assigned - that's when this level ended AND when next level started
                 endDate = nextLevelFirstAssignment;
                 estimatedCompletion = endDate;
-                console.log(`  ${level} ended: ${endDate.toLocaleDateString()} (when ${nextLevel} was first assigned)`);
+                // console.log(`  ${level} ended: ${endDate.toLocaleDateString()} (when ${nextLevel} was first assigned)`);
 
                 // IMPORTANT: Next level starts when it was first assigned
                 currentStartDate = new Date(nextLevelFirstAssignment);
@@ -563,16 +595,16 @@ export async function buildStudentProgress(
                 // No assignment for next level - estimate this level's completion
                 estimatedCompletion = new Date(startDate.getTime() + (DEFAULT_MONTHS_PER_LEVEL * 30 * 24 * 60 * 60 * 1000));
                 endDate = estimatedCompletion;
-                console.log(`  ${level} estimated end: ${estimatedCompletion.toLocaleDateString()} (no next assignment)`);
+                // console.log(`  ${level} estimated end: ${estimatedCompletion.toLocaleDateString()} (no next assignment)`);
 
                 // Next level starts day after estimated end
-                currentStartDate = new Date(estimatedCompletion.getTime() + (24 * 60 * 60 * 1000));
+                currentStartDate = new Date(toDate(estimatedCompletion).getTime() + (24 * 60 * 60 * 1000));
               }
             } else {
               // Last level (in progress) - estimate completion
               estimatedCompletion = new Date(startDate.getTime() + (DEFAULT_MONTHS_PER_LEVEL * 30 * 24 * 60 * 60 * 1000));
               endDate = undefined;
-              console.log(`  ${level} in progress, estimated completion: ${estimatedCompletion.toLocaleDateString()}`);
+              // console.log(`  ${level} in progress, estimated completion: ${estimatedCompletion.toLocaleDateString()}`);
             }
 
             levelHistory.push({
@@ -585,7 +617,7 @@ export async function buildStudentProgress(
             });
 
             // Update default start for next iteration (in case next level has no assignment date)
-            currentStartDate = new Date(estimatedCompletion.getTime() + (24 * 60 * 60 * 1000));
+            currentStartDate = new Date(toDate(estimatedCompletion).getTime() + (24 * 60 * 60 * 1000));
           });
 
           currentLevel = newLevels[newLevels.length - 1];
