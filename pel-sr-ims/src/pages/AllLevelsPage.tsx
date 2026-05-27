@@ -5,7 +5,7 @@ const mathLevels: Record<string, string[]> = {
     "Elementary School": ["MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11"],
     "Middle School": ["MM1", "MM2", "MM3"],
     "High School": ["MH1", "MH2", "MH3", "MH4", "MH5", "MH6", "MHG", "MHT"],
-    "Special Topics": ["WordProblems", "MG6_TwoDigitVisualAddition", "MG6_VerticalAddition"],
+    "Special Topics": ["WordProblems", "MG6_TwoDigitVisualAddition", "MG6_VerticalAddition", "MG7_Nx1DigitMultiplication"],
 };
 
 const englishLevels: Record<string, string[]> = {
