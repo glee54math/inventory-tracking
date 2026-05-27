@@ -5,6 +5,7 @@ import { useAuth } from "../components/AuthContext";
 
 // Pages
 import LevelsPage from "../pages/LevelsPage";
+import AllLevelsPage from "../pages/AllLevelsPage";
 import App from "../App";
 import Dashboard from "../components/student_progress_dashboard/Dashboard";
 import ParentLogin from "../components/ParentLogin";
@@ -50,6 +51,15 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/levels/LevelsPage"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "worker"]}>
+            <AllLevelsPage />
           </ProtectedRoute>
         }
       />

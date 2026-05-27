@@ -130,6 +130,21 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                         </button>
                         {isLevelsButtonPressed && (
                             <ul id="level-dropdown-button-list" className="absolute mt-2 w-32 max-h-48 overflow-y-auto bg-white border border-gray-300 rounded">
+                                <li
+                                    id="all-levels-page-redirect"
+                                    key={"all-levels-page-redirect"}
+                                    className="rounded"
+                                >
+                                    <button
+                                        className="w-full text-left px-4 py-2 text-sm hover:!bg-gray-200 rounded"
+                                        onClick={() => {
+                                            navigate(`/levels/LevelsPage`);
+                                            setIsLevelsButtonPressed(false);
+                                        }}
+                                    >
+                                        All Levels
+                                    </button>
+                                </li>
                                 {levelsArray.map((level:string) => (
                                     <li 
                                         id={level+"-button-redirect"}

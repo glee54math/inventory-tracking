@@ -16,8 +16,14 @@ export default function LevelsPage() {
             .then((module) => {
                 setLevelComponent(() => module.default);
             })
-            .catch(() => { 
-                setError(true);
+            .catch(() => {
+                import(`./english-levels/${levelId}.tsx`)
+                    .then((module) => {
+                        setLevelComponent(() => module.default);
+                    })
+                    .catch(() => {
+                        setError(true);
+                    });
             });
     }, [levelId]);
 
