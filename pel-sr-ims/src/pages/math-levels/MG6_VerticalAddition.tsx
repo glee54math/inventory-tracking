@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, } from 'react';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -37,9 +37,9 @@ const normalizeOperation = (op: string): 'add' | 'sub' => {
 
 const getSizeClasses = (size: 'sm' | 'md' | 'lg' = 'md') => {
   const sizes = {
-    sm: { digit: 'w-8 h-10 text-xl', box: 'w-8 h-10 text-xl' },
-    md: { digit: 'w-12 h-14 text-3xl', box: 'w-12 h-14 text-3xl' },
-    lg: { digit: 'w-16 h-18 text-4xl', box: 'w-16 h-18 text-4xl' }
+    sm: { digit: 'w-8 h-8 text-xl',    box: 'w-8 h-10 text-xl',   carry: 'w-8 h-5'  },
+    md: { digit: 'w-12 h-10 text-3xl', box: 'w-12 h-14 text-3xl', carry: 'w-12 h-6' },
+    lg: { digit: 'w-16 h-12 text-4xl', box: 'w-16 h-18 text-4xl', carry: 'w-16 h-7' },
   };
   return sizes[size];
 };
@@ -714,12 +714,12 @@ export const VerticalMath: React.FC<VerticalMathProps> = ({
     <div className="flex flex-col items-end">
       {/* Carry numbers for addition */}
       {showWork && normalizedOp === 'add' && (
-        <div className="flex mb-1">
-          <div className={`${sizeClasses.digit} pr-2`}></div>
+        <div className="flex">
+          <div className={`${sizeClasses.carry} pr-2`}></div>
           {paddedOperands[0].map((_, colIdx) => {
             const carryValue = problem.carries[colIdx];
             return (
-              <div key={colIdx} className={`${sizeClasses.digit} flex items-center justify-center`}>
+              <div key={colIdx} className={`${sizeClasses.carry} flex items-end justify-center pb-0.5`}>
                 {carryValue > 0 && (
                   <span className="text-sm text-red-500 font-semibold">
                     {carryValue}
@@ -749,8 +749,8 @@ export const VerticalMath: React.FC<VerticalMathProps> = ({
       ))}
       
       {/* Horizontal line */}
-      <div className="flex items-center">
-        <div className={`${sizeClasses.digit} pr-2`}></div>
+      <div className="flex items-center py-0.5">
+        <div className="pr-2 shrink-0" style={{ width: `${size === 'sm' ? 32 : size === 'md' ? 48 : 64}px` }} />
         <div className="border-t-2 border-gray-800" style={{ width: `${maxDigits * (size === 'sm' ? 32 : size === 'md' ? 48 : 64)}px` }}></div>
       </div>
       

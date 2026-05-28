@@ -1,12 +1,28 @@
 import { Link } from "react-router-dom";
 
-const mathLevels: Record<string, string[]> = {
-    "Kindergarten": ["MK1", "MK2", "MK3", "MK4"],
-    "Elementary School": ["MG1", "MG2", "MG3", "MG4", "MG5", "MG6", "MG7", "MG8", "MG9", "MG10", "MG11"],
-    "Middle School": ["MM1", "MM2", "MM3"],
-    "High School": ["MH1", "MH2", "MH3", "MH4", "MH5", "MH6", "MHG", "MHT"],
-    "Special Topics": ["WordProblems", "MG6_TwoDigitVisualAddition", "MG6_VerticalAddition", "MG7_Nx1DigitMultiplication"],
-};
+const mathModules = import.meta.glob('./math-levels/*.tsx');
+
+const allMathIds = Object.keys(mathModules)
+    .map(path => path.replace('./math-levels/', '').replace('.tsx', ''))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+const mathLevels = (() => {
+    const categories: Record<string, string[]> = {
+        "Kindergarten": [],
+        "Elementary School": [],
+        "Middle School": [],
+        "High School": [],
+        "Special Topics": [],
+    };
+    for (const id of allMathIds) {
+        if (/^MK\d+$/.test(id))      categories["Kindergarten"].push(id);
+        else if (/^MG\d+$/.test(id)) categories["Elementary School"].push(id);
+        else if (/^MM\d+$/.test(id)) categories["Middle School"].push(id);
+        else if (/^MH/.test(id))     categories["High School"].push(id);
+        else                          categories["Special Topics"].push(id);
+    }
+    return categories;
+})();
 
 const englishLevels: Record<string, string[]> = {
     "Kindergarten": ["EK1", "EK2", "EK3", "EK4"],
