@@ -268,14 +268,16 @@ function ActionContainer({
           (range) => action.movementMap[range].includes("ToStudent")
         );
         if (filteredToStudentHWPackets.length !== 0) {
-          const studentHWPacketsToDatabase = filteredToStudentHWPackets.map(
-            (packet) => (
-              {
+          const studentHWPacketsToDatabase: { assignment: string; dateAssigned: Date }[] = [];
+          for (const packet of filteredToStudentHWPackets) {
+            const numCopies = action.movementNumOfCopiesMap[packet] ?? 1;
+            for (let i = 0; i < numCopies; i++) {
+              studentHWPacketsToDatabase.push({
                 assignment: action.level + " " + packet,
                 dateAssigned: new Date(),
-              }
-            )
-          );
+              });
+            }
+          }
           await assignHWToStudent(action.toStudent, studentHWPacketsToDatabase);
         }
       }
