@@ -63,11 +63,25 @@ export interface LevelProgress {
   isComplete: boolean;
 }
 
+export interface LogActionData {
+  subject: string;
+  level: string;
+  range: string;
+  movementType: MovementType;
+  numOfCopies: number;
+  studentFirstName?: string;
+  studentLastName?: string;
+}
+
 export type LogEntry = {
   timeStamp: Date;
   userID: string;
   eventType: string;
   message: string;
+  undoData?: LogActionData;
+  isUndone?: boolean;
+  undoneAt?: Date;
+  undoneBy?: string;
 };
 
 export interface SubmittedAction {

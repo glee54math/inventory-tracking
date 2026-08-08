@@ -1,6 +1,6 @@
 import { doc, getDoc, getDocs, setDoc, collection, addDoc, updateDoc, query, where, orderBy, } from "firebase/firestore";
 import { db } from "./firebase";
-import type { LogEntry, SubmittedAction } from "./types";
+import type { LogEntry, LogActionData, SubmittedAction } from "./types";
 import type { InventoryData, Subsection, InsufficientSubsection, Worker, Student, HomeworkAssignment} from "./types";
 
 // subject_Location = math_back, math_front, english_back, english_front
@@ -140,17 +140,26 @@ export async function updateLogFromActions(workerName: string, submittedActions:
     for (const range of action.selectedSubsections) {
       const numOfCopies = action.movementNumOfCopiesMap[range];
       const movementAction = action.movementMap[range];
-      const studentFirstName = action.toStudent.firstName;
-      const studentLastName = action.toStudent.lastName;
+      const studentFirstName = action.toStudent?.firstName;
+      const studentLastName = action.toStudent?.lastName;
 
       const logEntry: LogEntry = {
         timeStamp: logTime,
         userID: workerName,
         eventType: `Adding ${action} To Log by ${workerName}`,
-        message: `${numOfCopies} ${numOfCopies === 1 ? "copy" : "copies"} of ${action.level} ${range} from ${movementAction} ${studentFirstName ? "for " + (studentFirstName + " " + studentLastName) : ""} | Done by: ${workerName}`
+        message: `${numOfCopies} ${numOfCopies === 1 ? "copy" : "copies"} of ${action.level} ${range} from ${movementAction} ${studentFirstName ? "for " + (studentFirstName + " " + studentLastName) : ""} | Done by: ${workerName}`,
+        undoData: {
+          subject: action.subject ?? "",
+          level: action.level,
+          range,
+          movementType: movementAction as LogActionData["movementType"],
+          numOfCopies,
+          studentFirstName: studentFirstName || undefined,
+          studentLastName: studentLastName || undefined,
+        },
       };
 
-      await saveLog(logEntry); // call new version
+      await saveLog(logEntry);
     }
   }
 }
@@ -629,4 +638,178 @@ export async function loadAllInventoryFlags(): Promise<InventoryFlag[]> {
   }
 
   return allFlags;
+}
+
+// ─────────────────────────────────────────────
+// Undo Functions
+// ─────────────────────────────────────────────
+
+async function reverseInventoryAction(undoData: LogActionData): Promise<void> {
+  const subjectLower = undoData.subject.toLowerCase();
+  const backKey = `${subjectLower}_back`;
+  const frontKey = `${subjectLower}_front`;
+
+  const applyDelta = (inventory: InventoryData, delta: number) => {
+    const subsection = inventory[undoData.level]?.find(
+      (s: Subsection) => s.range === undoData.range
+    );
+    if (subsection) subsection.count += delta;
+  };
+
+  switch (undoData.movementType) {
+    case "BackToFront": {
+      const back = await loadInventory(backKey);
+      const front = await loadInventory(frontKey);
+      applyDelta(back, undoData.numOfCopies);
+      applyDelta(front, -undoData.numOfCopies);
+      await saveInventory(back, backKey);
+      await saveInventory(front, frontKey);
+      break;
+    }
+    case "FrontToBack": {
+      const front = await loadInventory(frontKey);
+      const back = await loadInventory(backKey);
+      applyDelta(front, undoData.numOfCopies);
+      applyDelta(back, -undoData.numOfCopies);
+      await saveInventory(front, frontKey);
+      await saveInventory(back, backKey);
+      break;
+    }
+    case "BackToStudent": {
+      const back = await loadInventory(backKey);
+      applyDelta(back, undoData.numOfCopies);
+      await saveInventory(back, backKey);
+      break;
+    }
+    case "FrontToStudent": {
+      const front = await loadInventory(frontKey);
+      applyDelta(front, undoData.numOfCopies);
+      await saveInventory(front, frontKey);
+      break;
+    }
+    case "ShipmentToBack": {
+      const back = await loadInventory(backKey);
+      applyDelta(back, -undoData.numOfCopies);
+      await saveInventory(back, backKey);
+      break;
+    }
+    case "ShipmentToFront": {
+      const front = await loadInventory(frontKey);
+      applyDelta(front, -undoData.numOfCopies);
+      await saveInventory(front, frontKey);
+      break;
+    }
+  }
+}
+
+export async function removeHWFromStudent(
+  firstName: string,
+  lastName: string,
+  level: string,
+  range: string,
+  logTimestamp: Date
+): Promise<boolean> {
+  const targetAssignment = `${level} ${range}`;
+  const windowMs = 60 * 1000; // 60-second window to match dateAssigned to log timestamp
+
+  const q = query(
+    collection(db, "students", "san-ramon", "students"),
+    where("firstName", "==", firstName),
+    where("lastName", "==", lastName)
+  );
+
+  const qSnapshot = await getDocs(q);
+  if (qSnapshot.size !== 1) {
+    console.warn(`removeHWFromStudent: expected 1 student, found ${qSnapshot.size}`);
+    return false;
+  }
+
+  const docSnap = qSnapshot.docs[0];
+  const currentHW = (docSnap.data().hwkAssigned ?? []) as (string | HomeworkAssignment)[];
+
+  const matchIndex = currentHW.findIndex((entry) => {
+    if (typeof entry === "string") return false;
+    const hw = entry as HomeworkAssignment;
+    const assignmentDate = hw.dateAssigned instanceof Date
+      ? hw.dateAssigned
+      : (hw.dateAssigned as any).toDate?.() ?? new Date(hw.dateAssigned);
+    return (
+      hw.assignment === targetAssignment &&
+      Math.abs(assignmentDate.getTime() - logTimestamp.getTime()) <= windowMs
+    );
+  });
+
+  if (matchIndex === -1) {
+    console.warn(`removeHWFromStudent: no matching hw entry found for ${targetAssignment} near ${logTimestamp}`);
+    return false;
+  }
+
+  const updatedHW = [...currentHW];
+  updatedHW.splice(matchIndex, 1);
+  await updateDoc(docSnap.ref, { hwkAssigned: updatedHW });
+  console.log(`✅ Removed hw entry ${targetAssignment} from ${firstName} ${lastName}`);
+  return true;
+}
+
+export async function undoLogAction(logId: string, undoneBy: string): Promise<boolean> {
+  try {
+    const logDocRef = doc(db, "logs", logId);
+    const logSnap = await getDoc(logDocRef);
+
+    if (!logSnap.exists()) {
+      console.error("undoLogAction: log entry not found");
+      return false;
+    }
+
+    const logData = logSnap.data();
+
+    if (!logData.undoData) {
+      console.error("undoLogAction: entry has no undoData (created before undo feature)");
+      return false;
+    }
+
+    if (logData.isUndone) {
+      console.error("undoLogAction: entry has already been undone");
+      return false;
+    }
+
+    const undoData = logData.undoData as LogActionData;
+    const logTimestamp: Date = logData.timeStamp.toDate();
+
+    await reverseInventoryAction(undoData);
+
+    if (
+      (undoData.movementType === "BackToStudent" || undoData.movementType === "FrontToStudent") &&
+      undoData.studentFirstName &&
+      undoData.studentLastName
+    ) {
+      await removeHWFromStudent(
+        undoData.studentFirstName,
+        undoData.studentLastName,
+        undoData.level,
+        undoData.range,
+        logTimestamp
+      );
+    }
+
+    await updateDoc(logDocRef, {
+      isUndone: true,
+      undoneAt: new Date(),
+      undoneBy,
+    });
+
+    const auditEntry: LogEntry = {
+      timeStamp: new Date(),
+      userID: undoneBy,
+      eventType: "Undo Action",
+      message: `Undone by ${undoneBy}: "${logData.message}"`,
+    };
+    await saveLog(auditEntry);
+
+    console.log(`✅ Undone log entry ${logId} by ${undoneBy}`);
+    return true;
+  } catch (error) {
+    console.error("Error undoing log action:", error);
+    return false;
+  }
 }

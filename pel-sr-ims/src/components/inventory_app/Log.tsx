@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import type { LogEntry } from "../../utils/types";
+import type { LogEntry, LogActionData } from "../../utils/types";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db } from "../../utils/firebase";
-import { reassignLogEntry, canEditLogEntry } from "../../utils/inventoryService";
+import { reassignLogEntry, canEditLogEntry, undoLogAction } from "../../utils/inventoryService";
 import { useNameContext } from "./NameContext";
 import WorkerSwitchModal from "./WorkerSwitchModal";
 
@@ -11,6 +11,10 @@ interface LogEntryWithId extends LogEntry {
   reassignedFrom?: string;
   reassignedBy?: string;
   reassignedAt?: Date;
+  undoData?: LogActionData;
+  isUndone?: boolean;
+  undoneAt?: Date;
+  undoneBy?: string;
 }
 
 function Log() {
@@ -19,6 +23,7 @@ function Log() {
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
   const [reassigningLogId, setReassigningLogId] = useState<string | null>(null);
   const [showWorkerSwitch, setShowWorkerSwitch] = useState<boolean>(false);
+  const [undoInProgress, setUndoInProgress] = useState<string | null>(null);
   
   const { nameOfWorker } = useNameContext();
 
@@ -42,6 +47,10 @@ function Log() {
           reassignedFrom: data.reassignedFrom,
           reassignedBy: data.reassignedBy,
           reassignedAt: data.reassignedAt?.toDate(),
+          undoData: data.undoData,
+          isUndone: data.isUndone ?? false,
+          undoneAt: data.undoneAt?.toDate(),
+          undoneBy: data.undoneBy,
         });
       });
       setActionLog(newLogs);
@@ -98,6 +107,24 @@ function Log() {
     return await canEditLogEntry(logTimestamp);
   };
 
+  const handleUndoClick = async (entry: LogEntryWithId, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm("Undo this action? This will reverse the inventory change.")) return;
+
+    setUndoInProgress(entry.id);
+    try {
+      const success = await undoLogAction(entry.id, nameOfWorker);
+      if (!success) {
+        alert("Failed to undo this action.");
+      }
+    } catch (error) {
+      console.error("Error undoing log action:", error);
+      alert("An error occurred while undoing the action.");
+    } finally {
+      setUndoInProgress(null);
+    }
+  };
+
   return (
     <div className="mx-2 overflow-auto">
       {actionLog.map((entry, index) => {
@@ -111,7 +138,7 @@ function Log() {
               className="w-full m-1 p-2 text-left text-black hover:!bg-blue-100 border outline-1 outline-blue-500 rounded transition-colors"
             >
               <div className="flex items-center justify-between">
-                <span className="flex-1">
+                <span className={`flex-1 ${entry.isUndone ? "line-through text-gray-400" : ""}`}>
                   {index + 1}) {entry.timeStamp.toLocaleDateString()}{" "}
                   {entry.timeStamp.toLocaleTimeString()} | {entry.message}
                 </span>
@@ -119,7 +146,13 @@ function Log() {
                   {entry.userID}
                 </span>
               </div>
-              
+
+              {entry.isUndone && (
+                <div className="mt-1 text-xs text-red-500">
+                  Undone by {entry.undoneBy} at {entry.undoneAt?.toLocaleString()}
+                </div>
+              )}
+
               {entry.reassignedFrom && (
                 <div className="mt-1 text-xs text-orange-600">
                   ⚠️ Reassigned from {entry.reassignedFrom} by {entry.reassignedBy}
@@ -178,6 +211,30 @@ function Log() {
                     <p className="text-xs text-gray-500 mt-1">
                       (Only available within 4 hours of creation)
                     </p>
+                  </div>
+
+                  {/* Undo Button */}
+                  <div className="pt-2 border-t border-gray-300">
+                    {entry.isUndone ? (
+                      <p className="text-xs text-red-500">
+                        Undone by {entry.undoneBy} at {entry.undoneAt?.toLocaleString()}
+                      </p>
+                    ) : (
+                      <>
+                        <button
+                          onClick={(e) => handleUndoClick(entry, e)}
+                          disabled={!entry.undoData || undoInProgress === entry.id}
+                          className="text-sm bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded border border-red-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          {undoInProgress === entry.id ? "Undoing..." : "↩ Undo This Action"}
+                        </button>
+                        {!entry.undoData && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            (Undo not available — entry was created before this feature)
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
