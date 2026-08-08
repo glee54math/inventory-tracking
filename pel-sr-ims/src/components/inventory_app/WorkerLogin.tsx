@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { loadWorkersFromDB, checkWorkerHasPin, createWorkerPin, verifyWorkerPin, createNewWorker } from "../../utils/inventoryService";
 import type { Worker } from "../../utils/types";
 import { useNameContext } from "./NameContext";
@@ -9,6 +10,7 @@ import { getAdminEmail, getAdminPassword } from "../../utils/config";
 type LoginStep = "selectWorker" | "enterPin" | "createPin" | "confirmPin" | "addNewWorker";
 
 export default function WorkerLogin() {
+  const navigate = useNavigate();
   const { setNameOfWorker } = useNameContext();
   const [workersList, setWorkersList] = useState<Worker[]>([]);
   const [selectedWorker, setSelectedWorker] = useState<string>("");
@@ -251,9 +253,21 @@ export default function WorkerLogin() {
     setError("");
   };
 
+  const selectedWorkerInfo = workersList.find(w => w.initials === selectedWorker);
+  const selectedWorkerName = selectedWorkerInfo
+    ? `${selectedWorkerInfo.firstName} ${selectedWorkerInfo.lastName}`
+    : selectedWorker;
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 flex flex-col justify-center items-center p-4">
+    <div className="relative min-h-screen w-full bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 flex flex-col justify-center items-center p-4">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
+
+      <button
+        onClick={() => navigate("/parent-login")}
+        className="absolute top-4 right-4 z-20 px-4 py-2 !bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:!bg-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+      >
+        Parent Portal
+      </button>
       
       <div className="relative z-10 w-full max-w-md">
         <div className="text-center mb-8">
@@ -398,8 +412,8 @@ export default function WorkerLogin() {
             <form onSubmit={handlePinSubmit} className="space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <label 
-                    htmlFor="pin-input" 
+                  <label
+                    htmlFor="pin-input"
                     className="block text-sm font-semibold text-gray-700"
                   >
                     Enter Your PIN
@@ -412,6 +426,9 @@ export default function WorkerLogin() {
                     ← Back
                   </button>
                 </div>
+                <p className="text-sm text-gray-500 mb-3">
+                  Logging in as: <span className="font-semibold text-gray-700">{selectedWorkerName}</span>
+                </p>
                 <input
                   id="pin-input"
                   type="password"
@@ -460,8 +477,8 @@ export default function WorkerLogin() {
             <form onSubmit={handlePinSubmit} className="space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <label 
-                    htmlFor="new-pin-input" 
+                  <label
+                    htmlFor="new-pin-input"
                     className="block text-sm font-semibold text-gray-700"
                   >
                     Create Your PIN
@@ -474,6 +491,9 @@ export default function WorkerLogin() {
                     ← Back
                   </button>
                 </div>
+                <p className="text-sm text-gray-500 mb-3">
+                  Logging in as: <span className="font-semibold text-gray-700">{selectedWorkerName}</span>
+                </p>
                 <div className="!bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                   <p className="text-sm text-blue-800">
                     🔒 First time login detected. Please create a 4-digit PIN for future logins.
@@ -527,8 +547,8 @@ export default function WorkerLogin() {
             <form onSubmit={handleConfirmPinSubmit} className="space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <label 
-                    htmlFor="confirm-pin-input" 
+                  <label
+                    htmlFor="confirm-pin-input"
                     className="block text-sm font-semibold text-gray-700"
                   >
                     Confirm Your PIN
@@ -541,6 +561,9 @@ export default function WorkerLogin() {
                     ← Back
                   </button>
                 </div>
+                <p className="text-sm text-gray-500 mb-3">
+                  Logging in as: <span className="font-semibold text-gray-700">{selectedWorkerName}</span>
+                </p>
                 <input
                   id="confirm-pin-input"
                   type="password"
