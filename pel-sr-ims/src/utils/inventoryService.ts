@@ -154,8 +154,8 @@ export async function updateLogFromActions(workerName: string, submittedActions:
           range,
           movementType: movementAction as LogActionData["movementType"],
           numOfCopies,
-          studentFirstName: studentFirstName || undefined,
-          studentLastName: studentLastName || undefined,
+          ...(studentFirstName ? { studentFirstName } : {}),
+          ...(studentLastName ? { studentLastName } : {}),
         },
       };
 
@@ -812,4 +812,23 @@ export async function undoLogAction(logId: string, undoneBy: string): Promise<bo
     console.error("Error undoing log action:", error);
     return false;
   }
+}
+
+export async function undoMultipleLogActions(
+  entries: { id: string; message: string }[],
+  undoneBy: string
+): Promise<{ succeeded: string[]; failed: { id: string; message: string }[] }> {
+  const succeeded: string[] = [];
+  const failed: { id: string; message: string }[] = [];
+
+  for (const entry of entries) {
+    const result = await undoLogAction(entry.id, undoneBy);
+    if (result) {
+      succeeded.push(entry.id);
+    } else {
+      failed.push(entry);
+    }
+  }
+
+  return { succeeded, failed };
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { LogEntry, LogActionData } from "../../utils/types";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db } from "../../utils/firebase";
-import { reassignLogEntry, canEditLogEntry, undoLogAction } from "../../utils/inventoryService";
+import { reassignLogEntry, canEditLogEntry, undoLogAction, undoMultipleLogActions } from "../../utils/inventoryService";
 import { useNameContext } from "./NameContext";
 import WorkerSwitchModal from "./WorkerSwitchModal";
 
@@ -24,6 +24,9 @@ function Log() {
   const [reassigningLogId, setReassigningLogId] = useState<string | null>(null);
   const [showWorkerSwitch, setShowWorkerSwitch] = useState<boolean>(false);
   const [undoInProgress, setUndoInProgress] = useState<string | null>(null);
+  const [selectMode, setSelectMode] = useState<boolean>(false);
+  const [selectedLogIds, setSelectedLogIds] = useState<Set<string>>(new Set());
+  const [bulkUndoInProgress, setBulkUndoInProgress] = useState<boolean>(false);
   
   const { nameOfWorker } = useNameContext();
 
@@ -107,6 +110,51 @@ function Log() {
     return await canEditLogEntry(logTimestamp);
   };
 
+  const handleToggleSelectMode = () => {
+    setSelectMode((prev) => !prev);
+    setSelectedLogIds(new Set());
+  };
+
+  const handleCheckboxToggle = (entryId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedLogIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(entryId)) {
+        next.delete(entryId);
+      } else {
+        next.add(entryId);
+      }
+      return next;
+    });
+  };
+
+  const handleBulkUndo = async () => {
+    if (selectedLogIds.size === 0) return;
+    if (!window.confirm(`Undo ${selectedLogIds.size} selected action${selectedLogIds.size > 1 ? "s" : ""}? This will reverse all selected inventory changes.`)) return;
+
+    // Sort selected entries newest-first using timestamps already in state
+    const selectedEntries = actionLog
+      .filter((e) => selectedLogIds.has(e.id))
+      .sort((a, b) => b.timeStamp.getTime() - a.timeStamp.getTime())
+      .map((e) => ({ id: e.id, message: e.message }));
+
+    setBulkUndoInProgress(true);
+    try {
+      const { failed } = await undoMultipleLogActions(selectedEntries, nameOfWorker);
+      if (failed.length > 0) {
+        const lines = failed.map((f) => `• ${f.message}`).join("\n");
+        alert(`The following action${failed.length > 1 ? "s" : ""} could not be undone:\n\n${lines}`);
+      }
+    } catch (error) {
+      console.error("Error during bulk undo:", error);
+      alert("An unexpected error occurred during bulk undo.");
+    } finally {
+      setBulkUndoInProgress(false);
+      setSelectedLogIds(new Set());
+      setSelectMode(false);
+    }
+  };
+
   const handleUndoClick = async (entry: LogEntryWithId, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!window.confirm("Undo this action? This will reverse the inventory change.")) return;
@@ -127,15 +175,45 @@ function Log() {
 
   return (
     <div className="mx-2 overflow-auto">
+      {/* Bulk undo toolbar */}
+      <div className="flex items-center gap-2 mb-2">
+        <button
+          onClick={handleToggleSelectMode}
+          className="px-3 py-1 text-sm border rounded border-blue-400 text-blue-600 hover:!bg-blue-50 transition-colors"
+        >
+          {selectMode ? "Cancel" : "Select to Undo"}
+        </button>
+        {selectMode && (
+          <button
+            onClick={handleBulkUndo}
+            disabled={selectedLogIds.size === 0 || bulkUndoInProgress}
+            className="px-3 py-1 text-sm border rounded border-red-400 text-red-600 hover:!bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {bulkUndoInProgress ? "Undoing..." : `Undo Selected (${selectedLogIds.size})`}
+          </button>
+        )}
+      </div>
+
       {actionLog.map((entry, index) => {
         const isExpanded = expandedLogId === entry.id;
         const canEdit = checkIfCanEdit(entry.timeStamp);
 
         return (
           <div key={entry.id} className="mb-2">
+            <div className="flex items-center">
+              {selectMode && (
+                <input
+                  type="checkbox"
+                  checked={selectedLogIds.has(entry.id)}
+                  disabled={!!entry.isUndone || !entry.undoData}
+                  onClick={(e) => handleCheckboxToggle(entry.id, e)}
+                  onChange={() => {}}
+                  className="ml-1 mr-2 h-4 w-4 shrink-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                />
+              )}
             <button
               onClick={() => handleLogClick(entry.id)}
-              className="w-full m-1 p-2 text-left text-black hover:!bg-blue-100 border outline-1 outline-blue-500 rounded transition-colors"
+              className="flex-1 m-1 p-2 text-left text-black hover:!bg-blue-100 border outline-1 outline-blue-500 rounded transition-colors"
             >
               <div className="flex items-center justify-between">
                 <span className={`flex-1 ${entry.isUndone ? "line-through text-gray-400" : ""}`}>
@@ -159,6 +237,7 @@ function Log() {
                 </div>
               )}
             </button>
+            </div>
 
             {/* Expanded Details */}
             {isExpanded && (
