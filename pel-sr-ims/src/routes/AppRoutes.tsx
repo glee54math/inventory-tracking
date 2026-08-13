@@ -11,6 +11,8 @@ import Dashboard from "../components/student_progress_dashboard/Dashboard";
 import ParentLogin from "../components/ParentLogin";
 import ParentRegistration from "../components/ParentRegistration";
 import ParentDashboard from "../components/ParentDashboard";
+import StudentLogin from "../components/StudentLogin";
+import StudentDashboard from "../components/StudentDashboard";
 import ProtectedRoute from "../routes/ProtectedRoutes";
 
 export default function AppRoutes() {
@@ -21,6 +23,9 @@ export default function AppRoutes() {
       {/* Public Routes */}
       <Route path="/parent-login" element={<ParentLogin />} />
       <Route path="/parent-registration" element={<ParentRegistration />} />
+      <Route path="/student-login" element={<StudentLogin />} />
+      <Route path="/student-portal" element={<StudentDashboard />} />
+      <Route path="/student-levels/:levelId" element={<LevelsPage />} />
 
       {/* Protected Parent Routes */}
       <Route

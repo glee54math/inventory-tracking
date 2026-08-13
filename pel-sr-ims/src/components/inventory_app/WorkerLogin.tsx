@@ -262,12 +262,20 @@ export default function WorkerLogin() {
     <div className="relative min-h-screen w-full bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 flex flex-col justify-center items-center p-4">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
 
-      <button
-        onClick={() => navigate("/parent-login")}
-        className="absolute top-4 right-4 z-20 px-4 py-2 !bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:!bg-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
-      >
-        Parent Portal
-      </button>
+      <div className="absolute top-4 right-4 z-20 flex gap-2">
+        <button
+          onClick={() => navigate("/student-login")}
+          className="px-4 py-2 !bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:!bg-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+        >
+          Student Portal
+        </button>
+        <button
+          onClick={() => navigate("/parent-login")}
+          className="px-4 py-2 !bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:!bg-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+        >
+          Parent Portal
+        </button>
+      </div>
       
       <div className="relative z-10 w-full max-w-md">
         <div className="text-center mb-8">
