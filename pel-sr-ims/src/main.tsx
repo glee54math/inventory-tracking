@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./components/AuthContext";
 import { NameProvider } from "./components/inventory_app/NameContext";
-import { StudentProvider } from "./components/StudentContext";
+import { StudentProvider } from "./components/student_portal/StudentContext";
 import AppRoutes from "./routes/AppRoutes";
 import "./index.css";
 

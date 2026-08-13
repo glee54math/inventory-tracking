@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signInWithEmail, signInWithGoogle } from "../utils/authService";
-import { updateLastLogin } from "../utils/parentService";
-import { resetPassword } from "../utils/authService";
+import { signInWithEmail, signInWithGoogle } from "../../utils/authService";
+import { updateLastLogin } from "../../utils/parentService";
+import { resetPassword } from "../../utils/authService";
 
 export default function ParentLogin() {
   const [isLogin, setIsLogin] = useState(true);

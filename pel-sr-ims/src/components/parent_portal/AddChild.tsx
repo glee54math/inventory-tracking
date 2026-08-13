@@ -1,8 +1,8 @@
 // AddChildModal.tsx - Modal for parents to add additional children to their account
 
 import { useState } from "react";
-import { searchStudentsByName, addChildToParent, verifyParentChildMatch, getParentProfile } from "../utils/parentService";
-import type { ChildSearchResult } from "../utils/types";
+import { searchStudentsByName, addChildToParent, verifyParentChildMatch, getParentProfile } from "../../utils/parentService";
+import type { ChildSearchResult } from "../../utils/types";
 
 interface AddChildModalProps {
   parentUid: string;

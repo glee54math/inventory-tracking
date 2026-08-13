@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../components/AuthContext";
-import { getParentProfile } from "../utils/parentService";
-import { signOutUser } from "../utils/authService";
-import { getChildrenData } from "../utils/parentService";
+import { useAuth } from "../AuthContext";
+import { getParentProfile } from "../../utils/parentService";
+import { signOutUser } from "../../utils/authService";
+import { getChildrenData } from "../../utils/parentService";
 import ChildProgressView from "./ChildProgressView";
 import AddChildModal from "./AddChild";
-import type { Parent } from "../utils/types";
-import type { Student } from "../utils/types";
+import type { Parent } from "../../utils/types";
+import type { Student } from "../../utils/types";
 
 export default function ParentDashboard() {
   const { currentUser } = useAuth();

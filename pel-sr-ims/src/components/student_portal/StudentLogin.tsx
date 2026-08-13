@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loadStudentsFromDB } from "../utils/inventoryService";
-import type { Student } from "../utils/types";
+import { loadStudentsFromDB } from "../../utils/inventoryService";
+import type { Student } from "../../utils/types";
 import { useStudentContext } from "./StudentContext";
 
 const SHARED_PIN = "1234";

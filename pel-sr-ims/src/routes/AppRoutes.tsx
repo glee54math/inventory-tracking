@@ -8,11 +8,11 @@ import LevelsPage from "../pages/LevelsPage";
 import AllLevelsPage from "../pages/AllLevelsPage";
 import App from "../App";
 import Dashboard from "../components/student_progress_dashboard/Dashboard";
-import ParentLogin from "../components/ParentLogin";
-import ParentRegistration from "../components/ParentRegistration";
-import ParentDashboard from "../components/ParentDashboard";
-import StudentLogin from "../components/StudentLogin";
-import StudentDashboard from "../components/StudentDashboard";
+import ParentLogin from "../components/parent_portal/ParentLogin";
+import ParentRegistration from "../components/parent_portal/ParentRegistration";
+import ParentDashboard from "../components/parent_portal/ParentDashboard";
+import StudentLogin from "../components/student_portal/StudentLogin";
+import StudentDashboard from "../components/student_portal/StudentDashboard";
 import ProtectedRoute from "../routes/ProtectedRoutes";
 
 export default function AppRoutes() {

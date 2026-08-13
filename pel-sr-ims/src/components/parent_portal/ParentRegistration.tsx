@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signUpWithEmail } from "../utils/authService";
-import { createParentProfile, searchStudentsByName, addChildToParent } from "../utils/parentService";
-import type { ChildSearchResult } from "../utils/types";
+import { signUpWithEmail } from "../../utils/authService";
+import { createParentProfile, searchStudentsByName, addChildToParent } from "../../utils/parentService";
+import type { ChildSearchResult } from "../../utils/types";
 
 export default function ParentRegistration() {
   const navigate = useNavigate();

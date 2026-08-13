@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStudentContext } from "./StudentContext";
-import { loadStudentProgress } from "../utils/progressService";
-import type { StudentProgress } from "../utils/types";
-import LevelStatusCard from "./student_portal/LevelStatusCard";
-import HomeworkQueue from "./student_portal/HomeworkQueue";
-import RecentActivity from "./student_portal/RecentActivity";
-import SupplementalLevelBrowser from "./student_portal/SupplementalLevelBrowser";
-import WhatsNextCard from "./student_portal/WhatsNextCard";
+import { loadStudentProgress } from "../../utils/progressService";
+import type { StudentProgress } from "../../utils/types";
+import LevelStatusCard from "./LevelStatusCard";
+import HomeworkQueue from "./HomeworkQueue";
+import RecentActivity from "./RecentActivity";
+import SupplementalLevelBrowser from "./SupplementalLevelBrowser";
+import WhatsNextCard from "./WhatsNextCard";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();

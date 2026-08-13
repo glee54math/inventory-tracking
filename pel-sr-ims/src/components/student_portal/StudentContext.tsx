@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
-import type { Student } from "../utils/types";
+import type { Student } from "../../utils/types";
 
 interface StudentContextType {
   currentStudent: Student | null;

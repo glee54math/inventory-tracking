@@ -1,10 +1,10 @@
 // ChildProgressView.tsx - Individual child progress display for parents
 
 import { useState, useEffect } from "react";
-import { loadStudentProgress } from "../utils/progressService";
-// import { loadHistoricalProgress } from "../utils/historicalProgressService";
-import ProgressGraph from "./student_progress_dashboard/ProgressGraph";  // ← CORRECTED: Use your existing ProgressGraph component
-import type { Student, StudentProgress } from "../utils/types";
+import { loadStudentProgress } from "../../utils/progressService";
+// import { loadHistoricalProgress } from "../../utils/historicalProgressService";
+import ProgressGraph from "../student_progress_dashboard/ProgressGraph";  // ← CORRECTED: Use your existing ProgressGraph component
+import type { Student, StudentProgress } from "../../utils/types";
 
 interface ChildProgressViewProps {
   student: Student;
