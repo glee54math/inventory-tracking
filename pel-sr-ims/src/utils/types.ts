@@ -115,6 +115,32 @@ export interface Worker {
   pin?: string;
 }
 
+export interface TimesheetEntry {
+  date: string; // mm/dd/yy, recorded at clock-in
+  timeEntered: Date;
+  timeExited: Date | null; // null until the worker clocks out
+  checkSent: boolean | null; // null/blank until Mr. Lee marks it
+}
+
+// Firestore doc shape at timesheets/{firstName}_{lastName}
+export interface WorkerTimesheet {
+  firstName: string;
+  lastName: string;
+  entries: TimesheetEntry[];
+}
+
+// Firestore doc shape at timesheet_monthly_totals/{firstName}_{lastName}_{yyyy-mm}
+// Written once, the first time any client notices the month has ended. Never
+// auto-overwritten afterward (see finalizePastMonths in timesheetService.ts).
+export interface MonthlyTimesheetTotal {
+  firstName: string;
+  lastName: string;
+  year: number;
+  month: number; // 0-11
+  totalMinutes: number;
+  finalizedAt: Date;
+}
+
 //Types for Parent Portal
 
 export interface Parent {

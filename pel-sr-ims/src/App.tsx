@@ -15,6 +15,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "./utils/firebase";
 import { useNameContext } from "./components/inventory_app/NameContext";
 import Database from "./components/inventory_app/Database";
+import WorkerTimeSheet from "./components/inventory_app/WorkerTimeSheet";
 import { useIdleDetection } from "./components/inventory_app/useIdleDetection";
 import IdleWarningModal from "./components/inventory_app/idleWarningModal";
 import FlaggedInventorySummary from "./components/inventory_app/FlaggedInventorySummary";
@@ -52,6 +53,7 @@ function App() {
   >([]);
   const [showInsufficient, setShowInsufficient] = useState<boolean>(false);
   const [showStudentDatabase, setShowStudentDatabase] = useState<boolean>(false);
+  const [showTimesheet, setShowTimesheet] = useState<boolean>(false);
   const [showFlaggedSections, setShowFlaggedSections] = useState<boolean>(false);
   const [flagRefreshKey, setFlagRefreshKey] = useState<number>(0);
   // Incremented after each successful submission to reset Inventory cell edit state
@@ -166,22 +168,27 @@ function App() {
             <Sidebar
               showInventory={showInventory}
               toggleInventory={() => setShowInventory((prev) => !prev)}
-              toggleStudentDatabase={() =>
-                setShowStudentDatabase((prev) => !prev)
-              }
+              toggleStudentDatabase={() => {
+                setShowStudentDatabase((prev) => !prev);
+                setShowTimesheet(false);
+              }}
+              toggleTimesheet={() => {
+                setShowTimesheet((prev) => !prev);
+                setShowStudentDatabase(false);
+              }}
             />
           </div>
 
           {/* Inventory Panel || Student Database Panel */}
           <div
             className={`transition-all duration-500 overflow-auto bg-white ${
-              showInventory || showStudentDatabase
+              showInventory || showStudentDatabase || showTimesheet
                 ? "w-[40%] opacity-100 p-2 border pointer-events-auto"
                 : "w-0 opacity-0 !p-0 !border-none pointer-events-none"
             }`}
           >
             {/* Inventories */}
-            {showInventory && !showStudentDatabase && (
+            {showInventory && !showStudentDatabase && !showTimesheet && (
               <div className="overflow-auto w-full max-w-full">
                 {Object.entries(inventories).map(([firestoreId, inventory]) => {
                   const displayName = toDisplayName(firestoreId);
@@ -261,9 +268,16 @@ function App() {
             )}
 
             {/* Student Database */}
-            {showStudentDatabase && (
+            {showStudentDatabase && !showTimesheet && (
               <div className="w-[40%] opacity-100 p-2 border overflow-auto w-full max-w-full">
                 <Database />
+              </div>
+            )}
+
+            {/* Time Card */}
+            {showTimesheet && (
+              <div className="w-[40%] opacity-100 p-2 border overflow-auto w-full max-w-full">
+                <WorkerTimeSheet />
               </div>
             )}
           </div>

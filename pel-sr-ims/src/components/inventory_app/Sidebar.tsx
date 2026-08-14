@@ -7,9 +7,10 @@ interface SideBarProps {
     showInventory: boolean;
     toggleInventory: () => void;
     toggleStudentDatabase: () => void;
+    toggleTimesheet: () => void;
 }
 
-export default function Sidebar({showInventory, toggleInventory, toggleStudentDatabase}: SideBarProps) {
+export default function Sidebar({showInventory, toggleInventory, toggleStudentDatabase, toggleTimesheet}: SideBarProps) {
     // const [showSidebar, setShowSidebar] = useState<boolean>(false);
     const sideBarButtonCSS = "py-2 w-full !bg-gray-200 hover:!bg-green-300 hover:!border-blue-300";
     const { nameOfWorker } = useNameContext();
@@ -112,6 +113,20 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                         SDB
                     </button>
                 </a>
+            </div>
+
+            {/* Time Card */}
+            <div id="timesheet-button" className="mb-3 w-full mx-1/2">
+                <p className="text-xs text-center">
+                    Time Card
+                </p>
+                <button
+                    id="timesheet"
+                    onClick={toggleTimesheet}
+                    className={sideBarButtonCSS}
+                >
+                    Clock In/Out
+                </button>
             </div>
 
             {/* Levels */}
