@@ -44,6 +44,7 @@ function App() {
     Record<InventoryType, InventoryData>
   >({} as Record<InventoryType, InventoryData>);
   const [showInventory, setShowInventory] = useState(true);
+  const [showActionPanel, setShowActionPanel] = useState(true);
   const [inventoriesVisibility, setInventoriesVisibility] = useState<
     Record<string, boolean>
   >({});
@@ -176,6 +177,8 @@ function App() {
                 setShowTimesheet((prev) => !prev);
                 setShowStudentDatabase(false);
               }}
+              showActions={showActionPanel}
+              toggleActions={() => setShowActionPanel((prev) => !prev)}
             />
           </div>
 
@@ -183,7 +186,7 @@ function App() {
           <div
             className={`transition-all duration-500 overflow-auto bg-white ${
               showInventory || showStudentDatabase || showTimesheet
-                ? "w-[40%] opacity-100 p-2 border pointer-events-auto"
+                ? `${showActionPanel ? "w-[40%]" : "flex-1"} opacity-100 p-2 border pointer-events-auto`
                 : "w-0 opacity-0 !p-0 !border-none pointer-events-none"
             }`}
           >
@@ -284,8 +287,10 @@ function App() {
 
           {/* Right Panel */}
           <div
-            className={`flex flex-col transition-all duration-500 gap-4 overflow-hidden ${
-              showInventory ? "w-[60%]" : "w-full"
+            className={`flex flex-col transition-all duration-500 gap-4 ${
+              showActionPanel
+                ? `${showInventory || showStudentDatabase || showTimesheet ? "w-[60%]" : "w-full"} opacity-100 overflow-hidden pointer-events-auto`
+                : "w-0 opacity-0 overflow-hidden !p-0 pointer-events-none"
             }`}
           >
             <div className="border p-2 bg-white flex-3">

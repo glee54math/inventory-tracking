@@ -8,9 +8,11 @@ interface SideBarProps {
     toggleInventory: () => void;
     toggleStudentDatabase: () => void;
     toggleTimesheet: () => void;
+    showActions: boolean;
+    toggleActions: () => void;
 }
 
-export default function Sidebar({showInventory, toggleInventory, toggleStudentDatabase, toggleTimesheet}: SideBarProps) {
+export default function Sidebar({showInventory, toggleInventory, toggleStudentDatabase, toggleTimesheet, showActions, toggleActions}: SideBarProps) {
     // const [showSidebar, setShowSidebar] = useState<boolean>(false);
     const sideBarButtonCSS = "py-2 w-full !bg-gray-200 hover:!bg-green-300 hover:!border-blue-300";
     const { nameOfWorker } = useNameContext();
@@ -96,6 +98,21 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                 >
                     {/* {showInventory ? "Hide" : "Show"} */}
                     {showInventory ? "⮜ " : "⮞ "}  
+                </button>
+            </div>
+
+            {/* Hide/Show Actions Button */}
+            <div id="actions-button" className="mb-3 w-full mx-1/2">
+                <p className="text-xs text-center">
+                    {showActions ? "Hide Actions" : "Show Actions"}
+                </p>
+                <button
+                    id="Actions"
+                    onClick={toggleActions}
+                    className={sideBarButtonCSS}
+                    title={showActions ? "Hide" : "Show"}
+                >
+                    {showActions ? "⮜ " : "⮞ "}
                 </button>
             </div>
 
