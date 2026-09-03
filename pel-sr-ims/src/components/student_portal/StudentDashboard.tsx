@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStudentContext } from "./StudentContext";
-import { loadStudentProgress } from "../../utils/progressService";
+import { loadStudentProgress, buildHwkHistoryFromAssignments } from "../../utils/progressService";
 import type { StudentProgress } from "../../utils/types";
 import LevelStatusCard from "./LevelStatusCard";
 import HomeworkQueue from "./HomeworkQueue";
-import RecentActivity from "./RecentActivity";
 import SupplementalLevelBrowser from "./SupplementalLevelBrowser";
 import WhatsNextCard from "./WhatsNextCard";
+import PracticeEntryCard from "./PracticeEntryCard";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -33,6 +33,14 @@ export default function StudentDashboard() {
     setCurrentStudent(null);
     navigate("/student-login");
   };
+
+  // Student.hwkHistory is never actually written anywhere in this codebase — the real
+  // homework history has to be derived from hwkAssigned (which IS reliably populated),
+  // same as progressService.ts does internally when building SubjectProgress.
+  const hwkHistory = useMemo(
+    () => buildHwkHistoryFromAssignments(currentStudent?.hwkAssigned ?? []),
+    [currentStudent]
+  );
 
   if (!currentStudent) return null;
 
@@ -88,13 +96,18 @@ export default function StudentDashboard() {
               </section>
             )}
 
-            {/* Homework + Recent Activity */}
+            {/* Homework */}
             <section>
               <SectionLabel>Assignments</SectionLabel>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <HomeworkQueue hwkAssigned={currentStudent.hwkAssigned ?? []} />
-                <RecentActivity hwkHistory={currentStudent.hwkHistory ?? []} />
-              </div>
+              <HomeworkQueue hwkAssigned={currentStudent.hwkAssigned ?? []} />
+            </section>
+
+            {/* Practice Problems — depends only on hwkHistory, not on whether
+                SubjectProgress could be computed, so it's deliberately NOT
+                gated behind hasProgress like the sections below it. */}
+            <section>
+              <SectionLabel>Practice Problems</SectionLabel>
+              <PracticeEntryCard hwkHistory={hwkHistory} />
             </section>
 
             {/* Supplemental Browser + What's Next */}

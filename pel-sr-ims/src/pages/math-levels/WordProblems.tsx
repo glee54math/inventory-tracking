@@ -44,6 +44,18 @@ export interface WordProblemProps {
   showHelp?: boolean;
   onCheckAnswer?: () => void; // Optional callback for check answer button
   showCheckButton?: boolean; // Whether to show the check answer button inline
+  // Pre-resolved problem content (e.g. from a cached/Claude-generated problemBank entry).
+  // When provided, skips the random person/unit/template generation below and renders
+  // this content directly instead — same UI, same grading, just not re-rolled.
+  override?: {
+    text: string;
+    segments: { text: string; label?: string }[];
+    answer: number;
+    personName: string;
+    unitSingular: string;
+    unitPlural: string;
+    keyword: string;
+  };
 }
 
 interface ProblemData {
@@ -375,14 +387,30 @@ export const WordProblem: React.FC<WordProblemProps> = ({
   showHelp = true,
   onCheckAnswer,
   showCheckButton = false,
+  override,
 }) => {
   const normalizedOp = normalizeOperation(operation);
-  
+
   // ========================================================================
   // PROBLEM DATA GENERATION
-  // Generates random problem data once on mount (useMemo with empty deps)
+  // Generates random problem data once on mount (useMemo with empty deps),
+  // unless `override` supplies pre-resolved content (see WordProblemProps.override).
   // ========================================================================
   const problemData: ProblemData = useMemo(() => {
+    if (override) {
+      return {
+        person: { name: override.personName, pronoun: 'he', possessive: 'his', object: 'him' },
+        unit: { singular: override.unitSingular, plural: override.unitPlural, category: 'object' },
+        keyword: override.keyword,
+        actionVerb: '',
+        problemText: override.text,
+        problemSegments: override.segments,
+        answer: override.answer,
+        operationSymbol: getOperationSymbol(normalizedOp),
+        normalizedOp,
+      };
+    }
+
     const person = getRandomItem(PEOPLE);
     const unit = getRandomItem(UNITS);
     

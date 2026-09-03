@@ -33,7 +33,7 @@ function normalize(items: (string | HomeworkAssignment)[]): NormalizedAssignment
 
 export default function HomeworkQueue({ hwkAssigned }: HomeworkQueueProps) {
   const items = normalize(hwkAssigned ?? []);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

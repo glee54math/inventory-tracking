@@ -1,0 +1,284 @@
+MATH LEVEL TSX STYLE GUIDE
+==========================
+Derived from analysis of every implemented file in src/pages/math-levels/:
+MG1 (TenFrame), MG2 (PartPartWhole), MG3 (MakeTenStrategy), MG5 (TapeDiagram),
+MG6 (NumberLine), MG6_TwoDigitVisualAddition, MG6_VerticalAddition (VerticalMath),
+MG7_Nx1DigitMultiplication (Nx1Multiplication), Nx1VertMult, WordProblems +
+WordProblemData.
+
+Purpose: this is the spec to hand Claude (or a human) when authoring a NEW
+visual practice component for the Student Portal. Follow it exactly so
+generated files are drop-in compatible with the existing level pages and
+with the future ProblemRenderer / problemBank pipeline. Most level shell
+files (MG4, MG7-11, MH1-6, MK1-4, MM1-3, and every EG/EH/EK/EM file) are
+still empty — this guide is what fills them.
+
+------------------------------------------------------------------
+1. FILE ANATOMY
+------------------------------------------------------------------
+Every implemented file follows this exact section order, marked with
+banner comments:
+
+    import React, { useState } from 'react';   // + useRef, useMemo, useEffect as needed
+
+    // ============================================================================
+    // TYPE DEFINITIONS
+    // ============================================================================
+    export interface XxxProps { ... }
+
+    // ============================================================================
+    // UTILITY FUNCTIONS
+    // ============================================================================
+    const getSizeClasses = (size) => ({ ... }[size]);
+    // + any pure math/decomposition helpers
+
+    // ============================================================================
+    // PRIMITIVE COMPONENTS   (only if the model needs reusable sub-pieces)
+    // ============================================================================
+    const CircleNode: React.FC<...> = ...
+    const MathInput: React.FC<...> = ...
+
+    // ============================================================================
+    // MAIN COMPONENT
+    // ============================================================================
+    export const Xxx: React.FC<XxxProps> = ({ ...props }) => { ... };
+
+    // ============================================================================
+    // DEMO COMPONENT
+    // ============================================================================
+    const XxxDemo: React.FC = () => { /* page shell + 2-3 worked examples */ };
+    export default XxxDemo;
+
+Naming rule: the MAIN COMPONENT is a NAMED export (`export const Xxx`).
+The DEFAULT export is always the Demo wrapper, never the reusable
+component itself. Anything that imports the skill for real use (a level
+page, or the future ProblemRenderer) imports the NAMED export, e.g.:
+    import { Nx1Multiplication } from './MG7_Nx1DigitMultiplication';
+
+File naming: a file that matches an id in MATH_LEVELS exactly (e.g.
+`MG7.tsx`) is a ROUTED LEVEL SHELL — LevelsPage.tsx dynamically imports it
+by URL param. A file named `{levelId}_{SkillName}.tsx` (e.g.
+`MG7_Nx1DigitMultiplication.tsx`) is a SKILL COMPONENT — a building block,
+not directly routed. New AI-generated problem components should use the
+skill-component naming pattern; nothing should be written directly into
+the empty `{levelId}.tsx` shells as part of this pipeline.
+
+------------------------------------------------------------------
+2. THE STANDARD PROP CONTRACT
+------------------------------------------------------------------
+Every main component accepts (a subset of) these, always optional except
+the problem-defining numeric props:
+
+    showFeedback?: boolean       // reveal green/red correctness styling
+    showWork?: boolean           // reveal scratch-work annotations (carries/
+                                  // borrows) — SEPARATE from showFeedback
+    size?: 'sm' | 'md' | 'lg'    // default 'md', drives a size->classes map
+
+The problem itself is always passed as plain numeric/string props (num1,
+num2, addend1, addend2, parts, nums, whole, part1, part2, operation, ...).
+The correct answer is NEVER passed in as a separate prop — it is always
+derived from the numeric props via a pure function. This matters for the
+problem bank: caching a component instance only requires storing its
+input props; the answer key is reproducible from those props alone. The
+one exception is WordProblem, which resolves randomness (person/unit/
+template) once via useMemo on mount — see section 6.
+
+------------------------------------------------------------------
+3. STATE, INPUT, AND VALIDATION PATTERN
+------------------------------------------------------------------
+- Every fillable blank is a `useState<string>` (never number — inputs are
+  strings so an empty box can exist). For grids (vertical math), a single
+  `useState<{[key: string]: string}>` keyed by `"row-col"` is used instead
+  of one useState per cell.
+- Input onChange always regex-guards to digits only, e.g.:
+      onChange={(e) => {
+        const v = e.target.value;
+        if (v === '' || /^\d+$/.test(v)) onChange(v);
+      }}
+  Single-digit grid cells use `/^\d$/` with `maxLength={1}`.
+- Correctness check is always a tiny inline helper, e.g.:
+      const isCorrect = parseInt(value) === correctAnswer;
+  Feedback only renders `if (showFeedback && value)` — never shows red on
+  an empty box.
+- Feedback color convention (use exactly these Tailwind classes):
+      correct:   border-green-500 bg-green-50 (or bg-green-100) text-green-800
+      incorrect: border-red-500 bg-red-50 text-red-800
+      neutral:   border-gray-800 bg-white
+  Use the `!` important-prefix (e.g. `!bg-green-50`) only when overriding
+  another background utility already on the element (matches existing
+  usage in VerticalMath / Nx1VertMult).
+- Focus ring: `focus:outline-none focus:ring-2 focus:ring-blue-400
+  transition-colors` on every input.
+
+------------------------------------------------------------------
+4. SIZE VARIANTS
+------------------------------------------------------------------
+Always define a local `getSizeClasses` / `getSizeConfig` function mapping
+`'sm' | 'md' | 'lg'` to a small object of Tailwind width/height/text
+classes (see MG1/MG2/MG3/MG5 for the circle-based table, and
+VerticalMath/Nx1VertMult for the identical digit/box/carry table used by
+every vertical-format component — reuse that exact table for any new
+vertical addition/subtraction/multiplication/division component so they
+stack visually).
+
+------------------------------------------------------------------
+5. LAYOUT RULES
+------------------------------------------------------------------
+- The MAIN COMPONENT renders bare: `flex flex-col items-center gap-N p-N`
+  (or `items-end` for right-aligned vertical math). It must NEVER include
+  page chrome (`min-h-screen`, gradient backgrounds, `max-w-*-mx-auto`
+  wrappers, `<h1>` titles). That chrome belongs only in the Demo wrapper.
+  This is required so the component can be embedded directly into the
+  future practice-session page without fighting its own page shell.
+- Multi-step problems (Nx1Multiplication) use a numbered "STEP 1 / STEP 2
+  / STEP 3" pill pattern:
+      <span className="bg-indigo-500 text-white text-xs font-bold px-3
+        py-1 rounded-full tracking-wide">STEP 1</span>
+  with a following instruction sentence, then the step's interactive
+  region.
+- Connecting-line diagrams (PartPartWhole, MakeTenStrategy,
+  TwoDigitVisualAddition) share one technique: a `containerRef` plus one
+  `useRef` per node, an absolutely-positioned `<svg>` overlay sibling,
+  and a `useEffect` that measures `getBoundingClientRect()` on each ref
+  relative to the container and sets `<line>` coordinates. Recompute on
+  `[size, ...relevant state]`. Reuse this technique for any new
+  decomposition/bar-model visual rather than inventing a new one.
+- Vertical-format problems (VerticalMath, Nx1VertMult) share one
+  skeleton: `flex flex-col items-end`, an optional carry/borrow row above
+  the operands, right-padded operand rows, a horizontal rule sized to
+  `maxDigits * cellPx`, and a result row of single-digit inputs. They
+  also share identical keyboard navigation: a sorted `inputRefs` dict
+  keyed `"row-col"`, Tab/Shift+Tab and ArrowLeft/ArrowRight move through
+  cells in key order, ArrowUp/ArrowDown move by row.
+- Place-value color coding (Nx1Multiplication's area model): a fixed
+  array indexed by place (0=ones orange, 1=tens green, 2=hundreds sky,
+  3=thousands violet), each entry giving border/bg/headerBg/text/label/
+  inputBorder/ring classes. Reuse this exact palette for any new
+  place-value decomposition component so color meaning stays consistent
+  across levels.
+
+------------------------------------------------------------------
+6. WORD PROBLEMS ARE TEMPLATE-GENERATED, NOT FREE TEXT
+------------------------------------------------------------------
+WordProblemData.ts holds the randomizable content pools: PEOPLE (name +
+pronoun + possessive), UNITS (singular/plural + category: food/object/
+money/abstract, used to pick a matching verb), keyword banks per
+operation/context, and SentenceTemplate objects with `{name}` `{num1}`
+`{unit1}` `{verb}` `{keyword}` etc. placeholders.
+
+WordProblems.tsx (WordProblem component) picks a random person/unit/
+template ONCE via `useMemo(() => ..., [])` (empty deps — must not
+re-roll on re-render), fills the template with string `.replace()`,
+computes the numeric answer arithmetically from the `nums`/`operation`
+props, and also builds a `segments: {text, label?}[]` array so the
+"help" mode can underline and label the name/units/keyword inline.
+Grading compares typed answers (name, result number, units, keyword)
+case-insensitively, and is commutative-aware for add/mult (order of
+typed numbers doesn't matter) but order-sensitive for sub/div.
+
+Any new word-problem generator (including future Claude-authored ones)
+should follow this same shape: `{ text, keyword, segments }` output plus
+a numeric `answer`, so it can plug into the existing `WordProblem`
+rendering component instead of inventing new markup.
+
+------------------------------------------------------------------
+7. KNOWN DUPLICATION — DO NOT "FIX" IT DURING GENERATION
+------------------------------------------------------------------
+`CircleNode` and `MathInput` are re-defined nearly verbatim inside MG2,
+MG3, and MG6_TwoDigitVisualAddition (not imported from a shared module).
+This is the established convention in this codebase — each skill file is
+self-contained and copy-pastes its primitives rather than importing a
+shared library. New generated files should do the same (copy the
+primitive definitions in, don't invent an import from a nonexistent
+shared components file) unless a future refactor explicitly introduces a
+shared primitives module.
+
+------------------------------------------------------------------
+8. DEMO / DEFAULT EXPORT CONVENTION
+------------------------------------------------------------------
+Every file ends with a default-exported `XxxDemo` component: page-chrome
+wrapper (`min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8`,
+`max-w-*xl mx-auto`), an `<h1>` + subtitle, 2-3 example cards each with
+its own `showFeedback`/`showWork` `useState` toggle and a "Check Answer"
+/ "Show Work" button (`!bg-green-500` / `!bg-blue-500`, white text,
+rounded-lg), and a closing "Component Features" bullet list. This exists
+for standalone preview/QA of the component in isolation — keep writing it
+for every new skill file (useful when eyeballing a newly generated
+component), but note the Student Portal will never render this default
+export; it always imports the named component directly.
+
+------------------------------------------------------------------
+9. MINIMAL TEMPLATE FOR A NEW SKILL COMPONENT
+------------------------------------------------------------------
+    import React, { useState } from 'react';
+
+    // ============================================================================
+    // TYPE DEFINITIONS
+    // ============================================================================
+    export interface {Skill}Props {
+      // problem-defining numeric/string props (e.g. num1, num2)
+      showFeedback?: boolean;
+      size?: 'sm' | 'md' | 'lg';
+    }
+
+    // ============================================================================
+    // UTILITY FUNCTIONS
+    // ============================================================================
+    const getSizeClasses = (size: 'sm' | 'md' | 'lg' = 'md') => ({
+      sm: { /* ... */ },
+      md: { /* ... */ },
+      lg: { /* ... */ },
+    }[size]);
+
+    // ============================================================================
+    // MAIN COMPONENT
+    // ============================================================================
+    export const {Skill}: React.FC<{Skill}Props> = ({
+      showFeedback = false,
+      size = 'md',
+      // ...problem props
+    }) => {
+      // derive correct answer(s) from props here — pure functions only
+      // one useState per fillable blank, regex-guarded to digits
+      return (
+        <div className="flex flex-col items-center gap-6 p-6">
+          {/* bare component markup, no page chrome */}
+        </div>
+      );
+    };
+
+    // ============================================================================
+    // DEMO COMPONENT
+    // ============================================================================
+    const {Skill}Demo: React.FC = () => {
+      const [showFeedback1, setShowFeedback1] = useState(false);
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8">
+          <div className="max-w-3xl mx-auto">
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">{Skill Title}</h1>
+            <p className="text-gray-600 mb-8">{one-line description}</p>
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+              <div className="flex justify-center mb-2">
+                <button
+                  onClick={() => setShowFeedback1(!showFeedback1)}
+                  className="px-6 py-2 !bg-green-500 text-white rounded-lg font-medium hover:!bg-green-600 transition-colors"
+                >
+                  {showFeedback1 ? 'Hide' : 'Check'} Answer
+                </button>
+              </div>
+              <{Skill} /* ...example props */ showFeedback={showFeedback1} size="md" />
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    export default {Skill}Demo;
+
+------------------------------------------------------------------
+10. WHAT'S STILL UNDOCUMENTED (fill in later, per level)
+------------------------------------------------------------------
+This guide covers HOW to write a component. It does not yet cover WHICH
+skill belongs on which pages within a level's 110-page range (that's the
+"page subsection" documentation mentioned in the Student Portal plan —
+tracked separately in src/utils/levelSubsections.ts as it's authored).

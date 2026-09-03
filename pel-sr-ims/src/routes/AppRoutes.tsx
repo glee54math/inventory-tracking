@@ -13,6 +13,7 @@ import ParentRegistration from "../components/parent_portal/ParentRegistration";
 import ParentDashboard from "../components/parent_portal/ParentDashboard";
 import StudentLogin from "../components/student_portal/StudentLogin";
 import StudentDashboard from "../components/student_portal/StudentDashboard";
+import PracticeSessionPage from "../pages/PracticeSessionPage";
 import ProtectedRoute from "../routes/ProtectedRoutes";
 
 export default function AppRoutes() {
@@ -26,6 +27,7 @@ export default function AppRoutes() {
       <Route path="/student-login" element={<StudentLogin />} />
       <Route path="/student-portal" element={<StudentDashboard />} />
       <Route path="/student-levels/:levelId" element={<LevelsPage />} />
+      <Route path="/student-practice/:level" element={<PracticeSessionPage />} />
 
       {/* Protected Parent Routes */}
       <Route

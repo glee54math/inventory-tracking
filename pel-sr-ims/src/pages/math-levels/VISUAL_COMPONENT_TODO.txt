@@ -1,0 +1,99 @@
+VISUAL COMPONENT COVERAGE — TODO
+=================================
+Tracks which math levels have an authored visual practice component (per
+MATH_TSX_STYLE_GUIDE.txt conventions) and which still need one. Word
+problems don't need this list — the generation pipeline is level-agnostic
+and works for any level already (see Student Portal plan, Phase 3/4).
+
+Status legend: [x] authored AND wired into LEVEL_SKILLS (live for students)
+               [~] authored but NOT wired in yet (invisible to students —
+                   this is the state that caused a live "no practice
+                   problems" bug for MG6 on 2026-09-02, so don't assume
+                   a component existing means it's actually reachable)
+               [ ] needs one authored
+
+When a level gets a new component:
+  1. Write it per MATH_TSX_STYLE_GUIDE.txt (named export + Demo default export).
+  2. Add an entry to LEVEL_SKILLS in src/utils/levelSubsections.ts (type,
+     skillId, componentFile, componentExport, generateParams) — do this
+     immediately, don't leave it for later. A component isn't "done" until
+     this step happens; that's the step that actually makes it show up in
+     a student's Practice Problems card.
+  3. Check this file's box and note the component name below.
+
+------------------------------------------------------------------
+KINDERGARTEN
+------------------------------------------------------------------
+[ ] MK1
+[ ] MK2
+[ ] MK3
+[ ] MK4
+
+------------------------------------------------------------------
+ELEMENTARY
+------------------------------------------------------------------
+[~] MG1  — TenFrame                    (MG1.tsx) — authored, not wired
+[~] MG2  — PartPartWhole                (MG2.tsx) — authored, not wired
+[~] MG3  — MakeTenStrategy              (MG3.tsx) — authored, not wired
+[ ] MG4
+[~] MG5  — TapeDiagram                  (MG5.tsx) — authored, not wired
+[x] MG6  — TwoDigitVisualAddition       (MG6_TwoDigitVisualAddition.tsx) — wired 2026-09-02
+         — VerticalMath                 (MG6_VerticalAddition.tsx) — wired 2026-09-02
+         — NumberLine                   (MG6.tsx) — authored, deliberately NOT
+           wired: no showFeedback/correctAnswer props at all (open-ended
+           drag-and-explore tool, not a checkable exercise). Revisit once it
+           either gains a gradable mode or the practice UI supports a
+           non-gradable exploration mode.
+[x] MG7  — Nx1Multiplication            (MG7_Nx1DigitMultiplication.tsx) — wired
+         (MG7.tsx itself is still an empty shell — that's fine, the skill
+         component is what's actually used, not the level shell file.)
+[ ] MG8
+[ ] MG9
+[ ] MG10
+[ ] MG11
+
+------------------------------------------------------------------
+MIDDLE SCHOOL
+------------------------------------------------------------------
+[ ] MM1
+[ ] MM2
+[ ] MM3
+
+------------------------------------------------------------------
+HIGH SCHOOL
+------------------------------------------------------------------
+[ ] MH1
+[ ] MH2
+[ ] MH3
+[ ] MHG
+[ ] MH4
+[ ] MHT
+[ ] MH5
+[ ] MH6
+
+------------------------------------------------------------------
+UNASSIGNED / NEEDS A LEVEL
+------------------------------------------------------------------
+Nx1VertMult.tsx (Nx1VertMult) — has no level prefix in its filename, so
+it isn't tied to one level. It's the vertical-format counterpart to
+Nx1Multiplication (MG7) and likely belongs to whichever level introduces
+the standard algorithm after the area-model version — confirm which
+level before adding it to LEVEL_SKILLS.
+
+------------------------------------------------------------------
+NOT IN SCOPE YET
+------------------------------------------------------------------
+English levels (EK/EG/EM/EH) have zero implemented components — every
+file in src/pages/english-levels/ is empty. Out of scope until the
+Student Portal practice-problem work is extended to English.
+
+------------------------------------------------------------------
+FUTURE: CLAUDE-DRAFTED VISUAL COMPONENTS
+------------------------------------------------------------------
+Longer-term goal: have Claude draft new tsx skill components for the
+levels above, following MATH_TSX_STYLE_GUIDE.txt, rather than hand-
+authoring every one. Deliberately not started — needs, per level: what
+skill/strategy is actually taught, what the correct visual model looks
+like (area model? number line? tape diagram? something new?), and roughly
+what number ranges are age-appropriate. Revisit once that's documented
+for at least one new level.

@@ -1,0 +1,48 @@
+WORD PROBLEM TOPICS — WORKING NOTES
+====================================
+Low-friction brainstorming doc for deciding each level's word-problem
+topic before any AI generation happens (see Student Portal plan, Phase 4).
+Jot down ideas freely here in plain language; once a level is marked
+READY, promote it into a `wordProblem` entry in LEVEL_SKILLS
+(src/utils/levelSubsections.ts) with the concrete typed fields, e.g.:
+
+    {
+      type: "wordProblem",
+      skillId: "MultiplicationWordProblems",
+      operation: "mult",
+      numberRange: { min: 10, max: 999 },
+      topics: ["sports team scores", "recipe scaling", "class supply distribution"],
+    }
+
+Only OPERATION and NUMBER RANGE are required to promote an entry — those
+are what let the existing template generator (WordProblemData.ts) serve
+practice immediately, before any Claude-generated problems exist. TOPIC
+IDEAS are optional extra flavor read later by the seed script as prompt
+context for Claude — leave them loose/incomplete if you're not sure yet.
+
+A level with no entry below (or STATUS: draft) simply won't offer word-
+problem practice yet — it isn't a bug, it's the gate working as intended.
+
+------------------------------------------------------------------
+TEMPLATE (copy this block per level)
+------------------------------------------------------------------
+LEVEL:
+STATUS: draft
+OPERATION:            (add | sub | mult | div)
+NUMBER RANGE:         (e.g. "2-3 digit numbers" / "within 20")
+TOPIC IDEAS:
+-
+-
+NOTES:
+
+------------------------------------------------------------------
+MG7
+------------------------------------------------------------------
+LEVEL: MG7
+STATUS: draft
+OPERATION:
+NUMBER RANGE:
+TOPIC IDEAS:
+-
+NOTES: Visual practice (Nx1DigitMultiplication) is already live for MG7 —
+this section is only about whether/what word problems to add alongside it.
