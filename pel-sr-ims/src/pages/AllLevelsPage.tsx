@@ -1,14 +1,27 @@
 import { Link } from "react-router-dom";
 
-// Each level's shell file lives at math-levels/{level}/{level}.tsx (folder name ===
-// file name) — matching only that pattern excludes skill-component and shared-utility
-// files that also live inside a level folder (e.g. MG7/MG7_Nx1DigitMultiplication.tsx).
+// Broad glob over every file in every level folder (shell files, skill-component
+// files, anything else) — used only to compute the per-level file-count badge.
+// LevelFilesPage.tsx does the equivalent glob to actually list a level's files.
 const mathModules = import.meta.glob('./math-levels/*/*.tsx');
+const englishModules = import.meta.glob('./english-levels/*/*.tsx');
 
-const allMathIds = Object.keys(mathModules)
-    .map((path) => path.match(/\.\/math-levels\/([^/]+)\/\1\.tsx$/)?.[1])
-    .filter((id): id is string => !!id)
-    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+function countFilesByLevel(modules: Record<string, unknown>, prefix: string): Record<string, number> {
+    const pattern = new RegExp(`^${prefix}([^/]+)/`);
+    const counts: Record<string, number> = {};
+    for (const path of Object.keys(modules)) {
+        const level = path.match(pattern)?.[1];
+        if (level) counts[level] = (counts[level] ?? 0) + 1;
+    }
+    return counts;
+}
+
+const mathFileCounts = countFilesByLevel(mathModules, './math-levels/');
+const englishFileCounts = countFilesByLevel(englishModules, './english-levels/');
+
+const allMathIds = Object.keys(mathFileCounts).sort((a, b) =>
+    a.localeCompare(b, undefined, { numeric: true })
+);
 
 const mathLevels = (() => {
     const categories: Record<string, string[]> = {
@@ -35,7 +48,15 @@ const englishLevels: Record<string, string[]> = {
     "High School": ["EH1", "EH2", "EH3", "EH4", "EH5", "EH6"],
 };
 
-function LevelGroup({ title, levels }: { title: string; levels: string[] }) {
+function LevelGroup({
+    title,
+    levels,
+    fileCounts,
+}: {
+    title: string;
+    levels: string[];
+    fileCounts: Record<string, number>;
+}) {
     return (
         <div className="mb-4">
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">{title}</h3>
@@ -43,10 +64,15 @@ function LevelGroup({ title, levels }: { title: string; levels: string[] }) {
                 {levels.map((level) => (
                     <Link
                         key={level}
-                        to={`/levels/${level}`}
+                        to={`/levels/${level}/files`}
                         className="px-3 py-1 bg-gray-100 hover:bg-green-200 border border-gray-300 hover:border-green-400 rounded text-sm font-medium text-gray-800 transition-colors"
                     >
                         {level}
+                        {/* Only worth flagging once there's more than one file to browse into —
+                            every level folder has at least its (possibly empty) shell file. */}
+                        {fileCounts[level] > 1 && (
+                            <span className="ml-1 text-xs text-gray-400">({fileCounts[level]})</span>
+                        )}
                     </Link>
                 ))}
             </div>
@@ -62,14 +88,14 @@ export default function AllLevelsPage() {
             <section className="mb-8">
                 <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-4">Math</h2>
                 {Object.entries(mathLevels).map(([group, levels]) => (
-                    <LevelGroup key={group} title={group} levels={levels} />
+                    <LevelGroup key={group} title={group} levels={levels} fileCounts={mathFileCounts} />
                 ))}
             </section>
 
             <section>
                 <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-4">English</h2>
                 {Object.entries(englishLevels).map(([group, levels]) => (
-                    <LevelGroup key={group} title={group} levels={levels} />
+                    <LevelGroup key={group} title={group} levels={levels} fileCounts={englishFileCounts} />
                 ))}
             </section>
         </div>
