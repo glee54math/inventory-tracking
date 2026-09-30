@@ -1,4 +1,5 @@
-import type { MovementType, Student, SubmittedAction } from "../../utils/types";
+import type { MovementType, Student, SubmittedAction, Subject } from "../../utils/types";
+import { SUBJECTS, MOVEMENTS, SUBSECTIONS } from "../../utils/types";
 import dataMath from "../../assets/dataMath.json";
 import dataEnglish from "../../assets/data.json";
 import { loadInventory, loadStudentsFromDB, loadInventoryFlags, toggleInventoryFlag } from "../../utils/inventoryService";
@@ -113,31 +114,8 @@ function Action({ index, data, onChange }: ActionProps) {
     });
   };
 
-  const subsections = [
-    "1-10",
-    "11-20",
-    "21-30",
-    "31-40",
-    "41-50",
-    "51-60",
-    "61-70",
-    "71-80",
-    "81-90",
-    "91-100",
-    "101-110",
-  ];
-
-  const movements = [
-    "BackToFront",
-    "BackToStudent",
-    "FrontToBack",
-    "FrontToStudent",
-    "ShipmentToBack",
-    "ShipmentToFront",
-  ];
-
   const selectAllSubsections = () => {
-    updateField("selectedSubsections", [...subsections]);
+    updateField("selectedSubsections", [...SUBSECTIONS]);
   };
 
   const selectAllMovement = (movement: MovementType) => {
@@ -169,7 +147,7 @@ function Action({ index, data, onChange }: ActionProps) {
     });
   };
 
-  const handleSubjectChange = (newSubject: "Math" | "English" | "") => {
+  const handleSubjectChange = (newSubject: Subject | "") => {
     onChange({
       ...data,
       subject: newSubject === "" ? null : newSubject,
@@ -245,13 +223,16 @@ function Action({ index, data, onChange }: ActionProps) {
               id={`subject-${index}`}
               value={data.subject ?? ""}
               onChange={(e) =>
-                handleSubjectChange(e.target.value as "Math" | "English" | "")
+                handleSubjectChange(e.target.value as Subject | "")
               }
               className="border px-1 py-1 rounded field-sizing-content"
             >
               <option value="">Select Subject</option>
-              <option value="Math">Math</option>
-              <option value="English">English</option>
+              {SUBJECTS.map((subject) => (
+                <option key={subject} value={subject}>
+                  {subject}
+                </option>
+              ))}
             </select>
             
             {/* Student to assign to if option selected */}
@@ -348,7 +329,7 @@ function Action({ index, data, onChange }: ActionProps) {
                   name={`check-all-${index}`}
                   id={`check-all-${index}`}
                   checked={
-                    data.selectedSubsections.length === subsections.length
+                    data.selectedSubsections.length === SUBSECTIONS.length
                   }
                   onChange={(e) =>
                     e.target.checked
@@ -369,7 +350,7 @@ function Action({ index, data, onChange }: ActionProps) {
                   value=""
                 >
                   <option value="">Select Movement</option>
-                  {movements.map((movement) => (
+                  {MOVEMENTS.map((movement) => (
                     <option key={movement} value={movement}>
                       {movement}
                     </option>
@@ -392,7 +373,7 @@ function Action({ index, data, onChange }: ActionProps) {
               </label>
 
               {/* Individual subsections */}
-              {subsections.map((range) => (
+              {SUBSECTIONS.map((range) => (
                 <label key={range} className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -434,7 +415,7 @@ function Action({ index, data, onChange }: ActionProps) {
                         className="border rounded"
                       >
                         <option value="">Select Movement</option>
-                        {movements.map((movement) => (
+                        {MOVEMENTS.map((movement) => (
                           <option key={movement} value={movement}>
                             {movement}
                           </option>

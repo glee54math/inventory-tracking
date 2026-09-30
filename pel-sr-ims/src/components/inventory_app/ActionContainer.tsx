@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Student, SubmittedAction } from "../../utils/types";
+import { SHOW_VTA_FEEDBACK_MODAL } from "../../utils/types";
 import Action from "./Action";
 import {
   assignHWToStudent,
@@ -9,6 +10,9 @@ import {
 import { NewStudentForm } from "./NewStudent";
 import SubmissionConfirmModal from "./submissionConfirmModal";
 import WorkerSwitchModal from "./WorkerSwitchModal";
+import VoiceCommandBar from "./VoiceCommandBar";
+import VTAFeedbackModal, { type VTAFeedbackAnswer } from "./VTAFeedbackModal";
+import { saveVoiceCommandFeedback, buildVoiceFeedbackRecord } from "../../utils/voiceFeedbackService";
 import { useNameContext } from "./NameContext";
 import type { CellEdit } from "./Inventory";
 
@@ -77,8 +81,52 @@ function ActionContainer({
   const [showSubmissionConfirm, setShowSubmissionConfirm] = useState<boolean>(false);
   const [showWorkerSwitch, setShowWorkerSwitch] = useState<boolean>(false);
   const [pendingSubmission, setPendingSubmission] = useState<boolean>(false);
+  const [feedbackQueue, setFeedbackQueue] = useState<
+    { index: number; transcript: string; originalTranscript: string | null; transcriptEdited: boolean }[]
+  >([]);
 
   const { setNameOfWorker } = useNameContext();
+
+  // Ask "did VTA get this right?" ~12s after any new action is created, whether
+  // it came from voice or the manual "Create New Action" button (an answer of
+  // "No" to VTA just gets discarded — see handleFeedbackAnswer).
+  const scheduleFeedbackPrompt = (
+    index: number,
+    transcript: string,
+    originalTranscript: string | null,
+    transcriptEdited: boolean
+  ) => {
+    if (!SHOW_VTA_FEEDBACK_MODAL) return;
+    setTimeout(() => {
+      setFeedbackQueue((prev) => [...prev, { index, transcript, originalTranscript, transcriptEdited }]);
+    }, 12000);
+  };
+
+  const handleFeedbackAnswer = (answer: VTAFeedbackAnswer) => {
+    const current = feedbackQueue[0];
+    setFeedbackQueue((prev) => prev.slice(1));
+    if (!current || !answer.usedVTA || answer.selectedWithoutManualChanges === null) return;
+
+    const actionSnapshot = actionList[current.index];
+    if (!actionSnapshot) return;
+
+    const outcome = answer.selectedWithoutManualChanges ? "success" : "failure";
+    saveVoiceCommandFeedback(
+      buildVoiceFeedbackRecord(current.transcript, outcome, actionSnapshot, {
+        originalTranscript: current.originalTranscript,
+        transcriptEdited: current.transcriptEdited,
+      })
+    ).catch((err) => console.error("Failed to save VTA feedback:", err));
+  };
+
+  const handleVoiceActionCreated = (
+    action: SubmittedAction,
+    meta: { transcript: string; originalTranscript: string | null; transcriptEdited: boolean }
+  ) => {
+    const newIndex = actionList.length;
+    setActionList((prev) => [...prev, action]);
+    scheduleFeedbackPrompt(newIndex, meta.transcript, meta.originalTranscript, meta.transcriptEdited);
+  };
 
   // ── Merge incoming cell edits into the action list ───────────────────────
   useEffect(() => {
@@ -207,7 +255,9 @@ function ActionContainer({
       selectedSubsections: [],
       toStudent: {} as Student,
     };
+    const newIndex = actionList.length;
     setActionList((prev) => [...prev, newAction]);
+    scheduleFeedbackPrompt(newIndex, "", null, false);
   };
 
   const handleActionChange = (index: number, updatedAction: SubmittedAction) => {
@@ -316,6 +366,8 @@ function ActionContainer({
 
   return (
     <div className="space-y-4 overflow-auto">
+      <VoiceCommandBar onActionCreated={handleVoiceActionCreated} />
+
       <div className="mb-4">
         {actionList.length === 0 && (
           <p className="text-gray-500">
@@ -398,6 +450,10 @@ function ActionContainer({
           onWorkerSwitch={handleWorkerSwitch}
           onCancel={handleCancelWorkerSwitch}
         />
+      )}
+
+      {feedbackQueue.length > 0 && (
+        <VTAFeedbackModal onAnswer={handleFeedbackAnswer} />
       )}
     </div>
   );

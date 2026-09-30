@@ -3,6 +3,35 @@
 // Existing Types
 export type MovementType = "BackToFront" | "BackToStudent" | "FrontToBack" | "FrontToStudent" | "ShipmentToBack" | "ShipmentToFront";
 
+export type Subject = "Math" | "English";
+
+// Shared vocabulary for building/parsing a SubmittedAction (used by Action.tsx's
+// dropdowns/checkboxes, and by the voice-command parser so both stay in sync).
+export const SUBJECTS: Subject[] = ["Math", "English"];
+
+export const MOVEMENTS: MovementType[] = [
+  "BackToFront",
+  "BackToStudent",
+  "FrontToBack",
+  "FrontToStudent",
+  "ShipmentToBack",
+  "ShipmentToFront",
+];
+
+export const SUBSECTIONS = [
+  "1-10",
+  "11-20",
+  "21-30",
+  "31-40",
+  "41-50",
+  "51-60",
+  "61-70",
+  "71-80",
+  "81-90",
+  "91-100",
+  "101-110",
+];
+
 export interface Student {
   firstName: string;
   lastName: string;
@@ -227,3 +256,8 @@ export const ENGLISH_GRADE_LEVELS: Record<string, string[]> = {
 // School year starts on August 15
 export const SCHOOL_YEAR_START_MONTH = 7; // August (0-indexed)
 export const SCHOOL_YEAR_START_DAY = 15;
+
+// Voice-to-Action (VTA) testing: shows a feedback modal ~5s after any new
+// action is created, asking whether voice was used and whether it filled in
+// the right values unassisted. Flip to false once VTA testing is done.
+export const SHOW_VTA_FEEDBACK_MODAL = true;
