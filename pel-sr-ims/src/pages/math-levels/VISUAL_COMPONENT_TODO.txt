@@ -13,7 +13,8 @@ Status legend: [x] authored AND wired into LEVEL_SKILLS (live for students)
                [ ] needs one authored
 
 When a level gets a new component:
-  1. Write it per MATH_TSX_STYLE_GUIDE.txt (named export + Demo default export).
+  1. Write it per MATH_TSX_STYLE_GUIDE.txt (named export + Demo default export),
+     inside that level's own folder: src/pages/math-levels/{levelId}/{fileName}.tsx.
   2. Add an entry to LEVEL_SKILLS in src/utils/levelSubsections.ts (type,
      skillId, componentFile, componentExport, generateParams) — do this
      immediately, don't leave it for later. A component isn't "done" until
@@ -32,21 +33,26 @@ KINDERGARTEN
 ------------------------------------------------------------------
 ELEMENTARY
 ------------------------------------------------------------------
-[~] MG1  — TenFrame                    (MG1.tsx) — authored, not wired
-[~] MG2  — PartPartWhole                (MG2.tsx) — authored, not wired
-[~] MG3  — MakeTenStrategy              (MG3.tsx) — authored, not wired
+[~] MG1  — TenFrame                    (MG1/MG1.tsx) — authored, not wired
+[~] MG2  — PartPartWhole                (MG2/MG2.tsx) — authored, not wired
+[~] MG3  — MakeTenStrategy              (MG3/MG3.tsx) — authored, not wired
 [ ] MG4
-[~] MG5  — TapeDiagram                  (MG5.tsx) — authored, not wired
-[x] MG6  — TwoDigitVisualAddition       (MG6_TwoDigitVisualAddition.tsx) — wired 2026-09-02
-         — VerticalMath                 (MG6_VerticalAddition.tsx) — wired 2026-09-02
-         — NumberLine                   (MG6.tsx) — authored, deliberately NOT
+[~] MG5  — TapeDiagram                  (MG5/MG5.tsx) — authored, not wired
+[x] MG6  — TwoDigitVisualAddition       (MG6/MG6_TwoDigitVisualAddition.tsx) — wired 2026-09-02
+         — VerticalMath                 (MG6/MG6_VerticalAddition.tsx) — wired 2026-09-02
+         — NumberLine                   (MG6/MG6.tsx) — authored, deliberately NOT
            wired: no showFeedback/correctAnswer props at all (open-ended
            drag-and-explore tool, not a checkable exercise). Revisit once it
            either gains a gradable mode or the practice UI supports a
            non-gradable exploration mode.
-[x] MG7  — Nx1Multiplication            (MG7_Nx1DigitMultiplication.tsx) — wired
-         (MG7.tsx itself is still an empty shell — that's fine, the skill
-         component is what's actually used, not the level shell file.)
+[x] MG7  — Nx1Multiplication            (MG7/MG7_Nx1DigitMultiplication.tsx) — wired
+         — Nx1VertMult                  (MG7/Nx1VertMult.tsx) — authored, filed
+           under MG7 on 2026-09-30, NOT wired into LEVEL_SKILLS yet. It's the
+           standard vertical-algorithm counterpart to Nx1Multiplication's area
+           model — confirm whether it should be a second MG7 visual skill
+           (offered alongside Nx1Multiplication) before wiring it in.
+         (MG7/MG7.tsx itself is still an empty shell — that's fine, the skill
+         components are what's actually used, not the level shell file.)
 [ ] MG8
 [ ] MG9
 [ ] MG10
@@ -70,15 +76,6 @@ HIGH SCHOOL
 [ ] MHT
 [ ] MH5
 [ ] MH6
-
-------------------------------------------------------------------
-UNASSIGNED / NEEDS A LEVEL
-------------------------------------------------------------------
-Nx1VertMult.tsx (Nx1VertMult) — has no level prefix in its filename, so
-it isn't tied to one level. It's the vertical-format counterpart to
-Nx1Multiplication (MG7) and likely belongs to whichever level introduces
-the standard algorithm after the area-model version — confirm which
-level before adding it to LEVEL_SKILLS.
 
 ------------------------------------------------------------------
 NOT IN SCOPE YET

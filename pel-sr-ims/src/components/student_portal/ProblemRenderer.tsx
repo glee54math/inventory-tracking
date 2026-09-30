@@ -35,7 +35,14 @@ export default function ProblemRenderer({ level, skill }: ProblemRendererProps) 
   const [showFeedback, setShowFeedback] = useState(false);
 
   if (skill.type === "visual") {
-    return <VisualProblem skill={skill} showFeedback={showFeedback} setShowFeedback={setShowFeedback} />;
+    return (
+      <VisualProblem
+        level={level}
+        skill={skill}
+        showFeedback={showFeedback}
+        setShowFeedback={setShowFeedback}
+      />
+    );
   }
   return (
     <WordProblemPractice
@@ -52,10 +59,12 @@ export default function ProblemRenderer({ level, skill }: ProblemRendererProps) 
 // ============================================================================
 
 function VisualProblem({
+  level,
   skill,
   showFeedback,
   setShowFeedback,
 }: {
+  level: string;
   skill: Extract<LevelSkill, { type: "visual" }>;
   showFeedback: boolean;
   setShowFeedback: (v: boolean) => void;
@@ -72,13 +81,15 @@ function VisualProblem({
   useEffect(() => {
     let cancelled = false;
     setComponent(null);
-    import(`../../pages/math-levels/${skill.componentFile}.tsx`).then((mod) => {
+    // Every visual skill file lives inside its owning level's folder
+    // (math-levels/{level}/{componentFile}.tsx) — see VISUAL_COMPONENT_TODO.txt.
+    import(`../../pages/math-levels/${level}/${skill.componentFile}.tsx`).then((mod) => {
       if (!cancelled) setComponent(() => mod[skill.componentExport]);
     });
     return () => {
       cancelled = true;
     };
-  }, [skill.componentFile, skill.componentExport]);
+  }, [level, skill.componentFile, skill.componentExport]);
 
   const newProblem = () => {
     setParams(skill.generateParams());

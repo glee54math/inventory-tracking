@@ -12,12 +12,12 @@ export default function LevelsPage() {
         }
         setError(false);    // This part runs if there is a levelId present, but doesn't check its validity.
 
-        import(`./math-levels/${levelId}.tsx`)
+        import(`./math-levels/${levelId}/${levelId}.tsx`)
             .then((module) => {
                 setLevelComponent(() => module.default);
             })
             .catch(() => {
-                import(`./english-levels/${levelId}.tsx`)
+                import(`./english-levels/${levelId}/${levelId}.tsx`)
                     .then((module) => {
                         setLevelComponent(() => module.default);
                     })

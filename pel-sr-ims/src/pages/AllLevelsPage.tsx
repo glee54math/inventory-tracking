@@ -1,9 +1,13 @@
 import { Link } from "react-router-dom";
 
-const mathModules = import.meta.glob('./math-levels/*.tsx');
+// Each level's shell file lives at math-levels/{level}/{level}.tsx (folder name ===
+// file name) — matching only that pattern excludes skill-component and shared-utility
+// files that also live inside a level folder (e.g. MG7/MG7_Nx1DigitMultiplication.tsx).
+const mathModules = import.meta.glob('./math-levels/*/*.tsx');
 
 const allMathIds = Object.keys(mathModules)
-    .map(path => path.replace('./math-levels/', '').replace('.tsx', ''))
+    .map((path) => path.match(/\.\/math-levels\/([^/]+)\/\1\.tsx$/)?.[1])
+    .filter((id): id is string => !!id)
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
 const mathLevels = (() => {

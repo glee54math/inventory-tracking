@@ -55,13 +55,19 @@ component itself. Anything that imports the skill for real use (a level
 page, or the future ProblemRenderer) imports the NAMED export, e.g.:
     import { Nx1Multiplication } from './MG7_Nx1DigitMultiplication';
 
-File naming: a file that matches an id in MATH_LEVELS exactly (e.g.
-`MG7.tsx`) is a ROUTED LEVEL SHELL — LevelsPage.tsx dynamically imports it
-by URL param. A file named `{levelId}_{SkillName}.tsx` (e.g.
-`MG7_Nx1DigitMultiplication.tsx`) is a SKILL COMPONENT — a building block,
-not directly routed. New AI-generated problem components should use the
-skill-component naming pattern; nothing should be written directly into
-the empty `{levelId}.tsx` shells as part of this pipeline.
+Folder structure: every level has its own folder at
+src/pages/math-levels/{levelId}/ (e.g. src/pages/math-levels/MG7/). A file
+inside that folder matching the folder name exactly (e.g. MG7/MG7.tsx) is
+a ROUTED LEVEL SHELL — LevelsPage.tsx dynamically imports it by URL param
+(math-levels/{levelId}/{levelId}.tsx). A file named `{levelId}_{SkillName}.tsx`
+(e.g. MG7/MG7_Nx1DigitMultiplication.tsx) is a SKILL COMPONENT living
+inside that same level folder — a building block, not directly routed.
+New AI-generated problem components should use the skill-component naming
+pattern and live inside their level's folder; nothing should be written
+directly into the empty `{levelId}/{levelId}.tsx` shells as part of this
+pipeline. Files that aren't tied to one specific level (WordProblems.tsx,
+WordProblemData.ts, WordProblemsPrintable2x2.tsx) stay at the top of
+src/pages/math-levels/, not inside any level folder.
 
 ------------------------------------------------------------------
 2. THE STANDARD PROP CONTRACT

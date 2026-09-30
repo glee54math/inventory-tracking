@@ -24,12 +24,13 @@ interface LevelSkillBase {
 
 export interface VisualLevelSkill extends LevelSkillBase {
   type: "visual";
-  // Identifies which component to dynamically import and mount. componentFile is the
-  // module path relative to src/pages/math-levels/ (no extension); componentExport is the
-  // named export (NOT the default Demo export — see MATH_TSX_STYLE_GUIDE.txt section 1).
-  // Stored separately because, as-built, file name and export name don't follow one
-  // derivable pattern (e.g. MG6_VerticalAddition.tsx exports `VerticalMath`;
-  // Nx1VertMult.tsx has no level prefix at all since the skill applies across levels).
+  // Identifies which component to dynamically import and mount. Every level's files live
+  // under its own folder (src/pages/math-levels/{level}/), so componentFile is just the
+  // bare filename within that folder (no extension) — ProblemRenderer builds the full
+  // path as math-levels/{level}/{componentFile}.tsx. componentExport is the named export
+  // (NOT the default Demo export — see MATH_TSX_STYLE_GUIDE.txt section 1). Stored
+  // separately from skillId because, as-built, file name and export name don't follow one
+  // derivable pattern (e.g. MG6_VerticalAddition.tsx exports `VerticalMath`).
   componentFile: string;
   componentExport: string;
   // Produces a fresh set of valid props for the component (e.g. { num1, num2 }). Called

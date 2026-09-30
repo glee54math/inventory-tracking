@@ -2,20 +2,30 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MATH_LEVELS, ENGLISH_LEVELS } from "../../utils/types";
 
-// Detect which level files actually exist at build time
-const mathFileKeys = import.meta.glob("../../pages/math-levels/*.tsx");
-const englishFileKeys = import.meta.glob("../../pages/english-levels/*.tsx");
+// Detect which level files actually exist at build time. Each level's shell file lives
+// at {subject}-levels/{level}/{level}.tsx (folder name === file name) — matching only
+// that pattern excludes skill-component files that also live inside a level folder
+// (e.g. math-levels/MG7/MG7_Nx1DigitMultiplication.tsx).
+const mathFileKeys = import.meta.glob("../../pages/math-levels/*/*.tsx");
+const englishFileKeys = import.meta.glob("../../pages/english-levels/*/*.tsx");
+
+function extractLevelShellIds(fileKeys: Record<string, unknown>, prefix: string): string[] {
+  const pattern = new RegExp(`^${prefix}([^/]+)/\\1\\.tsx$`);
+  return Object.keys(fileKeys)
+    .map((p) => p.match(pattern)?.[1])
+    .filter((id): id is string => !!id);
+}
 
 const AVAILABLE_MATH = new Set(
-  Object.keys(mathFileKeys)
-    .map((p) => p.replace("../../pages/math-levels/", "").replace(".tsx", ""))
-    .filter((id) => MATH_LEVELS.includes(id))
+  extractLevelShellIds(mathFileKeys, "../../pages/math-levels/").filter((id) =>
+    MATH_LEVELS.includes(id)
+  )
 );
 
 const AVAILABLE_ENGLISH = new Set(
-  Object.keys(englishFileKeys)
-    .map((p) => p.replace("../../pages/english-levels/", "").replace(".tsx", ""))
-    .filter((id) => ENGLISH_LEVELS.includes(id))
+  extractLevelShellIds(englishFileKeys, "../../pages/english-levels/").filter((id) =>
+    ENGLISH_LEVELS.includes(id)
+  )
 );
 
 interface SupplementalLevelBrowserProps {
