@@ -5,7 +5,10 @@ import { buildHwkHistoryFromAssignments } from "../utils/progressService";
 import { getSkillsForLevel } from "../utils/levelSubsections";
 import type { LevelSkill } from "../utils/levelSubsections";
 import PracticeModeSelector from "../components/student_portal/PracticeModeSelector";
+import type { PracticeMode } from "../components/student_portal/PracticeModeSelector";
 import ProblemRenderer from "../components/student_portal/ProblemRenderer";
+
+const ALL_MODES: PracticeMode[] = ["visual", "wordProblem", "standalone"];
 
 export default function PracticeSessionPage() {
   const { level } = useParams<{ level: string }>();
@@ -17,33 +20,43 @@ export default function PracticeSessionPage() {
   }, [currentStudent, navigate]);
 
   const skills = useMemo(() => getSkillsForLevel(level ?? ""), [level]);
-  const visualSkills = useMemo(
-    () => skills.filter((s): s is Extract<LevelSkill, { type: "visual" }> => s.type === "visual"),
-    [skills]
-  );
-  const wordSkills = useMemo(
-    () => skills.filter((s): s is Extract<LevelSkill, { type: "wordProblem" }> => s.type === "wordProblem"),
+
+  // One pool per mode, so adding a new skill type only means adding it to ALL_MODES
+  // and this map — nothing else here needs to change.
+  const poolsByMode = useMemo<Record<PracticeMode, LevelSkill[]>>(
+    () => ({
+      visual: skills.filter((s): s is Extract<LevelSkill, { type: "visual" }> => s.type === "visual"),
+      wordProblem: skills.filter(
+        (s): s is Extract<LevelSkill, { type: "wordProblem" }> => s.type === "wordProblem"
+      ),
+      standalone: skills.filter(
+        (s): s is Extract<LevelSkill, { type: "standalone" }> => s.type === "standalone"
+      ),
+    }),
     [skills]
   );
 
-  const [mode, setMode] = useState<"visual" | "wordProblem" | null>(null);
+  const availableModes = useMemo(
+    () => ALL_MODES.filter((m) => poolsByMode[m].length > 0),
+    [poolsByMode]
+  );
+
+  const [mode, setMode] = useState<PracticeMode | null>(null);
   const [selectedSkill, setSelectedSkill] = useState<LevelSkill | null>(null);
 
   // Auto-pick the mode when only one type is available for this level.
   useEffect(() => {
-    if (visualSkills.length > 0 && wordSkills.length === 0) setMode("visual");
-    else if (wordSkills.length > 0 && visualSkills.length === 0) setMode("wordProblem");
-    else setMode(null);
-  }, [visualSkills, wordSkills]);
+    setMode(availableModes.length === 1 ? availableModes[0] : null);
+  }, [availableModes]);
 
   useEffect(() => {
     if (!mode) {
       setSelectedSkill(null);
       return;
     }
-    const pool = mode === "visual" ? visualSkills : wordSkills;
+    const pool = poolsByMode[mode];
     setSelectedSkill(pool[Math.floor(Math.random() * pool.length)] ?? null);
-  }, [mode, visualSkills, wordSkills]);
+  }, [mode, poolsByMode]);
 
   // Student.hwkHistory is never actually written anywhere in this codebase — derive it
   // from hwkAssigned (reliably populated), same as StudentDashboard/progressService do.
@@ -55,7 +68,7 @@ export default function PracticeSessionPage() {
   if (!currentStudent || !level) return null;
 
   const hasHomeworkInLevel = hwkHistory.some((h) => h.level === level);
-  const bothModesAvailable = visualSkills.length > 0 && wordSkills.length > 0;
+  const multipleModesAvailable = availableModes.length > 1;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50">
@@ -87,7 +100,7 @@ export default function PracticeSessionPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {bothModesAvailable && mode && (
+            {multipleModesAvailable && mode && (
               <button
                 onClick={() => setMode(null)}
                 className="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
@@ -96,7 +109,7 @@ export default function PracticeSessionPage() {
               </button>
             )}
 
-            {!mode && <PracticeModeSelector onSelect={setMode} />}
+            {!mode && <PracticeModeSelector availableModes={availableModes} onSelect={setMode} />}
 
             {mode && selectedSkill && <ProblemRenderer level={level} skill={selectedSkill} />}
           </div>

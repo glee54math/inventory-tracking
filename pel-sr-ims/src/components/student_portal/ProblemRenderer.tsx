@@ -44,6 +44,9 @@ export default function ProblemRenderer({ level, skill }: ProblemRendererProps) 
       />
     );
   }
+  if (skill.type === "standalone") {
+    return <StandaloneProblem level={level} skill={skill} />;
+  }
   return (
     <WordProblemPractice
       level={level}
@@ -52,6 +55,39 @@ export default function ProblemRenderer({ level, skill }: ProblemRendererProps) 
       setShowFeedback={setShowFeedback}
     />
   );
+}
+
+// ============================================================================
+// STANDALONE MODE — mounted with no injected props and no wrapper buttons; the
+// component owns its entire UI (see StandaloneLevelSkill in levelSubsections.ts).
+// ============================================================================
+
+function StandaloneProblem({
+  level,
+  skill,
+}: {
+  level: string;
+  skill: Extract<LevelSkill, { type: "standalone" }>;
+}) {
+  const [Component, setComponent] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setComponent(null);
+    import(`../../pages/math-levels/${level}/${skill.componentFile}.tsx`).then((mod) => {
+      if (!cancelled) setComponent(() => mod[skill.componentExport]);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [level, skill.componentFile, skill.componentExport]);
+
+  if (!Component) {
+    return <p className="text-center text-gray-400 py-12">Loading...</p>;
+  }
+  // No card wrapper — standalone components bring their own full page chrome
+  // (background, padding, etc.), unlike visual/wordProblem which render bare.
+  return <Component />;
 }
 
 // ============================================================================

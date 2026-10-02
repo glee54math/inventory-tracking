@@ -288,3 +288,28 @@ This guide covers HOW to write a component. It does not yet cover WHICH
 skill belongs on which pages within a level's 110-page range (that's the
 "page subsection" documentation mentioned in the Student Portal plan —
 tracked separately in src/utils/levelSubsections.ts as it's authored).
+
+------------------------------------------------------------------
+11. MULTI-FILE SKILLS (exception to section 1's "one file" rule)
+------------------------------------------------------------------
+Most skills are one self-contained file. A skill can legitimately need
+several (diagram + equation UI + feedback + shared logic + types) —
+MG6_BarModel is the first example. When that happens:
+
+  - All files stay FLAT as siblings directly inside the level folder — no
+    subfolder. Prefix every supporting file with the main file's full
+    name + underscore, e.g. MG6_BarModel.tsx is the entry point, and
+    MG6_BarModel_Diagram.tsx, MG6_BarModel_EquationRow.tsx,
+    MG6_BarModel_types.ts etc. are its supporting files. This keeps
+    filenames self-documenting in LevelFilesPage's file list and avoids
+    collisions with whatever the NEXT skill added to that same level
+    folder happens to also need to call "types.ts" or "Feedback.tsx".
+  - The entry file still needs a named export (not just default) if it's
+    going into LEVEL_SKILLS — see levelSubsections.ts's componentExport.
+  - If the component doesn't fit the generateParams()/showFeedback
+    contract section 2 describes (e.g. it's a complete self-contained
+    mini-app with its own Check/New-Problem controls, like MG6_BarModel),
+    it isn't a "visual" skill — wire it as a "standalone" skill instead
+    (StandaloneLevelSkill in levelSubsections.ts). ProblemRenderer mounts
+    a standalone skill with zero injected props and no wrapper buttons;
+    the component is trusted to be fully self-sufficient.

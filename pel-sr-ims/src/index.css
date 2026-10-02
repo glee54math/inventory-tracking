@@ -18,6 +18,7 @@ a {
   color: #646cff;
   text-decoration: inherit;
 }
+
 a:hover {
   color: #535bf2;
 }
@@ -38,14 +39,17 @@ h1 {
   line-height: 1.1;
 }
 
+/* border/border-radius deliberately omitted: this file loads outside Tailwind's
+   @layer system, so any value set here always wins over a Tailwind border or rounded
+   class on a <button> regardless of specificity — silently breaking any button whose
+   styling comes from Tailwind alone (confirmed: no <button> in this app renders
+   without its own className, so nothing relies on these two properties having a
+   default here). */
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
 }
@@ -61,10 +65,13 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
+
+  /* 
   a:hover {
     color: #747bff;
   }
+
   button {
     background-color: #f9f9f9;
-  }
+  } */
 }

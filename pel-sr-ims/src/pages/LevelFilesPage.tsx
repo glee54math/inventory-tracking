@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { MATH_LEVELS } from "../utils/types";
+import { previewableFilesForLevel } from "./levelFileHelpers";
 
 const mathModules = import.meta.glob('./math-levels/*/*.tsx');
 const englishModules = import.meta.glob('./english-levels/*/*.tsx');
@@ -7,11 +8,8 @@ const englishModules = import.meta.glob('./english-levels/*/*.tsx');
 function filesForLevel(levelId: string, isMath: boolean): string[] {
     const modules = isMath ? mathModules : englishModules;
     const prefix = isMath ? './math-levels/' : './english-levels/';
-    const pattern = new RegExp(`^${prefix}${levelId}/([^/]+)\\.tsx$`);
 
-    return Object.keys(modules)
-        .map((path) => path.match(pattern)?.[1])
-        .filter((name): name is string => !!name)
+    return previewableFilesForLevel(modules, prefix, levelId)
         // Shell file (name === levelId) first, then alphabetical.
         .sort((a, b) => {
             if (a === levelId) return -1;

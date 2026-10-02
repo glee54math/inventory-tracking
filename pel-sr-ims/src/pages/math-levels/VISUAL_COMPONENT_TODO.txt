@@ -40,6 +40,17 @@ ELEMENTARY
 [~] MG5  — TapeDiagram                  (MG5/MG5.tsx) — authored, not wired
 [x] MG6  — TwoDigitVisualAddition       (MG6/MG6_TwoDigitVisualAddition.tsx) — wired 2026-09-02
          — VerticalMath                 (MG6/MG6_VerticalAddition.tsx) — wired 2026-09-02
+         — BarModelPractice             (MG6/MG6_BarModel.tsx) — wired 2026-09-30 as a
+           "standalone" skill (not "visual" — see StandaloneLevelSkill in
+           levelSubsections.ts). Multi-file skill: MG6_BarModel.tsx is the entry
+           point, supporting files are MG6_BarModel_Diagram.tsx,
+           MG6_BarModel_EquationRow.tsx, MG6_BarModel_Feedback.tsx,
+           MG6_BarModel_TimesTableDrill.tsx, MG6_BarModel_problemLogic.ts,
+           MG6_BarModel_types.ts — all flat siblings in MG6/, prefixed
+           MG6_BarModel_ to avoid colliding with future MG6 files. Uses `dark:`
+           Tailwind variants, which nothing else in this project does — flagged,
+           not stripped; could look inconsistent if a viewer's OS is in dark mode
+           since no other component reacts to that.
          — NumberLine                   (MG6/MG6.tsx) — authored, deliberately NOT
            wired: no showFeedback/correctAnswer props at all (open-ended
            drag-and-explore tool, not a checkable exercise). Revisit once it
@@ -56,7 +67,19 @@ ELEMENTARY
 [ ] MG8
 [ ] MG9
 [ ] MG10
-[ ] MG11
+[x] MG11 — PowersOf10Practice          (MG11/MG11_PowersOfTen.tsx) — wired 2026-10-01
+          as a "standalone" skill (multi-file, same pattern as MG6_BarModel).
+          Supporting files: MG11_PowersOfTen_MoveSentence.tsx,
+          MG11_PowersOfTen_PlaceValueChart.tsx, MG11_PowersOfTen_PlaceValueExplorer.tsx,
+          MG11_PowersOfTen_PracticeCard.tsx, MG11_PowersOfTen_questions.tsx,
+          MG11_PowersOfTen_RulesPanel.tsx, MG11_PowersOfTen_numberModel.ts,
+          MG11_PowersOfTen_styles.ts — all flat siblings in MG11/, prefixed to match.
+          Loads Fredoka+Nunito from Google Fonts at runtime (document.head injection in
+          MG11_PowersOfTen.tsx's useFonts()) — an external CDN dependency nothing else
+          in this app has, and a different display font than the rest of the app uses.
+          Flagged, not stripped; same treatment as MG6_BarModel's unstripped `dark:`
+          variants — harmless to function, just a styling/dependency inconsistency to
+          be aware of if it's ever audited.
 
 ------------------------------------------------------------------
 MIDDLE SCHOOL

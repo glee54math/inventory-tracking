@@ -50,7 +50,19 @@ export interface WordProblemLevelSkill extends LevelSkillBase {
   topics?: string[];
 }
 
-export type LevelSkill = VisualLevelSkill | WordProblemLevelSkill;
+export interface StandaloneLevelSkill extends LevelSkillBase {
+  type: "standalone";
+  // Same componentFile/componentExport meaning as VisualLevelSkill, but ProblemRenderer
+  // mounts this component directly with NO injected props and NO wrapper buttons — it's
+  // fully self-sufficient (owns its own Check/New-Problem/level-picker UI), unlike every
+  // "visual" skill which expects generateParams()'s output as props plus an external
+  // showFeedback toggle. Use this type when a component doesn't fit that contract (e.g.
+  // it was authored as a complete standalone practice page, not a parameterized exercise).
+  componentFile: string;
+  componentExport: string;
+}
+
+export type LevelSkill = VisualLevelSkill | WordProblemLevelSkill | StandaloneLevelSkill;
 
 export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
   MG6: [
@@ -79,6 +91,12 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
         return { nums: [big, small, big - small], operation: "sub", numOfDigitsMissing: 2 };
       },
     },
+    {
+      type: "standalone",
+      skillId: "BarModel",
+      componentFile: "MG6_BarModel",
+      componentExport: "BarModelPractice",
+    },
     // NumberLine (MG6.tsx) intentionally not wired in — it has no showFeedback/
     // correctAnswer props at all (it's an open-ended drag-and-explore tool, not a
     // checkable exercise), so it doesn't fit ProblemRenderer's "check answer" pattern.
@@ -97,6 +115,14 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       }),
     },
     // No wordProblem entry yet — MG7 isn't in WORD_PROBLEM_TOPICS.txt as "ready" yet.
+  ],
+  MG11: [
+    {
+      type: "standalone",
+      skillId: "PowersOfTen",
+      componentFile: "MG11_PowersOfTen",
+      componentExport: "PowersOf10Practice",
+    },
   ],
 };
 

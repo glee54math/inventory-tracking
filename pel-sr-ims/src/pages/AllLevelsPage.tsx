@@ -1,23 +1,14 @@
 import { Link } from "react-router-dom";
+import { countPreviewableFilesByLevel } from "./levelFileHelpers";
 
-// Broad glob over every file in every level folder (shell files, skill-component
-// files, anything else) — used only to compute the per-level file-count badge.
-// LevelFilesPage.tsx does the equivalent glob to actually list a level's files.
+// Broad glob over every file in every level folder — countPreviewableFilesByLevel
+// filters out multi-file skills' supporting files (see levelFileHelpers.ts) so this
+// badge count always matches what LevelFilesPage.tsx actually lists for that level.
 const mathModules = import.meta.glob('./math-levels/*/*.tsx');
 const englishModules = import.meta.glob('./english-levels/*/*.tsx');
 
-function countFilesByLevel(modules: Record<string, unknown>, prefix: string): Record<string, number> {
-    const pattern = new RegExp(`^${prefix}([^/]+)/`);
-    const counts: Record<string, number> = {};
-    for (const path of Object.keys(modules)) {
-        const level = path.match(pattern)?.[1];
-        if (level) counts[level] = (counts[level] ?? 0) + 1;
-    }
-    return counts;
-}
-
-const mathFileCounts = countFilesByLevel(mathModules, './math-levels/');
-const englishFileCounts = countFilesByLevel(englishModules, './english-levels/');
+const mathFileCounts = countPreviewableFilesByLevel(mathModules, './math-levels/');
+const englishFileCounts = countPreviewableFilesByLevel(englishModules, './english-levels/');
 
 const allMathIds = Object.keys(mathFileCounts).sort((a, b) =>
     a.localeCompare(b, undefined, { numeric: true })

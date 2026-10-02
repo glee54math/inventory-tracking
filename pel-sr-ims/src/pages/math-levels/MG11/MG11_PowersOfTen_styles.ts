@@ -1,0 +1,45 @@
+/**
+ * Shared Tailwind class strings.
+ * Every class is written out in full (never assembled from fragments) so Tailwind's
+ * content scanner always finds it — this app's Tailwind v4 + @tailwindcss/vite setup
+ * scans automatically, no manual content globs to maintain.
+ * Colors are arbitrary values with dark: pairs, so no tailwind.config changes are needed.
+ */
+export const tw = {
+  root:
+    'min-h-full text-[17px] leading-[1.55] [font-family:Nunito,system-ui,sans-serif] ' +
+    'bg-[#EEF3FA] text-[#1B2440] dark:bg-[#111827] dark:text-[#E8EDF8] ' +
+    'bg-[image:linear-gradient(#DCE5F3_1px,transparent_1px),linear-gradient(90deg,#DCE5F3_1px,transparent_1px)] ' +
+    'dark:bg-[image:linear-gradient(#1A2338_1px,transparent_1px),linear-gradient(90deg,#1A2338_1px,transparent_1px)] ' +
+    'bg-[length:26px_26px]',
+  display: '[font-family:Fredoka,Nunito,system-ui,sans-serif]',
+  muted: 'text-[#56618A] dark:text-[#A3AECB]',
+  panel:
+    'rounded-[18px] border-[1.5px] border-[#C9D5EA] bg-white p-[18px] dark:border-[#34405E] dark:bg-[#1B2338]',
+  focus:
+    'focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2 ' +
+    'focus-visible:outline-[#2F5BD3] dark:focus-visible:outline-[#7C9BFF]',
+  h2: '[font-family:Fredoka,Nunito,system-ui,sans-serif] font-semibold leading-[1.15] text-[26px] mb-1.5',
+  key: 'mt-1.5 text-[13px] text-[#56618A] dark:text-[#A3AECB]',
+  soft: 'bg-[#F4F7FC] dark:bg-[#222C45]',
+
+  chip:
+    'rounded-full border-[1.5px] px-3 py-1.5 text-[15px] font-bold cursor-pointer ' +
+    'focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-[#2F5BD3] dark:focus-visible:outline-[#7C9BFF]',
+  chipOff:
+    'border-[#C9D5EA] bg-white text-[#1B2440] dark:border-[#34405E] dark:bg-[#1B2338] dark:text-[#E8EDF8]',
+  chipOn:
+    'border-[#1B2440] bg-[#1B2440] text-white dark:border-[#E8EDF8] dark:bg-[#E8EDF8] dark:text-[#1B2338]',
+
+  btn:
+    'min-h-[46px] rounded-xl px-4 py-[11px] font-extrabold cursor-pointer ' +
+    'focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-[#2F5BD3] dark:focus-visible:outline-[#7C9BFF]',
+  btnPrimary: 'border-0 bg-[#2F5BD3] text-white dark:bg-[#7C9BFF] dark:text-[#0E1426]',
+  btnQuiet:
+    'border-[1.5px] border-[#C9D5EA] bg-[#F4F7FC] text-[#1B2440] dark:border-[#34405E] dark:bg-[#222C45] dark:text-[#E8EDF8]',
+
+  input:
+    'min-w-0 rounded-xl border-2 border-[#C9D5EA] bg-white px-3 py-2.5 text-xl font-bold text-[#1B2440] ' +
+    'dark:border-[#34405E] dark:bg-[#1B2338] dark:text-[#E8EDF8] ' +
+    'focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-[#2F5BD3] dark:focus-visible:outline-[#7C9BFF]',
+} as const;
