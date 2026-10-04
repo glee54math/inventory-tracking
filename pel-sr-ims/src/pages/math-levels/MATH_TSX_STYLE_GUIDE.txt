@@ -313,3 +313,41 @@ MG6_BarModel is the first example. When that happens:
     (StandaloneLevelSkill in levelSubsections.ts). ProblemRenderer mounts
     a standalone skill with zero injected props and no wrapper buttons;
     the component is trusted to be fully self-sufficient.
+
+EXCEPTION — large packages with real internal module structure: the flat-
+prefix rule above is for a handful of files (6-8) that only exist to
+support ONE entry component. MM1_RatioLab is a different scale entirely:
+27 files organized into genuinely reusable subdirectories (diagrams/,
+engine/, lib/, units/) that cross-import each other, not just one
+component's private helpers. Flattening + prefixing all 27 would make
+every filename and every cross-import longer for no real benefit. For a
+package at this scale:
+
+  - The entry file (e.g. MM1_RatioLab.tsx) stays directly in the level
+    folder, same as always — this is what keeps it visible to the admin
+    file browser (LevelFilesPage's glob only goes one level deep, so
+    anything nested inside a subfolder is automatically invisible there,
+    the same outcome supporting-file filtering achieves for the flat
+    case, just via folder depth instead of filename matching).
+  - The package's internal subdirectories (diagrams/, engine/, lib/,
+    units/ or whatever the artifact already called them) become real
+    subfolders directly under the level folder, keeping their original
+    short names and relative imports exactly as authored — don't rename
+    or re-prefix files inside them.
+  - If the artifact styles itself with a plain CSS file instead of
+    Tailwind, check it for unscoped selectors (:root, body, html, bare
+    button/input/h1-h3/p/img, etc.) before importing it anywhere. An
+    artifact built to own its whole page will often reset these globally;
+    imported as-is into a multi-page app, that silently repaints every
+    OTHER page too. Rescope every selector under one wrapper class
+    (MM1_RatioLab used .ratio-lab) — move :root's custom properties and
+    body's visual properties onto the wrapper class itself, drop html-only
+    rules, and rename any @keyframes to something collision-proof before
+    they land in the site's global CSS namespace.
+  - Vite's per-file esbuild transform (unlike tsc, which sees the whole
+    program) needs type-only imports marked explicitly — `import { foo,
+    type Bar }` or `import type { Bar }` — when importing an interface
+    from another file in the package. Without it, the build still
+    "succeeds" but prints a warning per occurrence that the import
+    doesn't exist at runtime. tsc won't catch this; only an actual
+    `vite build` (not just `tsc --noEmit`) surfaces it.

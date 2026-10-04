@@ -124,6 +124,14 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       componentExport: "PowersOf10Practice",
     },
   ],
+  MM1: [
+    {
+      type: "standalone",
+      skillId: "RatioLab",
+      componentFile: "MM1_RatioLab",
+      componentExport: "RatioLab",
+    },
+  ],
 };
 
 export function getSkillsForLevel(level: string): LevelSkill[] {

@@ -84,7 +84,19 @@ ELEMENTARY
 ------------------------------------------------------------------
 MIDDLE SCHOOL
 ------------------------------------------------------------------
-[ ] MM1
+[x] MM1  — RatioLab                    (MM1/MM1_RatioLab.tsx) — wired 2026-10-04
+          as a "standalone" skill. First package large enough to use the real-
+          subfolder exception to section 11's flat-prefix rule: diagrams/, engine/,
+          lib/, units/ (27 files total) sit as genuine subfolders directly under
+          MM1/, keeping their original short names and cross-imports exactly as
+          authored. MM1_RatioLab.tsx is the only other file directly in MM1/
+          alongside the empty MM1.tsx shell, which is why it's still the only one
+          the admin file browser lists (its glob only goes one level deep).
+          Styled with its own CSS file (MM1_RatioLab_styles.css), not Tailwind —
+          the original artifact's :root/body/button/h1-h3/p/img rules were fully
+          unscoped and would have repainted the entire site; every selector was
+          rewritten under a .ratio-lab wrapper class before import. Loads Lexend
+          from Google Fonts at runtime, same external-CDN flag as MG11_PowersOfTen.
 [ ] MM2
 [ ] MM3
 
