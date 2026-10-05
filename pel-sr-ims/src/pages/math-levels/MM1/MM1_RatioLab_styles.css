@@ -24,6 +24,18 @@
   --good-soft: #d7f2e4;
   --bad: #c93848;
   --bad-soft: #fbe1e4;
+  /* Item colors — for scenes whose wording references a real color (see
+     lib/palette.ts's itemColors). Deliberately distinct from qa/qb/qc and
+     good/bad so reusing "red" here never gets confused with a feedback color. */
+  --item-red: #c4432e;
+  --item-red-soft: #f6ddd6;
+  --item-red-text: #9a3420;
+  --item-green: #4c8c2b;
+  --item-green-soft: #e1edd4;
+  --item-green-text: #386b1f;
+  --item-yellow: #d4a72c;
+  --item-yellow-soft: #fbf1d1;
+  --item-yellow-text: #8c6b14;
   --on-q: #ffffff;
   --radius-lg: 18px;
   --radius-sm: 10px;
@@ -61,6 +73,15 @@
     --good-soft: #173d2e;
     --bad: #ff6b7a;
     --bad-soft: #45202a;
+    --item-red: #e8775e;
+    --item-red-soft: #4a2a22;
+    --item-red-text: #f2a68f;
+    --item-green: #7fc44b;
+    --item-green-soft: #243318;
+    --item-green-text: #a3db7a;
+    --item-yellow: #e8c455;
+    --item-yellow-soft: #4a3c14;
+    --item-yellow-text: #f2d98a;
     --on-q: #0e1426;
   }
 }
@@ -84,6 +105,15 @@
   --good-soft: #173d2e;
   --bad: #ff6b7a;
   --bad-soft: #45202a;
+  --item-red: #e8775e;
+  --item-red-soft: #4a2a22;
+  --item-red-text: #f2a68f;
+  --item-green: #7fc44b;
+  --item-green-soft: #243318;
+  --item-green-text: #a3db7a;
+  --item-yellow: #e8c455;
+  --item-yellow-soft: #4a3c14;
+  --item-yellow-text: #f2d98a;
   --on-q: #0e1426;
 }
 
@@ -770,6 +800,12 @@
 .ratio-lab .ratio-box.qb small {
   color: var(--qb-text);
 }
+.ratio-lab .ratio-box.qc input.answer {
+  border-color: var(--qc);
+}
+.ratio-lab .ratio-box.qc small {
+  color: var(--qc-text);
+}
 .ratio-lab .choices {
   display: grid;
   gap: 8px;
@@ -859,6 +895,102 @@
   border-radius: var(--radius-sm);
   border: 2px solid var(--qb);
   font-weight: 600;
+}
+
+/* ---------- end-of-unit test ---------- */
+.ratio-lab .test-badge {
+  margin-top: 6px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 2px solid var(--bad);
+  color: var(--bad);
+}
+.ratio-lab .test-badge.pass {
+  border-color: var(--good);
+  color: var(--good);
+}
+.ratio-lab .test-meter {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+.ratio-lab .test-meter span {
+  height: 6px;
+  flex: 1;
+  border-radius: 3px;
+  background: var(--grid);
+}
+.ratio-lab .test-meter span.on {
+  background: var(--good);
+}
+.ratio-lab .test-meter span.now {
+  background: var(--qa);
+}
+.ratio-lab .test-question {
+  display: grid;
+  gap: 16px;
+}
+.ratio-lab .test-prompt {
+  font-size: 19px;
+  font-weight: 500;
+}
+.ratio-lab .test-score {
+  text-align: center;
+  padding: 22px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 20px;
+  border: 2px solid var(--bad);
+  background: var(--bad-soft);
+}
+.ratio-lab .test-score.pass {
+  border-color: var(--good);
+  background: var(--good-soft);
+}
+.ratio-lab .test-score-num {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.ratio-lab .test-score-label {
+  font-weight: 600;
+  margin-top: 4px;
+}
+.ratio-lab .test-review {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.ratio-lab .test-review li {
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--line);
+}
+.ratio-lab .test-review li.ok {
+  border-color: var(--good);
+  background: var(--good-soft);
+}
+.ratio-lab .test-review li.bad {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+}
+.ratio-lab .test-review-visual {
+  max-width: 320px;
+  margin: 0 0 10px;
+}
+.ratio-lab .test-review-prompt {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.ratio-lab .test-review-answer,
+.ratio-lab .test-review-correct {
+  font-size: 15px;
+}
+.ratio-lab .test-review-explain {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 6px;
 }
 
 /* ---------- responsive ---------- */

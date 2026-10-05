@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import "./MM1_RatioLab_styles.css";
 import { units, type Unit } from "./units";
 import { StepProblem } from "./engine/StepProblem";
+import { UnitTestView } from "./engine/UnitTest";
 import { MASTERY_GOAL, useProgress, type UnitProgress } from "./engine/useProgress";
 import { RatioGroups } from "./diagrams";
 import { palette } from "./lib/palette";
@@ -77,8 +78,18 @@ function Home({ onPick, progress }: { onPick: (i: number) => void; progress: Rec
   );
 }
 
-function UnitView({ unit, progress, onSolved, onNextUnit }: { unit: Unit; progress?: UnitProgress; onSolved: (clean: boolean) => void; onNextUnit?: () => void }) {
-  const [tab, setTab] = useState<"explore" | "practice">("explore");
+function TestBadge({ p, passScore }: { p?: UnitProgress; passScore: number }) {
+  if (p?.testScore === undefined) return null;
+  const passed = p.testScore >= passScore;
+  return (
+    <span className={`test-badge ${passed ? "pass" : "fail"}`} title="Your best score across all attempts">
+      Best test score: {p.testScore}/10{passed ? " ✓" : ""}
+    </span>
+  );
+}
+
+function UnitView({ unit, progress, onSolved, onTest, onNextUnit }: { unit: Unit; progress?: UnitProgress; onSolved: (clean: boolean) => void; onTest: (score: number) => void; onNextUnit?: () => void }) {
+  const [tab, setTab] = useState<"explore" | "practice" | "test">("explore");
   const [typeIdx, setTypeIdx] = useState<number | "mix">("mix");
   const [seed, setSeed] = useState(0);
 
@@ -102,6 +113,7 @@ function UnitView({ unit, progress, onSolved, onNextUnit }: { unit: Unit; progre
           <Stars p={progress} size="lg" />
           <span className="small muted">{progress?.solved ?? 0} solved</span>
           <span className="small muted">Standard {unit.standard}</span>
+          {unit.test && <TestBadge p={progress} passScore={unit.test.passScore} />}
         </div>
       </header>
 
@@ -114,9 +126,14 @@ function UnitView({ unit, progress, onSolved, onNextUnit }: { unit: Unit; progre
         <button role="tab" aria-selected={tab === "practice"} className={tab === "practice" ? "on" : ""} onClick={() => setTab("practice")}>
           Practice
         </button>
+        {unit.test && (
+          <button role="tab" aria-selected={tab === "test"} className={tab === "test" ? "on" : ""} onClick={() => setTab("test")}>
+            Test
+          </button>
+        )}
       </div>
 
-      {tab === "explore" ? (
+      {tab === "explore" && (
         <div className="panel" role="tabpanel">
           <unit.Explore />
           <div className="panel-foot">
@@ -125,7 +142,9 @@ function UnitView({ unit, progress, onSolved, onNextUnit }: { unit: Unit; progre
             </button>
           </div>
         </div>
-      ) : (
+      )}
+
+      {tab === "practice" && (
         <div className="panel" role="tabpanel">
           <div className="practice-bar">
             <div className="segmented" role="radiogroup" aria-label="Problem type">
@@ -153,13 +172,19 @@ function UnitView({ unit, progress, onSolved, onNextUnit }: { unit: Unit; progre
           )}
         </div>
       )}
+
+      {tab === "test" && unit.test && (
+        <div className="panel" role="tabpanel">
+          <UnitTestView key={unit.id} unit={unit} onComplete={onTest} />
+        </div>
+      )}
     </div>
   );
 }
 
 function RatioLab() {
   useFonts();
-  const { progress, record, reset } = useProgress();
+  const { progress, record, recordTest, reset } = useProgress();
   const [current, setCurrent] = useState<number | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const go = useCallback((i: number | null) => {
@@ -168,6 +193,7 @@ function RatioLab() {
   }, []);
   const unit = current === null ? null : units[current];
   const onSolved = useCallback((clean: boolean) => unit && record(unit.id, clean), [unit, record]);
+  const onTest = useCallback((score: number) => unit && recordTest(unit.id, score), [unit, recordTest]);
 
   return (
     <div className="ratio-lab">
@@ -206,7 +232,7 @@ function RatioLab() {
         </nav>
         <main className="main">
           {unit ? (
-            <UnitView key={unit.id} unit={unit} progress={progress[unit.id]} onSolved={onSolved} onNextUnit={current !== null && current < units.length - 1 ? () => go(current + 1) : undefined} />
+            <UnitView key={unit.id} unit={unit} progress={progress[unit.id]} onSolved={onSolved} onTest={onTest} onNextUnit={current !== null && current < units.length - 1 ? () => go(current + 1) : undefined} />
           ) : (
             <Home onPick={go} progress={progress} />
           )}

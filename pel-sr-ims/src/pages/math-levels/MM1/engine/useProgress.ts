@@ -4,6 +4,8 @@ export interface UnitProgress {
   solved: number;
   /** Problems solved cleanly (no revealed answers, at most one hint). */
   clean: number;
+  /** Best-ever end-of-unit test score out of 10. A later worse retake never lowers this. */
+  testScore?: number;
 }
 
 export type ProgressMap = Record<string, UnitProgress>;
@@ -42,7 +44,14 @@ export function useProgress() {
     });
   }, []);
 
+  const recordTest = useCallback((unitId: string, score: number) => {
+    setProgress((p) => {
+      const cur = p[unitId] ?? { solved: 0, clean: 0 };
+      return { ...p, [unitId]: { ...cur, testScore: Math.max(cur.testScore ?? 0, score) } };
+    });
+  }, []);
+
   const reset = useCallback(() => setProgress({}), []);
 
-  return { progress, record, reset };
+  return { progress, record, recordTest, reset };
 }

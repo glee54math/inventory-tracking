@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { RatioGroups, TapeDiagram } from "../diagrams";
 import type { ShapeKind } from "../diagrams";
-import { palette } from "../lib/palette";
+import { palette, itemColors } from "../lib/palette";
+import type { ItemColor } from "../lib/palette";
 import { gcd, pick, randInt, simplify } from "../lib/math";
 import { choice, type Problem } from "../engine/types";
 import { QA, QB, QC, Says, Segmented, Stepper } from "../engine/controls";
+import { ratioLanguageTest } from "./RatioLanguageTest";
 import type { Unit } from "./types";
 
 interface Scene {
@@ -126,13 +128,27 @@ function Explore() {
 
 // ---------- practice problems ----------
 
-const groupScenes = [
-  { where: "In a bag of marbles", a: "blue marbles", aOne: "blue marble", b: "yellow marbles", bOne: "yellow marble", sa: "circle", sb: "circle" },
+interface GroupScene {
+  where: string;
+  a: string;
+  aOne: string;
+  b: string;
+  bOne: string;
+  sa: ShapeKind;
+  sb: ShapeKind;
+  /** Overrides palette.a/b when this scene's own wording names a real color
+   *  (e.g. "yellow marbles") — see lib/palette.ts's itemColors. */
+  colorA?: ItemColor;
+  colorB?: ItemColor;
+}
+
+const groupScenes: GroupScene[] = [
+  { where: "In a bag of marbles", a: "blue marbles", aOne: "blue marble", b: "yellow marbles", bOne: "yellow marble", sa: "circle", sb: "circle", colorB: itemColors.yellow },
   { where: "On a sticker sheet", a: "stars", aOne: "star", b: "hearts", bOne: "heart", sa: "star", sb: "heart" },
   { where: "In a tile pattern", a: "squares", aOne: "square", b: "triangles", bOne: "triangle", sa: "square", sb: "triangle" },
   { where: "At the class party", a: "cookies", aOne: "cookie", b: "juice boxes", bOne: "juice box", sa: "circle", sb: "square" },
   { where: "In a garden bed", a: "tulips", aOne: "tulip", b: "daisies", bOne: "daisy", sa: "diamond", sb: "star" },
-] as const;
+];
 
 const countProblem = (): Problem => {
   const s = pick(groupScenes);
@@ -148,14 +164,14 @@ const countProblem = (): Problem => {
     title: "Count it, then say it",
     story: (
       <>
-        {s.where}, the objects come in matching groups. Use the picture to describe the ratio of <QA>{s.a}</QA> to <QB>{s.b}</QB>.
+        {s.where}, the objects come in matching groups. Use the picture to describe the ratio of <QA color={s.colorA?.text}>{s.a}</QA> to <QB color={s.colorB?.text}>{s.b}</QB>.
       </>
     ),
     visual: (done) => (
       <RatioGroups
         groups={g}
-        a={{ count: a, kind: s.sa, color: palette.a, label: s.a }}
-        b={{ count: b, kind: s.sb, color: palette.b, label: s.b }}
+        a={{ count: a, kind: s.sa, color: s.colorA?.main ?? palette.a, label: s.a }}
+        b={{ count: b, kind: s.sb, color: s.colorB?.main ?? palette.b, label: s.b }}
         focus={done === 0 ? "a" : done === 1 ? "b" : null}
         highlightGroup={done === 3 || done === 5 ? 0 : null}
         showGroupLabels={done >= 4}
@@ -166,7 +182,7 @@ const countProblem = (): Problem => {
         kind: "number",
         prompt: (
           <>
-            How many <QA>{s.a}</QA> are there in all?
+            How many <QA color={s.colorA?.text}>{s.a}</QA> are there in all?
           </>
         ),
         answer: ta,
@@ -177,7 +193,7 @@ const countProblem = (): Problem => {
         kind: "number",
         prompt: (
           <>
-            How many <QB>{s.b}</QB> are there in all?
+            How many <QB color={s.colorB?.text}>{s.b}</QB> are there in all?
           </>
         ),
         answer: tb,
@@ -188,7 +204,7 @@ const countProblem = (): Problem => {
         kind: "ratio",
         prompt: (
           <>
-            Write the ratio of <QA>{s.a}</QA> to <QB>{s.b}</QB> using the totals.
+            Write the ratio of <QA color={s.colorA?.text}>{s.a}</QA> to <QB color={s.colorB?.text}>{s.b}</QB> using the totals.
           </>
         ),
         answer: [ta, tb],
@@ -217,7 +233,7 @@ const countProblem = (): Problem => {
         {
           prompt: (
             <>
-              What is the ratio of <QB>{s.b}</QB> to <QA>{s.a}</QA>?
+              What is the ratio of <QB color={s.colorB?.text}>{s.b}</QB> to <QA color={s.colorA?.text}>{s.a}</QA>?
             </>
           ),
           hint: "Which word comes first this time?",
@@ -230,12 +246,13 @@ const countProblem = (): Problem => {
         kind: "ratio",
         prompt: (
           <>
-            In one group, what is the ratio of <QA>{s.a}</QA> to <QC>all the objects</QC>?
+            In one group, what is the ratio of <QA color={s.colorA?.text}>{s.a}</QA> to <QC>all the objects</QC>?
           </>
         ),
         answer: [a, a + b],
-        equivalent: true,
         labels: [s.a, "all objects"],
+        tones: ["a", "c"],
+        equivalentHint: "That's an equivalent ratio, but re-read the question — it's asking about ONE group only. Use the numbers from a single group, not a scaled-up version.",
         hint: `All the objects = ${s.a} + ${s.b} in one group.`,
         explain: (
           <>
@@ -246,18 +263,33 @@ const countProblem = (): Problem => {
     ],
     wrapUp: (
       <>
-        The ratio of <QA>{s.a}</QA> to <QB>{s.b}</QB> is {a}:{b} — for every {a} {a === 1 ? s.aOne : s.a} there {b === 1 ? "is" : "are"} {b} {b === 1 ? s.bOne : s.b}.
+        The ratio of <QA color={s.colorA?.text}>{s.a}</QA> to <QB color={s.colorB?.text}>{s.b}</QB> is {a}:{b} — for every {a} {a === 1 ? s.aOne : s.a} there {b === 1 ? "is" : "are"} {b} {b === 1 ? s.bOne : s.b}.
       </>
     ),
   };
 };
 
-const groupWordScenes = [
+interface GroupWordScene {
+  place: string;
+  a: string;
+  aOne: string;
+  aShort: string;
+  b: string;
+  bOne: string;
+  bShort: string;
+  whole: string;
+  /** Overrides palette.a/b when this scene's own wording names a real color
+   *  (e.g. "red apples") — see lib/palette.ts's itemColors. */
+  colorA?: ItemColor;
+  colorB?: ItemColor;
+}
+
+const groupWordScenes: GroupWordScene[] = [
   { place: "A class", a: "boys", aOne: "boy", aShort: "boys", b: "girls", bOne: "girl", bShort: "girls", whole: "students" },
   { place: "An animal shelter", a: "dogs", aOne: "dog", aShort: "dogs", b: "cats", bOne: "cat", bShort: "cats", whole: "animals" },
-  { place: "A fruit bowl", a: "red apples", aOne: "red apple", aShort: "red", b: "green apples", bOne: "green apple", bShort: "green", whole: "apples" },
+  { place: "A fruit bowl", a: "red apples", aOne: "red apple", aShort: "red", b: "green apples", bOne: "green apple", bShort: "green", whole: "apples", colorA: itemColors.red, colorB: itemColors.green },
   { place: "A bookshelf", a: "fiction books", aOne: "fiction book", aShort: "fiction", b: "nonfiction books", bOne: "nonfiction book", bShort: "nonfiction", whole: "books" },
-] as const;
+];
 
 const wordProblem = (): Problem => {
   const s = pick(groupWordScenes);
@@ -273,10 +305,10 @@ const wordProblem = (): Problem => {
     title: "Ratio language in a story",
     story: (
       <>
-        {s.place} has <QA>
+        {s.place} has <QA color={s.colorA?.text}>
           {ta} {s.a}
         </QA>{" "}
-        and <QB>
+        and <QB color={s.colorB?.text}>
           {tb} {s.b}
         </QB>
         .
@@ -285,8 +317,8 @@ const wordProblem = (): Problem => {
     visual: (done) => (
       <TapeDiagram
         tapes={[
-          { label: s.aShort, units: a, color: palette.a, softColor: palette.aSoft, values: done >= 2 ? Array(a).fill(k) : [], total: String(ta) },
-          { label: s.bShort, units: b, color: palette.b, softColor: palette.bSoft, values: done >= 2 ? Array(b).fill(k) : [], total: String(tb) },
+          { label: s.aShort, units: a, color: s.colorA?.main ?? palette.a, softColor: s.colorA?.soft ?? palette.aSoft, values: done >= 2 ? Array(a).fill(k) : [], total: String(ta) },
+          { label: s.bShort, units: b, color: s.colorB?.main ?? palette.b, softColor: s.colorB?.soft ?? palette.bSoft, values: done >= 2 ? Array(b).fill(k) : [], total: String(tb) },
         ]}
         unitWidth={48}
       />
@@ -296,7 +328,7 @@ const wordProblem = (): Problem => {
         kind: "ratio",
         prompt: (
           <>
-            Write the ratio of <QA>{s.a}</QA> to <QB>{s.b}</QB>.
+            Write the ratio of <QA color={s.colorA?.text}>{s.a}</QA> to <QB color={s.colorB?.text}>{s.b}</QB>.
           </>
         ),
         answer: [ta, tb],
@@ -309,6 +341,7 @@ const wordProblem = (): Problem => {
         prompt: <>Write it in simplest form. Each block in the tape diagram is the same size.</>,
         answer: [a, b],
         labels: [s.a, s.b],
+        equivalentHint: "That ratio is correct, but it's not fully simplified yet. Divide both numbers by their greatest common factor.",
         hint: `Find the biggest number that divides both ${ta} and ${tb}.`,
         explain: (
           <>
@@ -325,11 +358,13 @@ const wordProblem = (): Problem => {
         kind: "ratio",
         prompt: (
           <>
-            What is the ratio of <QB>{s.b}</QB> to <QC>all {s.whole}</QC>, in simplest form?
+            What is the ratio of <QB color={s.colorB?.text}>{s.b}</QB> to <QC>all {s.whole}</QC>, in simplest form?
           </>
         ),
         answer: [b, a + b],
         labels: [s.b, `all ${s.whole}`],
+        tones: ["b", "c"],
+        equivalentHint: "That ratio is correct, but it's not fully simplified yet. Divide both numbers by their greatest common factor.",
         hint: `Count blocks: ${s.b} blocks compared with all the blocks.`,
         explain: (
           <>
@@ -364,4 +399,5 @@ export const ratioLanguage: Unit = {
     { label: "Picture groups", make: countProblem },
     { label: "Word problem", make: wordProblem },
   ],
+  test: ratioLanguageTest,
 };

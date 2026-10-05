@@ -1,9 +1,22 @@
 import React from "react";
 
-/** Quantity words, colored to match the diagrams. */
-export const QA = ({ children }: { children: React.ReactNode }) => <span className="qa-text">{children}</span>;
-export const QB = ({ children }: { children: React.ReactNode }) => <span className="qb-text">{children}</span>;
-export const QC = ({ children }: { children: React.ReactNode }) => <span className="qc-text">{children}</span>;
+/**
+ * Quantity words, colored to match the diagrams. `color` overrides the default
+ * qa/qb/qc-text color — use it when a scene's own wording names a real color
+ * (e.g. "red apples") so the text and the diagram agree instead of the text
+ * defaulting to whichever of qa/qb/qc happens to be assigned to that quantity.
+ * The qa/qb/qc-text class still supplies font-weight; the inline style only
+ * overrides color, since inline style wins over a class for the same property.
+ */
+export const QA = ({ children, color }: { children: React.ReactNode; color?: string }) => (
+  <span className="qa-text" style={color ? { color } : undefined}>{children}</span>
+);
+export const QB = ({ children, color }: { children: React.ReactNode; color?: string }) => (
+  <span className="qb-text" style={color ? { color } : undefined}>{children}</span>
+);
+export const QC = ({ children, color }: { children: React.ReactNode; color?: string }) => (
+  <span className="qc-text" style={color ? { color } : undefined}>{children}</span>
+);
 
 export interface StepperProps {
   label: React.ReactNode;

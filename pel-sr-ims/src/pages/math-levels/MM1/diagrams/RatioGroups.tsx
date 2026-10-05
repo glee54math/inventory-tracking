@@ -58,7 +58,11 @@ export function RatioGroups({
   const width = cols * boxW + (cols - 1) * gap + 4;
   const height = rows * boxH + (rows - 1) * gap + 4;
 
-  const fade = (which: "a" | "b") => (focus && focus !== which ? 0.22 : 1);
+  // 0.45, not lower: this is the only de-emphasis value in the diagrams folder that was
+  // aggressive enough to make the non-focused shapes read as washed-out rather than
+  // "secondary but still visible" (every other opacity used for a similar effect
+  // elsewhere in this package sits between 0.55 and 0.75).
+  const fade = (which: "a" | "b") => (focus && focus !== which ? 0.45 : 1);
 
   return (
     <svg

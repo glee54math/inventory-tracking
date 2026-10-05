@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
-import type { ProblemType } from "../engine/types";
+import type { ProblemType, TestQuestion } from "../engine/types";
 
 export interface Unit {
   id: string;
@@ -14,4 +14,15 @@ export interface Unit {
   Explore: ComponentType;
   /** Randomized, step-by-step practice problems. */
   problems: ProblemType[];
+  /**
+   * End-of-unit test: a fixed, curated set of questions (unlike `problems`,
+   * which are picked randomly one at a time). Optional — units without one
+   * simply get no "Test" tab. `questions` is an array of generator functions
+   * because a few questions share a scenario's randomized numbers (a "cluster"
+   * generator returns more than one TestQuestion); flattened, it must total 10.
+   */
+  test?: {
+    questions: (() => TestQuestion[])[];
+    passScore: number;
+  };
 }

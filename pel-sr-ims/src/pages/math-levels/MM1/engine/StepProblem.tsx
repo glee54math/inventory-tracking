@@ -2,7 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import type { Problem, Step } from "./types";
 import { fmt, numbersMatch, parseAnswer } from "../lib/math";
 
-interface StepState {
+/** Exported so the end-of-unit test (engine/UnitTest.tsx) can type its own
+ *  per-question answer state the same shape StepInput expects. */
+export interface StepState {
   inputs: string[]; // one entry for number/choice, two for ratio
   wrong: number;
   hint: boolean;
@@ -10,17 +12,22 @@ interface StepState {
   feedback: string | null;
 }
 
-const fresh = (): StepState => ({ inputs: ["", ""], wrong: 0, hint: false, revealed: false, feedback: null });
+export const fresh = (): StepState => ({ inputs: ["", ""], wrong: 0, hint: false, revealed: false, feedback: null });
 
-const answerText = (s: Step): string => {
+/** Formats a step's canonical answer for display. Exported for reuse on the
+ *  end-of-unit test's results review screen — see engine/UnitTest.tsx. */
+export const answerText = (s: Step): string => {
   if (s.kind === "number") return `${s.prefix ?? ""}${fmt(s.answer)}${s.suffix ? " " + s.suffix : ""}`;
   if (s.kind === "ratio") return `${s.answer[0]} : ${s.answer[1]}`;
   return s.choices[s.correct];
 };
 
-/** Check one step. Returns null when right, or a targeted message when wrong. */
-const check = (s: Step, inputs: string[]): { ok: boolean; msg: string } => {
+/** Check one step. Returns null when right, or a targeted message when wrong.
+ *  Exported for reuse by the end-of-unit test, so test questions are graded
+ *  with the exact same logic as practice steps — see engine/UnitTest.tsx. */
+export const check = (s: Step, inputs: string[]): { ok: boolean; msg: string } => {
   if (s.kind === "choice") {
+    if (inputs[0] === "") return { ok: false, msg: "Pick one of the choices." };
     return Number(inputs[0]) === s.correct ? { ok: true, msg: "" } : { ok: false, msg: "Not that one. Reread each choice and test it against the picture." };
   }
   if (s.kind === "number") {
@@ -38,7 +45,12 @@ const check = (s: Step, inputs: string[]): { ok: boolean; msg: string } => {
   if (numbersMatch(a, x) && numbersMatch(b, y)) return { ok: true, msg: "" };
   if (s.equivalent && b !== 0 && numbersMatch(a / b, x / y)) return { ok: true, msg: "" };
   if (numbersMatch(a, y) && numbersMatch(b, x)) return { ok: false, msg: "Order matters in a ratio. Your numbers are switched." };
-  if (!s.equivalent && b !== 0 && numbersMatch(a / b, x / y)) return { ok: false, msg: "That ratio is equivalent, but this step asks for these exact numbers." };
+  if (!s.equivalent && b !== 0 && numbersMatch(a / b, x / y)) {
+    return {
+      ok: false,
+      msg: s.equivalentHint ?? "That ratio is equivalent, but this step asks for these exact numbers.",
+    };
+  }
   return { ok: false, msg: "Not yet. Count each quantity again." };
 };
 
@@ -178,7 +190,10 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
   );
 }
 
-function StepInput({ step, state, onChange, onSubmit }: { step: Step; state: StepState; onChange: (v: string[]) => void; onSubmit: (v: string[]) => void }) {
+/** The number/ratio/choice input widget for one step. Exported for reuse by
+ *  the end-of-unit test — see engine/UnitTest.tsx. StepState is also exported
+ *  so a caller outside this file can type its own per-question answer state. */
+export function StepInput({ step, state, onChange, onSubmit }: { step: Step; state: StepState; onChange: (v: string[]) => void; onSubmit: (v: string[]) => void }) {
   const enter = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") onSubmit(state.inputs);
   };
@@ -211,15 +226,20 @@ function StepInput({ step, state, onChange, onSubmit }: { step: Step; state: Ste
     );
   }
   const [before, mid, after] = step.frame ?? ["", ":", ""];
+  const boxClass = (i: 0 | 1): string => {
+    if (step.tones === "none") return "ratio-box";
+    const tones = step.tones ?? ["a", "b"];
+    return `ratio-box q${tones[i]}`;
+  };
   return (
     <div className="answer-row ratio-row">
       {before && <span className="affix">{before}</span>}
-      <label className="ratio-box qa">
+      <label className={boxClass(0)}>
         <input className="answer" inputMode="decimal" autoComplete="off" value={state.inputs[0]} aria-label={step.labels?.[0] ?? "first number"} onChange={(e) => onChange([e.target.value, state.inputs[1]])} onKeyDown={enter} />
         {step.labels && <small>{step.labels[0]}</small>}
       </label>
       <span className="affix colon">{mid}</span>
-      <label className="ratio-box qb">
+      <label className={boxClass(1)}>
         <input className="answer" inputMode="decimal" autoComplete="off" value={state.inputs[1]} aria-label={step.labels?.[1] ?? "second number"} onChange={(e) => onChange([state.inputs[0], e.target.value])} onKeyDown={enter} />
         {step.labels && <small>{step.labels[1]}</small>}
       </label>

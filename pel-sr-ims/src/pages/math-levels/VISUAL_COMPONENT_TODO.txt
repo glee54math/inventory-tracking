@@ -97,6 +97,29 @@ MIDDLE SCHOOL
           unscoped and would have repainted the entire site; every selector was
           rewritten under a .ratio-lab wrapper class before import. Loads Lexend
           from Google Fonts at runtime, same external-CDN flag as MG11_PowersOfTen.
+          2026-10-05: added lib/palette.ts's itemColors (red/green/yellow) + an
+          optional color prop on QA/QB/QC (engine/controls.tsx) + colorA/colorB on
+          RatioLanguage.tsx's scene data, so a scene whose item names reference a
+          real color (e.g. "red apples", "yellow marbles") renders in that color
+          instead of defaulting to whichever of qa/qb happens to be assigned to
+          it. Only 2 of the 9 scenes across groupScenes/groupWordScenes needed an
+          override; everything else still uses the qa/qb/qc default.
+          2026-10-05: added an End-of-Unit Test to the "Ratio language" unit only
+          (units/RatioLanguageTest.tsx — 7 curated generator functions, each
+          randomizing its own numbers, totaling 10 fixed questions; 2 with a
+          diagram, 3 with colored QA/QB/QC prompt text, 9/10 passScore). New
+          supporting pieces: TestQuestion type (engine/types.ts), RatioStep.tones
+          now also accepts "none" for a plain answer box with no qa/qb/qc tint,
+          Unit.test? field (units/types.ts), engine/UnitTest.tsx's UnitTestView
+          (one question at a time, no hints/reveal/feedback until all 10 are in,
+          reuses StepInput/check/answerText exported from StepProblem.tsx),
+          useProgress's testScore/recordTest (keeps the best-ever score, not the
+          latest), and a "Test" tab + pass/fail badge in MM1_RatioLab.tsx — shown
+          only for units with a `test` defined, so the other 5 MM1 units are
+          unaffected until each gets its own RatioLanguageTest.tsx-style file.
+          Not yet done: the other 5 units' tests, and the eventual student-login
+          + Firestore-backed persistence (useProgress's localStorage is explicitly
+          the piece designed to swap out for that later).
 [ ] MM2
 [ ] MM3
 
