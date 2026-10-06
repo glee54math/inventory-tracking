@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { CoordinatePlane, RatioTable } from "../diagrams";
 import type { PlotPoint, RatioTableCell } from "../diagrams";
-import { palette } from "../lib/palette";
+import { palette, itemColors } from "../lib/palette";
+import type { ItemColor } from "../lib/palette";
 import { gcd, lcm, pick, randInt, shuffle } from "../lib/math";
 import { choice, type Problem } from "../engine/types";
 import { niceMax, niceStep, QA, QB, QC, Says, Stepper } from "../engine/controls";
+import { tablesGraphsTest } from "./TablesGraphsTest";
 import type { Unit } from "./types";
 
 function Explore() {
@@ -103,9 +105,20 @@ function Explore() {
   );
 }
 
-const tableScenes = [
+interface TableScene {
+  a: string;
+  aShort: string;
+  b: string;
+  bShort: string;
+  /** Overrides palette.a/b when this scene's own wording names a real color
+   *  (e.g. "yellow paint") — see lib/palette.ts's itemColors. */
+  colorA?: ItemColor;
+  colorB?: ItemColor;
+}
+
+const tableScenes: TableScene[] = [
   { a: "scoops of lemonade mix", aShort: "scoops", b: "cups of water", bShort: "cups" },
-  { a: "drops of blue paint", aShort: "blue drops", b: "drops of white paint", bShort: "white drops" },
+  { a: "drops of blue paint", aShort: "blue drops", b: "drops of yellow paint", bShort: "yellow drops", colorB: itemColors.yellow },
   { a: "laps run", aShort: "laps", b: "minutes", bShort: "minutes" },
   { a: "packs of cards", aShort: "packs", b: "cards", bShort: "cards" },
 ];
@@ -129,7 +142,7 @@ const missingProblem = (): Problem => {
     title: "Fill in the ratio table",
     story: (
       <>
-        The table shows equivalent ratios of <QA>{s.a}</QA> to <QB>{s.b}</QB>. Find the missing values, then look at the graph.
+        The table shows equivalent ratios of <QA color={s.colorA?.text}>{s.a}</QA> to <QB color={s.colorB?.text}>{s.b}</QB>. Find the missing values, then look at the graph.
       </>
     ),
     visual: (done) => {
@@ -148,8 +161,8 @@ const missingProblem = (): Problem => {
         <div className="two-col">
           <RatioTable
             columns={[
-              { label: s.aShort, color: palette.a },
-              { label: s.bShort, color: palette.b },
+              { label: s.aShort, color: s.colorA?.main ?? palette.a },
+              { label: s.bShort, color: s.colorB?.main ?? palette.b },
             ]}
             rows={rows}
             scales={done >= 1 ? ks : undefined}
@@ -174,7 +187,7 @@ const missingProblem = (): Problem => {
         kind: "number",
         prompt: (
           <>
-            Row 2: what do you multiply <QA>{a}</QA> by to get <QA>{a * k2}</QA>?
+            Row 2: what do you multiply <QA color={s.colorA?.text}>{a}</QA> by to get <QA color={s.colorA?.text}>{a * k2}</QA>?
           </>
         ),
         answer: k2,
@@ -185,7 +198,7 @@ const missingProblem = (): Problem => {
         kind: "number",
         prompt: (
           <>
-            So what is the missing <QB>{s.bShort}</QB> value in row 2?
+            So what is the missing <QB color={s.colorB?.text}>{s.bShort}</QB> value in row 2?
           </>
         ),
         answer: b * k2,
@@ -196,7 +209,7 @@ const missingProblem = (): Problem => {
         kind: "number",
         prompt: (
           <>
-            Row 3 has <QB>{b * k3}</QB> {s.bShort}. How many <QA>{s.aShort}</QA>?
+            Row 3 has <QB color={s.colorB?.text}>{b * k3}</QB> {s.bShort}. How many <QA color={s.colorA?.text}>{s.aShort}</QA>?
           </>
         ),
         answer: a * k3,
@@ -207,7 +220,7 @@ const missingProblem = (): Problem => {
         kind: "number",
         prompt: (
           <>
-            Row 4 has <QA>{a * k4}</QA> {s.aShort}. How many <QB>{s.bShort}</QB>?
+            Row 4 has <QA color={s.colorA?.text}>{a * k4}</QA> {s.aShort}. How many <QB color={s.colorB?.text}>{s.bShort}</QB>?
           </>
         ),
         answer: b * k4,
@@ -372,4 +385,5 @@ export const tablesGraphs: Unit = {
     { label: "Missing values", make: missingProblem },
     { label: "Compare two ratios", make: compareProblem },
   ],
+  test: tablesGraphsTest,
 };

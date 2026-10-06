@@ -128,14 +128,37 @@ MIDDLE SCHOOL
           "2 1/2"), with a dedicated message when the value is right but the format
           isn't; answerText() and StepInput's placeholder updated to match. Applied to
           priceProblem()'s existing unit-price step too, for consistency between
-          practice and test. New units/UnitRateTest.tsx (8 generators, same 10-question/
-          2-diagram/3-colored/3-4-3-difficulty shape as RatioLanguageTest.tsx) — every
-          money generator picks the unit price first from a quarter-dollar pool (exact
-          in binary floating point) and multiplies by an integer quantity for any total,
-          so the student's division always terminates to the cent, never forcing a
-          round. DoubleNumberLine/TapeDiagram print their own axis labels directly on
-          the SVG, so unlike RatioGroups in the Ratio Language test, no extra legend
-          was needed for the diagram questions here.
+          practice and test. New units/UnitRateTest.tsx (originally 8 generators/10
+          questions in the same 2-diagram/3-colored/3-4-3-difficulty shape as
+          RatioLanguageTest.tsx; later revised per user feedback to 9 generators/10
+          questions — cut the too-easy "just restate the ratio" train question,
+          added a 4th multiple-choice question, landing on 1 colored/4 final MC —
+          see below). Every money generator picks the unit price first from a
+          quarter-dollar pool (exact in binary floating point) and multiplies by an
+          integer quantity for any total, so the student's division always
+          terminates to the cent, never forcing a round. DoubleNumberLine/TapeDiagram
+          print their own axis labels directly on the SVG, so unlike RatioGroups in
+          the Ratio Language test, no extra legend was needed for the diagram
+          questions here. Later fixes from manual testing: NumberStep.money's
+          two-decimal rule only applies when the answer isn't a whole dollar amount
+          (so "$4" and "$4.00" are both accepted) — this meant two multiple-choice
+          questions' "unformatted price" distractors had to be redesigned (a whole-
+          dollar distractor would otherwise have secretly also been correct); multiple
+          choice "sentence" questions were also found to not need a format gotcha at
+          all (that's what the free-type money questions are for) and were simplified
+          to pure arithmetic-mistake distractors; engine/UnitTest.tsx gained a
+          "← Previous question" button so a test isn't strictly forward-only.
+          2026-10-06: same pass applied to the "Tables & graphs" unit. Color fix:
+          tableScenes' "white paint" → "yellow paint" + colorB (same itemColors
+          rename pattern as the other two units — "blue paint" already matched QA's
+          default blue, so no colorA override was needed). New units/TablesGraphsTest.tsx
+          (9 generators/10 questions, 2-diagram/2-colored/3-4-3-difficulty shape) reuses
+          RatioTable and CoordinatePlane (both self-label like DoubleNumberLine/
+          TapeDiagram, so again no extra legend needed) and lib/math.ts's lcm(), the
+          same function compareProblem() already uses for its own "which ratio is
+          stronger" practice problem — the final MC question mirrors that same
+          common-multiple method. No engine changes needed (this unit doesn't involve
+          money).
 [ ] MM2
 [ ] MM3
 
