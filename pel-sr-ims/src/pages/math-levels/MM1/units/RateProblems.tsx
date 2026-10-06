@@ -11,7 +11,7 @@ function Explore() {
   const [hours, setHours] = useState(3);
   const [t, setT] = useState(hours);
   const [playing, setPlaying] = useState(false);
-  const raf = useRef<number>();
+  const raf = useRef<number | undefined>(undefined);
 
   useEffect(() => setT(hours), [hours]);
   useEffect(() => {
