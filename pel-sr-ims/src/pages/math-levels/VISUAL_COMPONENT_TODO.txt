@@ -120,6 +120,22 @@ MIDDLE SCHOOL
           Not yet done: the other 5 units' tests, and the eventual student-login
           + Firestore-backed persistence (useProgress's localStorage is explicitly
           the piece designed to swap out for that later).
+          2026-10-06: same pass applied to the "Unit rate" unit. Color fix: mixScenes'
+          "white paint" → "yellow paint" + colorA/colorB (itemColors only covers
+          red/green/yellow, so renamed rather than adding a new entry). New engine
+          capability: NumberStep.money? (engine/types.ts) — when set, check() requires
+          the typed answer to match exactly two decimal places ("4.50", not "4.5" or
+          "2 1/2"), with a dedicated message when the value is right but the format
+          isn't; answerText() and StepInput's placeholder updated to match. Applied to
+          priceProblem()'s existing unit-price step too, for consistency between
+          practice and test. New units/UnitRateTest.tsx (8 generators, same 10-question/
+          2-diagram/3-colored/3-4-3-difficulty shape as RatioLanguageTest.tsx) — every
+          money generator picks the unit price first from a quarter-dollar pool (exact
+          in binary floating point) and multiplies by an integer quantity for any total,
+          so the student's division always terminates to the cent, never forcing a
+          round. DoubleNumberLine/TapeDiagram print their own axis labels directly on
+          the SVG, so unlike RatioGroups in the Ratio Language test, no extra legend
+          was needed for the diagram questions here.
 [ ] MM2
 [ ] MM3
 

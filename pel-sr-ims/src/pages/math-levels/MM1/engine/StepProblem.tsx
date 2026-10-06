@@ -17,7 +17,10 @@ export const fresh = (): StepState => ({ inputs: ["", ""], wrong: 0, hint: false
 /** Formats a step's canonical answer for display. Exported for reuse on the
  *  end-of-unit test's results review screen — see engine/UnitTest.tsx. */
 export const answerText = (s: Step): string => {
-  if (s.kind === "number") return `${s.prefix ?? ""}${fmt(s.answer)}${s.suffix ? " " + s.suffix : ""}`;
+  if (s.kind === "number") {
+    const val = s.money ? (s.answer % 1 ? s.answer.toFixed(2) : String(s.answer)) : fmt(s.answer);
+    return `${s.prefix ?? ""}${val}${s.suffix ? " " + s.suffix : ""}`;
+  }
   if (s.kind === "ratio") return `${s.answer[0]} : ${s.answer[1]}`;
   return s.choices[s.correct];
 };
@@ -31,9 +34,15 @@ export const check = (s: Step, inputs: string[]): { ok: boolean; msg: string } =
     return Number(inputs[0]) === s.correct ? { ok: true, msg: "" } : { ok: false, msg: "Not that one. Reread each choice and test it against the picture." };
   }
   if (s.kind === "number") {
-    const v = parseAnswer(inputs[0]);
-    if (v === null) return { ok: false, msg: "Type a number, like 12, 2.5 or 3/4." };
-    if (numbersMatch(v, s.answer)) return { ok: true, msg: "" };
+    const raw = s.money ? inputs[0].trim().replace(/^\$/, "") : inputs[0];
+    const v = parseAnswer(raw);
+    if (v === null) return { ok: false, msg: s.money ? "Type a dollar amount, like 4.50." : "Type a number, like 12, 2.5 or 3/4." };
+    if (numbersMatch(v, s.answer)) {
+      if (s.money && s.answer % 1 !== 0 && !/^\d+\.\d{2}$/.test(raw)) {
+        return { ok: false, msg: `That's the right amount, but money answers need exactly two decimal places — write it like $${v.toFixed(2)}.` };
+      }
+      return { ok: true, msg: "" };
+    }
     if (s.answer !== 0 && numbersMatch(v, 1 / s.answer)) return { ok: false, msg: "That's the flip of the answer. Check which quantity you divided by which." };
     if (numbersMatch(v * 10, s.answer) || numbersMatch(v / 10, s.answer)) return { ok: false, msg: "Close: the digits are right but the size is off by a factor of 10." };
     return { ok: false, msg: "Not yet. Look at the diagram and try again." };
@@ -217,6 +226,7 @@ export function StepInput({ step, state, onChange, onSubmit }: { step: Step; sta
           inputMode="decimal"
           autoComplete="off"
           aria-label="Your answer"
+          placeholder={step.money ? "0.00" : undefined}
           value={state.inputs[0]}
           onChange={(e) => onChange([e.target.value, ""])}
           onKeyDown={enter}

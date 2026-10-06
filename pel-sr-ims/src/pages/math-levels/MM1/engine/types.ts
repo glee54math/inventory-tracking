@@ -15,6 +15,17 @@ export interface NumberStep extends BaseStep {
   answer: number;
   prefix?: string; // e.g. "$"
   suffix?: string; // e.g. "cups"
+  /**
+   * Whenever `answer` is NOT a whole dollar amount, require the typed answer
+   * to be formatted as exactly two decimal places (e.g. "4.50", not "4.5" or
+   * "4 1/2"), even though it's numerically the same value. Whole-dollar
+   * answers don't have this restriction — "4" and "4.00" are equally valid,
+   * since there's no ambiguity to resolve there. A right-but-wrong-format
+   * answer gets a dedicated message instead of being silently accepted or
+   * treated as simply wrong — see check() and answerText() in
+   * engine/StepProblem.tsx.
+   */
+  money?: boolean;
 }
 
 export interface RatioStep extends BaseStep {

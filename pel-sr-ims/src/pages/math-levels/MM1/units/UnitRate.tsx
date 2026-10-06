@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { DoubleNumberLine, TapeDiagram } from "../diagrams";
-import { palette } from "../lib/palette";
+import { palette, itemColors } from "../lib/palette";
+import type { ItemColor } from "../lib/palette";
 import { fmt, fracText, gcd, money, pick, randInt } from "../lib/math";
 import { choice, type Problem } from "../engine/types";
 import { QA, QB, Says, Segmented, Stepper } from "../engine/controls";
+import { unitRateTest } from "./UnitRateTest";
 import type { Unit } from "./types";
 
 interface Preset {
@@ -142,10 +144,11 @@ const priceProblem = (): Problem => {
       ),
       {
         kind: "number",
-        prompt: <>What is the unit price?</>,
+        prompt: <>What is the unit price? If it's not a whole dollar amount, write it with two decimal places (like 3.50).</>,
         prefix: "$",
         suffix: `per ${it.one}`,
         answer: price,
+        money: true,
         hint: `${fmt(total)} ÷ ${n} = ?`,
         explain: `${money(total)} ÷ ${n} = ${money(price)}. Check: ${n} × ${money(price)} = ${money(total)}.`,
       },
@@ -163,10 +166,22 @@ const priceProblem = (): Problem => {
   };
 };
 
-const mixScenes = [
+interface MixScene {
+  unit: string;
+  units: string;
+  aThing: string;
+  bThing: string;
+  what: string;
+  /** Overrides palette.a/b when this scene's own wording names a real color
+   *  (e.g. "red paint") — see lib/palette.ts's itemColors. */
+  colorA?: ItemColor;
+  colorB?: ItemColor;
+}
+
+const mixScenes: MixScene[] = [
   { unit: "cup", units: "cups", aThing: "flour", bThing: "sugar", what: "A recipe uses" },
   { unit: "cup", units: "cups", aThing: "juice", bThing: "water", what: "A punch recipe uses" },
-  { unit: "can", units: "cans", aThing: "red paint", bThing: "white paint", what: "A paint mix uses" },
+  { unit: "can", units: "cans", aThing: "red paint", bThing: "yellow paint", what: "A paint mix uses", colorA: itemColors.red, colorB: itemColors.yellow },
 ];
 
 const fractionRateProblem = (): Problem => {
@@ -184,22 +199,22 @@ const fractionRateProblem = (): Problem => {
     title: "Unit rate that is a fraction",
     story: (
       <>
-        {s.what} <QA>{qty(a, 1, s.aThing)}</QA> for every <QB>{qty(b, 1, s.bThing)}</QB>. How much {s.aThing} goes with each {oneB}?
+        {s.what} <QA color={s.colorA?.text}>{qty(a, 1, s.aThing)}</QA> for every <QB color={s.colorB?.text}>{qty(b, 1, s.bThing)}</QB>. How much {s.aThing} goes with each {oneB}?
       </>
     ),
     visual: (done) => (
       <>
         <TapeDiagram
           tapes={[
-            { label: s.aThing, units: b, color: palette.a, softColor: palette.aSoft, shaded: done >= 2 ? b : 0, values: done >= 3 ? Array(b).fill(fracText(a, b)) : [], total: qty(a, 1, s.aThing) },
-            { label: s.bThing, units: b, color: palette.b, values: Array(b).fill("1"), total: qty(b, 1, s.bThing) },
+            { label: s.aThing, units: b, color: s.colorA?.main ?? palette.a, softColor: s.colorA?.soft ?? palette.aSoft, shaded: done >= 2 ? b : 0, values: done >= 3 ? Array(b).fill(fracText(a, b)) : [], total: qty(a, 1, s.aThing) },
+            { label: s.bThing, units: b, color: s.colorB?.main ?? palette.b, values: Array(b).fill("1"), total: qty(b, 1, s.bThing) },
           ]}
           unitWidth={Math.min(60, 440 / b)}
         />
         {done >= 3 && (
           <DoubleNumberLine
-            top={{ label: s.aThing, color: palette.a, format: (v) => fracText(Math.round(v * b), b, true) }}
-            bottom={{ label: s.bThing, color: palette.b }}
+            top={{ label: s.aThing, color: s.colorA?.main ?? palette.a, format: (v) => fracText(Math.round(v * b), b, true) }}
+            bottom={{ label: s.bThing, color: s.colorB?.main ?? palette.b }}
             pairs={[
               { top: 0, bottom: 0 },
               { top: a / b, bottom: 1, highlight: true },
@@ -214,7 +229,7 @@ const fractionRateProblem = (): Problem => {
         kind: "ratio",
         prompt: (
           <>
-            Write the ratio of <QA>{s.aThing}</QA> to <QB>{s.bThing}</QB>.
+            Write the ratio of <QA color={s.colorA?.text}>{s.aThing}</QA> to <QB color={s.colorB?.text}>{s.bThing}</QB>.
           </>
         ),
         answer: [a, b],
@@ -226,7 +241,7 @@ const fractionRateProblem = (): Problem => {
         kind: "number",
         prompt: (
           <>
-            We share the <QA>{s.aThing}</QA> equally among the <QB>{qty(b, 1, s.bThing)}</QB>. Into how many equal parts do we split it?
+            We share the <QA color={s.colorA?.text}>{s.aThing}</QA> equally among the <QB color={s.colorB?.text}>{qty(b, 1, s.bThing)}</QB>. Into how many equal parts do we split it?
           </>
         ),
         answer: b,
@@ -278,4 +293,5 @@ export const unitRate: Unit = {
     { label: "Unit price", make: priceProblem },
     { label: "Fraction rate", make: fractionRateProblem },
   ],
+  test: unitRateTest,
 };

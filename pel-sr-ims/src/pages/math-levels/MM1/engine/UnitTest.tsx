@@ -54,6 +54,10 @@ export function UnitTestView({ unit, onComplete }: UnitTestViewProps) {
     }
   };
 
+  const back = () => {
+    if (current > 0) setCurrent((c) => c - 1);
+  };
+
   const retake = () => {
     setAttempt((a) => a + 1);
     setCurrent(0);
@@ -108,13 +112,18 @@ export function UnitTestView({ unit, onComplete }: UnitTestViewProps) {
         {q.visual && <div className="problem-visual">{q.visual}</div>}
         <div className="test-prompt">{q.step.prompt}</div>
         <StepInput step={q.step} state={st} onChange={(inputs) => update(current, { inputs })} onSubmit={next} />
-        {q.step.kind !== "choice" && (
-          <div className="step-tools">
+        <div className="step-tools">
+          {current > 0 && (
+            <button className="btn ghost" onClick={back}>
+              ← Previous question
+            </button>
+          )}
+          {q.step.kind !== "choice" && (
             <button className="btn primary" onClick={() => next(st.inputs)}>
               {current + 1 < questions.length ? "Next question" : "Finish test"}
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
