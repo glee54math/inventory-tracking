@@ -249,7 +249,7 @@ export async function loadStudentsFromDB(place: string) {
 
   querySnapshot.forEach((doc) => {
     const studentData = doc.data();
-    students.push(studentData as Student);
+    students.push({ ...studentData, id: doc.id, location: place } as Student);
   });
 
   return students;

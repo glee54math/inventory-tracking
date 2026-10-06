@@ -33,6 +33,8 @@ export const SUBSECTIONS = [
 ];
 
 export interface Student {
+  id?: string; // Firestore doc id (students/{location}/students/{id}) — set by loadStudentsFromDB.
+  location?: string; // Which location's "students" subcollection this came from, e.g. "san-ramon".
   firstName: string;
   lastName: string;
   father: string;

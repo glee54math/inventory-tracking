@@ -3,10 +3,13 @@ import "./MM1_RatioLab_styles.css";
 import { units, type Unit } from "./units";
 import { StepProblem } from "./engine/StepProblem";
 import { UnitTestView } from "./engine/UnitTest";
-import { MASTERY_GOAL, useProgress, type UnitProgress } from "./engine/useProgress";
 import { RatioGroups } from "./diagrams";
 import { palette } from "./lib/palette";
 import { pick } from "./lib/math";
+import { MASTERY_GOAL, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
+import { useStudentContext } from "../../../components/student_portal/StudentContext";
+
+const MODULE_ID = "MM1_RatioLab";
 
 const FONT_HREF =
   "https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap";
@@ -184,7 +187,12 @@ function UnitView({ unit, progress, onSolved, onTest, onNextUnit }: { unit: Unit
 
 function RatioLab() {
   useFonts();
-  const { progress, record, recordTest, reset } = useProgress();
+  const { currentStudent } = useStudentContext();
+  const { progress, record, recordTest, reset } = useModuleProgress(
+    currentStudent?.id ?? null,
+    currentStudent?.location ?? null,
+    MODULE_ID
+  );
   const [current, setCurrent] = useState<number | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const go = useCallback((i: number | null) => {

@@ -2,6 +2,13 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { canon, pick } from './MG11_PowersOfTen_numberModel';
 import { TOPICS, createQuestionBank, type Question, type TopicChoice } from './MG11_PowersOfTen_questions';
 import { tw } from './MG11_PowersOfTen_styles';
+import { MASTERY_GOAL, useModuleProgress } from '../../../hooks/useModuleProgress';
+import { useStudentContext } from '../../../components/student_portal/StudentContext';
+
+const MODULE_ID = 'MG11_PowersOfTen';
+// This module has no real sub-units (unlike MM1_RatioLab's 6), so its progress
+// is tracked under a single synthetic unit id.
+const UNIT_ID = 'main';
 
 const fbBase = 'mt-3 rounded-xl px-3.5 py-3';
 const fbTry = 'border-[1.5px] border-[#C9D5EA] bg-[#F4F7FC] dark:border-[#34405E] dark:bg-[#222C45]';
@@ -27,6 +34,12 @@ type Feedback =
 const CHEERS = ['Correct!', 'Nice work!', 'You got it!', 'Exactly right!'];
 
 export default function PracticeCard() {
+  const { currentStudent } = useStudentContext();
+  const { progress, record } = useModuleProgress(
+    currentStudent?.id ?? null,
+    currentStudent?.location ?? null,
+    MODULE_ID
+  );
   const bank = useRef(createQuestionBank()).current;
   const [topic, setTopic] = useState<TopicChoice>('mix');
   const [q, setQ] = useState<Question>(() => bank.next('mix'));
@@ -70,6 +83,7 @@ export default function PracticeCard() {
       streak: ok && tries === 0 ? s.streak + 1 : 0,
     }));
     setFeedback(ok ? { kind: 'correct', cheer: pick(CHEERS) } : { kind: 'revealed' });
+    record(UNIT_ID, ok && tries === 0);
   };
 
   const check = (choiceIdx?: number) => {
@@ -147,6 +161,14 @@ export default function PracticeCard() {
       <p className={tw.muted}>
         Pick a kind of problem, or mix them all. Every problem is new, so you can keep going as long as you like.
       </p>
+
+      <div className={`mt-1 flex items-center gap-1.5 text-lg ${tw.muted}`} aria-label={`${Math.min(MASTERY_GOAL, progress[UNIT_ID]?.clean ?? 0)} of ${MASTERY_GOAL} mastery stars`}>
+        {Array.from({ length: MASTERY_GOAL }, (_, i) => (
+          <span key={i} aria-hidden className={i < Math.min(MASTERY_GOAL, progress[UNIT_ID]?.clean ?? 0) ? 'text-[#F5A524]' : 'text-[#C9D5EA] dark:text-[#34405E]'}>
+            ★
+          </span>
+        ))}
+      </div>
 
       <div
         className="-mx-0.5 mt-2 flex gap-1.5 overflow-x-auto px-0.5 pb-2 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"

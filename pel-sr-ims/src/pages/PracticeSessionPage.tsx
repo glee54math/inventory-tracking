@@ -69,6 +69,15 @@ export default function PracticeSessionPage() {
 
   const hasHomeworkInLevel = hwkHistory.some((h) => h.level === level);
   const multipleModesAvailable = availableModes.length > 1;
+  // Standalone skills (e.g. MM1_RatioLab) bring their own full page chrome and are
+  // designed to render full-bleed — see the comment in ProblemRenderer.tsx's
+  // StandaloneProblem. Skip our own header/max-w wrapper so they aren't squeezed
+  // into the narrower column used by the visual/wordProblem card modes.
+  const isStandalone = mode === "standalone" && selectedSkill?.type === "standalone";
+
+  if (isStandalone && selectedSkill && hasHomeworkInLevel) {
+    return <ProblemRenderer level={level} skill={selectedSkill} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50">

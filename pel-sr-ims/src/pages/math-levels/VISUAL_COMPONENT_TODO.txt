@@ -159,6 +159,18 @@ MIDDLE SCHOOL
           stronger" practice problem — the final MC question mirrors that same
           common-multiple method. No engine changes needed (this unit doesn't involve
           money).
+          2026-10-06: swapped useProgress's localStorage-only persistence for the new
+          shared src/hooks/useModuleProgress.ts (Firestore-backed, same return shape:
+          progress/record/recordTest/reset), keyed by student id + location from
+          useStudentContext. Falls back to a per-browser "guest" cache when no student
+          is logged in (admin preview route, /student-levels/:levelId). Firestore doc
+          at students/{location}/students/{studentId}/moduleProgress/MM1_RatioLab, with
+          an attempts subcollection logging every solve/test for future history/
+          analytics. MG11_PowersOfTen's PracticeCard was wired to the same hook (single
+          synthetic "main" unit id, since it has no real sub-units) as the second
+          real-world case for the shared hook; it previously had no persistence at all.
+          This also required giving Student (types.ts) an id/location field, set by
+          loadStudentsFromDB — previously student identity was name-only.
 [ ] MM2
 [ ] MM3
 
