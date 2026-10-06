@@ -1,0 +1,1 @@
+import{j as r}from"./index-CutIl0JQ.js";function n({feedback:t}){return r.jsx("div",{"aria-live":"polite",className:t!=null&&t.good?"mt-2 min-h-[1.6em] font-medium text-green-700 dark:text-green-400":"mt-2 min-h-[1.6em] text-orange-600 dark:text-orange-400",children:(t==null?void 0:t.message)??""})}export{n as default};
