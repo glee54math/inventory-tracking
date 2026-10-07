@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { ConversionChain, DoubleNumberLine, RatioTable } from "../diagrams";
-import { palette } from "../lib/palette";
-import { fmt, pick, randInt } from "../lib/math";
-import { choice, type Problem } from "../engine/types";
-import { QA, QB, Says, Stepper } from "../engine/controls";
-import type { Unit } from "./types";
+import { palette } from "../../shared/lib/palette";
+import { fmt, pick, randInt } from "../../shared/lib/math";
+import { choice, type Problem } from "../../shared/engine/types";
+import { QA, QB, Says, Stepper } from "../../shared/engine/controls";
+import type { Unit } from "../../shared/units/types";
 
 interface Conv {
   id: string;

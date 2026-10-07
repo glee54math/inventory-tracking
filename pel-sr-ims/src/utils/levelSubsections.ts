@@ -20,6 +20,11 @@
 
 interface LevelSkillBase {
   skillId: string; // stable id stored on ProblemDoc.skillId, used as the problemBank lookup key
+  // Student-facing name shown when a level has more than one skill of the same
+  // type to choose between (see PracticeSessionPage.tsx's skill picker — only
+  // rendered when a mode's pool has >1 entry). Falls back to a humanized
+  // skillId when omitted, so single-skill levels never need to set this.
+  label?: string;
 }
 
 export interface VisualLevelSkill extends LevelSkillBase {
@@ -120,8 +125,16 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
     {
       type: "standalone",
       skillId: "PowersOfTen",
+      label: "Powers of Ten",
       componentFile: "MG11_PowersOfTen",
       componentExport: "PowersOf10Practice",
+    },
+    {
+      type: "standalone",
+      skillId: "MultDivFractionLab",
+      label: "Fractions, Decimals & Factors",
+      componentFile: "MG11_MultDivFractionLab",
+      componentExport: "MultDivFractionLab",
     },
   ],
   MM1: [

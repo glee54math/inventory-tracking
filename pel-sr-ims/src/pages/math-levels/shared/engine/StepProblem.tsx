@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { Problem, Step } from "./types";
-import { fmt, numbersMatch, parseAnswer } from "../lib/math";
+import { fmt, fracText, gcd, numbersMatch, parseAnswer, rawFraction } from "../lib/math";
 
 /** Exported so the end-of-unit test (engine/UnitTest.tsx) can type its own
  *  per-question answer state the same shape StepInput expects. */
@@ -18,6 +18,7 @@ export const fresh = (): StepState => ({ inputs: ["", ""], wrong: 0, hint: false
  *  end-of-unit test's results review screen — see engine/UnitTest.tsx. */
 export const answerText = (s: Step): string => {
   if (s.kind === "number") {
+    if (s.frac && s.fracAnswer) return `${s.prefix ?? ""}${fracText(s.fracAnswer[0], s.fracAnswer[1])}${s.suffix ? " " + s.suffix : ""}`;
     const val = s.money ? (s.answer % 1 ? s.answer.toFixed(2) : String(s.answer)) : fmt(s.answer);
     return `${s.prefix ?? ""}${val}${s.suffix ? " " + s.suffix : ""}`;
   }
@@ -36,10 +37,16 @@ export const check = (s: Step, inputs: string[]): { ok: boolean; msg: string } =
   if (s.kind === "number") {
     const raw = s.money ? inputs[0].trim().replace(/^\$/, "") : inputs[0];
     const v = parseAnswer(raw);
-    if (v === null) return { ok: false, msg: s.money ? "Type a dollar amount, like 4.50." : "Type a number, like 12, 2.5 or 3/4." };
+    if (v === null) return { ok: false, msg: s.money ? "Type a dollar amount, like 4.50." : s.frac ? "Type a number or a fraction, like 3/4." : "Type a number, like 12, 2.5 or 3/4." };
     if (numbersMatch(v, s.answer)) {
       if (s.money && s.answer % 1 !== 0 && !/^\d+\.\d{2}$/.test(raw)) {
         return { ok: false, msg: `That's the right amount, but money answers need exactly two decimal places — write it like $${v.toFixed(2)}.` };
+      }
+      if (s.frac) {
+        const typed = rawFraction(raw.trim());
+        if (typed && gcd(typed[0], typed[1]) !== 1) {
+          return { ok: false, msg: `That's the right value, but fractions need to be written in lowest terms — try ${fracText(typed[0], typed[1])}.` };
+        }
       }
       return { ok: true, msg: "" };
     }
@@ -226,7 +233,7 @@ export function StepInput({ step, state, onChange, onSubmit }: { step: Step; sta
           inputMode="decimal"
           autoComplete="off"
           aria-label="Your answer"
-          placeholder={step.money ? "0.00" : undefined}
+          placeholder={step.money ? "0.00" : step.frac ? "n/d" : undefined}
           value={state.inputs[0]}
           onChange={(e) => onChange([e.target.value, ""])}
           onKeyDown={enter}

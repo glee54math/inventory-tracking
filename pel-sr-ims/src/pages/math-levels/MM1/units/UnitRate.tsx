@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { DoubleNumberLine, TapeDiagram } from "../diagrams";
-import { palette, itemColors } from "../lib/palette";
-import type { ItemColor } from "../lib/palette";
-import { fmt, fracText, gcd, money, pick, randInt } from "../lib/math";
-import { choice, type Problem } from "../engine/types";
-import { QA, QB, Says, Segmented, Stepper } from "../engine/controls";
+import { palette, itemColors } from "../../shared/lib/palette";
+import type { ItemColor } from "../../shared/lib/palette";
+import { fmt, fracText, gcd, money, pick, randInt } from "../../shared/lib/math";
+import { choice, type Problem } from "../../shared/engine/types";
+import { QA, QB, Says, Segmented, Stepper } from "../../shared/engine/controls";
 import { unitRateTest } from "./UnitRateTest";
-import type { Unit } from "./types";
+import type { Unit } from "../../shared/units/types";
 
 interface Preset {
   id: string;

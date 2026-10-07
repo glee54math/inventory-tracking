@@ -7,6 +7,7 @@ import type { LevelSkill } from "../utils/levelSubsections";
 import PracticeModeSelector from "../components/student_portal/PracticeModeSelector";
 import type { PracticeMode } from "../components/student_portal/PracticeModeSelector";
 import ProblemRenderer from "../components/student_portal/ProblemRenderer";
+import SkillPicker from "../components/student_portal/SkillPicker";
 
 const ALL_MODES: PracticeMode[] = ["visual", "wordProblem", "standalone"];
 
@@ -49,13 +50,17 @@ export default function PracticeSessionPage() {
     setMode(availableModes.length === 1 ? availableModes[0] : null);
   }, [availableModes]);
 
+  // Auto-pick only when the mode has exactly one skill — with more than one
+  // (e.g. MG11's PowersOfTen + MultDivFractionLab, both "standalone"), leave
+  // selectedSkill unset so the SkillPicker below renders instead of silently
+  // locking the student into whichever skill happened to load first.
   useEffect(() => {
     if (!mode) {
       setSelectedSkill(null);
       return;
     }
     const pool = poolsByMode[mode];
-    setSelectedSkill(pool[Math.floor(Math.random() * pool.length)] ?? null);
+    setSelectedSkill(pool.length === 1 ? pool[0] : null);
   }, [mode, poolsByMode]);
 
   // Student.hwkHistory is never actually written anywhere in this codebase — derive it
@@ -69,6 +74,8 @@ export default function PracticeSessionPage() {
 
   const hasHomeworkInLevel = hwkHistory.some((h) => h.level === level);
   const multipleModesAvailable = availableModes.length > 1;
+  const skillPool = mode ? poolsByMode[mode] : [];
+  const multipleSkillsInMode = skillPool.length > 1;
   // Standalone skills (e.g. MM1_RatioLab) bring their own full page chrome and are
   // designed to render full-bleed — see the comment in ProblemRenderer.tsx's
   // StandaloneProblem. Skip our own header/max-w wrapper so they aren't squeezed
@@ -76,7 +83,19 @@ export default function PracticeSessionPage() {
   const isStandalone = mode === "standalone" && selectedSkill?.type === "standalone";
 
   if (isStandalone && selectedSkill && hasHomeworkInLevel) {
-    return <ProblemRenderer level={level} skill={selectedSkill} />;
+    return (
+      <>
+        {multipleSkillsInMode && (
+          <button
+            onClick={() => setSelectedSkill(null)}
+            className="fixed top-3 left-3 z-20 px-3 py-1.5 text-xs font-medium text-gray-600 !bg-white/90 border border-gray-200 rounded-lg shadow-sm hover:!bg-gray-50 transition-all duration-200"
+          >
+            ← Choose something else to practice
+          </button>
+        )}
+        <ProblemRenderer level={level} skill={selectedSkill} />
+      </>
+    );
   }
 
   return (
@@ -117,8 +136,20 @@ export default function PracticeSessionPage() {
                 ← Change practice mode
               </button>
             )}
+            {multipleSkillsInMode && selectedSkill && (
+              <button
+                onClick={() => setSelectedSkill(null)}
+                className="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                ← Choose something else to practice
+              </button>
+            )}
 
             {!mode && <PracticeModeSelector availableModes={availableModes} onSelect={setMode} />}
+
+            {mode && !selectedSkill && multipleSkillsInMode && (
+              <SkillPicker skills={skillPool} onSelect={setSelectedSkill} />
+            )}
 
             {mode && selectedSkill && <ProblemRenderer level={level} skill={selectedSkill} />}
           </div>

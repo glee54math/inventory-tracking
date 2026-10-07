@@ -1,5 +1,5 @@
 import React from "react";
-import { palette } from "../lib/palette";
+import { palette } from "../../shared/lib/palette";
 
 export interface UnitAmount {
   value: number | string;

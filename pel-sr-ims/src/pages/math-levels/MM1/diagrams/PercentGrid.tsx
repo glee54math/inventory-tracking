@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { palette } from "../lib/palette";
+import { palette } from "../../shared/lib/palette";
 
 export interface PercentGridProps {
   /** Number of the 100 squares that are filled (0–100). */

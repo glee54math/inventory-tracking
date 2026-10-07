@@ -1,6 +1,6 @@
 import React, { useId } from "react";
-import { palette } from "../lib/palette";
-import { fmt } from "../lib/math";
+import { palette } from "../../shared/lib/palette";
+import { fmt } from "../../shared/lib/math";
 
 export interface NumberLineSide {
   label: string;

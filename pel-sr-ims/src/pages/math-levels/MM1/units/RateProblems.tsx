@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ConversionChain, DoubleNumberLine, TapeDiagram } from "../diagrams";
-import { palette } from "../lib/palette";
-import { fmt, fracText, gcd, money, pick, randInt } from "../lib/math";
-import { choice, type Problem } from "../engine/types";
-import { QA, QB, Says, Slider } from "../engine/controls";
-import type { Unit } from "./types";
+import { palette } from "../../shared/lib/palette";
+import { fmt, fracText, gcd, money, pick, randInt } from "../../shared/lib/math";
+import { choice, type Problem } from "../../shared/engine/types";
+import { QA, QB, Says, Slider } from "../../shared/engine/controls";
+import type { Unit } from "../../shared/units/types";
 
 function Explore() {
   const [speed, setSpeed] = useState(40);

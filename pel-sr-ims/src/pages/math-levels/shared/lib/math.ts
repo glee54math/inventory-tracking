@@ -74,6 +74,20 @@ export const parseAnswer = (raw: string): number | null => {
   return null;
 };
 
+/**
+ * Parse ONLY a bare "n/d" form (no mixed numbers, no decimals) — used by the
+ * NumberStep.frac lowest-terms check (see engine/StepProblem.tsx's check()).
+ * Deliberately stricter than parseAnswer: we need the student's literal typed
+ * numerator/denominator to test whether THEY reduced it, not just the value.
+ */
+export const rawFraction = (raw: string): [number, number] | null => {
+  const m = raw.trim().match(/^(-?\d+)\s*\/\s*(\d+)$/);
+  if (!m) return null;
+  const d = Number(m[2]);
+  if (!d) return null;
+  return [Number(m[1]), d];
+};
+
 export const near = (a: number, b: number, tol = 1e-6): boolean => Math.abs(a - b) <= tol * Math.max(1, Math.abs(b));
 
 /** Answers like 0.33 for 1/3 are accepted when rounded to 2 decimals. */

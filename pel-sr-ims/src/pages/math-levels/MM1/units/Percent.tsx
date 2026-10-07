@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { DoubleNumberLine, PercentGrid, TapeDiagram } from "../diagrams";
-import { palette } from "../lib/palette";
-import { fmt, fracText, pick, randInt } from "../lib/math";
-import type { Problem } from "../engine/types";
-import { QA, QC, Says, Stepper } from "../engine/controls";
-import type { Unit } from "./types";
+import { palette } from "../../shared/lib/palette";
+import { fmt, fracText, pick, randInt } from "../../shared/lib/math";
+import type { Problem } from "../../shared/engine/types";
+import { QA, QC, Says, Stepper } from "../../shared/engine/controls";
+import type { Unit } from "../../shared/units/types";
 
 function Explore() {
   const [pct, setPct] = useState(30);

@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { CoordinatePlane, RatioTable } from "../diagrams";
 import type { PlotPoint, RatioTableCell } from "../diagrams";
-import { palette, itemColors } from "../lib/palette";
-import type { ItemColor } from "../lib/palette";
-import { gcd, lcm, pick, randInt, shuffle } from "../lib/math";
-import { choice, type Problem } from "../engine/types";
-import { niceMax, niceStep, QA, QB, QC, Says, Stepper } from "../engine/controls";
+import { palette, itemColors } from "../../shared/lib/palette";
+import type { ItemColor } from "../../shared/lib/palette";
+import { gcd, lcm, pick, randInt, shuffle } from "../../shared/lib/math";
+import { choice, type Problem } from "../../shared/engine/types";
+import { niceMax, niceStep, QA, QB, QC, Says, Stepper } from "../../shared/engine/controls";
 import { tablesGraphsTest } from "./TablesGraphsTest";
-import type { Unit } from "./types";
+import type { Unit } from "../../shared/units/types";
 
 function Explore() {
   const [a, setA] = useState(2);

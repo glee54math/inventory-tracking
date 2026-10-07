@@ -26,6 +26,19 @@ export interface NumberStep extends BaseStep {
    * engine/StepProblem.tsx.
    */
   money?: boolean;
+  /**
+   * Display/require this answer as a simplified fraction (e.g. "8/9") instead
+   * of a decimal. `answer` still carries the decimal value for numeric
+   * comparison — `fracAnswer` (required whenever `frac` is true) supplies the
+   * numerator/denominator pair `answerText()` formats via fracText(), since a
+   * decimal alone can't be losslessly turned back into one (0.888... doesn't
+   * tell you it was 8/9 and not, say, 16/18). When the student types a bare
+   * "n/d" answer that's numerically right but not in lowest terms, check()
+   * gives a dedicated "simplify it" message instead of silently accepting or
+   * flatly rejecting — same two-tier treatment as `money` above.
+   */
+  frac?: boolean;
+  fracAnswer?: [number, number];
 }
 
 export interface RatioStep extends BaseStep {
@@ -45,7 +58,8 @@ export interface RatioStep extends BaseStep {
    * which doesn't explain WHY the equivalent answer doesn't count.
    */
   equivalentHint?: string;
-  /** Small labels under the two boxes, e.g. ["wings", "beaks"]. */
+  /** Small labels under the two boxes, e.g. ["wings", "beaks"]. Also reused by
+   *  non-ratio two-value steps, e.g. ["quotient", "remainder"]. */
   labels?: [string, string];
   /**
    * Which color each box matches, e.g. ["a", "c"] for a part-to-whole step whose

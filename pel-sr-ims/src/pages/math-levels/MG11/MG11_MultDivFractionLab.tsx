@@ -1,29 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import "./MM1_RatioLab_styles.css";
-import { units, type Unit } from "./units";
+import { useCallback, useMemo, useState } from "react";
+import "./MG11_MultDivFractionLab_styles.css";
+import { units, type Unit } from "./MultDivFractionLab/units";
 import { StepProblem } from "../shared/engine/StepProblem";
 import { UnitTestView } from "../shared/engine/UnitTest";
-import { RatioGroups } from "./diagrams";
-import { palette } from "../shared/lib/palette";
 import { pick } from "../shared/lib/math";
 import { MASTERY_GOAL, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
 import { useStudentContext } from "../../../components/student_portal/StudentContext";
 
-const MODULE_ID = "MM1_RatioLab";
-
-const FONT_HREF =
-  "https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap";
-
-/** Loads the Lexend web font once. Remove if your app already loads it. */
-function useFonts() {
-  useEffect(() => {
-    if (document.querySelector(`link[href="${FONT_HREF}"]`)) return;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = FONT_HREF;
-    document.head.appendChild(link);
-  }, []);
-}
+const MODULE_ID = "MG11_MultDivFractionLab";
 
 function Stars({ p, size = "sm" }: { p?: UnitProgress; size?: "sm" | "lg" }) {
   const n = Math.min(MASTERY_GOAL, p?.clean ?? 0);
@@ -44,19 +28,13 @@ function Home({ onPick, progress }: { onPick: (i: number) => void; progress: Rec
     <div className="home">
       <section className="hero">
         <div className="hero-text">
-          <h1>For every 2 wings, there is 1 beak.</h1>
+          <h1>36 + 8 = 4 × (9 + 2)</h1>
           <p>
-            That sentence is a <b>ratio</b>. Ratio Lab teaches you to see ratios, say them, and use them to solve problems — one step at a time.
+            This lab covers dividing fractions by fractions, long division, decimal arithmetic, and factors &amp; multiples — the number-system skills behind every fraction, decimal, and factoring problem you'll see next.
           </p>
           <button className="btn primary big" onClick={() => onPick(next === -1 ? 0 : next)}>
-            {next <= 0 ? "Start with ratio language" : `Continue: ${units[next].title}`}
+            {next <= 0 ? "Start with dividing fractions" : `Continue: ${units[next].title}`}
           </button>
-        </div>
-        <div className="hero-art">
-          <RatioGroups groups={4} a={{ count: 2, kind: "triangle", color: palette.a, label: "wings" }} b={{ count: 1, kind: "diamond", color: palette.b, label: "beaks" }} showGroupLabels maxWidth={320} cell={46} />
-          <p className="legend">
-            <span className="key qa-bg" /> wings <span className="key qb-bg" /> beaks
-          </p>
         </div>
       </section>
       <section>
@@ -185,8 +163,7 @@ function UnitView({ unit, progress, onSolved, onTest, onNextUnit }: { unit: Unit
   );
 }
 
-function RatioLab() {
-  useFonts();
+function MultDivFractionLab() {
   const { currentStudent } = useStudentContext();
   const { progress, record, recordTest, reset } = useModuleProgress(
     currentStudent?.id ?? null,
@@ -204,15 +181,11 @@ function RatioLab() {
   const onTest = useCallback((score: number) => unit && recordTest(unit.id, score), [unit, recordTest]);
 
   return (
-    <div className="ratio-lab">
+    <div className="mdf-lab">
       <div className="app">
         <nav className="rail" aria-label="Units">
           <button className="brand" onClick={() => go(null)}>
-            <svg viewBox="0 0 40 40" width="34" height="34" aria-hidden>
-              <rect x="3" y="8" width="16" height="24" rx="4" style={{ fill: palette.a }} />
-              <rect x="21" y="16" width="16" height="16" rx="4" style={{ fill: palette.b }} />
-            </svg>
-            <span>Ratio Lab</span>
+            <span>Mult/Div Lab</span>
           </button>
           <ol>
             {units.map((u, i) => (
@@ -250,9 +223,7 @@ function RatioLab() {
   );
 }
 
-// Named export (used by levelSubsections.ts's componentExport, like every other skill
-// in this project) alongside the default export. Same reasoning as MG6_BarModel.tsx /
-// MG11_PowersOfTen.tsx — no separate "Demo" wrapper per MATH_TSX_STYLE_GUIDE.txt
-// convention, since this IS the complete self-contained practice page already.
-export { RatioLab };
-export default RatioLab;
+// Named export (used by levelSubsections.ts's componentExport, like every other
+// skill in this project) alongside the default export.
+export { MultDivFractionLab };
+export default MultDivFractionLab;

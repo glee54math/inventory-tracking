@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { RatioGroups, TapeDiagram } from "../diagrams";
 import type { ShapeKind } from "../diagrams";
-import { palette, itemColors } from "../lib/palette";
-import type { ItemColor } from "../lib/palette";
-import { gcd, pick, randInt, simplify } from "../lib/math";
-import { choice, type Problem } from "../engine/types";
-import { QA, QB, QC, Says, Segmented, Stepper } from "../engine/controls";
+import { palette, itemColors } from "../../shared/lib/palette";
+import type { ItemColor } from "../../shared/lib/palette";
+import { gcd, pick, randInt, simplify } from "../../shared/lib/math";
+import { choice, type Problem } from "../../shared/engine/types";
+import { QA, QB, QC, Says, Segmented, Stepper } from "../../shared/engine/controls";
 import { ratioLanguageTest } from "./RatioLanguageTest";
-import type { Unit } from "./types";
+import type { Unit } from "../../shared/units/types";
 
 interface Scene {
   id: string;
