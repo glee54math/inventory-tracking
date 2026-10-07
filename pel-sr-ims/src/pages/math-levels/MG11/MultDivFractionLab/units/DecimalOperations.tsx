@@ -215,6 +215,11 @@ function divideProblem(): Problem {
   };
 }
 
+/** Static snapshot for the cover page's preview carousel — see shared/components/UnitPreviewCarousel.tsx. */
+function Preview() {
+  return <PlaceValueColumns operation="add" top={12.5} bottom={3.25} done={1} />;
+}
+
 export const decimalOperations: Unit = {
   id: "decimalOperations",
   title: "Decimal Operations",
@@ -228,6 +233,7 @@ export const decimalOperations: Unit = {
     </>
   ),
   Explore,
+  preview: Preview,
   problems: [
     { label: "Add", make: addProblem },
     { label: "Subtract", make: subtractProblem },

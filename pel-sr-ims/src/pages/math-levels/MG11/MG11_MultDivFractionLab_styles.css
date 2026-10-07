@@ -284,7 +284,9 @@
 /* ---------- home ---------- */
 .mdf-lab .hero {
   display: grid;
-  gap: 16px;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: center;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -296,15 +298,98 @@
   font-weight: 700;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
+  margin-bottom: 16px;
 }
 .mdf-lab .hero-text p {
   font-size: 18px;
-  max-width: 68ch;
+  max-width: 46ch;
   margin-bottom: 24px;
   color: var(--muted);
 }
 .mdf-lab .hero-text p b {
   color: var(--ink);
+}
+.mdf-lab .hero-art {
+  display: flex;
+  justify-content: center;
+}
+.mdf-lab .unit-carousel {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.mdf-lab .unit-carousel-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  text-align: center;
+  cursor: pointer;
+  animation: unitCarouselIn 0.4s ease-out;
+}
+.mdf-lab .unit-carousel-card:hover,
+.mdf-lab .unit-carousel-card:focus-visible {
+  border-color: var(--qa);
+}
+.mdf-lab .unit-carousel-art {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 150px;
+  width: 100%;
+}
+.mdf-lab .unit-carousel-title {
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.25;
+  color: var(--ink);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mdf-lab .unit-carousel-goal {
+  font-size: 13px;
+  color: var(--muted);
+  min-height: 72px;
+}
+.mdf-lab .unit-carousel-dots {
+  display: flex;
+  gap: 8px;
+}
+.mdf-lab .unit-carousel-dots button {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--line);
+}
+.mdf-lab .unit-carousel-dots button.on {
+  background: var(--qa);
+}
+@keyframes unitCarouselIn {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mdf-lab .unit-carousel-card {
+    animation: none;
+  }
 }
 .mdf-lab .section-title {
   font-size: 22px;
@@ -966,6 +1051,9 @@
   }
   .mdf-lab .problem-visual {
     position: static;
+  }
+  .mdf-lab .hero {
+    grid-template-columns: 1fr;
   }
 }
 @media (max-width: 860px) {

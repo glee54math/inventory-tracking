@@ -3,6 +3,7 @@ import "./MG11_MultDivFractionLab_styles.css";
 import { units, type Unit } from "./MultDivFractionLab/units";
 import { StepProblem } from "../shared/engine/StepProblem";
 import { UnitTestView } from "../shared/engine/UnitTest";
+import { UnitPreviewCarousel } from "../shared/components/UnitPreviewCarousel";
 import { pick } from "../shared/lib/math";
 import { MASTERY_GOAL, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
 import { useStudentContext } from "../../../components/student_portal/StudentContext";
@@ -36,6 +37,9 @@ function Home({ onPick, progress }: { onPick: (i: number) => void; progress: Rec
             {next <= 0 ? "Start with dividing fractions" : `Continue: ${units[next].title}`}
           </button>
         </div>
+        <div className="hero-art">
+          <UnitPreviewCarousel units={units} onPick={onPick} />
+        </div>
       </section>
       <section>
         <h2 className="section-title">Your path</h2>
@@ -53,7 +57,7 @@ function Home({ onPick, progress }: { onPick: (i: number) => void; progress: Rec
             </li>
           ))}
         </ol>
-        <p className="muted small">Earn a star for each problem you solve with at most one hint. Five stars = mastered.</p>
+        <p className="muted small">Earn a star for each Mixed-mode problem you solve with at most one hint. Five stars = mastered.</p>
       </section>
     </div>
   );
@@ -142,7 +146,12 @@ function UnitView({ unit, progress, onSolved, onTest, onNextUnit }: { unit: Unit
               New problem
             </button>
           </div>
-          <StepProblem key={`${unit.id}-${seed}-${String(typeIdx)}`} problem={problem} onComplete={onSolved} onNext={() => setSeed((s) => s + 1)} />
+          {typeIdx !== "mix" && (
+            <p className="muted small">
+              Practicing one type is great for extra reps, but only <b>Mixed</b> problems count toward your mastery stars.
+            </p>
+          )}
+          <StepProblem key={`${unit.id}-${seed}-${String(typeIdx)}`} problem={problem} onComplete={(clean) => onSolved(clean && typeIdx === "mix")} onNext={() => setSeed((s) => s + 1)} />
           {mastered && onNextUnit && (
             <div className="mastered">
               <span>You've mastered {unit.title.toLowerCase()}.</span>

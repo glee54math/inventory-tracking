@@ -200,6 +200,11 @@ function relationshipProblem(): Problem {
   };
 }
 
+/** Static snapshot for the cover page's preview carousel — see shared/components/UnitPreviewCarousel.tsx. */
+function Preview() {
+  return <FractionBar numerator={2} denominator={5} label="2/5" width={220} height={48} />;
+}
+
 export const fractionDivision: Unit = {
   id: "fractionDivision",
   title: "Dividing Fractions",
@@ -214,6 +219,7 @@ export const fractionDivision: Unit = {
     </>
   ),
   Explore,
+  preview: Preview,
   problems: [
     { label: "Measuring", make: measurementProblem },
     { label: "Sharing", make: sharingProblem },

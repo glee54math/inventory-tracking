@@ -295,6 +295,11 @@ const rateTimeProblem = (): Problem => {
   };
 };
 
+/** Static snapshot for the cover page's preview carousel — see shared/components/UnitPreviewCarousel.tsx. */
+function Preview() {
+  return <ConversionChain start={{ value: 3, unit: "ft", color: palette.a }} factors={[{ num: { value: 12, unit: "in" }, den: { value: 1, unit: "ft" } }]} result={{ value: 36, unit: "in" }} />;
+}
+
 export const unitConversion: Unit = {
   id: "conversion",
   title: "Converting units",
@@ -309,6 +314,7 @@ export const unitConversion: Unit = {
     </>
   ),
   Explore,
+  preview: Preview,
   problems: [
     { label: "Big to small", make: bigToSmallProblem },
     { label: "Small to big", make: smallToBigProblem },

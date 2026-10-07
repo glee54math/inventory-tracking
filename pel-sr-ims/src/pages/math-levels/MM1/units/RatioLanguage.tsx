@@ -381,6 +381,11 @@ const wordProblem = (): Problem => {
   };
 };
 
+/** Static snapshot for the cover page's preview carousel — see shared/components/UnitPreviewCarousel.tsx. */
+function Preview() {
+  return <RatioGroups groups={3} a={{ count: 3, kind: "star", color: palette.a, label: "stars" }} b={{ count: 2, kind: "heart", color: palette.b, label: "hearts" }} maxWidth={240} cell={30} />;
+}
+
 export const ratioLanguage: Unit = {
   id: "ratio-language",
   title: "Ratio language",
@@ -395,6 +400,7 @@ export const ratioLanguage: Unit = {
     </>
   ),
   Explore,
+  preview: Preview,
   problems: [
     { label: "Picture groups", make: countProblem },
     { label: "Word problem", make: wordProblem },

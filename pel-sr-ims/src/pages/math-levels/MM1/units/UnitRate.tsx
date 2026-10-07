@@ -273,6 +273,22 @@ const fractionRateProblem = (): Problem => {
   };
 };
 
+/** Static snapshot for the cover page's preview carousel — see shared/components/UnitPreviewCarousel.tsx. */
+function Preview() {
+  return (
+    <DoubleNumberLine
+      top={{ label: "dollars", color: palette.a, format: money }}
+      bottom={{ label: "items", color: palette.b }}
+      pairs={[
+        { top: 0, bottom: 0 },
+        { top: 5, bottom: 1, highlight: true },
+        { top: 15, bottom: 3 },
+      ]}
+      width={260}
+    />
+  );
+}
+
 export const unitRate: Unit = {
   id: "unit-rate",
   title: "Unit rate",
@@ -289,6 +305,7 @@ export const unitRate: Unit = {
     </>
   ),
   Explore,
+  preview: Preview,
   problems: [
     { label: "Unit price", make: priceProblem },
     { label: "Fraction rate", make: fractionRateProblem },

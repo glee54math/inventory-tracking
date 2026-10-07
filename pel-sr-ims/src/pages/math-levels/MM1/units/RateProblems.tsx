@@ -38,7 +38,14 @@ function Explore() {
         <div className="control-row">
           <Slider label="Speed:" value={speed} min={10} max={70} step={5} onChange={setSpeed} display={`${speed} miles per hour`} />
           <Slider label="Trip length:" value={hours} min={1} max={6} onChange={setHours} display={`${hours} hours`} />
-          <button className="btn primary" onClick={() => setPlaying(true)} disabled={playing}>
+          <button
+            className="btn primary"
+            onClick={() => {
+              setT(0);
+              setPlaying(true);
+            }}
+            disabled={playing}
+          >
             {playing ? "Driving…" : "Drive"}
           </button>
         </div>
@@ -64,6 +71,7 @@ function Explore() {
           bottom={{ label: "hours", color: palette.b }}
           pairs={Array.from({ length: hours + 1 }, (_, h) => ({ top: speed * h, bottom: h, highlight: h === 1 }))}
           marker={t}
+          markerTransition={false}
           maxBottom={hours}
         />
         <ConversionChain start={{ value: fmt(t), unit: "hr", color: palette.b }} factors={[{ num: { value: speed, unit: "mi", color: palette.a }, den: { value: 1, unit: "hr", color: palette.b } }]} result={{ value: fmt(dist), unit: "mi" }} />
@@ -220,7 +228,7 @@ const speedProblem = (): Problem => {
         kind: "number",
         prompt: (
           <>
-            At that speed, how far in <QB>{T} hours</QB>?
+            At that speed, how far would it travel in <QB>{T} hours</QB>?
           </>
         ),
         answer: r * T,
@@ -287,17 +295,19 @@ const betterBuyProblem = (): Problem => {
     steps: [
       {
         kind: "number",
-        prompt: <>Store A: what is the price for 1 {g.one}?</>,
+        prompt: <>Store A: what is the price for 1 {g.one}? If it's not a whole dollar amount, write it with two decimal places (like 3.50).</>,
         prefix: "$",
         answer: u1,
+        money: true,
         hint: `${money(p1)} ÷ ${n1}`,
         explain: `${money(p1)} ÷ ${n1} = ${money(u1)} per ${g.one}.`,
       },
       {
         kind: "number",
-        prompt: <>Store B: what is the price for 1 {g.one}?</>,
+        prompt: <>Store B: what is the price for 1 {g.one}? If it's not a whole dollar amount, write it with two decimal places (like 3.50).</>,
         prefix: "$",
         answer: u2,
+        money: true,
         hint: `${money(p2)} ÷ ${n2}`,
         explain: `${money(p2)} ÷ ${n2} = ${money(u2)} per ${g.one}.`,
       },
@@ -315,6 +325,19 @@ const betterBuyProblem = (): Problem => {
   };
 };
 
+/** Static snapshot for the cover page's preview carousel — see shared/components/UnitPreviewCarousel.tsx. */
+function Preview() {
+  return (
+    <TapeDiagram
+      tapes={[
+        { label: "Store A", units: 4, color: palette.a, values: ["$2", "$2", "$2", "$2"], total: "$8 total" },
+        { label: "Store B", units: 5, color: palette.b, values: ["$2", "$2", "$2", "$2", "$2"], total: "$10 total" },
+      ]}
+      unitWidth={32}
+    />
+  );
+}
+
 export const rateProblems: Unit = {
   id: "rate-problems",
   title: "Rate problems",
@@ -329,6 +352,7 @@ export const rateProblems: Unit = {
     </>
   ),
   Explore,
+  preview: Preview,
   problems: [
     { label: "Mowing lawns", make: lawnProblem },
     { label: "Constant speed", make: speedProblem },

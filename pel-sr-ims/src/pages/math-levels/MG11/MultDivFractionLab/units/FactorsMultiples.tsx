@@ -168,6 +168,11 @@ function distributiveProblem(): Problem {
   };
 }
 
+/** Static snapshot for the cover page's preview carousel — see shared/components/UnitPreviewCarousel.tsx. */
+function Preview() {
+  return <FactorRectangle rows={4} cols={7} label="28 = 4 × 7" width={220} height={110} />;
+}
+
 export const factorsMultiples: Unit = {
   id: "factorsMultiples",
   title: "Factors, Multiples & the Distributive Property",
@@ -181,6 +186,7 @@ export const factorsMultiples: Unit = {
     </>
   ),
   Explore,
+  preview: Preview,
   problems: [
     { label: "Find the GCF", make: gcfProblem },
     { label: "Find the LCM", make: lcmProblem },

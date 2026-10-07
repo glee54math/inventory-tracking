@@ -28,6 +28,18 @@ export interface DoubleNumberLineProps {
   maxBottom?: number;
   /** Optional moving marker at this bottom-scale value. */
   marker?: number | null;
+  /**
+   * Smoothly glide the marker to its new position over ~250ms instead of
+   * snapping instantly. Good for occasional discrete jumps (e.g. revealing
+   * the next step of a problem); turn this off when `marker` itself is
+   * already being updated continuously (e.g. every requestAnimationFrame
+   * tick of a "Drive" animation) — retargeting a fixed-duration CSS
+   * transition on every frame makes the marker perpetually lag behind and
+   * chase its own target rather than track it, since each new frame's
+   * value restarts the transition before the previous one finishes.
+   * Default true to match every existing caller's expectations.
+   */
+  markerTransition?: boolean;
   width?: number;
   ariaLabel?: string;
 }
@@ -36,7 +48,7 @@ export interface DoubleNumberLineProps {
  * Two parallel number lines whose tick marks line up: each vertical pair is an equivalent
  * ratio. Because positions are proportional, the picture also shows the constant rate.
  */
-export function DoubleNumberLine({ top, bottom, pairs, maxBottom, marker = null, width = 560, ariaLabel }: DoubleNumberLineProps) {
+export function DoubleNumberLine({ top, bottom, pairs, maxBottom, marker = null, markerTransition = true, width = 560, ariaLabel }: DoubleNumberLineProps) {
   const left = 96;
   const right = 26;
   const yTop = 46;
@@ -105,7 +117,7 @@ export function DoubleNumberLine({ top, bottom, pairs, maxBottom, marker = null,
         );
       })}
       {marker !== null && marker !== undefined && (
-        <g style={{ transition: "transform .25s linear" }} transform={`translate(${x(Math.min(marker, maxB))},0)`}>
+        <g style={{ transition: markerTransition ? "transform .25s linear" : "none" }} transform={`translate(${x(Math.min(marker, maxB))},0)`}>
           <circle cx={0} cy={yTop} r={7} style={{ fill: top.color, stroke: palette.paper, strokeWidth: 2 }} />
           <circle cx={0} cy={yBot} r={7} style={{ fill: bottom.color, stroke: palette.paper, strokeWidth: 2 }} />
         </g>

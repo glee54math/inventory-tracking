@@ -160,6 +160,11 @@ function twoDigitDivisorProblem(): Problem {
   };
 }
 
+/** Static snapshot for the cover page's preview carousel — see shared/components/UnitPreviewCarousel.tsx. */
+function Preview() {
+  return <DivisionLadder dividend={144} divisor={6} done={0} />;
+}
+
 export const longDivision: Unit = {
   id: "longDivision",
   title: "Long Division",
@@ -172,6 +177,7 @@ export const longDivision: Unit = {
     </>
   ),
   Explore,
+  preview: Preview,
   problems: [
     { label: "No remainder", make: noRemainderProblem },
     { label: "With remainder", make: withRemainderProblem },

@@ -12,6 +12,14 @@ export interface Unit {
   keyIdea: ReactNode;
   /** Free-play sandbox with live diagrams. */
   Explore: ComponentType;
+  /**
+   * A small, fully static snapshot of this unit for the cover page's preview
+   * carousel (shared/components/UnitPreviewCarousel.tsx) — zero props, no
+   * interactivity or internal state, just one hand-picked "nice" example
+   * rendered at a fixed size. Optional so a unit without one yet falls back
+   * to title/goal text only in the carousel.
+   */
+  preview?: ComponentType;
   /** Randomized, step-by-step practice problems. */
   problems: ProblemType[];
   /**

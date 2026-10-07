@@ -367,6 +367,24 @@ const compareProblem = (): Problem => {
   };
 };
 
+/** Static snapshot for the cover page's preview carousel — see shared/components/UnitPreviewCarousel.tsx. */
+function Preview() {
+  return (
+    <RatioTable
+      compact
+      columns={[
+        { label: "A", color: palette.a },
+        { label: "B", color: palette.b },
+      ]}
+      rows={[
+        [{ value: 2 }, { value: 3 }],
+        [{ value: 4 }, { value: 6 }],
+        [{ value: 6 }, { value: 9 }],
+      ]}
+    />
+  );
+}
+
 export const tablesGraphs: Unit = {
   id: "tables-graphs",
   title: "Tables & graphs",
@@ -381,6 +399,7 @@ export const tablesGraphs: Unit = {
     </>
   ),
   Explore,
+  preview: Preview,
   problems: [
     { label: "Missing values", make: missingProblem },
     { label: "Compare two ratios", make: compareProblem },

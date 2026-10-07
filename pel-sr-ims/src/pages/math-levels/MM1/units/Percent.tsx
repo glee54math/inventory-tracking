@@ -221,6 +221,11 @@ const findWholeProblem = (): Problem => {
   };
 };
 
+/** Static snapshot for the cover page's preview carousel — see shared/components/UnitPreviewCarousel.tsx. */
+function Preview() {
+  return <PercentGrid filled={30} color={palette.a} size={180} />;
+}
+
 export const percent: Unit = {
   id: "percent",
   title: "Percent",
@@ -235,6 +240,7 @@ export const percent: Unit = {
     </>
   ),
   Explore,
+  preview: Preview,
   problems: [
     { label: "Find the part", make: findPartProblem },
     { label: "Find the whole", make: findWholeProblem },

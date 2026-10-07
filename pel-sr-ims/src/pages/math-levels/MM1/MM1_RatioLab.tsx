@@ -3,7 +3,7 @@ import "./MM1_RatioLab_styles.css";
 import { units, type Unit } from "./units";
 import { StepProblem } from "../shared/engine/StepProblem";
 import { UnitTestView } from "../shared/engine/UnitTest";
-import { RatioGroups } from "./diagrams";
+import { UnitPreviewCarousel } from "../shared/components/UnitPreviewCarousel";
 import { palette } from "../shared/lib/palette";
 import { pick } from "../shared/lib/math";
 import { MASTERY_GOAL, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
@@ -53,10 +53,7 @@ function Home({ onPick, progress }: { onPick: (i: number) => void; progress: Rec
           </button>
         </div>
         <div className="hero-art">
-          <RatioGroups groups={4} a={{ count: 2, kind: "triangle", color: palette.a, label: "wings" }} b={{ count: 1, kind: "diamond", color: palette.b, label: "beaks" }} showGroupLabels maxWidth={320} cell={46} />
-          <p className="legend">
-            <span className="key qa-bg" /> wings <span className="key qb-bg" /> beaks
-          </p>
+          <UnitPreviewCarousel units={units} onPick={onPick} />
         </div>
       </section>
       <section>
@@ -75,7 +72,7 @@ function Home({ onPick, progress }: { onPick: (i: number) => void; progress: Rec
             </li>
           ))}
         </ol>
-        <p className="muted small">Earn a star for each problem you solve with at most one hint. Five stars = mastered.</p>
+        <p className="muted small">Earn a star for each Mixed-mode problem you solve with at most one hint. Five stars = mastered.</p>
       </section>
     </div>
   );
@@ -164,7 +161,12 @@ function UnitView({ unit, progress, onSolved, onTest, onNextUnit }: { unit: Unit
               New problem
             </button>
           </div>
-          <StepProblem key={`${unit.id}-${seed}-${String(typeIdx)}`} problem={problem} onComplete={onSolved} onNext={() => setSeed((s) => s + 1)} />
+          {typeIdx !== "mix" && (
+            <p className="muted small">
+              Practicing one type is great for extra reps, but only <b>Mixed</b> problems count toward your mastery stars.
+            </p>
+          )}
+          <StepProblem key={`${unit.id}-${seed}-${String(typeIdx)}`} problem={problem} onComplete={(clean) => onSolved(clean && typeIdx === "mix")} onNext={() => setSeed((s) => s + 1)} />
           {mastered && onNextUnit && (
             <div className="mastered">
               <span>You've mastered {unit.title.toLowerCase()}.</span>
