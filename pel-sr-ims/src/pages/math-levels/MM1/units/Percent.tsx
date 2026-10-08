@@ -167,10 +167,15 @@ const findWholeProblem = (): Problem => {
         <TapeDiagram
           tapes={[
             { label: "known", units: n, color: palette.a, values: done >= 2 ? Array(n).fill(fmt(ten)) : Array(n).fill("10%"), total: `${P} ${s.short} = ${p}%` },
-            { label: "whole", units: 10, color: palette.c, softColor: palette.cSoft, shaded: done >= 3 ? 10 : 0, values: done >= 2 ? Array(10).fill(fmt(ten)) : [], total: done >= 3 ? `${W} ${s.short} = 100%` : "? = 100%" },
+            { label: "whole", units: 10, color: palette.c, softColor: palette.cSoft, shaded: done >= 3 ? 10 : 0, values: done >= 2 ? Array(10).fill(fmt(ten)) : Array(10).fill("10%"), total: done >= 3 ? `${W} ${s.short} = 100%` : "? = 100%" },
           ]}
           unitWidth={42}
         />
+        {done >= 2 && (
+          <Says>
+            1 block = 10% = <QA>{fmt(ten)}</QA> {s.short}.
+          </Says>
+        )}
         <DoubleNumberLine
           top={{ label: s.short, color: palette.c }}
           bottom={{ label: "percent", color: palette.a, format: (v) => `${v}%` }}
@@ -206,7 +211,11 @@ const findWholeProblem = (): Problem => {
       },
       {
         kind: "number",
-        prompt: <>The whole is 100%, which is 10 blocks. What is the whole?</>,
+        prompt: (
+          <>
+            1 block = 10% = {fmt(ten)} {s.short}. The whole (100%) is 10 of those blocks. What is the whole?
+          </>
+        ),
         answer: W,
         suffix: s.short,
         hint: `10 × ${fmt(ten)}`,

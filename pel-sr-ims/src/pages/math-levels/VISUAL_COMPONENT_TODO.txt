@@ -218,6 +218,18 @@ MIDDLE SCHOOL
           real-world case for the shared hook; it previously had no persistence at all.
           This also required giving Student (types.ts) an id/location field, set by
           loadStudentsFromDB — previously student identity was name-only.
+          2026-10-07: same end-of-unit-test pass applied to the "Rate problems" unit —
+          new units/RateProblemsTest.tsx (9 generators/10 questions, 2-diagram/
+          1-colored-pair/3-4-3 easy-medium-hard shape, final 3 multiple-choice
+          "sentence" questions), organized around this unit's own three practice
+          themes (constant speed, work rate, better buy) rather than a new context,
+          so every question traces back to lawnProblem/speedProblem/betterBuyProblem's
+          skills. DoubleNumberLine question reuses the self-labeling axis convention
+          (no extra legend); TapeDiagram question shows only the bracket total
+          (shaded: 0, no values) so the per-item price has to be computed, not read
+          off. Same quarter-dollar-unit-price trick as UnitRateTest's money questions
+          so unit-price division always terminates to the cent. Percent and Unit
+          conversion remain without a Test tab.
 [ ] MM2
 [ ] MM3
 

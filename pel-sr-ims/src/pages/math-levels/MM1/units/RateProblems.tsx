@@ -5,6 +5,7 @@ import { fmt, fracText, gcd, money, pick, randInt } from "../../shared/lib/math"
 import { choice, type Problem } from "../../shared/engine/types";
 import { QA, QB, Says, Slider } from "../../shared/engine/controls";
 import type { Unit } from "../../shared/units/types";
+import { rateProblemsTest } from "./RateProblemsTest";
 
 function Explore() {
   const [speed, setSpeed] = useState(40);
@@ -358,4 +359,5 @@ export const rateProblems: Unit = {
     { label: "Constant speed", make: speedProblem },
     { label: "Better buy", make: betterBuyProblem },
   ],
+  test: rateProblemsTest,
 };
