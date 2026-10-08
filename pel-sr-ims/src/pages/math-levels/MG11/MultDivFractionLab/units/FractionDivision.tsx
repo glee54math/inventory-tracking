@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { FractionBar, FractionMeasureStrip, simplifyCaption } from "../diagrams";
+import { FractionBar, FractionMeasureStrip } from "../diagrams";
 import { gcd, randInt, simplify } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
-import { QA, QB, Says, Stepper } from "../../../shared/engine/controls";
+import { Frac, QA, QB, Says, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { fractionDivisionTest } from "./FractionDivisionTest";
 
@@ -12,6 +12,11 @@ function properFraction(): [number, number] {
   const n = randInt(1, d - 1);
   const g = gcd(n, d);
   return [n / g, d / g];
+}
+
+/** Renders a quotient as a plain whole number when it reduces to one, otherwise as a stacked fraction. */
+function Quotient({ n, d }: { n: number; d: number }) {
+  return d === 1 ? <>{n}</> : <Frac n={n} d={d} />;
 }
 
 // ============================================================================
@@ -36,10 +41,10 @@ function Explore() {
       </div>
       <FractionMeasureStrip dividend={[an, bd]} divisor={[cn, dd]} />
       <Says>
-        <QA>{an}/{bd}</QA> ÷ <QB>{cn}/{dd}</QB> = <QA>{an}/{bd}</QA> × {dd}/{cn} = {qd === 1 ? qn : `${qn}/${qd}`}
+        <QA><Frac n={an} d={bd} /></QA> ÷ <QB><Frac n={cn} d={dd} /></QB> = <QA><Frac n={an} d={bd} /></QA> × <Frac n={dd} d={cn} /> = <Quotient n={qn} d={qd} />
       </Says>
       <Says>
-        Check it: <QB>{cn}/{dd}</QB> of {qd === 1 ? qn : `${qn}/${qd}`} is <QA>{an}/{bd}</QA>.
+        Check it: <QB><Frac n={cn} d={dd} /></QB> of <Quotient n={qn} d={qd} /> is <QA><Frac n={an} d={bd} /></QA>.
       </Says>
     </div>
   );
@@ -58,11 +63,11 @@ function measurementProblem(): Problem {
   const useServings = Math.random() < 0.5;
   const story = useServings ? (
     <>
-      A recipe uses <QB>{cn}/{dd}</QB>-cup servings. How many servings can you measure out of <QA>{an}/{bd}</QA> cup of yogurt?
+      A recipe uses <QB><Frac n={cn} d={dd} /></QB>-cup servings. How many servings can you measure out of <QA><Frac n={an} d={bd} /></QA> cup of yogurt?
     </>
   ) : (
     <>
-      A rectangular strip of land has an area of <QA>{an}/{bd}</QA> square miles and a length of <QB>{cn}/{dd}</QB> miles. How wide is the strip?
+      A rectangular strip of land has an area of <QA><Frac n={an} d={bd} /></QA> square miles and a length of <QB><Frac n={cn} d={dd} /></QB> miles. How wide is the strip?
     </>
   );
 
@@ -81,7 +86,7 @@ function measurementProblem(): Problem {
         tones: "none",
         frame: ["", "/", ""],
         labels: ["numerator", "denominator"],
-        prompt: <>To divide, multiply by the reciprocal: <QA>{an}/{bd}</QA> × {dd}/{cn}. What's the new numerator and denominator, before simplifying?</>,
+        prompt: <>To divide, multiply by the reciprocal: <QA><Frac n={an} d={bd} /></QA> × <Frac n={dd} d={cn} />. What's the new numerator and denominator, before simplifying?</>,
         hint: "Multiply numerator × numerator, and denominator × denominator.",
         explain: <>{an} × {dd} = {an * dd}, and {bd} × {cn} = {bd * cn}.</>,
         answer: [an * dd, bd * cn],
@@ -90,9 +95,9 @@ function measurementProblem(): Problem {
         kind: "number",
         frac: true,
         fracAnswer: [qn, qd],
-        prompt: `Simplify ${an * dd}/${bd * cn} to lowest terms.`,
+        prompt: <>Simplify <Frac n={an * dd} d={bd * cn} /> to lowest terms.</>,
         hint: `Both ${an * dd} and ${bd * cn} share a common factor — divide both by it.`,
-        explain: `${an * dd}/${bd * cn} simplifies to ${simplifyCaption(an * dd, bd * cn)}.`,
+        explain: <><Frac n={an * dd} d={bd * cn} /> simplifies to <Quotient n={qn} d={qd} />.</>,
         answer: quotientVal,
       },
       choice(
@@ -102,9 +107,9 @@ function measurementProblem(): Problem {
       ),
     ],
     wrapUp: useServings ? (
-      <>You can measure out {qd === 1 ? qn : `${qn}/${qd}`} full servings.</>
+      <>You can measure out <Quotient n={qn} d={qd} /> full servings.</>
     ) : (
-      <>The strip is {qd === 1 ? qn : `${qn}/${qd}`} miles wide.</>
+      <>The strip is <Quotient n={qn} d={qd} /> miles wide.</>
     ),
   };
 }
@@ -123,7 +128,7 @@ function sharingProblem(): Problem {
     title: "Sharing equally",
     story: (
       <>
-        {n} people share <QA>{an}/{bd}</QA> lb of chocolate equally. How much chocolate does each person get?
+        {n} people share <QA><Frac n={an} d={bd} /></QA> lb of chocolate equally. How much chocolate does each person get?
       </>
     ),
     visual: () => <FractionBar numerator={an} denominator={bd} shareCount={bd % n === 0 ? n : undefined} highlightShare={bd % n === 0 ? 0 : undefined} label={`${an}/${bd} lb shared ${n} ways`} />,
@@ -139,9 +144,9 @@ function sharingProblem(): Problem {
         fracAnswer: [qn, qd],
         prefix: "",
         suffix: "lb",
-        prompt: <>Write {n} as a fraction (1/{n}) and multiply: <QA>{an}/{bd}</QA> × 1/{n}. What's each share, in simplest form?</>,
+        prompt: <>Write {n} as a fraction (<Frac n={1} d={n} />) and multiply: <QA><Frac n={an} d={bd} /></QA> × <Frac n={1} d={n} />. What's each share, in simplest form?</>,
         hint: `Multiply the numerators (${an} × 1) and the denominators (${bd} × ${n}), then simplify.`,
-        explain: `${an}/${bd * n} simplifies to ${simplifyCaption(an, bd * n)}.`,
+        explain: <><Frac n={an} d={bd * n} /> simplifies to <Quotient n={qn} d={qd} />.</>,
         answer: quotientVal,
       },
       choice(
@@ -150,7 +155,7 @@ function sharingProblem(): Problem {
         ["No — one share should be bigger than the whole amount", "No — the answer should be a whole number"]
       ),
     ],
-    wrapUp: <>Each person gets {qd === 1 ? qn : `${qn}/${qd}`} lb of chocolate.</>,
+    wrapUp: <>Each person gets <Quotient n={qn} d={qd} /> lb of chocolate.</>,
   };
 }
 
@@ -168,7 +173,7 @@ function relationshipProblem(): Problem {
     title: "Multiplication checks division",
     story: (
       <>
-        Explain why <QA>{an}/{bd}</QA> ÷ <QB>{cn}/{dd}</QB> equals a certain fraction, using the fact that <QB>{cn}/{dd}</QB> of that fraction gives back <QA>{an}/{bd}</QA>.
+        Explain why <QA><Frac n={an} d={bd} /></QA> ÷ <QB><Frac n={cn} d={dd} /></QB> equals a certain fraction, using the fact that <QB><Frac n={cn} d={dd} /></QB> of that fraction gives back <QA><Frac n={an} d={bd} /></QA>.
       </>
     ),
     visual: () => <FractionMeasureStrip dividend={[an, bd]} divisor={[cn, dd]} />,
@@ -177,16 +182,16 @@ function relationshipProblem(): Problem {
         kind: "number",
         frac: true,
         fracAnswer: [qn, qd],
-        prompt: <>First, what is <QA>{an}/{bd}</QA> ÷ <QB>{cn}/{dd}</QB>? (Multiply by the reciprocal, then simplify.)</>,
+        prompt: <>First, what is <QA><Frac n={an} d={bd} /></QA> ÷ <QB><Frac n={cn} d={dd} /></QB>? (Multiply by the reciprocal, then simplify.)</>,
         hint: `(a/b) ÷ (c/d) = ad/bc = (${an}×${dd})/(${bd}×${cn}).`,
-        explain: `${an}/${bd} × ${dd}/${cn} = ${an * dd}/${bd * cn} = ${simplifyCaption(an * dd, bd * cn)}.`,
+        explain: <><Frac n={an} d={bd} /> × <Frac n={dd} d={cn} /> = <Frac n={an * dd} d={bd * cn} /> = <Quotient n={qn} d={qd} />.</>,
         answer: quotientVal,
       },
       choice(
         {
-          prompt: <>Which multiplication fact PROVES that <QA>{an}/{bd}</QA> ÷ <QB>{cn}/{dd}</QB> = {qd === 1 ? qn : `${qn}/${qd}`}?</>,
+          prompt: <>Which multiplication fact PROVES that <QA><Frac n={an} d={bd} /></QA> ÷ <QB><Frac n={cn} d={dd} /></QB> = <Quotient n={qn} d={qd} />?</>,
           hint: "Division undoes multiplication: the divisor times the quotient should give back the dividend.",
-          explain: <>Since division and multiplication are inverses, <QB>{cn}/{dd}</QB> × {qd === 1 ? qn : `${qn}/${qd}`} must equal <QA>{an}/{bd}</QA> — and it does.</>,
+          explain: <>Since division and multiplication are inverses, <QB><Frac n={cn} d={dd} /></QB> × <Quotient n={qn} d={qd} /> must equal <QA><Frac n={an} d={bd} /></QA> — and it does.</>,
         },
         `${cn}/${dd} × ${qd === 1 ? qn : `${qn}/${qd}`} = ${an}/${bd}`,
         [`${an}/${bd} × ${cn}/${dd} = ${qd === 1 ? qn : `${qn}/${qd}`}`, `${qd === 1 ? qn : `${qn}/${qd}`} ÷ ${an}/${bd} = ${cn}/${dd}`]
@@ -194,7 +199,7 @@ function relationshipProblem(): Problem {
     ],
     wrapUp: (
       <>
-        <QA>{an}/{bd}</QA> ÷ <QB>{cn}/{dd}</QB> = {qd === 1 ? qn : `${qn}/${qd}`}, because <QB>{cn}/{dd}</QB> of {qd === 1 ? qn : `${qn}/${qd}`} is <QA>{an}/{bd}</QA>.
+        <QA><Frac n={an} d={bd} /></QA> ÷ <QB><Frac n={cn} d={dd} /></QB> = <Quotient n={qn} d={qd} />, because <QB><Frac n={cn} d={dd} /></QB> of <Quotient n={qn} d={qd} /> is <QA><Frac n={an} d={bd} /></QA>.
       </>
     ),
   };
@@ -213,7 +218,7 @@ export const fractionDivision: Unit = {
   keyIdea: (
     <>
       <p>
-        To divide fractions, multiply by the reciprocal: (a/b) ÷ (c/d) = (a×d)/(b×c). For example, 2/3 ÷ 3/4 = 2/3 × 4/3 = 8/9 — and you can check it, because 3/4 of 8/9 is 2/3.
+        To divide fractions, multiply by the reciprocal: (a/b) ÷ (c/d) = (a×d)/(b×c). For example, <Frac n={2} d={3} /> ÷ <Frac n={3} d={4} /> = <Frac n={2} d={3} /> × <Frac n={4} d={3} /> = <Frac n={8} d={9} /> — and you can check it, because <Frac n={3} d={4} /> of <Frac n={8} d={9} /> is <Frac n={2} d={3} />.
       </p>
       <p>Division can mean "how many groups fit?" (measuring) or "what does one share get?" (sharing equally).</p>
     </>

@@ -10,6 +10,8 @@ export interface UnitProgress {
   clean: number;
   /** Best-ever end-of-unit test score out of 10. A later worse retake never lowers this. */
   testScore?: number;
+  /** Has this student finished the unit's required intro exercise (if it has one)? See Unit.requiresIntro. */
+  introDone?: boolean;
 }
 
 export type ProgressMap = Record<string, UnitProgress>;

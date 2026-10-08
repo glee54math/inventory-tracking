@@ -1,8 +1,13 @@
-import { FractionBar, FractionMeasureStrip, simplifyCaption } from "../diagrams";
+import { FractionBar, FractionMeasureStrip } from "../diagrams";
 import { gcd, randInt, simplify } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
-import { QA, QB } from "../../../shared/engine/controls";
+import { Frac, QA, QB } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
+
+/** Renders a quotient as a plain whole number when it reduces to one, otherwise as a stacked fraction. */
+function Quotient({ n, d }: { n: number; d: number }) {
+  return d === 1 ? <>{n}</> : <Frac n={n} d={d} />;
+}
 
 function properFraction(): [number, number] {
   const d = randInt(2, 9);
@@ -26,9 +31,9 @@ function servingsQuestion(): TestQuestion[] {
         kind: "number",
         frac: true,
         fracAnswer: [qn, qd],
-        prompt: <>How many <QB>{cn}/{dd}</QB>-cup servings fit in <QA>{an}/{bd}</QA> cup?</>,
-        hint: `Multiply ${an}/${bd} by the reciprocal of ${cn}/${dd}.`,
-        explain: `${an}/${bd} ÷ ${cn}/${dd} = ${an}/${bd} × ${dd}/${cn} = ${simplifyCaption(an * dd, bd * cn)}.`,
+        prompt: <>How many <QB><Frac n={cn} d={dd} /></QB>-cup servings fit in <QA><Frac n={an} d={bd} /></QA> cup?</>,
+        hint: <>Multiply <Frac n={an} d={bd} /> by the reciprocal of <Frac n={cn} d={dd} />.</>,
+        explain: <><Frac n={an} d={bd} /> ÷ <Frac n={cn} d={dd} /> = <Frac n={an} d={bd} /> × <Frac n={dd} d={cn} /> = <Quotient n={qn} d={qd} />.</>,
         answer: (an * dd) / (bd * cn),
       },
     },
@@ -49,9 +54,9 @@ function sharingQuestion(): TestQuestion[] {
         frac: true,
         fracAnswer: [qn, qd],
         suffix: "lb",
-        prompt: <>{n} people share <QA>{an}/{bd}</QA> lb of trail mix equally. How much does each person get?</>,
-        hint: `${an}/${bd} ÷ ${n} = ${an}/${bd} × 1/${n}.`,
-        explain: `${an}/${bd} ÷ ${n} simplifies to ${simplifyCaption(an, bd * n)} lb.`,
+        prompt: <>{n} people share <QA><Frac n={an} d={bd} /></QA> lb of trail mix equally. How much does each person get?</>,
+        hint: <><Frac n={an} d={bd} /> ÷ {n} = <Frac n={an} d={bd} /> × <Frac n={1} d={n} />.</>,
+        explain: <><Frac n={an} d={bd} /> ÷ {n} simplifies to <Quotient n={qn} d={qd} /> lb.</>,
         answer: an / (bd * n),
       },
     },
@@ -72,9 +77,9 @@ function widthQuestion(): TestQuestion[] {
         frac: true,
         fracAnswer: [qn, qd],
         suffix: "mi",
-        prompt: <>A rectangular strip of land has area <QA>{an}/{bd}</QA> square miles and length <QB>{cn}/{dd}</QB> miles. How wide is it?</>,
+        prompt: <>A rectangular strip of land has area <QA><Frac n={an} d={bd} /></QA> square miles and length <QB><Frac n={cn} d={dd} /></QB> miles. How wide is it?</>,
         hint: "Width = area ÷ length.",
-        explain: `${an}/${bd} ÷ ${cn}/${dd} = ${simplifyCaption(an * dd, bd * cn)} mi.`,
+        explain: <><Frac n={an} d={bd} /> ÷ <Frac n={cn} d={dd} /> = <Quotient n={qn} d={qd} /> mi.</>,
         answer: (an * dd) / (bd * cn),
       },
     },
@@ -94,9 +99,9 @@ function crossMultiplyQuestion(): TestQuestion[] {
         tones: "none",
         frame: ["", "/", ""],
         labels: ["numerator", "denominator"],
-        prompt: <>Using (a/b)÷(c/d) = ad/bc, what's the numerator and denominator of <QA>{an}/{bd}</QA> ÷ <QB>{cn}/{dd}</QB>, before simplifying?</>,
+        prompt: <>Using (a/b)÷(c/d) = ad/bc, what's the numerator and denominator of <QA><Frac n={an} d={bd} /></QA> ÷ <QB><Frac n={cn} d={dd} /></QB>, before simplifying?</>,
         hint: "Multiply numerator × numerator, and denominator × denominator.",
-        explain: `${an} × ${dd} = ${an * dd}, and ${bd} × ${cn} = ${bd * cn}.`,
+        explain: <>{an} × {dd} = {an * dd}, and {bd} × {cn} = {bd * cn}.</>,
         answer: [an * dd, bd * cn],
       },
     },
@@ -116,9 +121,9 @@ function computeQuestion1(): TestQuestion[] {
         kind: "number",
         frac: true,
         fracAnswer: [qn, qd],
-        prompt: `Compute: ${an}/${bd} ÷ ${cn}/${dd}`,
+        prompt: <>Compute: <Frac n={an} d={bd} /> ÷ <Frac n={cn} d={dd} /></>,
         hint: "Multiply by the reciprocal of the second fraction.",
-        explain: `${an}/${bd} × ${dd}/${cn} = ${simplifyCaption(an * dd, bd * cn)}.`,
+        explain: <><Frac n={an} d={bd} /> × <Frac n={dd} d={cn} /> = <Quotient n={qn} d={qd} />.</>,
         answer: (an * dd) / (bd * cn),
       },
     },
@@ -139,9 +144,9 @@ function chocolateQuestion(): TestQuestion[] {
         frac: true,
         fracAnswer: [qn, qd],
         suffix: "lb",
-        prompt: `${n} people share ${an}/${bd} lb of chocolate equally. How much chocolate does each person get?`,
-        hint: `${an}/${bd} ÷ ${n}.`,
-        explain: `${an}/${bd} ÷ ${n} = ${simplifyCaption(an, bd * n)} lb.`,
+        prompt: <>{n} people share <Frac n={an} d={bd} /> lb of chocolate equally. How much chocolate does each person get?</>,
+        hint: <><Frac n={an} d={bd} /> ÷ {n}.</>,
+        explain: <><Frac n={an} d={bd} /> ÷ {n} = <Quotient n={qn} d={qd} /> lb.</>,
         answer: an / (bd * n),
       },
     },
@@ -161,9 +166,9 @@ function computeQuestion2(): TestQuestion[] {
         kind: "number",
         frac: true,
         fracAnswer: [qn, qd],
-        prompt: `Compute: ${an}/${bd} ÷ ${cn}/${dd}`,
+        prompt: <>Compute: <Frac n={an} d={bd} /> ÷ <Frac n={cn} d={dd} /></>,
         hint: "Multiply by the reciprocal of the second fraction, then simplify.",
-        explain: `${an}/${bd} × ${dd}/${cn} = ${simplifyCaption(an * dd, bd * cn)}.`,
+        explain: <><Frac n={an} d={bd} /> × <Frac n={dd} d={cn} /> = <Quotient n={qn} d={qd} />.</>,
         answer: (an * dd) / (bd * cn),
       },
     },
@@ -183,9 +188,9 @@ function crossMultiplyQuestion2(): TestQuestion[] {
         tones: "none",
         frame: ["", "/", ""],
         labels: ["numerator", "denominator"],
-        prompt: `Using (a/b)÷(c/d) = ad/bc, what's the numerator and denominator of ${an}/${bd} ÷ ${cn}/${dd}, before simplifying?`,
+        prompt: <>Using (a/b)÷(c/d) = ad/bc, what's the numerator and denominator of <Frac n={an} d={bd} /> ÷ <Frac n={cn} d={dd} />, before simplifying?</>,
         hint: "Multiply numerator × numerator, and denominator × denominator.",
-        explain: `${an} × ${dd} = ${an * dd}, and ${bd} × ${cn} = ${bd * cn}.`,
+        explain: <>{an} × {dd} = {an * dd}, and {bd} × {cn} = {bd * cn}.</>,
         answer: [an * dd, bd * cn],
       },
     },
@@ -202,7 +207,7 @@ function modelChoiceQuestion(): TestQuestion[] {
       difficulty: "hard",
       step: choice(
         {
-          prompt: `A ribbon is ${an}/${bd} yd long. It's cut into pieces that are each ${cn}/${dd} yd. Which expression finds how many pieces there are?`,
+          prompt: <>A ribbon is <Frac n={an} d={bd} /> yd long. It's cut into pieces that are each <Frac n={cn} d={dd} /> yd. Which expression finds how many pieces there are?</>,
           hint: "You're finding how many of the smaller length fit into the total length — that's division.",
           explain: "Finding how many equal-sized pieces fit into a total length is division.",
         },
@@ -225,9 +230,9 @@ function relationshipChoiceQuestion(): TestQuestion[] {
       difficulty: "hard",
       step: choice(
         {
-          prompt: `${an}/${bd} ÷ ${cn}/${dd} = ${qText}. Which multiplication fact proves this?`,
+          prompt: <><Frac n={an} d={bd} /> ÷ <Frac n={cn} d={dd} /> = <Quotient n={qn} d={qd} />. Which multiplication fact proves this?</>,
           hint: "Division undoes multiplication: the divisor times the quotient should give back the dividend.",
-          explain: `${cn}/${dd} × ${qText} = ${an}/${bd}, because division and multiplication are inverse operations.`,
+          explain: <><Frac n={cn} d={dd} /> × <Quotient n={qn} d={qd} /> = <Frac n={an} d={bd} />, because division and multiplication are inverse operations.</>,
         },
         `${cn}/${dd} × ${qText} = ${an}/${bd}`,
         [`${an}/${bd} × ${cn}/${dd} = ${qText}`, `${qText} ÷ ${an}/${bd} = ${cn}/${dd}`]

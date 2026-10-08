@@ -18,6 +18,18 @@ export const QC = ({ children, color }: { children: React.ReactNode; color?: str
   <span className="qc-text" style={color ? { color } : undefined}>{children}</span>
 );
 
+/**
+ * A fraction typeset the "regular" way — numerator stacked over denominator
+ * with a dividing line — instead of as a slash string like "2/3". Inherits
+ * color/weight from an ancestor like QA/QB, since it sets neither itself.
+ */
+export const Frac = ({ n, d }: { n: React.ReactNode; d: React.ReactNode }) => (
+  <span className="frac" role="math" aria-label={`${n}/${d}`}>
+    <span className="frac-n">{n}</span>
+    <span className="frac-d">{d}</span>
+  </span>
+);
+
 export interface StepperProps {
   label: React.ReactNode;
   value: number;

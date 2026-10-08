@@ -163,6 +163,23 @@
 .mdf-lab .muted {
   color: var(--muted);
 }
+.mdf-lab .frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  margin: 0 0.15em;
+  font-size: 0.82em;
+  line-height: 1.05;
+}
+.mdf-lab .frac-n,
+.mdf-lab .frac-d {
+  padding: 0 0.12em;
+}
+.mdf-lab .frac-n {
+  border-bottom: 1.5px solid currentColor;
+}
 .mdf-lab .small {
   font-size: 14px;
 }
@@ -497,6 +514,10 @@
   color: var(--ink);
   position: relative;
   top: 1px;
+}
+.mdf-lab .tabs button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .mdf-lab .panel {
   background: var(--card);

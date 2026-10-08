@@ -230,6 +230,22 @@ MIDDLE SCHOOL
           off. Same quarter-dollar-unit-price trick as UnitRateTest's money questions
           so unit-price division always terminates to the cent. Percent and Unit
           conversion remain without a Test tab.
+          2026-10-08: added the required-intro gate pattern — Unit.requiresIntro (shared/
+          units/types.ts) + UnitProgress.introDone (utils/moduleProgressTypes.ts) +
+          useModuleProgress's recordIntroDone — a unit can require a one-time guided
+          exercise in its Explore tab (Explore's type widened to accept an optional
+          onIntroDone prop, present only when the gate isn't satisfied yet) before
+          "Practice" unlocks; students with existing practice history are grandfathered
+          in automatically so this never retroactively locks anyone out. Percent is the
+          first (only) unit using it: Explore now walks a first-time student through
+          "1 block = 10% = ?" at a forced 10%, then requires them to move the stepper to
+          20% themselves and solve "2 blocks = 20% = ?" before Practice becomes clickable.
+          Also added units/PercentTest.tsx (9 generators/10 questions, same 2-diagram/
+          2-colored/3-4-3 shape as the other three tests) — closes the "Percent remains
+          without a Test tab" note above. Every percent in both practice and the test
+          pointedly excludes 50% (doubling trivializes the answer without the 10%-block
+          method this unit teaches); the test's final MC question is a direct conceptual
+          callback to that — asking why halving-by-2 doesn't generalize to other percents.
 [ ] MM2
 [ ] MM3
 

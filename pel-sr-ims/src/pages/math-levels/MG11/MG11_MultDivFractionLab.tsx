@@ -73,7 +73,21 @@ function TestBadge({ p, passScore }: { p?: UnitProgress; passScore: number }) {
   );
 }
 
-function UnitView({ unit, progress, onSolved, onTest, onNextUnit }: { unit: Unit; progress?: UnitProgress; onSolved: (clean: boolean) => void; onTest: (score: number) => void; onNextUnit?: () => void }) {
+function UnitView({
+  unit,
+  progress,
+  onSolved,
+  onTest,
+  onIntroDone,
+  onNextUnit,
+}: {
+  unit: Unit;
+  progress?: UnitProgress;
+  onSolved: (clean: boolean) => void;
+  onTest: (score: number) => void;
+  onIntroDone: () => void;
+  onNextUnit?: () => void;
+}) {
   const [tab, setTab] = useState<"explore" | "practice" | "test">("explore");
   const [typeIdx, setTypeIdx] = useState<number | "mix">("mix");
   const [seed, setSeed] = useState(0);
@@ -86,6 +100,9 @@ function UnitView({ unit, progress, onSolved, onTest, onNextUnit }: { unit: Unit
   }, [unit, typeIdx, seed]);
 
   const mastered = (progress?.clean ?? 0) >= MASTERY_GOAL;
+  // Grandfather in anyone who already has practice history from before this unit
+  // had a required intro — only ever gate a student who's never touched Practice.
+  const introSatisfied = !unit.requiresIntro || !!progress?.introDone || (progress?.solved ?? 0) > 0;
 
   return (
     <div className="unit">
@@ -108,7 +125,7 @@ function UnitView({ unit, progress, onSolved, onTest, onNextUnit }: { unit: Unit
         <button role="tab" aria-selected={tab === "explore"} className={tab === "explore" ? "on" : ""} onClick={() => setTab("explore")}>
           Explore
         </button>
-        <button role="tab" aria-selected={tab === "practice"} className={tab === "practice" ? "on" : ""} onClick={() => setTab("practice")}>
+        <button role="tab" aria-selected={tab === "practice"} className={tab === "practice" ? "on" : ""} disabled={!introSatisfied} onClick={() => setTab("practice")}>
           Practice
         </button>
         {unit.test && (
@@ -120,11 +137,15 @@ function UnitView({ unit, progress, onSolved, onTest, onNextUnit }: { unit: Unit
 
       {tab === "explore" && (
         <div className="panel" role="tabpanel">
-          <unit.Explore />
+          {introSatisfied ? <unit.Explore /> : <unit.Explore onIntroDone={onIntroDone} />}
           <div className="panel-foot">
-            <button className="btn primary" onClick={() => setTab("practice")}>
-              Try practice problems
-            </button>
+            {introSatisfied ? (
+              <button className="btn primary" onClick={() => setTab("practice")}>
+                Try practice problems
+              </button>
+            ) : (
+              <p className="muted small">Complete the activity above to unlock practice problems.</p>
+            )}
           </div>
         </div>
       )}
@@ -174,7 +195,7 @@ function UnitView({ unit, progress, onSolved, onTest, onNextUnit }: { unit: Unit
 
 function MultDivFractionLab() {
   const { currentStudent } = useStudentContext();
-  const { progress, record, recordTest, reset } = useModuleProgress(
+  const { progress, record, recordTest, recordIntroDone, reset } = useModuleProgress(
     currentStudent?.id ?? null,
     currentStudent?.location ?? null,
     MODULE_ID
@@ -188,6 +209,7 @@ function MultDivFractionLab() {
   const unit = current === null ? null : units[current];
   const onSolved = useCallback((clean: boolean) => unit && record(unit.id, clean), [unit, record]);
   const onTest = useCallback((score: number) => unit && recordTest(unit.id, score), [unit, recordTest]);
+  const onIntroDone = useCallback(() => unit && recordIntroDone(unit.id), [unit, recordIntroDone]);
 
   return (
     <div className="mdf-lab">
@@ -222,7 +244,15 @@ function MultDivFractionLab() {
         </nav>
         <main className="main">
           {unit ? (
-            <UnitView key={unit.id} unit={unit} progress={progress[unit.id]} onSolved={onSolved} onTest={onTest} onNextUnit={current !== null && current < units.length - 1 ? () => go(current + 1) : undefined} />
+            <UnitView
+              key={unit.id}
+              unit={unit}
+              progress={progress[unit.id]}
+              onSolved={onSolved}
+              onTest={onTest}
+              onIntroDone={onIntroDone}
+              onNextUnit={current !== null && current < units.length - 1 ? () => go(current + 1) : undefined}
+            />
           ) : (
             <Home onPick={go} progress={progress} />
           )}
