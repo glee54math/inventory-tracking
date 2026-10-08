@@ -10,8 +10,26 @@ export interface Unit {
   standard: string;
   /** One or two short "key idea" paragraphs with an example. */
   keyIdea: ReactNode;
-  /** Free-play sandbox with live diagrams. */
-  Explore: ComponentType;
+  /**
+   * Free-play sandbox with live diagrams. `onIntroDone` is only ever passed
+   * when `requiresIntro` is true AND the student hasn't completed it yet —
+   * its presence IS the signal for whether to show a required guided
+   * exercise before free play, so a component can simply check `if
+   * (onIntroDone) { ... }`. Every existing Explore component ignores this
+   * (zero-arg function components are still valid here — they just never
+   * read it), so this is backward compatible with every unit that doesn't
+   * use it.
+   */
+  Explore: ComponentType<{ onIntroDone?: () => void }>;
+  /**
+   * When true, the unit's Explore tab must show a required one-time guided
+   * exercise (calling the `onIntroDone` prop it's given once finished)
+   * before "Practice" unlocks — see UnitView in MM1_RatioLab.tsx /
+   * MG11_MultDivFractionLab.tsx. Tracked per-student via
+   * UnitProgress.introDone (hooks/useModuleProgress.ts), so it only ever
+   * gates the very first visit.
+   */
+  requiresIntro?: boolean;
   /**
    * A small, fully static snapshot of this unit for the cover page's preview
    * carousel (shared/components/UnitPreviewCarousel.tsx) — zero props, no

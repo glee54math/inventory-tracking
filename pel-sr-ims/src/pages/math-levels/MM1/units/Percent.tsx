@@ -5,13 +5,79 @@ import { fmt, fracText, pick, randInt } from "../../shared/lib/math";
 import type { Problem } from "../../shared/engine/types";
 import { QA, QC, Says, Stepper } from "../../shared/engine/controls";
 import type { Unit } from "../../shared/units/types";
+import { percentTest } from "./PercentTest";
 
-function Explore() {
-  const [pct, setPct] = useState(30);
+function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
+  const introActive = !!onIntroDone;
+  const [pct, setPct] = useState(introActive ? 10 : 30);
   const [whole, setWhole] = useState(60);
   const part = (pct / 100) * whole;
+
+  // Required first-time walkthrough: find 1 block = 10%, then move to 20% and
+  // find 2 blocks = 20% — see Unit.requiresIntro in shared/units/types.ts.
+  const [introStage, setIntroStage] = useState<0 | 1>(0);
+  const [introCompleted, setIntroCompleted] = useState(false);
+  const [introInput, setIntroInput] = useState("");
+  const [introWrong, setIntroWrong] = useState(false);
+  const showIntro = introActive && !introCompleted;
+  const introTargetPct = introStage === 0 ? 10 : 20;
+  const introBlocks = introStage === 0 ? 1 : 2;
+  const introTarget = (whole / 10) * introBlocks;
+  const introReady = pct === introTargetPct;
+
+  const checkIntro = () => {
+    const v = Number(introInput);
+    if (Number.isFinite(v) && Math.abs(v - introTarget) < 0.01) {
+      setIntroWrong(false);
+      setIntroInput("");
+      if (introStage === 0) {
+        setIntroStage(1);
+      } else {
+        setIntroCompleted(true);
+        onIntroDone?.();
+      }
+    } else {
+      setIntroWrong(true);
+    }
+  };
+
   return (
     <div className="explore">
+      {showIntro && (
+        <div className="intro-gate">
+          <p className="intro-gate-title">Before you practice: let's find 10% first.</p>
+          {introReady ? (
+            <>
+              <p>
+                {introBlocks} block{introBlocks > 1 ? "s" : ""} = {introTargetPct}% = ___
+              </p>
+              <div className="control-row">
+                <input
+                  className="answer"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={introInput}
+                  onChange={(e) => setIntroInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && checkIntro()}
+                  aria-label={`${introBlocks} block${introBlocks > 1 ? "s" : ""} equals ${introTargetPct}%, what number`}
+                />
+                <button className="btn primary" onClick={checkIntro}>
+                  Check
+                </button>
+              </div>
+              {introWrong && (
+                <p className="feedback bad" role="alert">
+                  Not quite. Look at how many squares are shaded on the grid, or divide the whole by 10.
+                </p>
+              )}
+            </>
+          ) : (
+            <p>
+              Move the <b>percent</b> stepper below to <b>{introTargetPct}%</b> to continue.
+            </p>
+          )}
+        </div>
+      )}
       <div className="controls">
         <div className="control-row">
           <Stepper tone="a" label="percent" value={pct} min={0} max={100} step={5} onChange={setPct} />
@@ -39,7 +105,17 @@ function Explore() {
             width={440}
           />
           <TapeDiagram
-            tapes={[{ label: "10% each", units: 10, color: palette.a, softColor: palette.aSoft, shaded: Math.floor(pct / 10), values: Array(10).fill(fmt(whole / 10)), total: `${whole} = 100%` }]}
+            tapes={[
+              {
+                label: "10% each",
+                units: 10,
+                color: palette.a,
+                softColor: palette.aSoft,
+                shaded: Math.floor(pct / 10),
+                values: showIntro && introStage === 0 ? Array(10).fill("?") : Array(10).fill(fmt(whole / 10)),
+                total: `${whole} = 100%`,
+              },
+            ]}
             unitWidth={38}
             labelWidth={78}
           />
@@ -67,7 +143,9 @@ const partScenes = [
 
 const findPartProblem = (): Problem => {
   const s = pick(partScenes);
-  const p = randInt(1, 9) * 10;
+  // 50% excluded: doubling trivializes the answer without using the 10%-block
+  // strategy this unit is specifically teaching.
+  const p = pick([10, 20, 30, 40, 60, 70, 80, 90]);
   const W = randInt(2, 30) * 10;
   const ten = W / 10;
   const n = p / 10;
@@ -82,9 +160,22 @@ const findPartProblem = (): Problem => {
     visual: (done) => (
       <>
         <TapeDiagram
-          tapes={[{ label: s.unit, units: 10, color: palette.a, softColor: palette.aSoft, shaded: done >= 3 ? n : 0, values: done >= 2 ? Array(10).fill(fmt(ten)) : [], total: `${W} ${s.unit} = 100%` }]}
+          tapes={[{ label: s.unit, units: 10, color: palette.a, softColor: palette.aSoft, shaded: done >= 3 ? n : 0, values: done >= 2 ? Array(10).fill(fmt(ten)) : Array(10).fill("10%"), total: `${W} ${s.unit} = 100%` }]}
           unitWidth={44}
         />
+        {done >= 1 && (
+          <Says>
+            1 block = 10% ={" "}
+            {done >= 2 ? (
+              <>
+                <QA>{fmt(ten)}</QA> {s.unit}
+              </>
+            ) : (
+              `? ${s.unit}`
+            )}
+            .
+          </Says>
+        )}
         <DoubleNumberLine
           top={{ label: s.unit, color: palette.c }}
           bottom={{ label: "percent", color: palette.a, format: (v) => `${v}%` }}
@@ -112,6 +203,7 @@ const findPartProblem = (): Problem => {
             Split the whole into 10 equal parts. What is 10% of <QC>{W}</QC>?
           </>
         ),
+        prefix: "10% =",
         answer: ten,
         suffix: s.unit,
         hint: `100% ÷ 10 = 10%, so divide ${W} by 10.`,
@@ -129,7 +221,7 @@ const findPartProblem = (): Problem => {
         kind: "number",
         prompt: (
           <>
-            So what is {p}% of {W}?
+            Since 1 block = 10% = {fmt(ten)} {s.unit}. How much is {p}% of {W} {s.unit}?
           </>
         ),
         answer: part,
@@ -147,14 +239,35 @@ const findPartProblem = (): Problem => {
 };
 
 const wholeScenes = [
-  { text: (P: number, p: number) => `Ava has saved $${P}. That's ${p}% of the price of a bike. How much does the bike cost?`, unit: "dollars", short: "dollars" },
-  { text: (P: number, p: number) => `${P} students voted for a field trip. That's ${p}% of the grade. How many students are in the grade?`, unit: "students", short: "students" },
-  { text: (P: number, p: number) => `Jon has run ${P} miles. That's ${p}% of his monthly goal. What is his goal?`, unit: "miles", short: "miles" },
+  {
+    text: (P: number, p: number) => `Ava has saved $${P}. That's ${p}% of the price of a bike. How much does the bike cost?`,
+    unit: "dollars",
+    short: "dollars",
+    wholeLabel: "the bike's price",
+    wholeQuestion: "How much does the bike cost",
+  },
+  {
+    text: (P: number, p: number) => `${P} students voted for a field trip. That's ${p}% of the grade. How many students are in the grade?`,
+    unit: "students",
+    short: "students",
+    wholeLabel: "the grade",
+    wholeQuestion: "How many students are in the grade",
+  },
+  {
+    text: (P: number, p: number) => `Jon has run ${P} miles. That's ${p}% of his monthly goal. What is his goal?`,
+    unit: "miles",
+    short: "miles",
+    wholeLabel: "his monthly goal",
+    wholeQuestion: "How many miles is his monthly goal",
+  },
 ];
 
 const findWholeProblem = (): Problem => {
   const s = pick(wholeScenes);
-  const p = randInt(2, 9) * 10;
+  // 50% excluded: doubling trivializes the answer without using the 10%-block
+  // strategy this unit is specifically teaching (same reasoning as the other
+  // percents this unit deliberately avoids — see findPartProblem's p pool).
+  const p = pick([20, 30, 40, 60, 70, 80, 90]);
   const n = p / 10;
   const ten = randInt(2, 15) * (s.unit === "dollars" ? 5 : 1);
   const W = ten * 10;
@@ -171,9 +284,17 @@ const findWholeProblem = (): Problem => {
           ]}
           unitWidth={42}
         />
-        {done >= 2 && (
+        {done >= 1 && (
           <Says>
-            1 block = 10% = <QA>{fmt(ten)}</QA> {s.short}.
+            1 block = 10% ={" "}
+            {done >= 2 ? (
+              <>
+                <QA>{fmt(ten)}</QA> {s.short}
+              </>
+            ) : (
+              `? ${s.short}`
+            )}
+            .
           </Says>
         )}
         <DoubleNumberLine
@@ -201,9 +322,10 @@ const findWholeProblem = (): Problem => {
         kind: "number",
         prompt: (
           <>
-            Those {n} blocks hold <QA>{P}</QA> {s.short}. How much is in one block (10%)?
+            Those {n} 10% blocks represent <QA>{P}</QA> {s.short}. How much is 10% of {s.wholeLabel} (1 block)?
           </>
         ),
+        prefix: "10% =",
         answer: ten,
         suffix: s.short,
         hint: `Share ${P} equally among ${n} blocks.`,
@@ -213,7 +335,7 @@ const findWholeProblem = (): Problem => {
         kind: "number",
         prompt: (
           <>
-            1 block = 10% = {fmt(ten)} {s.short}. The whole (100%) is 10 of those blocks. What is the whole?
+            1 block = 10% = {fmt(ten)} {s.short}. The whole (100%) is 10 of those blocks. {s.wholeQuestion} (100%)?
           </>
         ),
         answer: W,
@@ -249,9 +371,11 @@ export const percent: Unit = {
     </>
   ),
   Explore,
+  requiresIntro: true,
   preview: Preview,
   problems: [
     { label: "Find the part", make: findPartProblem },
     { label: "Find the whole", make: findWholeProblem },
   ],
+  test: percentTest,
 };

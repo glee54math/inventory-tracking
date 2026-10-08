@@ -42,6 +42,7 @@ function mergeProgress(remote: ProgressMap, local: ProgressMap): ProgressMap {
           solved: Math.max(r.solved, l.solved),
           clean: Math.max(r.clean, l.clean),
           testScore: Math.max(r.testScore ?? 0, l.testScore ?? 0) || undefined,
+          introDone: (r.introDone || l.introDone) || undefined,
         }
       : r;
   }
@@ -138,10 +139,23 @@ export function useModuleProgress(
     [studentId, location, moduleId, persist]
   );
 
+  const recordIntroDone = useCallback(
+    (unitId: string) => {
+      setProgress((p) => {
+        const cur = p[unitId] ?? { solved: 0, clean: 0 };
+        if (cur.introDone) return p;
+        const next = { ...p, [unitId]: { ...cur, introDone: true } };
+        persist(next);
+        return next;
+      });
+    },
+    [persist]
+  );
+
   const reset = useCallback(() => {
     setProgress({});
     persist({});
   }, [persist]);
 
-  return { progress, record, recordTest, reset };
+  return { progress, record, recordTest, recordIntroDone, reset };
 }

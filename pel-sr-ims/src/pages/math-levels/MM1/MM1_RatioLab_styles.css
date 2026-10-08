@@ -505,6 +505,25 @@
   gap: 8px;
   font-size: 17px;
 }
+.ratio-lab .intro-gate {
+  border: 2px solid var(--qa);
+  background: var(--qa-soft);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: grid;
+  gap: 10px;
+}
+.ratio-lab .intro-gate-title {
+  font-weight: 700;
+  font-size: 17px;
+}
+.ratio-lab .intro-gate .control-row {
+  align-items: center;
+}
+.ratio-lab .intro-gate input.answer {
+  width: 90px;
+}
 .ratio-lab .tabs {
   display: flex;
   gap: 4px;
@@ -523,6 +542,10 @@
   color: var(--ink);
   position: relative;
   top: 1px;
+}
+.ratio-lab .tabs button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .ratio-lab .panel {
   background: var(--card);
