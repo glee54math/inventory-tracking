@@ -236,8 +236,8 @@ function Action({ index, data, onChange }: ActionProps) {
             </select>
             
             {/* Student to assign to if option selected */}
-            {data.selectedSubsections.length != 0 && 
-             (Object.values(data.movementMap).includes("BackToStudent") || Object.values(data.movementMap).includes("FrontToStudent")) && 
+            {data.selectedSubsections.length != 0 &&
+             (Object.values(data.movementMap).includes("BackToStudent") || Object.values(data.movementMap).includes("FrontToStudent") || Object.values(data.movementMap).includes("ShipmentToStudent")) &&
              (Object.values(data.movementNumOfCopiesMap).some(value => value != 0)) && (
               <select
                 name="Student"

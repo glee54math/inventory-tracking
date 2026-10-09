@@ -282,8 +282,8 @@ function ActionContainer({
         Object.values(action.movementNumOfCopiesMap).every(numOfCopies => numOfCopies !== 0) &&
         Object.values(action.movementMap).every(movement => (
           // If assigning to student, it needs a student within the selection box.
-          ((movement === "BackToStudent" || movement === "FrontToStudent") && (action.toStudent.firstName)) || 
-          ((movement !== "BackToStudent" && movement !== "FrontToStudent") && movement)
+          (movement.includes("ToStudent") && (action.toStudent.firstName)) ||
+          (!movement.includes("ToStudent") && movement)
         )) &&
         action.selectedSubsections.every((section) => (
           action.movementMap[section] && action.movementNumOfCopiesMap[section]

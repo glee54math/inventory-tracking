@@ -94,6 +94,7 @@ const MOVEMENT_LOOKUP: Record<string, MovementType> = {
   "Front->Student": "FrontToStudent",
   "Shipment->Back": "ShipmentToBack",
   "Shipment->Front": "ShipmentToFront",
+  "Shipment->Student": "ShipmentToStudent",
 };
 
 function levenshtein(a: string, b: string): number {

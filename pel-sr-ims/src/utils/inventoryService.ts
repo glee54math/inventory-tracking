@@ -60,7 +60,7 @@ export const saveLog = async (logEntry: LogEntry) => {
 
 export async function updateInventoryFromActions(submittedActions: SubmittedAction[]) {
   // SubmittedAction has subject, level, subsection[], movementType(AtoB), numOfCopies
-  // movementType = BackToFront, BackToStudent, FrontToBack, FrontToStudent, ShipmentToBack, ShipmentToFront
+  // movementType = BackToFront, BackToStudent, FrontToBack, FrontToStudent, ShipmentToBack, ShipmentToFront, ShipmentToStudent
   // Determine the inventories involved
   console.log(submittedActions)
   let inventoryFrom: InventoryData | undefined;
@@ -90,6 +90,12 @@ export async function updateInventoryFromActions(submittedActions: SubmittedActi
         case "ShipmentToFront":
           inventoryTo = await loadInventory(`${action.subject?.toLowerCase()}_front`);
           break;
+        case "ShipmentToStudent":
+          // Goes straight from the shipment to the student — never touches
+          // Front or Back inventory, so there's nothing to load here.
+          inventoryFrom = undefined;
+          inventoryTo = undefined;
+          break;
       }
 
       // inventoryFrom[level][subsection] -= numOfCopies
@@ -116,7 +122,7 @@ export async function updateInventoryFromActions(submittedActions: SubmittedActi
 
 
       // Update database of both inventoryFrom and inventoryTo
-      // movementType = BackToFront, BackToStudent, FrontToBack, FrontToStudent, ShipmentToBack, ShipmentToFront
+      // movementType = BackToFront, BackToStudent, FrontToBack, FrontToStudent, ShipmentToBack, ShipmentToFront, ShipmentToStudent
       // inventory names are of the form: (subject)_(location); all lowercase
       const movementType = action.movementMap[action.selectedSubsections[index]];
       const fromFrontBackOrShipment = movementType.substring(0, movementType.indexOf("To"))
@@ -699,6 +705,10 @@ async function reverseInventoryAction(undoData: LogActionData): Promise<void> {
       await saveInventory(front, frontKey);
       break;
     }
+    case "ShipmentToStudent": {
+      // Never touched Front or Back inventory, so there's nothing to reverse.
+      break;
+    }
   }
 }
 
@@ -779,7 +789,9 @@ export async function undoLogAction(logId: string, undoneBy: string): Promise<bo
     await reverseInventoryAction(undoData);
 
     if (
-      (undoData.movementType === "BackToStudent" || undoData.movementType === "FrontToStudent") &&
+      (undoData.movementType === "BackToStudent" ||
+        undoData.movementType === "FrontToStudent" ||
+        undoData.movementType === "ShipmentToStudent") &&
       undoData.studentFirstName &&
       undoData.studentLastName
     ) {
