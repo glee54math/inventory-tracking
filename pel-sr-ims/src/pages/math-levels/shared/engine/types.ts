@@ -39,6 +39,21 @@ export interface NumberStep extends BaseStep {
    */
   frac?: boolean;
   fracAnswer?: [number, number];
+  /**
+   * Stricter companion to `frac` — use alongside it (both `frac: true` and
+   * `fracRequired: true`) when a decimal answer shouldn't be accepted at all,
+   * not just penalized for being unsimplified. `frac` by itself still accepts
+   * a numerically-close decimal (e.g. "0.33" for 1/3), since `rawFraction()`
+   * only fires its lowest-terms check when the student actually typed "n/d"
+   * text — a decimal never reaches that check. `fracRequired` closes that
+   * gap: the raw input must itself parse as a bare "n/d" fraction (via
+   * rawFraction()) or it's rejected with a dedicated "write this as a
+   * fraction" message, before the usual value/lowest-terms checks run. Use
+   * this when the point of the step is fraction fluency itself (e.g. a
+   * minutes→hours conversion that's often a repeating decimal), not just
+   * when a fraction happens to be the cleaner display format.
+   */
+  fracRequired?: boolean;
 }
 
 export interface RatioStep extends BaseStep {

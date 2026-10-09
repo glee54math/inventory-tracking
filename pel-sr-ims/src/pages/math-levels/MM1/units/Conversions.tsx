@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { ConversionChain, DoubleNumberLine, RatioTable } from "../diagrams";
 import { palette } from "../../shared/lib/palette";
-import { fmt, pick, randInt } from "../../shared/lib/math";
+import { fmt, fracText, gcd, pick, randInt, shuffle, simplify } from "../../shared/lib/math";
 import { choice, type Problem } from "../../shared/engine/types";
 import { QA, QB, Says, Stepper } from "../../shared/engine/controls";
 import type { Unit } from "../../shared/units/types";
+import { conversionsTest } from "./ConversionsTest";
 
 interface Conv {
   id: string;
@@ -28,7 +29,17 @@ export const conversions: Conv[] = [
   { id: "day-hr", big: "day", bigs: "days", bigAb: "d", small: "hour", smalls: "hours", smallAb: "hr", f: 24 },
 ];
 
-function Explore() {
+// Conversion facts worth drilling before Practice unlocks — deliberately
+// excludes hr-min (60) and day-hr (24), which students already know cold by
+// 5th grade and don't need a forced check on. See Unit.requiresIntro /
+// reintroEverySolved below: the gate re-picks 3 of these at random each time
+// it's shown (first visit, and again periodically), so a single pass doesn't
+// let a student get away with only ever proving the same one or two facts.
+const DRILL_IDS = ["ft-in", "yd-ft", "gal-qt", "lb-oz", "m-cm", "kg-g"];
+const DRILL_COUNT = 3;
+
+function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
+  const introActive = !!onIntroDone;
   const [id, setId] = useState("ft-in");
   const [v, setV] = useState(3);
   const [toBig, setToBig] = useState(false);
@@ -36,8 +47,77 @@ function Explore() {
   const amount = toBig ? v * c.f : v; // what we start with
   const result = toBig ? v : v * c.f;
 
+  // Required guided drill: confirm DRILL_COUNT randomly-picked "must memorize"
+  // conversion facts before Practice unlocks (or re-unlocks — see
+  // reintroEverySolved on the unitConversion export below). Each stage asks
+  // for the bare fact (1 {big} = ? {smalls}), not a scaled multiple, since
+  // that's literally what we want memorized — same anchor-statement idea as
+  // Percent.tsx's "1 block = 10%" intro, generalized to a rotating fact pool.
+  const [drillIds] = useState(() => shuffle(DRILL_IDS).slice(0, DRILL_COUNT));
+  const [drillStage, setDrillStage] = useState(0);
+  const [introCompleted, setIntroCompleted] = useState(false);
+  const [introInput, setIntroInput] = useState("");
+  const [introWrong, setIntroWrong] = useState(false);
+  const showIntro = introActive && !introCompleted;
+  const drillTarget = conversions.find((x) => x.id === drillIds[drillStage])!;
+  const drillReady = id === drillTarget.id;
+
+  const checkIntro = () => {
+    const val = Number(introInput);
+    if (Number.isFinite(val) && val === drillTarget.f) {
+      setIntroWrong(false);
+      setIntroInput("");
+      if (drillStage < drillIds.length - 1) {
+        setDrillStage((s) => s + 1);
+      } else {
+        setIntroCompleted(true);
+        onIntroDone?.();
+      }
+    } else {
+      setIntroWrong(true);
+    }
+  };
+
   return (
     <div className="explore">
+      {showIntro && (
+        <div className="intro-gate">
+          <p className="intro-gate-title">Before you practice: let's lock in a few conversion facts.</p>
+          {drillReady ? (
+            <>
+              <p>
+                1 {drillTarget.big} = ___ {drillTarget.smalls}
+              </p>
+              <div className="control-row">
+                <input
+                  className="answer"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={introInput}
+                  onChange={(e) => setIntroInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && checkIntro()}
+                  aria-label={`1 ${drillTarget.big} equals how many ${drillTarget.smalls}`}
+                />
+                <button className="btn primary" onClick={checkIntro}>
+                  Check
+                </button>
+              </div>
+              {introWrong && (
+                <p className="feedback bad" role="alert">
+                  Not quite. Use the diagrams below to find it.
+                </p>
+              )}
+            </>
+          ) : (
+            <p>
+              Select <b>{drillTarget.bigs} & {drillTarget.smalls}</b> from the dropdown below to continue.
+            </p>
+          )}
+          <p className="muted small">
+            Fact {drillStage + 1} of {drillIds.length}.
+          </p>
+        </div>
+      )}
       <div className="controls">
         <label className="select">
           <span className="stepper-label">Units</span>
@@ -103,7 +183,6 @@ function Explore() {
 const bigToSmallProblem = (): Problem => {
   const c = pick(conversions);
   const v = randInt(2, 9);
-  const right = `${c.f} ${c.smallAb} / 1 ${c.bigAb}`;
   return {
     title: "Convert to a smaller unit",
     story: (
@@ -146,9 +225,17 @@ const bigToSmallProblem = (): Problem => {
         explain: `1 ${c.big} = ${c.f} ${c.smalls}. That's the ratio ${c.f}:1, or ${c.f} ${c.smalls} per ${c.big}.`,
       },
       choice(
-        { prompt: <>Which fraction should you multiply by so that {c.bigs} cancel?</>, hint: `Put ${c.bigAb} on the bottom so it cancels with the ${c.bigAb} on top.`, explain: `Multiplying by ${c.f} ${c.smallAb} / 1 ${c.bigAb} is multiplying by 1 — the amount stays the same, only the unit changes.` },
-        right,
-        [`1 ${c.bigAb} / ${c.f} ${c.smallAb}`]
+        {
+          prompt: (
+            <>
+              Going from {c.bigs} to {c.smalls} is going to a <b>smaller</b> unit. Should you multiply or divide by {c.f}?
+            </>
+          ),
+          hint: `A smaller unit means you need MORE of them to describe the same amount.`,
+          explain: `Going to a smaller unit, you need more of them: multiply by ${c.f}.`,
+        },
+        `Multiply by ${c.f}`,
+        [`Divide by ${c.f}`]
       ),
       {
         kind: "number",
@@ -217,9 +304,17 @@ const smallToBigProblem = (): Problem => {
         explain: `${c.f} ${c.smalls} = 1 ${c.big}.`,
       },
       choice(
-        { prompt: <>Which fraction should you multiply by so that {c.smalls} cancel?</>, hint: `${c.smallAb} must go on the bottom.`, explain: `With ${c.smallAb} on the bottom, the ${c.smallAb} cancel and ${c.bigAb} is left.` },
-        `1 ${c.bigAb} / ${c.f} ${c.smallAb}`,
-        [`${c.f} ${c.smallAb} / 1 ${c.bigAb}`]
+        {
+          prompt: (
+            <>
+              Going from {c.smalls} to {c.bigs} is going to a <b>bigger</b> unit. Should you multiply or divide by {c.f}?
+            </>
+          ),
+          hint: `A bigger unit means you need FEWER of them to describe the same amount.`,
+          explain: `Going to a bigger unit, you need fewer of them: divide by ${c.f}.`,
+        },
+        `Divide by ${c.f}`,
+        [`Multiply by ${c.f}`]
       ),
       {
         kind: "number",
@@ -247,6 +342,10 @@ const rateTimeProblem = (): Problem => {
   const m = pick([15, 20, 30, 45, 90, 120, 150].filter((x) => (r * x) % 60 === 0));
   const hrs = m / 60;
   const d = (r * m) / 60;
+  const [hrsNum, hrsDen] = simplify(m, 60);
+  const hrsFrac = fracText(m, 60);
+  const hrsWord = hrs <= 1 ? "hour" : "hours";
+  const g = gcd(m, 60);
   return {
     title: "Units in a rate problem",
     story: (
@@ -255,14 +354,23 @@ const rateTimeProblem = (): Problem => {
       </>
     ),
     visual: (done) => (
-      <ConversionChain
-        start={{ value: m, unit: "min", color: palette.b }}
-        factors={[
-          ...(done >= 1 ? [{ num: { value: 1, unit: "hr" }, den: { value: 60, unit: "min", color: palette.b } }] : []),
-          ...(done >= 2 ? [{ num: { value: r, unit: "mi", color: palette.a }, den: { value: 1, unit: "hr" } }] : []),
-        ]}
-        result={{ value: done >= 3 ? fmt(d) : "?", unit: done >= 2 ? "mi" : "" }}
-      />
+      <>
+        <ConversionChain
+          start={{ value: m, unit: "min", color: palette.b, simplifiedValue: done >= 2 ? hrsNum : undefined }}
+          factors={[
+            ...(done >= 1
+              ? [{ num: { value: 1, unit: "hr" }, den: { value: 60, unit: "min", color: palette.b, simplifiedValue: done >= 2 ? hrsDen : undefined } }]
+              : []),
+            ...(done >= 2 ? [{ num: { value: r, unit: "mi", color: palette.a }, den: { value: 1, unit: "hr" } }] : []),
+          ]}
+          result={{ value: done >= 3 ? fmt(d) : "?", unit: done >= 2 ? "mi" : "" }}
+        />
+        {done >= 2 && (
+          <Says>
+            {m}/{g} = {hrsNum} and 60/{g} = {hrsDen}.
+          </Says>
+        )}
+      </>
     ),
     steps: [
       choice(
@@ -272,19 +380,22 @@ const rateTimeProblem = (): Problem => {
       ),
       {
         kind: "number",
-        prompt: <>{m} minutes is how many hours? (Fractions or decimals are fine.)</>,
+        frac: true,
+        fracRequired: true,
+        fracAnswer: [hrsNum, hrsDen],
+        prompt: <>{m} minutes is how many hours? Write your answer as a simplified fraction.</>,
         answer: hrs,
-        suffix: "hours",
-        hint: `60 minutes = 1 hour, so divide ${m} by 60.`,
-        explain: `${m} ÷ 60 = ${fmt(hrs)} hours. The minutes cancel.`,
+        suffix: hrsWord,
+        hint: `60 minutes = 1 hour, so write ${m}/60 as a fraction, then simplify it.`,
+        explain: `${m}/60 simplifies to ${hrsFrac} ${hrsWord}. The minutes cancel.`,
       },
       {
         kind: "number",
         prompt: <>Now multiply the rate by the time. How many miles?</>,
         answer: d,
         suffix: "miles",
-        hint: `${r} × ${fmt(hrs)}`,
-        explain: `${r} mi/hr × ${fmt(hrs)} hr = ${fmt(d)} mi. The hours cancel, leaving miles.`,
+        hint: `${r} × ${hrsFrac}`,
+        explain: `${r} mi/hr × ${hrsFrac} hr = ${fmt(d)} mi. The hours cancel, leaving miles.`,
       },
     ],
     wrapUp: (
@@ -314,10 +425,15 @@ export const unitConversion: Unit = {
     </>
   ),
   Explore,
+  requiresIntro: true,
+  // Re-show the drill every 20 solved problems, not just once — these are
+  // facts meant to be memorized long-term, not just proven usable one time.
+  reintroEverySolved: 20,
   preview: Preview,
   problems: [
     { label: "Big to small", make: bigToSmallProblem },
     { label: "Small to big", make: smallToBigProblem },
     { label: "Rate × time", make: rateTimeProblem },
   ],
+  test: conversionsTest,
 };

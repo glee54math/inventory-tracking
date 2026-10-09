@@ -117,7 +117,12 @@ function UnitView({
   const mastered = (progress?.clean ?? 0) >= MASTERY_GOAL;
   // Grandfather in anyone who already has practice history from before this unit
   // had a required intro — only ever gate a student who's never touched Practice.
-  const introSatisfied = !unit.requiresIntro || !!progress?.introDone || (progress?.solved ?? 0) > 0;
+  // reintroEverySolved (optional) adds periodic re-gating on top of that: once
+  // the student has solved that many NEW problems since the last time they
+  // passed the intro, the gate reappears even though introDone is already true.
+  const solvedSinceIntro = (progress?.solved ?? 0) - (progress?.introDoneAtSolved ?? 0);
+  const introNeedsRefresh = !!unit.reintroEverySolved && !!progress?.introDone && solvedSinceIntro >= unit.reintroEverySolved;
+  const introSatisfied = !unit.requiresIntro || ((!!progress?.introDone || (progress?.solved ?? 0) > 0) && !introNeedsRefresh);
 
   return (
     <div className="unit">

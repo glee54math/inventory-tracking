@@ -246,6 +246,75 @@ MIDDLE SCHOOL
           pointedly excludes 50% (doubling trivializes the answer without the 10%-block
           method this unit teaches); the test's final MC question is a direct conceptual
           callback to that — asking why halving-by-2 doesn't generalize to other percents.
+          2026-10-08: Unit conversion also adopted requiresIntro, as its second user —
+          drills 3 randomly-picked "must memorize" conversion facts (ft-in, yd-ft, gal-qt,
+          lb-oz, m-cm, kg-g; hr-min and day-hr are deliberately excluded as already-obvious
+          to a 5th grader) by having the student select the right unit pair from Explore's
+          dropdown, then type the bare factor (e.g. "1 yard = ? feet") — same anchor-
+          statement idea as Percent's "1 block = 10%" gate. This is also where
+          Unit.reintroEverySolved (shared/units/types.ts) + UnitProgress.introDoneAtSolved
+          (utils/moduleProgressTypes.ts) were added: requiresIntro by itself only ever
+          gates the very first visit, but these facts are meant to be memorized long-term,
+          not just proven usable once, so Conversion re-shows the drill every 20 solved
+          problems — recordIntroDone now re-stamps introDoneAtSolved on every pass, not
+          just the first. MM1_RatioLab.tsx's and MG11_MultDivFractionLab.tsx's duplicated
+          introSatisfied logic were both updated identically to respect it.
+
+          Also fixed a real bug in shared/engine/StepProblem.tsx found via Conversion's
+          bigToSmallProblem (NumberStep → ChoiceStep → NumberStep): the auto-focus-next-
+          step effect used to focus "input, button.choice", and a Choice step landing
+          right after an Enter-submitted step could get its first button spuriously
+          activated by a trailing native key event from that same Enter press — silently
+          "choosing" whichever option rendered first regardless of correctness. Now only
+          plain <input> elements are auto-focused; buttons never are. Affects every unit
+          with a Number/Ratio step immediately followed by a Choice step, not just this one.
+
+          bigToSmallProblem/smallToBigProblem's step 2 was rewritten: it used to ask
+          "which fraction should you multiply by so units cancel" (formal dimensional
+          analysis these students haven't learned yet); now asks "going to a smaller/
+          bigger unit, should you multiply or divide by {f}?", building the more-of-the-
+          smaller-unit/fewer-of-the-bigger-unit intuition the Explore tab's own Says
+          lines already taught, instead of fraction mechanics.
+
+          rateTimeProblem's hours step now uses the engine's new NumberStep.fracRequired
+          flag (shared/engine/types.ts + StepProblem.tsx's check()) — a stricter sibling
+          of the existing `frac` flag: `frac` alone still silently accepts a close decimal
+          like "0.33" for 1/3, since rawFraction() only runs its lowest-terms check when
+          the student actually typed "n/d"; fracRequired rejects decimal input outright
+          ("Write this as a fraction, not a decimal") unless the true answer is a whole
+          number (e.g. when minutes divide evenly into hours), in which case a plain
+          number is still accepted — nobody would think to type "2/1". ConversionChain
+          (MM1/diagrams/ConversionChain.tsx) also gained a `simplifiedValue` option on
+          UnitAmount: once that step is answered, the chain's 90 and 60 strike through to
+          their reduced 3 and 2, with a "90/30 = 3 and 60/30 = 2" caption underneath —
+          same spirit as unit-cancellation strikethrough, applied to the numbers instead.
+
+          New units/ConversionsTest.tsx (9 generators/10 questions, 3-diagram/2-colored/
+          3-4-3 shape — 3 diagrams instead of the usual 2, same exception TablesGraphsTest
+          uses, since this unit's whole subject is diagrams too) — closes the "Unit
+          conversion remains without a Test tab" note above. Its final 3 MC questions
+          pointedly test the same multiply-vs-divide-and-why reasoning the practice
+          problems were just rewritten to use, not the fraction-cancellation phrasing they
+          used to have. Found and fixed a real distractor collision while spot-checking
+          the full conversions pool programmatically: for yd-ft (f=3) with v=9, the
+          "divided instead of multiplied" and "forgot to scale" distractors both landed on
+          3 — correctConversionQuestion now regenerates v when that'd happen.
+
+          Two bugs found post-ship by the user, both fixed same day: (1) ConversionsTest.tsx
+          originally imported `conversions` back from Conversions.tsx — a genuine circular
+          import (Conversions.tsx already imports conversionsTest from ConversionsTest.tsx),
+          which threw "Cannot access 'conversionsTest' before initialization" at module-eval
+          time in dev (confirmed via the browser's own dynamic import(), the exact mechanism
+          LevelsPage.tsx uses — it silently swallows any import() rejection into a blanket
+          "Level MM1 not found", which is how it actually surfaced). Fixed the same way every
+          other MM1 *Test.tsx already does it: ConversionsTest.tsx now keeps its own local
+          copy of the conversions table instead of importing it. (2) fenceLengthQuestions and
+          correctConversionQuestion both picked a random pair from the full 8-conversion pool
+          for a "a fence is ___ long" / "a ribbon is ___ long" story — nonsensical for a
+          volume/weight/time pair (e.g. "a fence is 2 gallons long"). Added a LENGTH_IDS
+          subset (ft-in, yd-ft, m-cm only) and a pickLength() helper for just these two
+          generators; every other question in the file has no physical-length noun in its
+          wording, so they're unaffected and still pull from the full pool.
 [ ] MM2
 [ ] MM3
 

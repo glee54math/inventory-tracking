@@ -5,6 +5,15 @@ export interface UnitAmount {
   value: number | string;
   unit: string;
   color?: string;
+  /**
+   * When set, `value` is struck through and this replacement is shown right
+   * after it — e.g. 90 reduced to 3 once a student has simplified 90/60 to
+   * 3/2. Independent of `showCancel`'s unit strikethrough, which crosses out
+   * the UNIT label when it cancels against a matching unit elsewhere in the
+   * chain; this crosses out the NUMBER when it's been reduced by a common
+   * factor, same spirit as a hand-worked fraction simplification.
+   */
+  simplifiedValue?: number | string;
 }
 
 export interface ConversionFactor {
@@ -54,7 +63,19 @@ export function ConversionChain({ start, factors, result, showCancel = true }: C
   const bar: React.CSSProperties = { alignSelf: "stretch", height: 2, background: palette.ink, margin: "3px 0" };
   const amt = (a: UnitAmount, struck: boolean) => (
     <span style={{ whiteSpace: "nowrap" }}>
-      <span style={{ color: a.color ?? palette.ink, fontVariantNumeric: "tabular-nums" }}>{a.value}</span>{" "}
+      <span
+        style={{
+          color: a.color ?? palette.ink,
+          fontVariantNumeric: "tabular-nums",
+          textDecoration: a.simplifiedValue !== undefined ? "line-through" : "none",
+          textDecorationColor: palette.bad,
+          textDecorationThickness: 3,
+          opacity: a.simplifiedValue !== undefined ? 0.55 : 1,
+        }}
+      >
+        {a.value}
+      </span>
+      {a.simplifiedValue !== undefined && <span style={{ color: palette.good, fontWeight: 800 }}> {a.simplifiedValue}</span>}{" "}
       <span style={unitStyle(struck, a.color)}>{a.unit}</span>
     </span>
   );

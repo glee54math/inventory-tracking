@@ -43,6 +43,7 @@ function mergeProgress(remote: ProgressMap, local: ProgressMap): ProgressMap {
           clean: Math.max(r.clean, l.clean),
           testScore: Math.max(r.testScore ?? 0, l.testScore ?? 0) || undefined,
           introDone: (r.introDone || l.introDone) || undefined,
+          introDoneAtSolved: Math.max(r.introDoneAtSolved ?? 0, l.introDoneAtSolved ?? 0) || undefined,
         }
       : r;
   }
@@ -143,8 +144,10 @@ export function useModuleProgress(
     (unitId: string) => {
       setProgress((p) => {
         const cur = p[unitId] ?? { solved: 0, clean: 0 };
-        if (cur.introDone) return p;
-        const next = { ...p, [unitId]: { ...cur, introDone: true } };
+        // Always re-stamp introDoneAtSolved (not just on first completion) so a
+        // unit with reintroEverySolved correctly resets its "since last intro"
+        // counter every time the gate is passed, not just the very first time.
+        const next = { ...p, [unitId]: { ...cur, introDone: true, introDoneAtSolved: cur.solved } };
         persist(next);
         return next;
       });

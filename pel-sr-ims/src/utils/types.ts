@@ -1,7 +1,7 @@
 // types.ts - Updated with Progress Tracking Types
 
 // Existing Types
-export type MovementType = "BackToFront" | "BackToStudent" | "FrontToBack" | "FrontToStudent" | "ShipmentToBack" | "ShipmentToFront";
+export type MovementType = "BackToFront" | "BackToStudent" | "FrontToBack" | "FrontToStudent" | "ShipmentToBack" | "ShipmentToFront" | "ShipmentToStudent";
 
 export type Subject = "Math" | "English";
 
@@ -16,6 +16,7 @@ export const MOVEMENTS: MovementType[] = [
   "FrontToStudent",
   "ShipmentToBack",
   "ShipmentToFront",
+  "ShipmentToStudent",
 ];
 
 export const SUBSECTIONS = [

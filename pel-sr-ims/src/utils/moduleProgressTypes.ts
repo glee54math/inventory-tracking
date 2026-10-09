@@ -12,6 +12,8 @@ export interface UnitProgress {
   testScore?: number;
   /** Has this student finished the unit's required intro exercise (if it has one)? See Unit.requiresIntro. */
   introDone?: boolean;
+  /** `solved` count at the moment introDone was last set — see Unit.reintroEverySolved. */
+  introDoneAtSolved?: number;
 }
 
 export type ProgressMap = Record<string, UnitProgress>;

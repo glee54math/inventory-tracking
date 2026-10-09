@@ -36,6 +36,24 @@ export const check = (s: Step, inputs: string[]): { ok: boolean; msg: string } =
   }
   if (s.kind === "number") {
     const raw = s.money ? inputs[0].trim().replace(/^\$/, "") : inputs[0];
+    if (s.fracRequired) {
+      // A genuinely whole-number answer doesn't need "fraction form" — a plain
+      // number is already as simple as it gets, and nobody would think to type
+      // "2/1". Only enforce bare n/d input when the answer is actually non-whole.
+      if (s.answer % 1 === 0) {
+        const v = parseAnswer(raw);
+        if (v === null) return { ok: false, msg: "Type a number, like 12." };
+        return numbersMatch(v, s.answer) ? { ok: true, msg: "" } : { ok: false, msg: "Not yet. Look at the diagram and try again." };
+      }
+      const typed = rawFraction(raw.trim());
+      if (!typed) return { ok: false, msg: "Write this as a fraction (like 1/3), not a decimal." };
+      const v = typed[0] / typed[1];
+      if (!numbersMatch(v, s.answer)) return { ok: false, msg: "Not yet. Look at the diagram and try again." };
+      if (gcd(typed[0], typed[1]) !== 1) {
+        return { ok: false, msg: `That's the right value, but it needs to be in lowest terms — try ${fracText(typed[0], typed[1])}.` };
+      }
+      return { ok: true, msg: "" };
+    }
     const v = parseAnswer(raw);
     if (v === null) return { ok: false, msg: s.money ? "Type a dollar amount, like 4.50." : s.frac ? "Type a number or a fraction, like 3/4." : "Type a number, like 12, 2.5 or 3/4." };
     if (numbersMatch(v, s.answer)) {
@@ -87,7 +105,16 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
   // Note: give this component a new `key` for each new problem so its state resets.
 
   useEffect(() => {
-    if (current > 0) activeRef.current?.querySelector<HTMLElement>("input, button.choice")?.focus({ preventScroll: true });
+    // Only auto-focus a plain text input here, never a `button.choice`. When a
+    // step advances via Enter (submitting a NumberStep), the browser can still
+    // be mid-way through that same physical keypress (e.g. a trailing native
+    // keyup) at the moment this effect runs. If the newly-revealed step is a
+    // ChoiceStep and we focus its first button, that trailing key event can
+    // activate the now-focused button directly — silently "choosing" whichever
+    // option happens to render first, with no validation gate, regardless of
+    // whether it's correct. A text input has no such native Enter-activation
+    // behavior, so it's safe to auto-focus; a button is not.
+    if (current > 0) activeRef.current?.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true });
   }, [current]);
 
   useEffect(() => {
