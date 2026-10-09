@@ -99,7 +99,39 @@ export interface ChoiceStep extends BaseStep {
   correct: number;
 }
 
-export type Step = NumberStep | RatioStep | ChoiceStep;
+/** A fill-in-the-blank dropdown inside a SentenceStep — never free-typed. */
+export interface SentenceSelectBlank {
+  kind: "select";
+  choices: string[];
+  correct: number;
+}
+
+/** A fill-in-the-blank free-typed number (optionally money-formatted) inside a SentenceStep. */
+export interface SentenceNumberBlank {
+  kind: "number";
+  answer: number;
+  /** Same two-decimal-place formatting rule as NumberStep.money — see its doc comment. */
+  money?: boolean;
+}
+
+export type SentenceBlank = SentenceSelectBlank | SentenceNumberBlank;
+
+/**
+ * A sentence with exactly two fill-in blanks, e.g. "Store ___ is the better
+ * buy, at $___ per item." (a select blank + a free-typed money blank). Reads
+ * like ChoiceStep's "pick the correct full sentence" MC questions, but the
+ * student fills in just the parts that vary instead of recognizing one whole
+ * pre-written sentence. Always exactly two blanks (not a general N), which
+ * keeps it compatible with StepState.inputs' existing 2-slot shape.
+ */
+export interface SentenceStep extends BaseStep {
+  kind: "sentence";
+  /** Literal text: before blank 1, between blank 1 and blank 2, after blank 2. */
+  parts: [string, string, string];
+  blanks: [SentenceBlank, SentenceBlank];
+}
+
+export type Step = NumberStep | RatioStep | ChoiceStep | SentenceStep;
 
 export interface Problem {
   title: string;
@@ -143,3 +175,21 @@ export const choice = (
   const all = shuffle([correctText, ...distractors.filter((d) => d !== correctText)]);
   return { ...base, kind: "choice", choices: all, correct: all.indexOf(correctText) };
 };
+
+/** Build a select-dropdown SentenceBlank with shuffled options. */
+export const selectBlank = (correctText: string, distractors: string[]): SentenceSelectBlank => {
+  const all = shuffle([correctText, ...distractors.filter((d) => d !== correctText)]);
+  return { kind: "select", choices: all, correct: all.indexOf(correctText) };
+};
+
+/** Build a free-typed SentenceBlank (optionally money-formatted). */
+export const numberBlank = (answer: number, money?: boolean): SentenceNumberBlank => ({ kind: "number", answer, money });
+
+/** Build a sentence step from already-built blanks (selectBlank/numberBlank), e.g.
+ *  sentence(base, "Store ", selectBlank("A", ["B"]), " is better, at $", numberBlank(1.5, true), " each."). */
+export const sentence = (base: BaseStep, before: string, blank1: SentenceBlank, between: string, blank2: SentenceBlank, after: string): SentenceStep => ({
+  ...base,
+  kind: "sentence",
+  parts: [before, between, after],
+  blanks: [blank1, blank2],
+});

@@ -315,6 +315,24 @@ MIDDLE SCHOOL
           subset (ft-in, yd-ft, m-cm only) and a pickLength() helper for just these two
           generators; every other question in the file has no physical-length noun in its
           wording, so they're unaffected and still pull from the full pool.
+
+          2026-10-09: added a cumulative end-of-MODULE test spanning all 6 Ratio Lab units
+          (units/ModuleTest.tsx, 20 questions, passScore 18) — distinct from each unit's own
+          10-question Test tab. Unlike the per-unit tests, which deliberately mix in diagrams,
+          QA/QB color-coded text, and multiple-choice "sentence" questions for pedagogy, this
+          test strips all of that out: every question is plain prose, free-type (number/ratio,
+          never choice), medium or hard, solvable from only the numbers stated in its own
+          prompt. Cataloging all 54 existing per-unit generators against that bar found only
+          13 that actually qualified (2-3 per unit, mostly medium) — so 13 are reused (the
+          source generators were made `export` for this), and 7 new ones were authored to fill
+          the gaps and add more hard coverage. shared/engine/UnitTest.tsx's UnitTestView was
+          refactored to take `test: NonNullable<Unit["test"]>` directly instead of a whole
+          `unit: Unit` (it never read anything else off `unit`), so the module test doesn't
+          need a fake Unit object; its hardcoded "/10" score display is now "/{questions.length}"
+          so a 20-question test displays correctly too. Progress is stored under a new
+          synthetic "module" key in the same ProgressMap useModuleProgress already uses (no
+          type changes needed — recordTest/mergeProgress already iterate keys generically).
+          Reachable from a new card on the Home page and a button in the left rail; no gating.
 [ ] MM2
 [ ] MM3
 

@@ -4,7 +4,8 @@ import type { Step, TestQuestion } from "./types";
 import { answerText, check, fresh, StepInput, type StepState } from "./StepProblem";
 
 export interface UnitTestViewProps {
-  unit: Unit;
+  /** A unit's `test` field — or any other `{questions, passScore}` config, e.g. a cross-unit module test. */
+  test: NonNullable<Unit["test"]>;
   /** Called once, right after the last question is answered and graded. */
   onComplete: (score: number) => void;
 }
@@ -14,25 +15,31 @@ const studentAnswerText = (step: Step, inputs: string[]): string => {
   if (!inputs[0]) return "(blank)";
   if (step.kind === "choice") return step.choices[Number(inputs[0])] ?? "(blank)";
   if (step.kind === "number") return inputs[0];
+  if (step.kind === "sentence") {
+    if (!inputs[1]) return "(blank)";
+    const blankText = (b: (typeof step.blanks)[number], raw: string): string => (b.kind === "select" ? (b.choices[Number(raw)] ?? "?") : raw);
+    return `${step.parts[0]}${blankText(step.blanks[0], inputs[0])}${step.parts[1]}${blankText(step.blanks[1], inputs[1])}${step.parts[2]}`;
+  }
   return inputs[1] ? inputs.join(" : ") : "(blank)";
 };
 
-const makeQuestions = (unit: Unit): TestQuestion[] => unit.test!.questions.flatMap((make) => make());
+const makeQuestions = (test: NonNullable<Unit["test"]>): TestQuestion[] => test.questions.flatMap((make) => make());
 
 /**
- * A fixed 10-question test, one question at a time, with no hints, no reveal,
- * and no feedback until every question is answered — unlike practice mode's
- * StepProblem, which scaffolds the student toward the right answer. Reuses
- * StepInput/check/answerText from StepProblem.tsx so a test question is graded
- * and displayed exactly like the same step would be in practice.
+ * A fixed-length test (10 questions for a unit, or however many a module test
+ * defines), one question at a time, with no hints, no reveal, and no feedback
+ * until every question is answered — unlike practice mode's StepProblem, which
+ * scaffolds the student toward the right answer. Reuses StepInput/check/
+ * answerText from StepProblem.tsx so a test question is graded and displayed
+ * exactly like the same step would be in practice.
  */
-export function UnitTestView({ unit, onComplete }: UnitTestViewProps) {
+export function UnitTestView({ test, onComplete }: UnitTestViewProps) {
   const [attempt, setAttempt] = useState(0);
   const questions = useMemo(
-    () => makeQuestions(unit),
+    () => makeQuestions(test),
     // attempt forces a fresh set of questions on retake
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [unit, attempt]
+    [test, attempt]
   );
   const [current, setCurrent] = useState(0);
   const [states, setStates] = useState<StepState[]>(() => questions.map(fresh));
@@ -67,12 +74,14 @@ export function UnitTestView({ unit, onComplete }: UnitTestViewProps) {
 
   if (finished && results) {
     const score = results.filter((r) => r.ok).length;
-    const passed = score >= unit.test!.passScore;
+    const passed = score >= test.passScore;
     return (
       <div className="unit-test results">
         <div className={`test-score ${passed ? "pass" : "fail"}`}>
-          <div className="test-score-num">{score}/10</div>
-          <div className="test-score-label">{passed ? "Passed — nice work!" : `Keep practicing — aim for ${unit.test!.passScore}/10.`}</div>
+          <div className="test-score-num">
+            {score}/{questions.length}
+          </div>
+          <div className="test-score-label">{passed ? "Passed — nice work!" : `Keep practicing — aim for ${test.passScore}/${questions.length}.`}</div>
         </div>
         <ol className="test-review">
           {questions.map((q, i) => (

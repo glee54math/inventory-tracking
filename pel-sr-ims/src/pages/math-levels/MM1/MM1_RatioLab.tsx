@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import "./MM1_RatioLab_styles.css";
 import { units, type Unit } from "./units";
+import { moduleTest, moduleTestStars, MODULE_TEST_TOTAL } from "./units/ModuleTest";
 import { StepProblem } from "../shared/engine/StepProblem";
 import { UnitTestView } from "../shared/engine/UnitTest";
 import { UnitPreviewCarousel } from "../shared/components/UnitPreviewCarousel";
@@ -10,6 +11,10 @@ import { MASTERY_GOAL, useModuleProgress, type UnitProgress } from "../../../hoo
 import { useStudentContext } from "../../../components/student_portal/StudentContext";
 
 const MODULE_ID = "MM1_RatioLab";
+// Synthetic progress key for the cross-unit module test — not a real unit id,
+// but ProgressMap/recordTest are already generic over any string key (see
+// moduleProgressTypes.ts's doc comment anticipating keys like "main").
+const MODULE_PROGRESS_KEY = "module";
 
 const FONT_HREF =
   "https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap";
@@ -38,8 +43,31 @@ function Stars({ p, size = "sm" }: { p?: UnitProgress; size?: "sm" | "lg" }) {
   );
 }
 
-function Home({ onPick, progress }: { onPick: (i: number) => void; progress: Record<string, UnitProgress> }) {
+/** A plain n-of-max star rating, independent of the mastery-tracking Stars
+ *  component above — used for the module test's letter-grade-style rating. */
+function RatingStars({ n, max = 5, size = "sm", label }: { n: number; max?: number; size?: "sm" | "lg"; label: string }) {
+  return (
+    <span className={`stars ${size}`} aria-label={label}>
+      {Array.from({ length: max }, (_, i) => (
+        <span key={i} className={i < n ? "on" : ""} aria-hidden>
+          ★
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function Home({
+  onPick,
+  progress,
+  onModuleTest,
+}: {
+  onPick: (i: number) => void;
+  progress: Record<string, UnitProgress>;
+  onModuleTest: () => void;
+}) {
   const next = units.findIndex((u) => (progress[u.id]?.clean ?? 0) < MASTERY_GOAL);
+  const moduleTestScore = progress[MODULE_PROGRESS_KEY]?.testScore;
   return (
     <div className="home">
       <section className="hero">
@@ -74,16 +102,29 @@ function Home({ onPick, progress }: { onPick: (i: number) => void; progress: Rec
         </ol>
         <p className="muted small">Earn a star for each Mixed-mode problem you solve with at most one hint. Five stars = mastered.</p>
       </section>
+      <section>
+        <button className="path-card module-test-card" onClick={onModuleTest}>
+          <span className="path-body">
+            <span className="path-title">📝 Module Test</span>
+            <span className="path-goal">20 cumulative questions, a few from every unit — no diagrams, no color hints, solved from the words alone.</span>
+          </span>
+          <span className="unit-stars">
+            {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} label="Module test rating" />}
+            <TestBadge p={progress[MODULE_PROGRESS_KEY]} passScore={moduleTest.passScore} total={MODULE_TEST_TOTAL} />
+          </span>
+        </button>
+      </section>
     </div>
   );
 }
 
-function TestBadge({ p, passScore }: { p?: UnitProgress; passScore: number }) {
+function TestBadge({ p, passScore, total = 10 }: { p?: UnitProgress; passScore: number; total?: number }) {
   if (p?.testScore === undefined) return null;
   const passed = p.testScore >= passScore;
   return (
     <span className={`test-badge ${passed ? "pass" : "fail"}`} title="Your best score across all attempts">
-      Best test score: {p.testScore}/10{passed ? " ✓" : ""}
+      Best test score: {p.testScore}/{total}
+      {passed ? " ✓" : ""}
     </span>
   );
 }
@@ -206,7 +247,7 @@ function UnitView({
 
       {tab === "test" && unit.test && (
         <div className="panel" role="tabpanel">
-          <UnitTestView key={unit.id} unit={unit} onComplete={onTest} />
+          <UnitTestView key={unit.id} test={unit.test!} onComplete={onTest} />
         </div>
       )}
     </div>
@@ -222,14 +263,23 @@ function RatioLab() {
     MODULE_ID
   );
   const [current, setCurrent] = useState<number | null>(null);
+  const [moduleTestOpen, setModuleTestOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const go = useCallback((i: number | null) => {
+    setModuleTestOpen(false);
     setCurrent(i);
     window.scrollTo({ top: 0 });
   }, []);
+  const openModuleTest = useCallback(() => {
+    setCurrent(null);
+    setModuleTestOpen(true);
+    window.scrollTo({ top: 0 });
+  }, []);
   const unit = current === null ? null : units[current];
+  const moduleTestScore = progress[MODULE_PROGRESS_KEY]?.testScore;
   const onSolved = useCallback((clean: boolean) => unit && record(unit.id, clean), [unit, record]);
   const onTest = useCallback((score: number) => unit && recordTest(unit.id, score), [unit, recordTest]);
+  const onModuleTestComplete = useCallback((score: number) => recordTest(MODULE_PROGRESS_KEY, score), [recordTest]);
   const onIntroDone = useCallback(() => unit && recordIntroDone(unit.id), [unit, recordIntroDone]);
 
   return (
@@ -254,6 +304,17 @@ function RatioLab() {
               </li>
             ))}
           </ol>
+          <button className={`module-test-nav ${moduleTestOpen ? "on" : ""}`} aria-current={moduleTestOpen ? "page" : undefined} onClick={openModuleTest}>
+            <span className="module-test-row">
+              <span>📝 Module Test</span>
+              {moduleTestScore !== undefined && moduleTestScore >= moduleTest.passScore && (
+                <span className="module-test-check" aria-label="Completed">
+                  ✓
+                </span>
+              )}
+            </span>
+            {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} label="Module test rating" />}
+          </button>
           <button
             className="reset"
             onClick={() => {
@@ -268,7 +329,28 @@ function RatioLab() {
           </button>
         </nav>
         <main className="main">
-          {unit ? (
+          {moduleTestOpen ? (
+            <div className="unit">
+              <header className="unit-head">
+                <div>
+                  <h1>Module Test</h1>
+                  <p className="goal">20 cumulative questions covering every unit in Ratio Lab — no diagrams, no color hints, solved from the words alone.</p>
+                </div>
+                <div className="unit-stars">
+                  {progress[MODULE_PROGRESS_KEY]?.testScore !== undefined && (
+                    <RatingStars n={moduleTestStars(progress[MODULE_PROGRESS_KEY].testScore)} size="lg" label="Module test rating" />
+                  )}
+                  <TestBadge p={progress[MODULE_PROGRESS_KEY]} passScore={moduleTest.passScore} total={MODULE_TEST_TOTAL} />
+                </div>
+              </header>
+              <button className="btn ghost module-test-back" onClick={() => go(null)}>
+                ← Back to Ratio Lab
+              </button>
+              <div className="panel">
+                <UnitTestView test={moduleTest} onComplete={onModuleTestComplete} />
+              </div>
+            </div>
+          ) : unit ? (
             <UnitView
               key={unit.id}
               unit={unit}
@@ -279,7 +361,7 @@ function RatioLab() {
               onNextUnit={current !== null && current < units.length - 1 ? () => go(current + 1) : undefined}
             />
           ) : (
-            <Home onPick={go} progress={progress} />
+            <Home onPick={go} progress={progress} onModuleTest={openModuleTest} />
           )}
         </main>
       </div>

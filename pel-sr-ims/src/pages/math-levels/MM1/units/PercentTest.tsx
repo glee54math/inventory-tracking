@@ -137,7 +137,7 @@ const classVoteQuestion = (): TestQuestion[] => {
 };
 
 // Q6 — theater seats: no diagram, no color. Medium: find the part, compressed into one question.
-const theaterSeatsQuestion = (): TestQuestion[] => {
+export const theaterSeatsQuestion = (): TestQuestion[] => {
   const W = randInt(2, 30) * 10;
   const p = pick([10, 20, 30, 40, 60, 70, 80, 90]);
   const perBlock = W / 10;
@@ -160,7 +160,7 @@ const theaterSeatsQuestion = (): TestQuestion[] => {
 };
 
 // Q7 — cookie goal: no diagram, no color. Medium: find the whole, compressed into one question.
-const cookieGoalQuestion = (): TestQuestion[] => {
+export const cookieGoalQuestion = (): TestQuestion[] => {
   const p = pick([20, 30, 40, 60, 70, 80, 90]);
   const n = p / 10;
   const ten = randInt(2, 15);

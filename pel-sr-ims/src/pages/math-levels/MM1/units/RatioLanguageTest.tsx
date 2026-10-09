@@ -145,7 +145,7 @@ const libraryQuestions = (): TestQuestion[] => {
 
 // Q5/Q6 — classroom: no diagram, no color. Easy direct ratio, then medium simplify.
 // Both questions in the pair use the same asked order, so the cluster reads as one story.
-const classroomQuestions = (): TestQuestion[] => {
+export const classroomQuestions = (): TestQuestion[] => {
   let p = randInt(2, 5);
   let q = randInt(2, 6);
   while (gcd(p, q) !== 1) {
@@ -192,7 +192,7 @@ const classroomQuestions = (): TestQuestion[] => {
 };
 
 // Q7 — fish tank: no diagram, no color. Medium: part-to-whole, simplified.
-const fishTankQuestion = (): TestQuestion[] => {
+export const fishTankQuestion = (): TestQuestion[] => {
   let p = randInt(2, 4); // goldfish per unit
   let q = randInt(3, 6); // guppies per unit
   while (gcd(p, q) !== 1) {

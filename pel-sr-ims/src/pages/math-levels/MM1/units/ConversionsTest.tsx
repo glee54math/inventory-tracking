@@ -133,11 +133,22 @@ const ribbonBiggerQuestion = (): TestQuestion[] => {
   ];
 };
 
-// Q3/Q4 — fence length: no diagram, color text. Easy convert it, then medium identify the factor used.
+// Q3/Q4 — length conversions: no diagram, color text. Easy convert a length, then medium
+// identify the factor from a DIFFERENT, independently-generated conversion pair. These
+// two used to share one fence scenario (Q4 restated Q3's exact numbers as a given fact)
+// — but since the test engine supports going back to a previous question, a student
+// could read Q4, go back, and use the leaked answer to fix a wrong Q3. Independent
+// numbers (and a different unit type) removes that leak entirely.
 const fenceLengthQuestions = (): TestQuestion[] => {
   const c = pickLength();
   const v = randInt(2, 9);
   const s = v * c.f;
+
+  let c2 = pick(conversions);
+  while (c2.id === c.id) c2 = pick(conversions);
+  const v2 = randInt(2, 9);
+  const s2 = v2 * c2.f;
+
   return [
     {
       visual: null,
@@ -162,20 +173,22 @@ const fenceLengthQuestions = (): TestQuestion[] => {
         kind: "number",
         prompt: (
           <>
-            That same fence is <QA>{v} {c.bigs}</QA>, or <QB>{s} {c.smalls}</QB>. What number did you multiply {v} by to get {s}?
+            <QA>{v2} {c2.bigs}</QA> equals <QB>{s2} {c2.smalls}</QB>. What number did you multiply {v2} by to get {s2}?
           </>
         ),
-        answer: c.f,
-        hint: `${s} ÷ ${v}`,
-        explain: `${s} ÷ ${v} = ${c.f} — that's the conversion factor, 1 ${c.big} = ${c.f} ${c.smalls}.`,
+        answer: c2.f,
+        hint: `${s2} ÷ ${v2}`,
+        explain: `${s2} ÷ ${v2} = ${c2.f} — that's the conversion factor, 1 ${c2.big} = ${c2.f} ${c2.smalls}.`,
       },
     },
   ];
 };
 
 // Q5 — ratio table: diagram, no color. Medium: continue the table's pattern to a new row.
+// Pinned to yards↔feet specifically (not randomized across all 8 conversions) so this
+// slot doesn't end up coincidentally repeating whatever Q1/Q2/Q3 happened to land on.
 const tableQuestion = (): TestQuestion[] => {
-  const c = pick(conversions);
+  const c = conversions.find((x) => x.id === "yd-ft")!;
   const n = randInt(4, 9);
   const rows: RatioTableCell[][] = [1, 2, 3, n]
     .filter((x, i, arr) => arr.indexOf(x) === i)
@@ -207,7 +220,7 @@ const tableQuestion = (): TestQuestion[] => {
 
 // Q6 — minutes to hours as a fraction: no diagram, no color. Hard: same frac/fracRequired
 // discipline as rateTimeProblem's own hours step — a decimal like "0.33" is rejected outright.
-const minutesToHoursQuestion = (): TestQuestion[] => {
+export const minutesToHoursQuestion = (): TestQuestion[] => {
   const m = pick([15, 20, 30, 45, 90, 120, 150]);
   const hrs = m / 60;
   const [num, den] = simplify(m, 60);
@@ -233,7 +246,7 @@ const minutesToHoursQuestion = (): TestQuestion[] => {
 
 // Q7 — rate × time, full distance: no diagram, no color. Medium: the end-to-end computation,
 // same minute-pool filter as rateTimeProblem so the distance always comes out whole.
-const rateDistanceQuestion = (): TestQuestion[] => {
+export const rateDistanceQuestion = (): TestQuestion[] => {
   const r = pick([30, 40, 48, 50, 60]);
   const m = pick([15, 20, 30, 45, 90, 120, 150].filter((x) => (r * x) % 60 === 0));
   const d = (r * m) / 60;
@@ -299,13 +312,15 @@ const biggerUnitReasoningQuestion = (): TestQuestion[] => {
 
 // Q10 — which conversion is correct: no diagram, no color, multiple choice. Easy: recognize the
 // correctly-computed conversion. Distractors are arithmetic mistakes (added instead of multiplied,
-// forgot to scale, divided instead of multiplied) — never a formatting trap.
+// forgot to scale, divided instead of multiplied) — never a formatting trap. Pinned to pounds↔ounces
+// (not pickLength(), which only ever produces a length) so this slot doesn't end up a third or
+// fourth repeat of whatever length conversion Q1/Q2/Q3 happened to land on.
 const correctConversionQuestion = (): TestQuestion[] => {
-  const c = pickLength();
+  const c = conversions.find((x) => x.id === "lb-oz")!;
   let v = randInt(2, 9);
   // Avoid v where the "divided instead of multiplied" distractor accidentally
   // lands on the same number as the "forgot to scale" distractor (happens
-  // when v === f*f, e.g. yd-ft's f=3 with v=9 — both would show "3").
+  // when v === f*f, e.g. a factor of 3 with v=9 — both would show "3").
   while (Math.round((v / c.f) * 100) / 100 === c.f) {
     v = randInt(2, 9);
   }
@@ -315,7 +330,7 @@ const correctConversionQuestion = (): TestQuestion[] => {
       difficulty: "easy",
       step: choice(
         {
-          prompt: `A ribbon is ${v} ${c.bigs} long. Which of these correctly converts it to ${c.smalls}?`,
+          prompt: `A bag of flour weighs ${v} ${c.bigs}. Which of these correctly converts it to ${c.smalls}?`,
           hint: `Multiply ${v} by ${c.f}.`,
           explain: `${v} × ${c.f} = ${v * c.f} ${c.smalls}.`,
         },

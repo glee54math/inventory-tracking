@@ -95,7 +95,7 @@ const graphedLineQuestion = (): TestQuestion[] => {
 };
 
 // Q3/Q4 — trail mix: no diagram, color text. Easy scale forward, then medium find the scale factor.
-const trailMixQuestions = (): TestQuestion[] => {
+export const trailMixQuestions = (): TestQuestion[] => {
   const p = randInt(1, 3); // cups of nuts
   let q = randInt(2, 5); // cups of raisins
   while (q === p) q = randInt(2, 5);
@@ -138,7 +138,7 @@ const trailMixQuestions = (): TestQuestion[] => {
 };
 
 // Q5 — solve the proportion: no diagram, no color. Medium: given one column's target, find the other.
-const proportionQuestion = (): TestQuestion[] => {
+export const proportionQuestion = (): TestQuestion[] => {
   let p = randInt(2, 5);
   let q = randInt(2, 6);
   while (gcd(p, q) !== 1) {
@@ -201,7 +201,7 @@ const nextRowQuestion = (): TestQuestion[] => {
 };
 
 // Q7 — simplify the base ratio: no diagram, no color. Medium: reduce a table's starting row.
-const simplifyBaseQuestion = (): TestQuestion[] => {
+export const simplifyBaseQuestion = (): TestQuestion[] => {
   let p = randInt(2, 5);
   let q = randInt(2, 6);
   while (gcd(p, q) !== 1) {

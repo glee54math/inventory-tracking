@@ -142,7 +142,7 @@ const lawnCrewQuestions = (): TestQuestion[] => {
 };
 
 // Q5 — reverse speed: no diagram, no color. Medium: given the unit rate, find the time for a new distance.
-const reverseSpeedQuestion = (): TestQuestion[] => {
+export const reverseSpeedQuestion = (): TestQuestion[] => {
   const rate = pick([30, 35, 40, 45, 50, 55, 60, 65]); // miles per hour
   const time = randInt(2, 8);
   const distance = rate * time;
@@ -189,7 +189,7 @@ const directUnitPriceQuestion = (): TestQuestion[] => {
 // early questions, same as every other MM1 unit test). Hard: a rate less than 1, same skill as
 // lawnCrewQuestions' reciprocal step but a fresh scenario. h is drawn from {2, 4, 5} for the same
 // terminating-decimal reason as lawnCrewQuestions' L.
-const fenceCrewQuestion = (): TestQuestion[] => {
+export const fenceCrewQuestion = (): TestQuestion[] => {
   const h = pick([2, 4, 5]); // hours
   let p = randInt(1, h - 1); // fences
   while (gcd(p, h) !== 1) {

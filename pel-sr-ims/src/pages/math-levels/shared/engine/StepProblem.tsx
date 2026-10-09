@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import type { Problem, Step } from "./types";
+import type { Problem, SentenceBlank, Step } from "./types";
 import { fmt, fracText, gcd, numbersMatch, parseAnswer, rawFraction } from "../lib/math";
 
 /** Exported so the end-of-unit test (engine/UnitTest.tsx) can type its own
@@ -23,7 +23,25 @@ export const answerText = (s: Step): string => {
     return `${s.prefix ?? ""}${val}${s.suffix ? " " + s.suffix : ""}`;
   }
   if (s.kind === "ratio") return `${s.answer[0]} : ${s.answer[1]}`;
+  if (s.kind === "sentence") {
+    return `${s.parts[0]}${sentenceBlankText(s.blanks[0])}${s.parts[1]}${sentenceBlankText(s.blanks[1])}${s.parts[2]}`;
+  }
   return s.choices[s.correct];
+};
+
+/** Formats a SentenceBlank's canonical (correct) answer for display. */
+const sentenceBlankText = (b: SentenceBlank): string =>
+  b.kind === "select" ? b.choices[b.correct] : b.money ? (b.answer % 1 ? b.answer.toFixed(2) : String(b.answer)) : fmt(b.answer);
+
+/** Grades one SentenceStep blank — a select blank by index, a number blank
+ *  the same way NumberStep.money is graded (same two-decimal-place rule). */
+const sentenceBlankOk = (b: SentenceBlank, raw: string): boolean => {
+  if (b.kind === "select") return Number(raw) === b.correct;
+  const trimmed = b.money ? raw.trim().replace(/^\$/, "") : raw;
+  const v = parseAnswer(trimmed);
+  if (v === null || !numbersMatch(v, b.answer)) return false;
+  if (b.money && b.answer % 1 !== 0 && !/^\d+\.\d{2}$/.test(trimmed)) return false;
+  return true;
 };
 
 /** Check one step. Returns null when right, or a targeted message when wrong.
@@ -71,6 +89,11 @@ export const check = (s: Step, inputs: string[]): { ok: boolean; msg: string } =
     if (s.answer !== 0 && numbersMatch(v, 1 / s.answer)) return { ok: false, msg: "That's the flip of the answer. Check which quantity you divided by which." };
     if (numbersMatch(v * 10, s.answer) || numbersMatch(v / 10, s.answer)) return { ok: false, msg: "Close: the digits are right but the size is off by a factor of 10." };
     return { ok: false, msg: "Not yet. Look at the diagram and try again." };
+  }
+  if (s.kind === "sentence") {
+    if (inputs[0] === "" || inputs[1] === "") return { ok: false, msg: "Fill in both blanks." };
+    const ok = sentenceBlankOk(s.blanks[0], inputs[0]) && sentenceBlankOk(s.blanks[1], inputs[1]);
+    return ok ? { ok: true, msg: "" } : { ok: false, msg: "One of the blanks isn't right yet — check both against the problem." };
   }
   const a = parseAnswer(inputs[0]);
   const b = parseAnswer(inputs[1]);
@@ -248,6 +271,50 @@ export function StepInput({ step, state, onChange, onSubmit }: { step: Step; sta
             {c}
           </button>
         ))}
+      </div>
+    );
+  }
+  if (step.kind === "sentence") {
+    const renderBlank = (i: 0 | 1) => {
+      const b = step.blanks[i];
+      const val = state.inputs[i];
+      const set = (v: string) => onChange(i === 0 ? [v, state.inputs[1]] : [state.inputs[0], v]);
+      if (b.kind === "select") {
+        return (
+          <select className="sentence-select" aria-label={i === 0 ? "First blank" : "Second blank"} value={val} onChange={(e) => set(e.target.value)}>
+            <option value="" disabled>
+              choose
+            </option>
+            {b.choices.map((c, k) => (
+              <option key={k} value={k}>
+                {c}
+              </option>
+            ))}
+          </select>
+        );
+      }
+      return (
+        <span className="sentence-number">
+          <input
+            className="answer sentence-input-box"
+            inputMode="decimal"
+            autoComplete="off"
+            aria-label={i === 0 ? "First blank" : "Second blank"}
+            placeholder={b.money ? "0.00" : undefined}
+            value={val}
+            onChange={(e) => set(e.target.value)}
+            onKeyDown={enter}
+          />
+        </span>
+      );
+    };
+    return (
+      <div className="answer-row sentence-input">
+        <span>{step.parts[0]}</span>
+        {renderBlank(0)}
+        <span>{step.parts[1]}</span>
+        {renderBlank(1)}
+        <span>{step.parts[2]}</span>
       </div>
     );
   }
