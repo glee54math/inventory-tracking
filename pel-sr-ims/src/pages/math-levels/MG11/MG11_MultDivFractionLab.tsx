@@ -191,7 +191,7 @@ function UnitView({
 
       {tab === "test" && unit.test && (
         <div className="panel" role="tabpanel">
-          <UnitTestView key={unit.id} unit={unit} onComplete={onTest} />
+          <UnitTestView key={unit.id} test={unit.test!} onComplete={onTest} />
         </div>
       )}
     </div>

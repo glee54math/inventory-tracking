@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FractionBar, FractionMeasureStrip } from "../diagrams";
+import { AreaRectangle, FractionBar, FractionMeasureStrip } from "../diagrams";
 import { gcd, randInt, simplify } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
 import { Frac, QA, QB, Says, Stepper } from "../../../shared/engine/controls";
@@ -57,8 +57,11 @@ function Explore() {
 function measurementProblem(): Problem {
   const [cn, dd] = properFraction(); // the "serving"/"length" size
   const [an, bd] = properFraction(); // the total amount
-  const [qn, qd] = simplify(an * dd, bd * cn);
-  const quotientVal = (an * dd) / (bd * cn);
+  const improperN = an * dd;
+  const improperD = bd * cn;
+  const [qn, qd] = simplify(improperN, improperD);
+  const quotientVal = improperN / improperD;
+  const alreadyLowest = gcd(improperN, improperD) === 1;
 
   const useServings = Math.random() < 0.5;
   const story = useServings ? (
@@ -74,10 +77,18 @@ function measurementProblem(): Problem {
   return {
     title: useServings ? "Measuring out servings" : "Width of a strip of land",
     story,
-    visual: () => (useServings ? <FractionMeasureStrip dividend={[an, bd]} divisor={[cn, dd]} /> : null),
+    visual: () => (useServings ? <FractionMeasureStrip dividend={[an, bd]} divisor={[cn, dd]} /> : <AreaRectangle area={[an, bd]} length={[cn, dd]} unit="mi" />),
     steps: [
       choice(
-        { prompt: "Which expression finds the answer?", hint: "You're asking \"how many of the smaller amount fit into the larger one?\" — that's division.", explain: "Finding how many groups of one size fit into a total is division." },
+        {
+          prompt: "Which expression finds the answer?",
+          hint: useServings
+            ? "You're asking \"how many of the smaller amount fit into the larger one?\" — that's division."
+            : "Area = length × width, so width = area ÷ length.",
+          explain: useServings
+            ? "Finding how many groups of one size fit into a total is division."
+            : "Since area = length × width, solving for width means dividing the area by the length: width = area ÷ length.",
+        },
         `${an}/${bd} ÷ ${cn}/${dd}`,
         [`${an}/${bd} × ${cn}/${dd}`, `${cn}/${dd} ÷ ${an}/${bd}`]
       ),
@@ -95,9 +106,19 @@ function measurementProblem(): Problem {
         kind: "number",
         frac: true,
         fracAnswer: [qn, qd],
-        prompt: <>Simplify <Frac n={an * dd} d={bd * cn} /> to lowest terms.</>,
-        hint: `Both ${an * dd} and ${bd * cn} share a common factor — divide both by it.`,
-        explain: <><Frac n={an * dd} d={bd * cn} /> simplifies to <Quotient n={qn} d={qd} />.</>,
+        prompt: alreadyLowest ? (
+          <>Write <Frac n={improperN} d={improperD} /> as the answer.</>
+        ) : (
+          <>Simplify <Frac n={improperN} d={improperD} /> to lowest terms.</>
+        ),
+        hint: alreadyLowest
+          ? `${improperN} and ${improperD} don't share a common factor, so ${improperN}/${improperD} is already in lowest terms.`
+          : `Both ${improperN} and ${improperD} share a common factor — divide both by it.`,
+        explain: alreadyLowest ? (
+          <><Frac n={improperN} d={improperD} /> is already in lowest terms — there's no common factor to divide out.</>
+        ) : (
+          <><Frac n={improperN} d={improperD} /> simplifies to <Quotient n={qn} d={qd} />.</>
+        ),
         answer: quotientVal,
       },
       choice(

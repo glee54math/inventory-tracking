@@ -1,4 +1,4 @@
-import { FractionBar, FractionMeasureStrip } from "../diagrams";
+import { AreaRectangle, FractionBar, FractionMeasureStrip } from "../diagrams";
 import { gcd, randInt, simplify } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
 import { Frac, QA, QB } from "../../../shared/engine/controls";
@@ -70,7 +70,7 @@ function widthQuestion(): TestQuestion[] {
   const [qn, qd] = quotientOf(an, bd, cn, dd);
   return [
     {
-      visual: <FractionMeasureStrip dividend={[an, bd]} divisor={[cn, dd]} />,
+      visual: <AreaRectangle area={[an, bd]} length={[cn, dd]} unit="mi" />,
       difficulty: "hard",
       step: {
         kind: "number",

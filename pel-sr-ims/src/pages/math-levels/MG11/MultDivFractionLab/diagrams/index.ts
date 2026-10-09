@@ -2,6 +2,8 @@ export { FractionBar, simplifyCaption } from "./FractionBar";
 export type { FractionBarProps } from "./FractionBar";
 export { FractionMeasureStrip } from "./FractionMeasureStrip";
 export type { FractionMeasureStripProps } from "./FractionMeasureStrip";
+export { AreaRectangle } from "./AreaRectangle";
+export type { AreaRectangleProps } from "./AreaRectangle";
 export { DivisionLadder, computeLongDivision } from "./DivisionLadder";
 export type { DivisionLadderProps } from "./DivisionLadder";
 export { PlaceValueColumns } from "./PlaceValueColumns";

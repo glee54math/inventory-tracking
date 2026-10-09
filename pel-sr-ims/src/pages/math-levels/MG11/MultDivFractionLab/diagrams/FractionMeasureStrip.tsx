@@ -11,65 +11,91 @@ export interface FractionMeasureStripProps {
 }
 
 /**
- * Quotitive ("how many groups of this size fit?") division model: a bar
- * representing the dividend, marked off in divisor-sized segments, with the
- * final partial segment shaded differently so the leftover fraction is
- * visible. Both fractions are converted to a common unit (L = lcm of the two
- * denominators) so segment boundaries land exactly — this is also literally
- * how (a/b)/(c/d) = ad/bc falls out: the dividend is a*(L/b) unit-cells long,
- * each segment is c*(L/d) cells, and the number of segments is their ratio.
+ * Quotitive ("how many groups of this size fit?") division model, drawn as two
+ * aligned bars so a first-time learner has a "whole" to anchor to instead of
+ * just a lone, unexplained strip:
+ *  - Top bar: the dividend shown the same way FractionBar shows it elsewhere in
+ *    this unit — the WHOLE cup split into its own denominator's cells, with the
+ *    amount you have shaded. This is what supplies the "whole" reference.
+ *  - Bottom ruler: sits directly under the shaded portion only (same width),
+ *    marked off in divisor-sized servings, with the leftover segment captioned
+ *    as a fraction OF A SERVING (not of a cup) to avoid the two fractions being
+ *    misread as the same kind of amount.
+ * Both bars share one common-unit cell size (L = lcm of the two denominators)
+ * so every boundary lands exactly — the same reasoning that makes (a/b)/(c/d) =
+ * ad/bc fall out visually: the dividend is a*(L/b) unit-cells long, each
+ * segment is c*(L/d) cells, and the number of segments is their ratio.
  */
-export function FractionMeasureStrip({ dividend, divisor, width = 360, height = 70 }: FractionMeasureStripProps) {
+export function FractionMeasureStrip({ dividend, divisor, width = 360, height = 52 }: FractionMeasureStripProps) {
   const [a, b] = dividend;
   const [c, d] = divisor;
   const L = lcm(b, d);
   const dividendCells = a * (L / b); // dividend expressed in L-unit cells
   const segmentCells = c * (L / d); // one divisor-segment, in L-unit cells
-  const cellW = width / dividendCells;
 
   const fullSegments = Math.floor(dividendCells / segmentCells);
   const leftoverCells = dividendCells - fullSegments * segmentCells;
   const g = gcd(leftoverCells, segmentCells);
   const leftoverLabel = leftoverCells > 0 ? `${leftoverCells / g}/${segmentCells / g}` : null;
 
+  const topCellW = width / b; // top bar's own cells (one whole cup across the full width)
+  const haveWidth = width * (a / b); // width of the shaded "what you have" portion
+  const rulerY = height + 42; // top bar + its caption + a gap before the ruler
+  const totalHeight = rulerY + height + (leftoverLabel ? 36 : 20);
+
   return (
     <svg
-      viewBox={`0 0 ${width} ${height + 24}`}
+      viewBox={`0 0 ${width} ${totalHeight}`}
       width={width}
       style={{ maxWidth: "100%" }}
       role="img"
-      aria-label={`Measuring ${a}/${b} in segments of ${c}/${d}`}
+      aria-label={`${a}/${b} cup, measured in ${c}/${d}-cup servings`}
     >
-      {Array.from({ length: dividendCells }, (_, i) => {
-        const inPartial = i >= fullSegments * segmentCells;
-        return (
-          <rect
-            key={i}
-            x={i * cellW}
-            y={0}
-            width={cellW}
-            height={height}
-            style={{ fill: inPartial ? palette.cSoft : palette.aSoft, stroke: palette.grid, strokeWidth: 0.5 }}
-          />
-        );
-      })}
-      {Array.from({ length: fullSegments + (leftoverCells > 0 ? 1 : 0) }, (_, i) => {
-        const x0 = i * segmentCells * cellW;
-        const segW = Math.min(segmentCells, dividendCells - i * segmentCells) * cellW;
-        const isPartial = i === fullSegments;
-        return (
-          <g key={`seg-${i}`}>
-            <rect x={x0} y={0} width={segW} height={height} style={{ fill: "none", stroke: isPartial ? palette.c : palette.a, strokeWidth: 2.5 }} />
-            <text x={x0 + segW / 2} y={height / 2 + 5} textAnchor="middle" style={{ fill: palette.ink, fontSize: 14, fontWeight: 700 }}>
-              {isPartial ? leftoverLabel : i + 1}
-            </text>
-          </g>
-        );
-      })}
+      {/* top bar: one whole cup, split into b equal cells, a of them shaded */}
+      {Array.from({ length: b }, (_, i) => (
+        <rect
+          key={i}
+          x={i * topCellW}
+          y={0}
+          width={topCellW}
+          height={height}
+          style={{ fill: i < a ? palette.a : palette.paper, fillOpacity: i < a ? 0.85 : 1, stroke: palette.line, strokeWidth: 1 }}
+        />
+      ))}
       <rect x={0} y={0} width={width} height={height} style={{ fill: "none", stroke: palette.ink, strokeWidth: 2 }} />
-      <text x={width / 2} y={height + 18} textAnchor="middle" style={{ fill: palette.muted, fontSize: 13 }}>
-        {a}/{b} measured in {c}/{d}-sized pieces
+      <text x={width / 2} y={height + 16} textAnchor="middle" style={{ fill: palette.muted, fontSize: 13 }}>
+        {a}/{b} cup — what you have
       </text>
+
+      {/* dashed guides tying the shaded portion above to the ruler below */}
+      <line x1={0} y1={height + 24} x2={0} y2={rulerY} style={{ stroke: palette.line, strokeWidth: 1, strokeDasharray: "3 3" }} />
+      <line x1={haveWidth} y1={height + 24} x2={haveWidth} y2={rulerY} style={{ stroke: palette.line, strokeWidth: 1, strokeDasharray: "3 3" }} />
+
+      {/* bottom ruler: spans only the shaded width, marked off in divisor-sized servings */}
+      <g transform={`translate(0, ${rulerY})`}>
+        {Array.from({ length: fullSegments + (leftoverCells > 0 ? 1 : 0) }, (_, i) => {
+          const startCells = i * segmentCells;
+          const x0 = (startCells / dividendCells) * haveWidth;
+          const segW = (Math.min(segmentCells, dividendCells - startCells) / dividendCells) * haveWidth;
+          const isPartial = i === fullSegments;
+          return (
+            <g key={`seg-${i}`}>
+              <rect x={x0} y={0} width={segW} height={height} style={{ fill: isPartial ? palette.cSoft : palette.bSoft, stroke: isPartial ? palette.c : palette.b, strokeWidth: 2 }} />
+              <text x={x0 + segW / 2} y={height / 2 + 5} textAnchor="middle" style={{ fill: palette.ink, fontSize: 14, fontWeight: 700 }}>
+                {isPartial ? leftoverLabel : i + 1}
+              </text>
+            </g>
+          );
+        })}
+        <text x={width / 2} y={height + 16} textAnchor="middle" style={{ fill: palette.muted, fontSize: 13 }}>
+          {c}/{d}-cup servings
+        </text>
+        {leftoverLabel && (
+          <text x={width / 2} y={height + 32} textAnchor="middle" style={{ fill: palette.muted, fontSize: 12 }}>
+            last one is only {leftoverLabel} of a serving
+          </text>
+        )}
+      </g>
     </svg>
   );
 }
