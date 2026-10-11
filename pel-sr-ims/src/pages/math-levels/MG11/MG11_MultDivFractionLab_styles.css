@@ -674,6 +674,195 @@
   box-shadow: 0 1px 3px rgba(27, 37, 64, 0.18);
 }
 
+/* ---------- explore: live fraction-stepper equation ---------- */
+.mdf-lab .explore-equation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 18px 12px;
+}
+.mdf-lab .explore-op {
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.mdf-lab .frac-stepper {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.mdf-lab .frac-stepper.tone-a {
+  color: var(--qa-text);
+}
+.mdf-lab .frac-stepper.tone-b {
+  color: var(--qb-text);
+}
+.mdf-lab .frac-stepper-bar {
+  width: 68px;
+  height: 3px;
+  background: currentColor;
+  border-radius: 2px;
+}
+.mdf-lab .mini-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  background: var(--card);
+  padding: 2px;
+}
+.mdf-lab .mini-stepper button {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  background: none;
+  font-size: 17px;
+  font-weight: 700;
+  border-radius: 50%;
+}
+.mdf-lab .mini-stepper button:hover:not(:disabled) {
+  background: var(--grid);
+}
+.mdf-lab .mini-stepper button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.mdf-lab .mini-stepper output {
+  min-width: 30px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- explore: Keep, Change, Flip (button-triggered, inline in the big equation) ---------- */
+.mdf-lab .kcf-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.mdf-lab .kcf-label.kcf-keep {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.mdf-lab .kcf-label.kcf-change {
+  background: var(--qc-soft);
+  color: var(--qc-text);
+}
+.mdf-lab .kcf-label.kcf-flip {
+  background: var(--qb-soft);
+  color: var(--qb-text);
+}
+
+/* A 2-row grid: the DOM order is all four .kcf2-content cells followed by all
+   four .kcf2-caption cells, so grid auto-placement (4 columns, wraps every 4
+   items) lands them as row 1 = math, row 2 = captions — captions share one
+   real grid row, so they're guaranteed level with each other, instead of each
+   hanging off its own content box at a slightly different height. The first
+   caption cell is left empty (nothing under "="). */
+.mdf-lab .kcf2 {
+  display: inline-grid;
+  grid-template-columns: repeat(4, auto);
+  column-gap: 20px;
+  row-gap: 10px;
+  align-items: center;
+  justify-items: center;
+  /* Match the stepper equation's big-text scale (mini-stepper output is 26px)
+     so the revealed "= 2/3 × 4/3" reads at the same size, not a caption size —
+     Frac renders at 0.82em of whatever font-size it inherits, so this cascades
+     down to the Keep/Flip fractions automatically. */
+  font-size: 32px;
+  /* .explore-equation centers each of its children by that child's FULL box —
+     without this, the caption row's height gets counted too, so the whole
+     two-row block (math + captions) is centered as one unit, which shoves the
+     math row ("= 2/3 × 4/3") up above the ÷ it needs to line up with, to make
+     room to center the captions along with it. This negative margin cancels
+     the caption row + row-gap out of that calculation (it doesn't clip or
+     hide anything — .explore-equation just "sees" this item as math-row-only
+     height, so it centers THAT against ÷, leaving captions to hang lower). */
+  margin-bottom: -33px;
+}
+.mdf-lab .kcf2-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+}
+.mdf-lab .kcf2-op {
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.mdf-lab .kcf2-op-new {
+  color: var(--qc-text);
+}
+.mdf-lab .kcf2-flipped {
+  color: var(--qc-text);
+}
+
+/* Appear-in-place reveal, used both standalone (the "=" sign) and as the
+   wrapper for each Keep/Change/Flip part. Each instance's `animation-delay`
+   is set inline from JS so the three stages (plus the two flips below) land
+   in sequence with pauses between — see KCF_TIMING in FractionDivision.tsx. */
+@keyframes mdfLabKcfReveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.mdf-lab .kcf2-reveal {
+  opacity: 0;
+  animation: mdfLabKcfReveal 0.4s ease-out forwards;
+}
+
+/* The "becomes" animation for ÷ → × and 3/4 → 4/3: a 3D card flip between two
+   stacked faces. .flip-inner sits at rotateX(0) (front showing) until its own
+   delayed animation rotates it to rotateX(180deg); .flip-back is pre-rotated
+   180deg so it lands right-side-up exactly when the front rotates out of view. */
+.mdf-lab .flip-swap {
+  display: inline-block;
+  perspective: 400px;
+}
+.mdf-lab .flip-inner {
+  position: relative;
+  display: inline-block;
+  min-width: 56px;
+  min-height: 72px;
+  transform-style: preserve-3d;
+  transform: rotateX(0deg);
+  animation: mdfLabFlipRotate 0.55s ease-in-out forwards;
+}
+.mdf-lab .flip-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden;
+}
+.mdf-lab .flip-back {
+  transform: rotateX(180deg);
+}
+@keyframes mdfLabFlipRotate {
+  from {
+    transform: rotateX(0deg);
+  }
+  to {
+    transform: rotateX(180deg);
+  }
+}
+
 /* ---------- explore ---------- */
 .mdf-lab .stage {
   display: grid;
@@ -1139,5 +1328,18 @@
   .mdf-lab *::after {
     animation: none !important;
     transition: none !important;
+  }
+  /* The Keep/Change/Flip reveal relies on `animation` to bring these in from
+     opacity: 0 — with animation disabled above, show everything immediately
+     instead of leaving it permanently invisible. */
+  .mdf-lab .kcf2-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  /* Likewise the flip cards: with the rotate animation disabled, jump straight
+     to the "after" face (× / the flipped fraction) instead of staying stuck
+     showing ÷ / the un-flipped fraction forever. */
+  .mdf-lab .flip-inner {
+    transform: rotateX(180deg) !important;
   }
 }

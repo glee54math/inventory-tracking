@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AreaRectangle, FractionBar, FractionMeasureStrip } from "../diagrams";
 import { gcd, randInt, simplify } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
-import { Frac, QA, QB, Says, Stepper } from "../../../shared/engine/controls";
+import { Frac, QA, QB, Says } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { fractionDivisionTest } from "./FractionDivisionTest";
 
@@ -23,23 +23,178 @@ function Quotient({ n, d }: { n: number; d: number }) {
 // EXPLORE
 // ============================================================================
 
+/** A compact −/value/+ control, sized for sitting right inside a fraction instead of a full-width row. */
+function MiniStepper({ value, min, max, onChange, ariaLabel }: { value: number; min: number; max: number; onChange: (v: number) => void; ariaLabel: string }) {
+  return (
+    <span className="mini-stepper">
+      <button type="button" aria-label={`decrease ${ariaLabel}`} disabled={value <= min} onClick={() => onChange(value - 1)}>
+        −
+      </button>
+      <output>{value}</output>
+      <button type="button" aria-label={`increase ${ariaLabel}`} disabled={value >= max} onClick={() => onChange(value + 1)}>
+        +
+      </button>
+    </span>
+  );
+}
+
+/** Numerator/denominator MiniSteppers stacked into a live, editable fraction. */
+function FracStepperGroup({
+  n,
+  d,
+  onN,
+  onD,
+  nMax,
+  dMax,
+  tone,
+  label,
+}: {
+  n: number;
+  d: number;
+  onN: (v: number) => void;
+  onD: (v: number) => void;
+  nMax: number;
+  dMax: number;
+  tone: "a" | "b";
+  label: string;
+}) {
+  return (
+    <span className={`frac-stepper tone-${tone}`}>
+      <MiniStepper value={n} min={1} max={nMax} onChange={onN} ariaLabel={`${label} numerator`} />
+      <span className="frac-stepper-bar" />
+      <MiniStepper value={d} min={2} max={dMax} onChange={onD} ariaLabel={`${label} denominator`} />
+    </span>
+  );
+}
+
+/**
+ * A two-sided "becomes" animation: `front` is shown, then flips (3D card
+ * rotate) to reveal `back`. `flipDelayMs` is when the flip itself starts;
+ * the slot's own appearance (showing `front` at rest first) is driven by the
+ * surrounding .kcf2-reveal wrapper, so there's a beat to register the "before"
+ * state before it changes — see KeepChangeFlipInline for the full timeline.
+ *
+ * Once the flip finishes, this swaps to rendering `back` as a plain node with
+ * no transform/perspective wrapper at all — a lingering 3D transform context
+ * (even one that nets out to "no rotation") can leave a browser compositing a
+ * flipped element on its own layer, which is enough to shift its text a
+ * pixel or two off the plain, non-transformed content next to it. Settling
+ * removes that layer so the final result lines up exactly like plain text.
+ */
+function FlipSwap({ front, back, flipDelayMs }: { front: React.ReactNode; back: React.ReactNode; flipDelayMs: number }) {
+  const [settled, setSettled] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+  if (settled) return <>{back}</>;
+  return (
+    <span className="flip-swap">
+      <span className="flip-inner" style={{ animationDelay: `${flipDelayMs}ms` }} onAnimationEnd={() => setSettled(true)}>
+        <span className="flip-face flip-front">{front}</span>
+        <span className="flip-face flip-back">{back}</span>
+      </span>
+    </span>
+  );
+}
+
+/** Timeline (ms from the button press) for KeepChangeFlipInline's staged reveal. */
+const KCF_TIMING = {
+  keep: 0,
+  changeAppear: 700,
+  changeFlip: 1300,
+  flipAppear: 2100,
+  flipFlip: 2700,
+};
+
+/**
+ * The "Keep, Change, Flip" mnemonic, played out as an extension of the big
+ * equation itself — "= 2/3 × 4/3" builds on in stages, with ÷ visibly
+ * flipping into × and 3/4 visibly flipping into 4/3 — instead of restating
+ * the rule in a separate diagram. Mount this (via a `key` that changes on
+ * each button press) to replay the sequence from the start.
+ *
+ * Laid out as a 2-row grid (all four .kcf2-content cells, then all four
+ * .kcf2-caption cells) instead of four independent columns, so the captions
+ * share one literal grid row — guaranteed level with each other and with the
+ * bottom of the block, rather than each hanging off its own content box.
+ */
+function KeepChangeFlipInline({ an, bd, cn, dd }: { an: number; bd: number; cn: number; dd: number }) {
+  return (
+    <span className="kcf2">
+      <span className="kcf2-content kcf2-reveal" style={{ animationDelay: `${KCF_TIMING.keep}ms` }}>
+        <span className="explore-op">=</span>
+      </span>
+      <span className="kcf2-content kcf2-reveal" style={{ animationDelay: `${KCF_TIMING.keep}ms` }}>
+        <span className="qa-text"><Frac n={an} d={bd} /></span>
+      </span>
+      <span className="kcf2-content kcf2-reveal" style={{ animationDelay: `${KCF_TIMING.changeAppear}ms` }}>
+        <FlipSwap
+          flipDelayMs={KCF_TIMING.changeFlip}
+          front={<span className="kcf2-op">÷</span>}
+          back={<span className="kcf2-op kcf2-op-new">×</span>}
+        />
+      </span>
+      <span className="kcf2-content kcf2-reveal" style={{ animationDelay: `${KCF_TIMING.flipAppear}ms` }}>
+        <FlipSwap
+          flipDelayMs={KCF_TIMING.flipFlip}
+          front={<span className="qb-text"><Frac n={cn} d={dd} /></span>}
+          back={<span className="kcf2-flipped"><Frac n={dd} d={cn} /></span>}
+        />
+      </span>
+
+      <span className="kcf2-caption" />
+      <span className="kcf2-caption kcf2-reveal" style={{ animationDelay: `${KCF_TIMING.keep}ms` }}>
+        <span className="kcf-label kcf-keep">Keep</span>
+      </span>
+      <span className="kcf2-caption kcf2-reveal" style={{ animationDelay: `${KCF_TIMING.changeAppear}ms` }}>
+        <span className="kcf-label kcf-change">Change</span>
+      </span>
+      <span className="kcf2-caption kcf2-reveal" style={{ animationDelay: `${KCF_TIMING.flipAppear}ms` }}>
+        <span className="kcf-label kcf-flip">Flip</span>
+      </span>
+    </span>
+  );
+}
+
 function Explore() {
   const [an, setAn] = useState(2);
   const [bd, setBd] = useState(3);
   const [cn, setCn] = useState(3);
   const [dd, setDd] = useState(4);
+  const [playKey, setPlayKey] = useState(0);
 
   const [qn, qd] = simplify(an * dd, bd * cn);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="controls">
-        <Stepper label="Dividend numerator" value={an} min={1} max={bd - 1} onChange={setAn} tone="a" />
-        <Stepper label="Dividend denominator" value={bd} min={2} max={9} onChange={(v: number) => { setBd(v); if (an >= v) setAn(v - 1); }} tone="a" />
-        <Stepper label="Divisor numerator" value={cn} min={1} max={dd - 1} onChange={setCn} tone="b" />
-        <Stepper label="Divisor denominator" value={dd} min={2} max={9} onChange={(v: number) => { setDd(v); if (cn >= v) setCn(v - 1); }} tone="b" />
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div className="explore-equation">
+        <FracStepperGroup
+          n={an}
+          d={bd}
+          onN={setAn}
+          onD={(v) => { setBd(v); if (an >= v) setAn(v - 1); }}
+          nMax={bd - 1}
+          dMax={9}
+          tone="a"
+          label="dividend"
+        />
+        <span className="explore-op">÷</span>
+        <FracStepperGroup
+          n={cn}
+          d={dd}
+          onN={setCn}
+          onD={(v) => { setDd(v); if (cn >= v) setCn(v - 1); }}
+          nMax={dd - 1}
+          dMax={9}
+          tone="b"
+          label="divisor"
+        />
+        {playKey > 0 && <KeepChangeFlipInline key={playKey} an={an} bd={bd} cn={cn} dd={dd} />}
       </div>
-      <FractionMeasureStrip dividend={[an, bd]} divisor={[cn, dd]} />
+
+      <button type="button" className="btn ghost" style={{ alignSelf: "center" }} onClick={() => setPlayKey((k) => k + 1)}>
+        {playKey > 0 ? "↻ Replay: Keep, Change, Flip" : "▶ Show: Keep, Change, Flip"}
+      </button>
+
       <Says>
         <QA><Frac n={an} d={bd} /></QA> ÷ <QB><Frac n={cn} d={dd} /></QB> = <QA><Frac n={an} d={bd} /></QA> × <Frac n={dd} d={cn} /> = <Quotient n={qn} d={qd} />
       </Says>
@@ -239,7 +394,15 @@ export const fractionDivision: Unit = {
   keyIdea: (
     <>
       <p>
-        To divide fractions, multiply by the reciprocal: (a/b) ÷ (c/d) = (a×d)/(b×c). For example, <Frac n={2} d={3} /> ÷ <Frac n={3} d={4} /> = <Frac n={2} d={3} /> × <Frac n={4} d={3} /> = <Frac n={8} d={9} /> — and you can check it, because <Frac n={3} d={4} /> of <Frac n={8} d={9} /> is <Frac n={2} d={3} />.
+        To divide fractions, multiply by the reciprocal: (a/b) ÷ (c/d) = (a×d)/(b×c). For example,{" "}
+        <span style={{ whiteSpace: "nowrap" }}>
+          <Frac n={2} d={3} /> ÷ <Frac n={3} d={4} /> = <Frac n={2} d={3} /> × <Frac n={4} d={3} /> = <Frac n={8} d={9} />
+        </span>{" "}
+        — and you can check it, because{" "}
+        <span style={{ whiteSpace: "nowrap" }}>
+          <Frac n={3} d={4} /> of <Frac n={8} d={9} /> is <Frac n={2} d={3} />
+        </span>
+        .
       </p>
       <p>Division can mean "how many groups fit?" (measuring) or "what does one share get?" (sharing equally).</p>
     </>
