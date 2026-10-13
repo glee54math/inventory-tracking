@@ -1306,6 +1306,56 @@
 .mdf-lab .ratio-box.qc small {
   color: var(--qc-text);
 }
+/* FracMultiplyStep: two stacked fractions (numerator over denominator, a bar
+   between) multiplied together — each slot is either plain fixed text or a
+   fill-in box, same visual language as Explore's stacked Frac/BigFraction
+   instead of an inline "a/b" row with disconnected blanks. */
+.mdf-lab .frac-multiply-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.mdf-lab .frac-slot-pair {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.mdf-lab .frac-slot-fixed {
+  font-size: 20px;
+  font-weight: 700;
+  padding: 0 4px;
+}
+.mdf-lab .frac-slot-bar {
+  width: 100%;
+  min-width: 52px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+}
+.mdf-lab .frac-slot-input {
+  width: 60px;
+  padding: 6px 4px;
+  font-size: 16px;
+}
+.mdf-lab .frac-slot-pair.qa {
+  color: var(--qa-text);
+}
+.mdf-lab .frac-slot-pair.qa .frac-slot-input {
+  border-color: var(--qa);
+}
+.mdf-lab .frac-slot-pair.qb {
+  color: var(--qb-text);
+}
+.mdf-lab .frac-slot-pair.qb .frac-slot-input {
+  border-color: var(--qb);
+}
+.mdf-lab .frac-slot-pair.qc {
+  color: var(--qc-text);
+}
+.mdf-lab .frac-slot-pair.qc .frac-slot-input {
+  border-color: var(--qc);
+}
 .mdf-lab .choices {
   display: grid;
   gap: 8px;

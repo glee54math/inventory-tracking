@@ -131,7 +131,28 @@ export interface SentenceStep extends BaseStep {
   blanks: [SentenceBlank, SentenceBlank];
 }
 
-export type Step = NumberStep | RatioStep | ChoiceStep | SentenceStep;
+/**
+ * Two fractions multiplied together, each of the 4 numbers either fixed
+ * (shown as plain text) or `null` (a fill-in box) — rendered as real stacked
+ * fractions (numerator over denominator, divided by a bar), not an inline
+ * "a/b" row, so a cancelled-down rewrite step reads the same way Explore's
+ * stacked fractions do instead of looking like a flat equation with two
+ * disconnected blanks in it. `answer` lines up with the `null` slots in
+ * reading order (leftNum, leftDen, rightNum, rightDen) — however many of the
+ * four are blanked out, `answer` must have that many entries, in that order.
+ */
+export interface FracMultiplyStep extends BaseStep {
+  kind: "fracMultiply";
+  leftNum: number | null;
+  leftDen: number | null;
+  rightNum: number | null;
+  rightDen: number | null;
+  answer: number[];
+  /** Tints the first/second fraction — "none" for plain, undefined also plain. */
+  tones?: ["a" | "b" | "c", "a" | "b" | "c"] | "none";
+}
+
+export type Step = NumberStep | RatioStep | ChoiceStep | SentenceStep | FracMultiplyStep;
 
 export interface Problem {
   title: string;
@@ -193,3 +214,16 @@ export const sentence = (base: BaseStep, before: string, blank1: SentenceBlank, 
   parts: [before, between, after],
   blanks: [blank1, blank2],
 });
+
+/** Build a FracMultiplyStep — pass `null` for whichever of the 4 slots should
+ *  be a fill-in box, and list their answers in `answers` (reading order:
+ *  leftNum, leftDen, rightNum, rightDen — only for the slots that are null). */
+export const fracMultiply = (
+  base: BaseStep,
+  leftNum: number | null,
+  leftDen: number | null,
+  rightNum: number | null,
+  rightDen: number | null,
+  answers: number[],
+  tones?: FracMultiplyStep["tones"]
+): FracMultiplyStep => ({ ...base, kind: "fracMultiply", leftNum, leftDen, rightNum, rightDen, answer: answers, tones });

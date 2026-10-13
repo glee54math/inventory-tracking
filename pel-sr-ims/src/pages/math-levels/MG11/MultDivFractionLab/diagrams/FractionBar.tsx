@@ -7,9 +7,14 @@ export interface FractionBarProps {
   width?: number;
   height?: number;
   /**
-   * When set, also draws thicker dividers grouping the `denominator` cells
-   * into `shareCount` equal share-groups (the partitive "N people share this"
-   * visual) — only meaningful when denominator is a multiple of shareCount.
+   * When set, also draws thicker dividers grouping the SHADED `numerator`
+   * cells (not the whole bar) into `shareCount` equal share-groups — the
+   * partitive "N people share this amount" visual. Call sites make this
+   * exact by rescaling to a common denominator first: pass numerator = (the
+   * original numerator) × shareCount and denominator = (the original
+   * denominator) × shareCount, which guarantees numerator divides evenly by
+   * shareCount regardless of the original fraction, so every group is the
+   * same whole number of cells with nothing left over or split mid-cell.
    */
   shareCount?: number;
   /** Which share-group (0-indexed) to tint distinctly — "this is one share." */
@@ -26,7 +31,7 @@ export interface FractionBarProps {
  */
 export function FractionBar({ numerator, denominator, width = 320, height = 64, shareCount, highlightShare, label }: FractionBarProps) {
   const cellW = width / denominator;
-  const shareSize = shareCount ? denominator / shareCount : 0;
+  const shareSize = shareCount ? numerator / shareCount : 0;
 
   return (
     <svg viewBox={`0 0 ${width} ${height + (label ? 22 : 0)}`} width={width} style={{ maxWidth: "100%" }} role="img" aria-label={label ?? `${numerator} of ${denominator} parts shaded`}>

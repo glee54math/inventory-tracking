@@ -26,6 +26,11 @@ export const answerText = (s: Step): string => {
   if (s.kind === "sentence") {
     return `${s.parts[0]}${sentenceBlankText(s.blanks[0])}${s.parts[1]}${sentenceBlankText(s.blanks[1])}${s.parts[2]}`;
   }
+  if (s.kind === "fracMultiply") {
+    let i = 0;
+    const [ln, ld, rn, rd] = [s.leftNum, s.leftDen, s.rightNum, s.rightDen].map((v) => v ?? s.answer[i++]);
+    return `${ln}/${ld} × ${rn}/${rd}`;
+  }
   return s.choices[s.correct];
 };
 
@@ -94,6 +99,13 @@ export const check = (s: Step, inputs: string[]): { ok: boolean; msg: string } =
     if (inputs[0] === "" || inputs[1] === "") return { ok: false, msg: "Fill in both blanks." };
     const ok = sentenceBlankOk(s.blanks[0], inputs[0]) && sentenceBlankOk(s.blanks[1], inputs[1]);
     return ok ? { ok: true, msg: "" } : { ok: false, msg: "One of the blanks isn't right yet — check both against the problem." };
+  }
+  if (s.kind === "fracMultiply") {
+    const n = s.answer.length;
+    const vals = inputs.slice(0, n).map(parseAnswer);
+    if (vals.some((v) => v === null)) return { ok: false, msg: n === 1 ? "Fill in the box with a number." : "Fill in both boxes with numbers." };
+    const ok = vals.every((v, i) => numbersMatch(v as number, s.answer[i]));
+    return ok ? { ok: true, msg: "" } : { ok: false, msg: "Not yet. Check your cancelling and try again." };
   }
   const a = parseAnswer(inputs[0]);
   const b = parseAnswer(inputs[1]);
@@ -333,6 +345,48 @@ export function StepInput({ step, state, onChange, onSubmit }: { step: Step; sta
           onKeyDown={enter}
         />
         {step.suffix && <span className="affix">{step.suffix}</span>}
+      </div>
+    );
+  }
+  if (step.kind === "fracMultiply") {
+    const slots = [step.leftNum, step.leftDen, step.rightNum, step.rightDen];
+    let next = 0;
+    const inputIndex = slots.map((v) => (v === null ? next++ : -1));
+    const toneClass = (side: 0 | 1): string => {
+      if (!step.tones || step.tones === "none") return "";
+      return ` q${step.tones[side]}`;
+    };
+    const renderSlot = (value: number | null, idx: number, label: string) =>
+      value !== null ? (
+        <span className="frac-slot-fixed">{value}</span>
+      ) : (
+        <input
+          className="answer frac-slot-input"
+          inputMode="decimal"
+          autoComplete="off"
+          aria-label={label}
+          value={state.inputs[idx] ?? ""}
+          onChange={(e) => {
+            const nextInputs = [...state.inputs];
+            nextInputs[idx] = e.target.value;
+            onChange(nextInputs);
+          }}
+          onKeyDown={enter}
+        />
+      );
+    return (
+      <div className="answer-row frac-multiply-row">
+        <span className={`frac-slot-pair${toneClass(0)}`}>
+          {renderSlot(step.leftNum, inputIndex[0], "first fraction's numerator")}
+          <span className="frac-slot-bar" />
+          {renderSlot(step.leftDen, inputIndex[1], "first fraction's denominator")}
+        </span>
+        <span className="affix colon">×</span>
+        <span className={`frac-slot-pair${toneClass(1)}`}>
+          {renderSlot(step.rightNum, inputIndex[2], "second fraction's numerator")}
+          <span className="frac-slot-bar" />
+          {renderSlot(step.rightDen, inputIndex[3], "second fraction's denominator")}
+        </span>
       </div>
     );
   }

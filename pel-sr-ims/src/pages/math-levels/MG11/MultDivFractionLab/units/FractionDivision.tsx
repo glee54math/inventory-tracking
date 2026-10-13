@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AreaRectangle, FractionBar, FractionMeasureStrip } from "../diagrams";
 import { gcd, randInt, simplify } from "../../../shared/lib/math";
-import { choice, type Problem } from "../../../shared/engine/types";
+import { choice, fracMultiply, type Problem, type Step } from "../../../shared/engine/types";
 import { Frac, QA, QB } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { fractionDivisionTest } from "./FractionDivisionTest";
@@ -711,7 +711,20 @@ function measurementProblem(): Problem {
   const improperD = bd * cn;
   const [qn, qd] = simplify(improperN, improperD);
   const quotientVal = improperN / improperD;
-  const alreadyLowest = gcd(improperN, improperD) === 1;
+
+  // After flipping, the multiplication is (an/bd) × (dd/cn) — cross-cancel
+  // checks the diagonal pairs: an's numerator against cn (the OTHER
+  // fraction's denominator), and dd against bd. Since an/bd and cn/dd each
+  // start in lowest terms, cancelling both diagonals (dividing by 1 is a
+  // no-op when a pair doesn't share a factor) always lands exactly on
+  // qn/qd — so step 3 can multiply these straight across with no separate
+  // "simplify" step needed afterward, whether or not anything cancelled.
+  const g1 = gcd(an, cn);
+  const g2 = gcd(dd, bd);
+  const redAn = an / g1;
+  const redCn = cn / g1;
+  const redDd = dd / g2;
+  const redBd = bd / g2;
 
   const useServings = Math.random() < 0.5;
   const story = useServings ? (
@@ -742,33 +755,76 @@ function measurementProblem(): Problem {
         `${an}/${bd} ÷ ${cn}/${dd}`,
         [`${an}/${bd} × ${cn}/${dd}`, `${cn}/${dd} ÷ ${an}/${bd}`]
       ),
-      {
-        kind: "ratio",
-        tones: "none",
-        frame: ["", "/", ""],
-        labels: ["numerator", "denominator"],
-        prompt: <>To divide, multiply by the reciprocal: <QA><Frac n={an} d={bd} /></QA> × <Frac n={dd} d={cn} />. What's the new numerator and denominator, before simplifying?</>,
-        hint: "Multiply numerator × numerator, and denominator × denominator.",
-        explain: <>{an} × {dd} = {an * dd}, and {bd} × {cn} = {bd * cn}.</>,
-        answer: [an * dd, bd * cn],
-      },
+      // To divide, multiply by the reciprocal: an/bd × dd/cn. Before multiplying
+      // straight across, check both diagonals (an against cn, dd against bd) for a
+      // shared factor to cancel — whichever one actually has one (there may be none,
+      // one, or both), since an/bd and cn/dd each already start in lowest terms. When
+      // one does cancel, a second step has the student rewrite the expression with
+      // the cancelled numbers filled in, before step 3 multiplies what's left.
+      ...(g1 > 1
+        ? ([
+            {
+              kind: "number",
+              prompt: <>To divide, multiply by the reciprocal: <QA><Frac n={an} d={bd} /></QA> × <Frac n={dd} d={cn} />. Before multiplying straight across, look for a shortcut: <QA>{an}</QA> and <QB>{cn}</QB> share a common factor. What is it?</>,
+              hint: `List the factors of ${an} and of ${cn} — what's the biggest factor they have in common?`,
+              explain: <>{an} and {cn} are both divisible by {g1}, so you can cancel it before multiplying — dividing {an} by {g1} gives {redAn}, and dividing {cn} by {g1} gives {redCn}.</>,
+              answer: g1,
+            },
+            fracMultiply(
+              {
+                prompt: <>Rewrite the expression with {an} and {cn} cancelled down by {g1}.</>,
+                hint: `${an} ÷ ${g1} and ${cn} ÷ ${g1} — the other two numbers (${bd} and ${dd}) don't change.`,
+                explain: <>{an} ÷ {g1} = {redAn}, and {cn} ÷ {g1} = {redCn}, so the expression becomes <Frac n={redAn} d={bd} /> × <Frac n={dd} d={redCn} />.</>,
+              },
+              null,
+              bd,
+              dd,
+              null,
+              [redAn, redCn],
+              "none"
+            ),
+          ] as Step[])
+        : g2 > 1
+          ? ([
+              {
+                kind: "number",
+                prompt: <>To divide, multiply by the reciprocal: <QA><Frac n={an} d={bd} /></QA> × <Frac n={dd} d={cn} />. Before multiplying straight across, look for a shortcut: <QB>{dd}</QB> and <QA>{bd}</QA> share a common factor. What is it?</>,
+                hint: `List the factors of ${dd} and of ${bd} — what's the biggest factor they have in common?`,
+                explain: <>{dd} and {bd} are both divisible by {g2}, so you can cancel it before multiplying — dividing {dd} by {g2} gives {redDd}, and dividing {bd} by {g2} gives {redBd}.</>,
+                answer: g2,
+              },
+              fracMultiply(
+                {
+                  prompt: <>Rewrite the expression with {dd} and {bd} cancelled down by {g2}.</>,
+                  hint: `${dd} ÷ ${g2} and ${bd} ÷ ${g2} — the other two numbers (${an} and ${cn}) don't change.`,
+                  explain: <>{dd} ÷ {g2} = {redDd}, and {bd} ÷ {g2} = {redBd}, so the expression becomes <Frac n={an} d={redBd} /> × <Frac n={redDd} d={cn} />.</>,
+                },
+                an,
+                null,
+                null,
+                cn,
+                [redBd, redDd],
+                "none"
+              ),
+            ] as Step[])
+          : ([
+              choice(
+                {
+                  prompt: <>To divide, multiply by the reciprocal: <QA><Frac n={an} d={bd} /></QA> × <Frac n={dd} d={cn} />. Before multiplying straight across, check for a shortcut — does any numerator share a common factor with the other fraction's denominator?</>,
+                  hint: `Compare ${an} with ${cn}, and ${dd} with ${bd} — does either pair share a factor greater than 1?`,
+                  explain: `${an} and ${cn} don't share a common factor, and neither do ${dd} and ${bd} — so there's nothing to cancel here; just multiply straight across.`,
+                },
+                "No — none of these share a common factor, so just multiply straight across",
+                [`Yes — ${an} and ${cn} share a common factor`, `Yes — ${dd} and ${bd} share a common factor`]
+              ),
+            ] as Step[])),
       {
         kind: "number",
         frac: true,
         fracAnswer: [qn, qd],
-        prompt: alreadyLowest ? (
-          <>Write <Frac n={improperN} d={improperD} /> as the answer.</>
-        ) : (
-          <>Simplify <Frac n={improperN} d={improperD} /> to lowest terms.</>
-        ),
-        hint: alreadyLowest
-          ? `${improperN} and ${improperD} don't share a common factor, so ${improperN}/${improperD} is already in lowest terms.`
-          : `Both ${improperN} and ${improperD} share a common factor — divide both by it.`,
-        explain: alreadyLowest ? (
-          <><Frac n={improperN} d={improperD} /> is already in lowest terms — there's no common factor to divide out.</>
-        ) : (
-          <><Frac n={improperN} d={improperD} /> simplifies to <Quotient n={qn} d={qd} />.</>
-        ),
+        prompt: <>Now multiply straight across: <Frac n={redAn} d={redBd} /> × <Frac n={redDd} d={redCn} />. What's the product?</>,
+        hint: `Multiply the numerators (${redAn} × ${redDd}) and the denominators (${redBd} × ${redCn}).`,
+        explain: <><Frac n={redAn} d={redBd} /> × <Frac n={redDd} d={redCn} /> = <Quotient n={qn} d={qd} />.</>,
         answer: quotientVal,
       },
       choice(
@@ -802,7 +858,11 @@ function sharingProblem(): Problem {
         {n} people share <QA><Frac n={an} d={bd} /></QA> lb of chocolate equally. How much chocolate does each person get?
       </>
     ),
-    visual: () => <FractionBar numerator={an} denominator={bd} shareCount={bd % n === 0 ? n : undefined} highlightShare={bd % n === 0 ? 0 : undefined} label={`${an}/${bd} lb shared ${n} ways`} />,
+    // Rescale to a common denominator (bd×n) before drawing: that always makes the
+    // shaded amount (an×n cells) divide evenly by n, so the bar can show the actual
+    // n-way split (and highlight one share) no matter what an/bd/n happen to be —
+    // not just the cases where bd was already a multiple of n.
+    visual: () => <FractionBar numerator={an * n} denominator={bd * n} shareCount={n} highlightShare={0} label={`${an}/${bd} lb shared ${n} ways`} />,
     steps: [
       choice(
         { prompt: "Which expression finds one share?", hint: "Sharing a total equally among a number of people is division.", explain: `Dividing the whole amount by the number of people gives one share.` },

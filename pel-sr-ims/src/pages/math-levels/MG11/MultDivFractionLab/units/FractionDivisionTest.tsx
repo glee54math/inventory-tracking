@@ -47,7 +47,9 @@ function sharingQuestion(): TestQuestion[] {
   const [qn, qd] = simplify(an, bd * n);
   return [
     {
-      visual: <FractionBar numerator={an} denominator={bd} shareCount={bd % n === 0 ? n : undefined} highlightShare={bd % n === 0 ? 0 : undefined} label={`shared ${n} ways`} />,
+      // Rescaled to a common denominator (bd×n) so the bar can always show the
+      // actual n-way split — see the matching comment in FractionDivision.tsx.
+      visual: <FractionBar numerator={an * n} denominator={bd * n} shareCount={n} highlightShare={0} label={`shared ${n} ways`} />,
       difficulty: "medium",
       step: {
         kind: "number",
