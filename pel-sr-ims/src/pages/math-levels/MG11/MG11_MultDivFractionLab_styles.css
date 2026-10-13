@@ -738,6 +738,227 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+/* A plain big digit — same size as .mini-stepper output, but for the
+   non-interactive example carousel slides (no pill, no +/- buttons). */
+.mdf-lab .example-number {
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.mdf-lab .example-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+/* Cross-cancellation notation: the original digit, struck through, with the
+   reduced value in a small badge above it — the standard textbook mark for
+   "divide this and its diagonal partner by their common factor." */
+.mdf-lab .cancel-number {
+  position: relative;
+  display: inline-block;
+}
+.mdf-lab .cancel-original {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  color: var(--muted);
+}
+.mdf-lab .cancel-reduced {
+  position: absolute;
+  top: -0.95em;
+  right: -0.4em;
+  font-size: 0.6em;
+  font-weight: 800;
+  color: var(--qc-text);
+  background: var(--qc-soft);
+  border-radius: 999px;
+  padding: 1px 5px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+/* ---------- explore: example carousel (Keep/Change/Flip + 3 fixed examples) ---------- */
+.mdf-lab .example-carousel {
+  position: relative;
+  padding: 0 52px;
+}
+.mdf-lab .example-carousel-viewport {
+  display: flex;
+  flex-direction: column;
+}
+.mdf-lab .example-carousel-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.mdf-lab .example-kicker {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+/* Vertical rectangular nav buttons, not circles — the chevron icon is an
+   inline SVG (not a text glyph) specifically so it centers exactly: text
+   glyphs like ‹ › carry their own uneven internal padding in most fonts, so
+   centering them with flexbox still looks visually off. */
+.mdf-lab .example-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 64px;
+  border-radius: 10px;
+  border: 2px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  z-index: 1;
+}
+.mdf-lab .example-nav svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+.mdf-lab .example-nav:hover {
+  border-color: var(--qa);
+  color: var(--qa-text);
+}
+.mdf-lab .example-nav-left {
+  left: 0;
+}
+.mdf-lab .example-nav-right {
+  right: 0;
+}
+.mdf-lab .example-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+.mdf-lab .example-dots button {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--line);
+}
+.mdf-lab .example-dots button.on {
+  background: var(--qa);
+}
+
+/* Slide transition: only the INCOMING slide animates (sliding/fading in from
+   the direction you navigated), keyed by index so it replays on every nav —
+   the outgoing one just unmounts, no synced two-panel track needed. */
+@keyframes mdfLabSlideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(36px);
+  }
+}
+@keyframes mdfLabSlideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-36px);
+  }
+}
+.mdf-lab .example-slide-in-right {
+  animation: mdfLabSlideInRight 0.3s ease-out;
+}
+.mdf-lab .example-slide-in-left {
+  animation: mdfLabSlideInLeft 0.3s ease-out;
+}
+
+/* ---------- explore: step-player controls (replaces the old single Play/Replay button) ---------- */
+.mdf-lab .step-player {
+  display: inline-flex;
+  align-self: center;
+  align-items: center;
+  gap: 2px;
+  padding: 5px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+}
+.mdf-lab .step-player button {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: none;
+  border-radius: 50%;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.mdf-lab .step-player button svg {
+  display: block;
+  width: 15px;
+  height: 15px;
+}
+.mdf-lab .step-player button:hover:not(:disabled) {
+  background: var(--grid);
+}
+.mdf-lab .step-player button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* Left-side-justified numbered list of the big named stages (Convert, Keep,
+   Change, Flip, Cancel and simplify), highlighted in step with the player —
+   see StageList in FractionDivision.tsx. */
+.mdf-lab .stage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+  width: 150px;
+}
+.mdf-lab .stage-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--line);
+  transition: color 0.15s;
+}
+.mdf-lab .stage-list-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--grid);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.mdf-lab .stage-list-item.done {
+  color: var(--muted);
+}
+.mdf-lab .stage-list-item.done .stage-list-num {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.mdf-lab .stage-list-item.active {
+  color: var(--ink);
+}
+.mdf-lab .stage-list-item.active .stage-list-num {
+  background: var(--qa);
+  color: var(--on-q);
+}
 
 /* ---------- explore: Keep, Change, Flip (button-triggered, inline in the big equation) ---------- */
 .mdf-lab .kcf-label {
@@ -761,39 +982,53 @@
   color: var(--qb-text);
 }
 
-/* A 2-row grid: the DOM order is all four .kcf2-content cells followed by all
-   four .kcf2-caption cells, so grid auto-placement (4 columns, wraps every 4
-   items) lands them as row 1 = math, row 2 = captions — captions share one
-   real grid row, so they're guaranteed level with each other, instead of each
-   hanging off its own content box at a slightly different height. The first
-   caption cell is left empty (nothing under "="). */
+/* .kcf2 holds 4 .kcf2-part items ("=", Keep, Change, Flip). Each part's
+   caption is POSITION: ABSOLUTE (see .kcf2-part .kcf-label below), so it
+   hangs below its part without adding to that part's own box height — every
+   part's in-flow height is just its .kcf2-content (min-height: 72px,
+   identical across all four), so .kcf2's own box height is a clean 72px too.
+   That matters for TWO separate things: within .kcf2, align-items: center
+   lines up all four math contents with each other; and up a level, when
+   .explore-equation centers .kcf2 against ÷ and the stepper bars, it's
+   centering that same clean 72px box — not a taller one that includes the
+   captions, which would push the math up to make room for them (and badly
+   undercounts .kcf2's real height for whatever comes after it in the page,
+   like the Replay button — a trick this file used to use a negative margin
+   for, which caused exactly that overlap). The captions simply overflow
+   below .kcf2's box, which is fine: nothing here clips overflow. */
 .mdf-lab .kcf2 {
-  display: inline-grid;
-  grid-template-columns: repeat(4, auto);
-  column-gap: 20px;
-  row-gap: 10px;
+  display: inline-flex;
   align-items: center;
-  justify-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
   /* Match the stepper equation's big-text scale (mini-stepper output is 26px)
      so the revealed "= 2/3 × 4/3" reads at the same size, not a caption size —
      Frac renders at 0.82em of whatever font-size it inherits, so this cascades
      down to the Keep/Flip fractions automatically. */
   font-size: 32px;
-  /* .explore-equation centers each of its children by that child's FULL box —
-     without this, the caption row's height gets counted too, so the whole
-     two-row block (math + captions) is centered as one unit, which shoves the
-     math row ("= 2/3 × 4/3") up above the ÷ it needs to line up with, to make
-     room to center the captions along with it. This negative margin cancels
-     the caption row + row-gap out of that calculation (it doesn't clip or
-     hide anything — .explore-equation just "sees" this item as math-row-only
-     height, so it centers THAT against ÷, leaving captions to hang lower). */
-  margin-bottom: -33px;
+}
+.mdf-lab .kcf2-part {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  /* Reserve enough width for the caption pill even when the math content
+     above it is narrow (e.g. a bare "×") — otherwise the absolutely
+     positioned caption, centered on content narrower than itself, overflows
+     into the next part's caption instead of just filling its own column. */
+  min-width: 74px;
 }
 .mdf-lab .kcf2-content {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 72px;
+}
+.mdf-lab .kcf2-part .kcf-label {
+  position: absolute;
+  top: 100%;
+  margin-top: 10px;
+  white-space: nowrap;
 }
 .mdf-lab .kcf2-op {
   font-size: 34px;
@@ -804,13 +1039,12 @@
   color: var(--qc-text);
 }
 .mdf-lab .kcf2-flipped {
-  color: var(--qc-text);
+  color: var(--qb-text);
 }
 
-/* Appear-in-place reveal, used both standalone (the "=" sign) and as the
-   wrapper for each Keep/Change/Flip part. Each instance's `animation-delay`
-   is set inline from JS so the three stages (plus the two flips below) land
-   in sequence with pauses between — see KCF_TIMING in FractionDivision.tsx. */
+/* Appear-in-place reveal, played once each time a piece first mounts — which
+   now happens exactly when the step player's `step` reaches it (see
+   FractionDivision.tsx), so no per-instance delay is needed here any more. */
 @keyframes mdfLabKcfReveal {
   from {
     opacity: 0;
@@ -823,13 +1057,17 @@
 }
 .mdf-lab .kcf2-reveal {
   opacity: 0;
-  animation: mdfLabKcfReveal 0.4s ease-out forwards;
+  /* 2.25x a plain 0.4s reveal (two successive 50%-slower requests). */
+  animation: mdfLabKcfReveal 0.9s ease-out forwards;
 }
 
 /* The "becomes" animation for ÷ → × and 3/4 → 4/3: a 3D card flip between two
-   stacked faces. .flip-inner sits at rotateX(0) (front showing) until its own
-   delayed animation rotates it to rotateX(180deg); .flip-back is pre-rotated
-   180deg so it lands right-side-up exactly when the front rotates out of view. */
+   stacked faces, played exactly once when the step player's `step` lands on
+   the flip's own step (see FlipStep in FractionDivision.tsx) — no delay
+   needed, since reaching that step IS the cue to start. .flip-inner sits at
+   rotateX(0) (front showing) until that mount-time animation rotates it to
+   rotateX(180deg); .flip-back is pre-rotated 180deg so it lands right-side-up
+   exactly when the front rotates out of view. */
 .mdf-lab .flip-swap {
   display: inline-block;
   perspective: 400px;
@@ -841,7 +1079,8 @@
   min-height: 72px;
   transform-style: preserve-3d;
   transform: rotateX(0deg);
-  animation: mdfLabFlipRotate 0.55s ease-in-out forwards;
+  /* 2.25x a plain 0.55s flip (two successive 50%-slower requests). */
+  animation: mdfLabFlipRotate 1.24s ease-in-out forwards;
 }
 .mdf-lab .flip-face {
   position: absolute;
@@ -1331,15 +1570,12 @@
   }
   /* The Keep/Change/Flip reveal relies on `animation` to bring these in from
      opacity: 0 — with animation disabled above, show everything immediately
-     instead of leaving it permanently invisible. */
+     instead of leaving it permanently invisible. (The flip cards don't need
+     an equivalent override: FlipStep checks prefers-reduced-motion itself in
+     JS and renders the settled "after" face directly, never the animating
+     markup at all.) */
   .mdf-lab .kcf2-reveal {
     opacity: 1 !important;
     transform: none !important;
-  }
-  /* Likewise the flip cards: with the rotate animation disabled, jump straight
-     to the "after" face (× / the flipped fraction) instead of staying stuck
-     showing ÷ / the un-flipped fraction forever. */
-  .mdf-lab .flip-inner {
-    transform: rotateX(180deg) !important;
   }
 }
