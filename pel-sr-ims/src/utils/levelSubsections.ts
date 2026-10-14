@@ -136,6 +136,13 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       componentFile: "MG11_MultDivFractionLab",
       componentExport: "MultDivFractionLab",
     },
+    {
+      type: "standalone",
+      skillId: "GeometryLab",
+      label: "Geometry Lab",
+      componentFile: "MG11_GeometryLab",
+      componentExport: "GeometryLab",
+    },
   ],
   MM1: [
     {
