@@ -138,7 +138,7 @@ export const WORD_PROBLEMS: WordProblem[] = [
   },
 ];
 
-export function WordProblemsModule({ onSolved }: { onSolved: () => void }) {
+export function WordProblemsModule({ onSolved }: { onSolved: (clean: boolean) => void }) {
   const [id, setId] = useState(WORD_PROBLEMS[0].id);
   const [stepIdx, setStepIdx] = useState(0);
   const [solved, setSolved] = useState<Record<string, boolean>>({});
@@ -167,7 +167,7 @@ export function WordProblemsModule({ onSolved }: { onSolved: () => void }) {
       <Workbench figure={wp.figure(focus, stepIdx)}>
         <div className="story">{wp.story}</div>
         <StepSolver key={wp.id} steps={wp.steps} onStepChange={setStepIdx}
-          onComplete={() => { setSolved((s) => ({ ...s, [wp.id]: true })); onSolved(); }}
+          onComplete={(clean) => { setSolved((s) => ({ ...s, [wp.id]: true })); onSolved(clean); }}
           onNext={() => { setId(nextWp.id); setStepIdx(0); }} nextLabel={`Next: ${nextWp.title}`} />
       </Workbench>
     </section>

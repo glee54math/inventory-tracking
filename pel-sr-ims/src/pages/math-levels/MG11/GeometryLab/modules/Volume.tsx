@@ -55,7 +55,7 @@ export function formulaProblem(): Omit<Problem, "key"> {
   };
 }
 
-export function VolumeModule({ onSolved }: { onSolved: () => void }) {
+export function VolumeModule({ onSolved }: { onSolved: (clean: boolean) => void }) {
   const [mode, setMode] = useState<"explore" | "packing" | "formula">("explore");
   const [den, setDen] = useState<Den>("2");
   const d = +den;

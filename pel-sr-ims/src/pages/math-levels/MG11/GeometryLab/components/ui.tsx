@@ -19,7 +19,12 @@ export function Num({ value }: { value: number }) {
 export type Step = {
   /** The question for this step. */
   prompt: React.ReactNode;
-  /** Number for typed answers, or the correct choice text for multiple choice. */
+  /**
+   * Number for typed answers, or the correct choice text for multiple choice.
+   * When `blanks` is set, this is still the canonical result (e.g. the area)
+   * recorded for the step-result display — grading itself checks the three
+   * blanks instead of this field.
+   */
   answer: number | string;
   choices?: string[];
   unit?: string;
@@ -30,6 +35,15 @@ export type Step = {
   focus?: string[];
   /** Targeted feedback for common wrong answers. */
   mistakes?: { value: number | string; msg: string }[];
+  /**
+   * Ask for three numbers inline instead of one typed answer — "½ × __ × __
+   * = __" for a triangle's base, height, and area — so the student supplies
+   * the formula's inputs AND works out the result themselves, instead of
+   * multiplying numbers the prompt already handed them. `values` is
+   * [base, height, result]; `labels` names each box for its aria-label and
+   * the small caption under it. Mutually exclusive with `choices`.
+   */
+  blanks?: { prefix: string; labels: [string, string, string]; values: [number, number, number] };
 };
 
 type Feedback = { kind: "ok" | "bad" | "hint"; msg: React.ReactNode } | null;
@@ -46,15 +60,25 @@ function guessMistake(step: Step, given: number): string | null {
 export function StepSolver({ steps, onStepChange, onComplete, onNext, nextLabel = "New problem" }: {
   steps: Step[];
   onStepChange?: (index: number) => void;
-  onComplete?: () => void;
+  /** `clean` = no "Show me the answer" reveals and at most 1 hint used across the whole problem. */
+  onComplete?: (clean: boolean) => void;
   onNext?: () => void;
   nextLabel?: string;
 }) {
   const [idx, setIdx] = useState(0);
   const [value, setValue] = useState("");
+  const [blankVals, setBlankVals] = useState(["", "", ""]);
   const [misses, setMisses] = useState(0);
   const [fb, setFb] = useState<Feedback>(null);
   const [answers, setAnswers] = useState<(string | number)[]>([]);
+  // Cumulative across the whole problem (unlike `misses`, which resets per step) — used to
+  // compute `clean` for mastery-star tracking. Refs, not state: nothing renders off these
+  // directly, and advance()/reveal() need the up-to-the-instant count (a same-tick setState
+  // read would still see the pre-update value here). hintShownThisStep guards against one
+  // step's Hint button being clicked more than once inflating the count.
+  const hintsUsed = useRef(0);
+  const hintShownThisStep = useRef(false);
+  const revealsUsed = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const done = idx >= steps.length;
 
@@ -63,10 +87,24 @@ export function StepSolver({ steps, onStepChange, onComplete, onNext, nextLabel 
 
   const advance = (given: string | number) => {
     setAnswers((a) => [...a, given]);
-    setFb(null); setValue(""); setMisses(0);
+    setFb(null); setValue(""); setBlankVals(["", "", ""]); setMisses(0); hintShownThisStep.current = false;
     const next = idx + 1;
     setIdx(next);
-    if (next >= steps.length) onComplete?.();
+    if (next >= steps.length) onComplete?.(revealsUsed.current === 0 && hintsUsed.current <= 1);
+  };
+
+  const showHint = (hint: React.ReactNode) => {
+    if (!hintShownThisStep.current) {
+      hintShownThisStep.current = true;
+      hintsUsed.current += 1;
+    }
+    setFb({ kind: "hint", msg: hint });
+  };
+
+  const reveal = (answer: number | string) => {
+    revealsUsed.current += 1;
+    setFb(null);
+    advance(answer);
   };
 
   const check = (raw: string) => {
@@ -83,6 +121,23 @@ export function StepSolver({ steps, onStepChange, onComplete, onNext, nextLabel 
     const m = step.mistakes?.find((x) => typeof x.value === "number" && approxEq(x.value, n));
     setMisses((k) => k + 1);
     setFb({ kind: "bad", msg: m?.msg ?? guessMistake(step, n) ?? "Not quite. Check your arithmetic, or tap Hint." });
+  };
+
+  const checkBlanks = () => {
+    const step = steps[idx];
+    if (!step.blanks) return;
+    const vals = blankVals.map(parseNumber);
+    if (vals.some(Number.isNaN)) return setFb({ kind: "bad", msg: "Fill in all three boxes with numbers." });
+    const targets = step.blanks.values;
+    if (vals.every((v, i) => approxEq(v, targets[i]))) return advance(step.answer);
+    setMisses((n) => n + 1);
+    const bad = targets.map((t, i) => !approxEq(vals[i], t));
+    const badCount = bad.filter(Boolean).length;
+    const msg =
+      badCount >= 2
+        ? "More than one of these isn't right yet. Check them against the picture."
+        : `The ${step.blanks.labels[bad.indexOf(true)]} isn't right yet.`;
+    setFb({ kind: "bad", msg });
   };
 
   return (
@@ -105,7 +160,36 @@ export function StepSolver({ steps, onStepChange, onComplete, onNext, nextLabel 
                 )}
                 {!solved && !done && (
                   <>
-                    {s.choices ? (
+                    {s.blanks ? (() => {
+                      const blanks = s.blanks!;
+                      return (
+                        <div className="answer-row blanks-row">
+                          <div className="blanks-equation">
+                            {blanks.prefix && <span className="unit">{blanks.prefix}</span>}
+                            {([0, 1, 2] as const).map((k) => (
+                              <React.Fragment key={k}>
+                                {k > 0 && <span className="unit">{k === 2 ? "=" : "×"}</span>}
+                                <label className="blank-box">
+                                  <input
+                                    ref={k === 0 ? inputRef : undefined}
+                                    className="answer"
+                                    value={blankVals[k]}
+                                    onChange={(e) => setBlankVals((vals) => vals.map((v, i) => (i === k ? e.target.value : v)))}
+                                    onKeyDown={(e) => { if (e.key === "Enter") checkBlanks(); }}
+                                    inputMode="text"
+                                    autoComplete="off"
+                                    aria-label={blanks.labels[k]}
+                                  />
+                                  <small>{blanks.labels[k]}</small>
+                                </label>
+                              </React.Fragment>
+                            ))}
+                            {s.unit && <span className="unit">{s.unit}</span>}
+                          </div>
+                          <button className="btn primary" onClick={checkBlanks}>Check</button>
+                        </div>
+                      );
+                    })() : s.choices ? (
                       <div className="choices">
                         {s.choices.map((c) => (
                           <button key={c} className="choice" onClick={() => check(c)}>{c}</button>
@@ -121,9 +205,9 @@ export function StepSolver({ steps, onStepChange, onComplete, onNext, nextLabel 
                       </div>
                     )}
                     <div className="step-tools">
-                      {s.hint && <button className="link" onClick={() => setFb({ kind: "hint", msg: s.hint })}>Hint</button>}
+                      {s.hint && <button className="link" onClick={() => showHint(s.hint)}>Hint</button>}
                       {misses >= 2 && (
-                        <button className="link" onClick={() => { setFb(null); advance(s.answer); }}>Show me the answer</button>
+                        <button className="link" onClick={() => reveal(s.answer)}>Show me the answer</button>
                       )}
                     </div>
                     {fb && <div className={"feedback " + fb.kind} role="status">{fb.msg}</div>}
@@ -145,6 +229,19 @@ export function StepSolver({ steps, onStepChange, onComplete, onNext, nextLabel 
         </div>
       )}
     </div>
+  );
+}
+
+/** An n-of-max mastery star row. Used both for tab-level progress (max 5, the
+ *  sitewide convention) and Area's per-shape progress (max 3, see Area.tsx). */
+export function Stars({ n, max, size = "sm", label }: { n: number; max: number; size?: "sm" | "lg"; label: string }) {
+  const filled = Math.min(max, n);
+  return (
+    <span className={`stars ${size}`} aria-label={label}>
+      {Array.from({ length: max }, (_, i) => (
+        <span key={i} className={i < filled ? "on" : ""} aria-hidden>★</span>
+      ))}
+    </span>
   );
 }
 

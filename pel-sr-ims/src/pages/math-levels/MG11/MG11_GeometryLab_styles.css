@@ -120,6 +120,11 @@
 .geometry-lab .tab-std { font-size: 0.78rem; color: var(--muted); display: flex; gap: 8px; }
 .geometry-lab .tab-count { color: var(--c-teal); font-weight: 600; }
 
+.geometry-lab .stars { letter-spacing: 1px; color: var(--line); white-space: nowrap; }
+.geometry-lab .stars.sm { font-size: 11px; }
+.geometry-lab .stars.lg { font-size: 20px; }
+.geometry-lab .stars .on { color: var(--c-gold); }
+
 /* ---------- module ---------- */
 .geometry-lab .module-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
 .geometry-lab .module-head h2 { margin: 0; font-size: 1.85rem; font-weight: 700; letter-spacing: -0.015em; }
@@ -236,6 +241,26 @@
   border: 1.5px solid var(--line); border-radius: var(--radius-sm); background: var(--paper); color: var(--ink);
 }
 .geometry-lab .answer-row input:focus { border-color: var(--c-blue); outline: none; box-shadow: 0 0 0 3px var(--c-blue-soft); }
+/* The equation (boxes/×/=) and the Check button are deliberately separate
+   flex items stacked in a column — the Check button must never share a line
+   with the equation, because .blank-box's labels are positioned absolutely
+   below their input (see .blank-box small below) and don't reserve any
+   in-flow space; if Check could wrap onto the same visual row as the
+   equation, it would land right on top of those floating labels. */
+.geometry-lab .blanks-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+/* align-items: center here only works because .blank-box's in-flow layout
+   height is just its input (the label is pulled out of flow below it) — if
+   the label were a normal flex-column child, .blank-box would be taller than
+   the "×"/"="/unit text siblings and this would center against that extra
+   height instead of against the inputs themselves. padding-bottom reserves
+   room for the floating labels so content after this row never overlaps them. */
+.geometry-lab .blanks-equation { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding-bottom: 22px; }
+.geometry-lab .blank-box { position: relative; display: inline-block; }
+.geometry-lab .blank-box input { width: 4.5em; text-align: center; display: block; }
+.geometry-lab .blank-box small {
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  margin-top: 4px; white-space: nowrap; font-size: 0.78rem; color: var(--muted); font-weight: 600;
+}
 .geometry-lab .choices { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .geometry-lab .choice { border: 1.5px solid var(--line); background: var(--paper); border-radius: 999px; padding: 8px 16px; font-weight: 500; }
 .geometry-lab .choice:hover { border-color: var(--c-blue); background: var(--c-blue-soft); }

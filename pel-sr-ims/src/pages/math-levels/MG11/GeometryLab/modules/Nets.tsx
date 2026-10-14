@@ -69,7 +69,7 @@ function genNetProblem(id: SolidId): { params: Record<string, number>; steps: St
 
 let counter = 0;
 
-export function NetsModule({ onSolved }: { onSolved: () => void }) {
+export function NetsModule({ onSolved }: { onSolved: (clean: boolean) => void }) {
   const [solid, setSolid] = useState<SolidId>("box");
   const [mode, setMode] = useState<"explore" | "practice">("explore");
   const [params, setParams] = useState<Record<SolidId, Record<string, number>>>({

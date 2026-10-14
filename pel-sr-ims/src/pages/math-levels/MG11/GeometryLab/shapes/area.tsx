@@ -16,11 +16,13 @@ export function RectangleFig({ b, h, u, unit, focus, grid = true }: Common & { b
   const W = b * U, H = h * U;
   const P: Pt[] = [{ x: 0, y: 0 }, { x: W, y: 0 }, { x: W, y: H }, { x: 0, y: H }];
   const fr = focusState(focus, "row");
+  const fc = focusState(focus, "col");
   return (
     <FigureSvg width={W} height={H} label={`Rectangle ${fmt(b)} by ${fmt(h)}`}>
       {grid && <Grid cols={Math.ceil(b)} rows={Math.ceil(h)} u={U} />}
       <Poly points={P} color="blue" {...focusState(focus, "rect")} faded={false} />
       {fr.strong && <Poly points={[{ x: 0, y: H - U }, { x: W, y: H - U }, { x: W, y: H }, { x: 0, y: H }]} color="gold" strong />}
+      {fc.strong && <Poly points={[{ x: 0, y: 0 }, { x: U, y: 0 }, { x: U, y: H }, { x: 0, y: H }]} color="gold" strong />}
       <DimLabel a={P[3]} b={P[2]} text={lab(b, unit)} offset={-18} highlight={focusState(focus, "b").strong} />
       <DimLabel a={P[3]} b={P[0]} text={lab(h, unit)} offset={18} highlight={focusState(focus, "h").strong} />
     </FigureSvg>

@@ -138,7 +138,7 @@ function FreeDraw() {
 }
 
 /* ---------- Guided practice ---------- */
-export function CoordinateModule({ onSolved }: { onSolved: () => void }) {
+export function CoordinateModule({ onSolved }: { onSolved: (clean: boolean) => void }) {
   const [mode, setMode] = useState<"draw" | "practice">("practice");
   const [problem, setProblem] = useState<CoordProblem>(genCoord);
   const [plotted, setPlotted] = useState(0);

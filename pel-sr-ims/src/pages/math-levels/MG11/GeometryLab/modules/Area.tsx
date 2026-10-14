@@ -2,7 +2,13 @@
 import React, { useMemo, useState } from "react";
 import { clamp, randInt } from "../lib/math";
 import { CompositeFig, HouseFig, ParallelogramFig, RectangleFig, ShapeIcon, TrapezoidFig, TriangleFig } from "../shapes/area";
-import { Num, Segmented, Slider, type Step, StepSolver, Toggle, Workbench } from "../components/ui";
+import { Num, Segmented, Slider, type Step, StepSolver, Stars, Toggle, Workbench } from "../components/ui";
+import type { UnitProgress } from "../../../../../hooks/useModuleProgress";
+
+/** Area tracks mastery per shape, not per tab — 3 stars is "mastered" here,
+ *  distinct from the sitewide 5-star convention every other tab uses. */
+export const AREA_SHAPE_MASTERY_GOAL = 3;
+export const areaProgressKey = (id: ShapeId): string => `area-${id}`;
 
 export type Problem = {
   key: number;
@@ -43,14 +49,24 @@ export const SHAPES: Record<ShapeId, ShapeSpec> = {
     formula: (p) => ({ lines: [<>A = b × h</>, <>A = {p.b} × {p.h}</>], area: p.b * p.h }),
     gen: () => {
       const b = randInt(3, 10), h = randInt(2, 8);
+      // Randomize which direction the counting starts from, so students learn
+      // to read the grid either way — not just "always count the bottom row".
+      const vertical = Math.random() < 0.5;
+      const steps: Step[] = vertical
+        ? [
+            { prompt: "How many unit squares are in the left column?", answer: h, focus: ["col"], hint: "The left column is as tall as the height." },
+            { prompt: "How many columns are there?", answer: b, focus: ["b"], hint: "Count across the bottom — that's the base." },
+            { prompt: `So the area is ${h} squares × ${b} columns = ?`, answer: b * h, unit: SQ, explain: <>That's why <b>A = base × height</b>.</> },
+          ]
+        : [
+            { prompt: "How many unit squares are in the bottom row?", answer: b, focus: ["row"], hint: "The bottom row is as long as the base." },
+            { prompt: "How many rows are there?", answer: h, focus: ["h"], hint: "Count up the left side — that's the height." },
+            { prompt: `So the area is ${b} squares × ${h} rows = ?`, answer: b * h, unit: SQ, explain: <>That's why <b>A = base × height</b>.</> },
+          ];
       return {
         intro: <>Find the area of the rectangle. Each grid square is 1 square unit.</>,
         figure: (focus) => <RectangleFig b={b} h={h} focus={focus} />,
-        steps: [
-          { prompt: "How many unit squares are in the bottom row?", answer: b, focus: ["row"], hint: "The bottom row is as long as the base." },
-          { prompt: "How many rows are there?", answer: h, focus: ["h"], hint: "Count up the left side — that's the height." },
-          { prompt: `So the area is ${b} squares × ${h} rows = ?`, answer: b * h, unit: SQ, explain: <>That's why <b>A = base × height</b>.</> },
-        ],
+        steps,
       };
     },
   },
@@ -101,22 +117,43 @@ export const SHAPES: Record<ShapeId, ShapeSpec> = {
     formula: (p) => ({ lines: [<>A = ½ × b × h</>, <>A = ½ × {p.b} × {p.h}</>], area: half(p.b * p.h) }),
     gen: () => {
       const b = randInt(5, 10), a = randInt(1, b - 2), h = randInt(2, 8);
+      const direct = half(b * h);
+      const correct = "Splitting a shape into pieces and adding their areas always matches the area of the whole shape.";
       return {
-        intro: <>Find the area by splitting the triangle along its height (the dashed line).</>,
+        intro: <>Find the area by splitting the triangle along its height (the dashed line), then check it with the direct formula.</>,
         figure: (focus, i) => <TriangleFig b={b} h={h} apex={a} showBox splitLabels rightKnown={i > 0} focus={focus} />,
         steps: [
           { prompt: `The whole base is ${b}. The left piece is ${a}. How long is the right piece?`, answer: b - a, focus: ["rightBase"], hint: `${b} − ${a}` },
           {
-            prompt: `Area of the left right triangle: ½ × ${a} × ${h} = ?`, answer: half(a * h), unit: SQ, focus: ["left"],
-            mistakes: [{ value: a * h, msg: "That's the whole left rectangle. The triangle is half of it." }],
+            prompt: "Area of the left piece. Fill in its base and height, then its area:", answer: half(a * h), unit: SQ, focus: ["left"],
+            blanks: { prefix: "½ ×", labels: ["base", "height", "area"], values: [a, h, half(a * h)] },
           },
           {
-            prompt: `Area of the right right triangle: ½ × ${b - a} × ${h} = ?`, answer: half((b - a) * h), unit: SQ, focus: ["right"],
-            mistakes: [{ value: (b - a) * h, msg: "That's the whole right rectangle. The triangle is half of it." }],
+            prompt: "Area of the right piece. Fill in its base and height, then its area:", answer: half((b - a) * h), unit: SQ, focus: ["right"],
+            blanks: { prefix: "½ ×", labels: ["base", "height", "area"], values: [b - a, h, half((b - a) * h)] },
           },
           {
-            prompt: "Add the two pieces. Total area = ?", answer: half(b * h), unit: SQ, focus: ["tri"],
-            explain: <>Shortcut check: ½ × {b} × {h} = <Num value={half(b * h)} />. Same answer!</>,
+            prompt: "Add the two pieces. Total area = ?", answer: direct, unit: SQ, focus: ["tri"],
+            explain: <>Nice — now let's double-check that a different way.</>,
+          },
+          {
+            prompt: `Find that same area directly, using the whole triangle: ½ × ${b} × ${h} = ?`, answer: direct, unit: SQ, focus: ["tri"],
+            hint: `½ × ${b} × ${h}`,
+            explain: <>Both methods give <Num value={direct} /> square units.</>,
+          },
+          {
+            prompt: "Both methods gave the same area. Which statement explains why?",
+            answer: correct,
+            choices: [
+              correct,
+              "It's a coincidence that the two methods matched for this triangle.",
+              "The split method only works when the two pieces are equal in size.",
+            ],
+            mistakes: [
+              { value: "It's a coincidence that the two methods matched for this triangle.", msg: "Not a coincidence — try this with any base and height and the two methods will always agree." },
+              { value: "The split method only works when the two pieces are equal in size.", msg: "The pieces don't need to be equal — splitting anywhere along the height still works, as long as you add both pieces." },
+            ],
+            explain: "That's why you can always pick whichever method is easier: the direct formula, or splitting into shapes you already know.",
           },
         ],
       };
@@ -262,7 +299,13 @@ export const SHAPES: Record<ShapeId, ShapeSpec> = {
 let counter = 0;
 export const makeProblem = (gen: () => Omit<Problem, "key">): Problem => ({ key: ++counter, ...gen() });
 
-export function AreaModule({ onSolved }: { onSolved: () => void }) {
+export function AreaModule({
+  onSolved,
+  progress,
+}: {
+  onSolved: (clean: boolean, shapeId: ShapeId) => void;
+  progress: Record<string, UnitProgress>;
+}) {
   const [shape, setShape] = useState<ShapeId>("right");
   const [mode, setMode] = useState<"explore" | "practice">("explore");
   const [params, setParams] = useState<Record<ShapeId, Params>>(() =>
@@ -288,10 +331,11 @@ export function AreaModule({ onSolved }: { onSolved: () => void }) {
         <button key={id} role="tab" aria-selected={shape === id} className={"shape-chip" + (shape === id ? " on" : "")} onClick={() => choose(id)}>
           <ShapeIcon points={SHAPES[id].icon} />
           <span>{SHAPES[id].name}</span>
+          <Stars n={progress[areaProgressKey(id)]?.clean ?? 0} max={AREA_SHAPE_MASTERY_GOAL} label={`${SHAPES[id].name} mastery`} />
         </button>
       ))}
     </div>
-  ), [shape]);
+  ), [shape, progress]);
 
   return (
     <section>
@@ -320,7 +364,7 @@ export function AreaModule({ onSolved }: { onSolved: () => void }) {
         </Workbench>
       ) : (
         <Workbench figure={problem.figure(focus, stepIdx)} caption={problem.intro}>
-          <StepSolver key={problem.key} steps={problem.steps} onStepChange={setStepIdx} onComplete={onSolved} onNext={next} />
+          <StepSolver key={problem.key} steps={problem.steps} onStepChange={setStepIdx} onComplete={(clean) => onSolved(clean, shape)} onNext={next} />
         </Workbench>
       )}
     </section>
