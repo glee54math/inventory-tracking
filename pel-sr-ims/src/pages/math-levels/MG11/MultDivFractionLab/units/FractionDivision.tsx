@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { AreaRectangle, FractionBar, FractionMeasureStrip } from "../diagrams";
-import { gcd, randInt, simplify } from "../../../shared/lib/math";
+import { AreaRectangle, FractionBar, FractionMeasureStrip, RecipeCard } from "../diagrams";
+import { gcd, pick, randInt, simplify } from "../../../shared/lib/math";
 import { choice, fracMultiply, type Problem, type Step } from "../../../shared/engine/types";
 import { Frac, QA, QB } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
@@ -117,16 +117,17 @@ function FlipStep({
 /**
  * How many local steps KeepChangeFlipSteps has — a plain 5 (Keep appears,
  * Change appears, Change flips, Flip appears, Flip flips), plus one more for
- * each side that's a mixed number: that side's "appears" step is captioned
- * "Convert" first (showing the number IS the converted improper form, not
- * the original mixed number — which stays visible elsewhere, unflipped) and
- * needs its own extra step to settle into its real caption ("Keep"/"Flip")
- * before the sequence continues; plus one more again if `showResult` (the
- * final "= 8/9" reveal). Must match the step numbering inside
- * KeepChangeFlipSteps itself exactly.
+ * each side that doesn't already look like a fraction (a mixed number or a
+ * whole number): that side's "appears" step is captioned "Convert" first
+ * (showing the number IS the converted fraction form, not the original
+ * mixed/whole number — which stays visible elsewhere, unflipped) and needs
+ * its own extra step to settle into its real caption ("Keep"/"Flip") before
+ * the sequence continues; plus one more again if `showResult` (the final
+ * "= 8/9" reveal). Must match the step numbering inside KeepChangeFlipSteps
+ * itself exactly.
  */
-function kcfStepCount(dividendIsMixed: boolean, divisorIsMixed: boolean, showResult = false): number {
-  return 5 + (dividendIsMixed ? 1 : 0) + (divisorIsMixed ? 1 : 0) + (showResult ? 1 : 0);
+function kcfStepCount(dividendNeedsConvert: boolean, divisorNeedsConvert: boolean, showResult = false): number {
+  return 5 + (dividendNeedsConvert ? 1 : 0) + (divisorNeedsConvert ? 1 : 0) + (showResult ? 1 : 0);
 }
 
 /**
@@ -138,13 +139,14 @@ function kcfStepCount(dividendIsMixed: boolean, divisorIsMixed: boolean, showRes
  * ×, 4 = 3/4 appears (Flip), 5 = 3/4 flips to 4/3.
  *
  * `an/bd` and `cn/dd` are the CURRENT values Keep/Flip work with — already
- * the improper form when that side started as a mixed number, since
- * Keep/Change/Flip only ever applies to fractions, not mixed numbers. Pass
- * `dividendIsMixed`/`divisorIsMixed` when the caller's base equation still
- * shows the original mixed number (unflipped, permanently) alongside this —
- * that side's "appears" step is then captioned "Convert" for one extra step
- * before settling into "Keep"/"Flip", making it visible that Keep/Flip acts
- * on the converted fraction, not the mixed number sitting next to it.
+ * the fraction form when that side started as a mixed or whole number, since
+ * Keep/Change/Flip only ever applies to fractions. Pass
+ * `dividendNeedsConvert`/`divisorNeedsConvert` when the caller's base
+ * equation still shows the original mixed/whole number (unflipped,
+ * permanently) alongside this — that side's "appears" step is then captioned
+ * "Convert" for one extra step before settling into "Keep"/"Flip", making it
+ * visible that Keep/Flip acts on the converted fraction, not the mixed/whole
+ * number sitting next to it.
  *
  * `showResult`, when true, adds one final step revealing "= 8/9" (computed
  * from an/bd ÷ cn/dd, i.e. the ORIGINAL un-flipped division) right after Flip
@@ -159,8 +161,8 @@ function KeepChangeFlipSteps({
   cn,
   dd,
   step,
-  dividendIsMixed = false,
-  divisorIsMixed = false,
+  dividendNeedsConvert = false,
+  divisorNeedsConvert = false,
   showResult = false,
 }: {
   an: number;
@@ -168,22 +170,22 @@ function KeepChangeFlipSteps({
   cn: number;
   dd: number;
   step: number;
-  dividendIsMixed?: boolean;
-  divisorIsMixed?: boolean;
+  dividendNeedsConvert?: boolean;
+  divisorNeedsConvert?: boolean;
   showResult?: boolean;
 }) {
   let s = 0;
   const keepAppear = ++s;
-  const keepConfirm = dividendIsMixed ? ++s : keepAppear;
+  const keepConfirm = dividendNeedsConvert ? ++s : keepAppear;
   const changeAppear = ++s;
   const changeFlip = ++s;
   const flipAppear = ++s;
-  const flipConfirm = divisorIsMixed ? ++s : flipAppear;
+  const flipConfirm = divisorNeedsConvert ? ++s : flipAppear;
   const flipFlip = ++s;
   const resultStep = showResult ? ++s : flipFlip;
 
-  const keepCaption = dividendIsMixed && step < keepConfirm ? "Convert" : "Keep";
-  const flipCaption = divisorIsMixed && step < flipConfirm ? "Convert" : "Flip";
+  const keepCaption = dividendNeedsConvert && step < keepConfirm ? "Convert" : "Keep";
+  const flipCaption = divisorNeedsConvert && step < flipConfirm ? "Convert" : "Flip";
   const [qn, qd] = showResult ? simplify(an * dd, bd * cn) : [0, 1];
 
   return (
@@ -567,7 +569,7 @@ function ExploreMixedByProper() {
           <span className="qa-text"><NumberDisplay value={{ whole, n: mixedN, d: mixedD }} /></span>
           <span className="explore-op">÷</span>
           <span className="qb-text"><NumberDisplay value={{ n: cn, d: dd }} /></span>
-          <KeepChangeFlipSteps an={improperN} bd={improperD} cn={cn} dd={dd} step={player.step} dividendIsMixed />
+          <KeepChangeFlipSteps an={improperN} bd={improperD} cn={cn} dd={dd} step={player.step} dividendNeedsConvert />
         </div>
 
         <StepPlayerControls {...player} />
@@ -585,7 +587,7 @@ function ExploreMixedByProper() {
  * as the mixed-÷-proper case. The divisor's own conversion isn't a separate
  * named stage — it's folded into Flip, whose "appears" step is captioned
  * "Convert" first (showing 9/4, the divisor's improper form) before settling
- * into "Flip" and then flipping to 4/9, via the same `divisorIsMixed` option
+ * into "Flip" and then flipping to 4/9, via the same `divisorNeedsConvert` option
  * KeepChangeFlipSteps already supports. Numbers (1 1/2 ÷ 2 1/4 = 3/2 ÷ 9/4)
  * are chosen so both cross-cancellation diagonals hit, landing on a clean
  * simplified fraction (2/3) instead of a messy unreduced one.
@@ -618,7 +620,7 @@ function ExploreMixedByMixed() {
           <span className="qa-text"><NumberDisplay value={{ whole: dWhole, n: dN, d: dD }} /></span>
           <span className="explore-op">÷</span>
           <span className="qb-text"><NumberDisplay value={{ whole: vWhole, n: vN, d: vD }} /></span>
-          <KeepChangeFlipSteps an={improperAn} bd={improperBd} cn={improperCn} dd={improperDd} step={player.step} dividendIsMixed divisorIsMixed />
+          <KeepChangeFlipSteps an={improperAn} bd={improperBd} cn={improperCn} dd={improperDd} step={player.step} dividendNeedsConvert divisorNeedsConvert />
         </div>
 
         <StepPlayerControls {...player} />
@@ -629,12 +631,52 @@ function ExploreMixedByMixed() {
   );
 }
 
+/**
+ * Whole ÷ proper, built the same way as mixed ÷ proper — a whole number is
+ * just as much "not yet in fraction shape" as a mixed number is, so it gets
+ * the same treatment: "4" stays on screen permanently, and Convert reveals
+ * its fraction form (4/1) as new information next to it, which then settles
+ * into being captioned "Keep". Only the dividend needs converting (the
+ * divisor is already a proper fraction), so this mirrors ExploreMixedByProper
+ * with `divisorNeedsConvert` left off. Numbers (4 ÷ 2/3) are chosen so the
+ * cancel step has something to do, landing on a clean whole-number answer —
+ * a useful thing for a student to see, since "dividing can make it bigger" is
+ * the whole point of this example.
+ */
 function ExploreWholeByProper() {
+  const whole = 4;
+  const improperN = whole; // 4/1
+  const improperD = 1;
+  const cn = 2; // divisor 2/3
+  const dd = 3;
+
+  const kcfSteps = kcfStepCount(true, false);
+  const stages: Stage[] = [
+    { label: "Convert to a fraction", from: 1, to: 1 },
+    { label: "Keep", from: 2, to: 2 },
+    { label: "Change", from: 3, to: 4 },
+    { label: "Flip", from: 5, to: 6 },
+    { label: "Cancel and simplify", from: kcfSteps + 1, to: kcfSteps + CANCEL_STEPS },
+  ];
+
+  const player = useStepPlayer(kcfSteps + CANCEL_STEPS);
+  const cancelStep = Math.max(0, Math.min(CANCEL_STEPS, player.step - kcfSteps));
+
   return (
-    <div className="explore-equation">
-      <span className="qa-text"><NumberDisplay value={{ whole: 4 }} /></span>
-      <span className="explore-op">÷</span>
-      <span className="qb-text"><NumberDisplay value={{ n: 2, d: 3 }} /></span>
+    <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+      <StageList stages={stages} step={player.step} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 20, flex: 1, minWidth: 0 }}>
+        <div className="explore-equation">
+          <span className="qa-text"><NumberDisplay value={{ whole }} /></span>
+          <span className="explore-op">÷</span>
+          <span className="qb-text"><NumberDisplay value={{ n: cn, d: dd }} /></span>
+          <KeepChangeFlipSteps an={improperN} bd={improperD} cn={cn} dd={dd} step={player.step} dividendNeedsConvert />
+        </div>
+
+        <StepPlayerControls {...player} />
+
+        <CancelSteps n1={improperN} d1={improperD} n2={dd} d2={cn} step={cancelStep} />
+      </div>
     </div>
   );
 }
@@ -644,9 +686,9 @@ function ExploreWholeByProper() {
  * fractions" means anything beyond proper-over-proper: the same operation
  * shows up with a mixed number, two mixed numbers, or a whole number on
  * either side, and seeing each one named and pictured is part of learning
- * the vocabulary, not just the mechanics. Only the first is interactive
- * (steppers + Keep/Change/Flip); the other three are fixed illustrations for
- * now — check-for-understanding questions come later, once these look right.
+ * the vocabulary, not just the mechanics. All four are interactive or
+ * animated walkthroughs — check-for-understanding questions come later, once
+ * these look right.
  */
 const EXPLORE_EXAMPLES: { title: string; Component: React.ComponentType }[] = [
   { title: "Proper fraction ÷ proper fraction", Component: ExploreProperFraction },
@@ -705,8 +747,124 @@ function Explore() {
 // ============================================================================
 
 function measurementProblem(): Problem {
-  const [cn, dd] = properFraction(); // the "serving"/"length" size
-  const [an, bd] = properFraction(); // the total amount
+  const [ln, ld] = properFraction(); // length
+  const [wn, wd] = properFraction(); // width
+  const [areaN, areaD] = simplify(ln * wn, ld * wd); // area, derived + reduced
+
+  const find = pick(["length", "width", "area"] as const);
+
+  if (find === "area") {
+    // Area = length × width — straight multiplication, no reciprocal flip.
+    // Cross-cancel checks the diagonal pairs: ln's numerator against wd (the
+    // OTHER fraction's denominator), and wn against ld. Since ln/ld and wn/wd
+    // each start in lowest terms, cancelling both diagonals (dividing by 1 is
+    // a no-op when a pair doesn't share a factor) always lands exactly on
+    // areaN/areaD — so the final step can multiply these straight across with
+    // no separate "simplify" step needed, whether or not anything cancelled.
+    const g1 = gcd(ln, wd);
+    const g2 = gcd(wn, ld);
+    const redLn = ln / g1;
+    const redWd = wd / g1;
+    const redWn = wn / g2;
+    const redLd = ld / g2;
+    const quotientVal = (ln * wn) / (ld * wd);
+
+    return {
+      title: "Area of a strip of land",
+      story: (
+        <>
+          A rectangular strip of land has a length of <QA><Frac n={ln} d={ld} /></QA> miles and a width of <QB><Frac n={wn} d={wd} /></QB> miles. What is its area?
+        </>
+      ),
+      visual: () => <AreaRectangle length={[ln, ld]} width={[wn, wd]} find="area" unit="mi" />,
+      steps: [
+        choice(
+          { prompt: "Which expression finds the answer?", hint: "Area = length × width.", explain: "The area of a rectangle is its length times its width." },
+          `${ln}/${ld} × ${wn}/${wd}`,
+          [`${ln}/${ld} ÷ ${wn}/${wd}`, `${wn}/${wd} ÷ ${ln}/${ld}`]
+        ),
+        ...(g1 > 1
+          ? ([
+              {
+                kind: "number",
+                prompt: <>Before multiplying straight across <QA><Frac n={ln} d={ld} /></QA> × <QB><Frac n={wn} d={wd} /></QB>, look for a shortcut: <QA>{ln}</QA> and <QB>{wd}</QB> share a common factor. What is it?</>,
+                hint: `List the factors of ${ln} and of ${wd} — what's the biggest factor they have in common?`,
+                explain: <>{ln} and {wd} are both divisible by {g1}, so you can cancel it before multiplying — dividing {ln} by {g1} gives {redLn}, and dividing {wd} by {g1} gives {redWd}.</>,
+                answer: g1,
+              },
+              fracMultiply(
+                {
+                  prompt: <>Rewrite the expression with {ln} and {wd} cancelled down by {g1}.</>,
+                  hint: `${ln} ÷ ${g1} and ${wd} ÷ ${g1} — the other two numbers (${ld} and ${wn}) don't change.`,
+                  explain: <>{ln} ÷ {g1} = {redLn}, and {wd} ÷ {g1} = {redWd}, so the expression becomes <Frac n={redLn} d={ld} /> × <Frac n={wn} d={redWd} />.</>,
+                },
+                null,
+                ld,
+                wn,
+                null,
+                [redLn, redWd],
+                "none"
+              ),
+            ] as Step[])
+          : g2 > 1
+            ? ([
+                {
+                  kind: "number",
+                  prompt: <>Before multiplying straight across <QA><Frac n={ln} d={ld} /></QA> × <QB><Frac n={wn} d={wd} /></QB>, look for a shortcut: <QB>{wn}</QB> and <QA>{ld}</QA> share a common factor. What is it?</>,
+                  hint: `List the factors of ${wn} and of ${ld} — what's the biggest factor they have in common?`,
+                  explain: <>{wn} and {ld} are both divisible by {g2}, so you can cancel it before multiplying — dividing {wn} by {g2} gives {redWn}, and dividing {ld} by {g2} gives {redLd}.</>,
+                  answer: g2,
+                },
+                fracMultiply(
+                  {
+                    prompt: <>Rewrite the expression with {wn} and {ld} cancelled down by {g2}.</>,
+                    hint: `${wn} ÷ ${g2} and ${ld} ÷ ${g2} — the other two numbers (${ln} and ${wd}) don't change.`,
+                    explain: <>{wn} ÷ {g2} = {redWn}, and {ld} ÷ {g2} = {redLd}, so the expression becomes <Frac n={ln} d={redLd} /> × <Frac n={redWn} d={wd} />.</>,
+                  },
+                  ln,
+                  null,
+                  null,
+                  wd,
+                  [redLd, redWn],
+                  "none"
+                ),
+              ] as Step[])
+            : ([
+                choice(
+                  {
+                    prompt: <>Before multiplying straight across <QA><Frac n={ln} d={ld} /></QA> × <QB><Frac n={wn} d={wd} /></QB>, check for a shortcut — does any numerator share a common factor with the other fraction's denominator?</>,
+                    hint: `Compare ${ln} with ${wd}, and ${wn} with ${ld} — does either pair share a factor greater than 1?`,
+                    explain: `${ln} and ${wd} don't share a common factor, and neither do ${wn} and ${ld} — so there's nothing to cancel here; just multiply straight across.`,
+                  },
+                  "No — none of these share a common factor, so just multiply straight across",
+                  [`Yes — ${ln} and ${wd} share a common factor`, `Yes — ${wn} and ${ld} share a common factor`]
+                ),
+              ] as Step[])),
+        {
+          kind: "number",
+          frac: true,
+          fracAnswer: [areaN, areaD],
+          suffix: "sq mi",
+          prompt: <>Now multiply straight across: <Frac n={redLn} d={redLd} /> × <Frac n={redWn} d={redWd} />. What's the product?</>,
+          hint: `Multiply the numerators (${redLn} × ${redWn}) and the denominators (${redLd} × ${redWd}).`,
+          explain: <><Frac n={redLn} d={redLd} /> × <Frac n={redWn} d={redWd} /> = <Quotient n={areaN} d={areaD} />.</>,
+          answer: quotientVal,
+        },
+        choice(
+          { prompt: "What does this answer mean?", hint: "Reread the question — what were you asked to find?", explain: "The product answers exactly what the question asked." },
+          "The area of the strip, in square miles",
+          ["The length of the strip, in miles", "The width of the strip, in miles"]
+        ),
+      ],
+      wrapUp: <>The strip's area is <Quotient n={areaN} d={areaD} /> square miles.</>,
+    };
+  }
+
+  // find === "length" or "width": area ÷ (the known side) = the unknown side.
+  const an = areaN;
+  const bd = areaD;
+  const [cn, dd] = find === "width" ? [ln, ld] : [wn, wd]; // the known side
+  const knownLabel = find === "width" ? "length" : "width";
   const improperN = an * dd;
   const improperD = bd * cn;
   const [qn, qd] = simplify(improperN, improperD);
@@ -726,31 +884,25 @@ function measurementProblem(): Problem {
   const redDd = dd / g2;
   const redBd = bd / g2;
 
-  const useServings = Math.random() < 0.5;
-  const story = useServings ? (
-    <>
-      A recipe uses <QB><Frac n={cn} d={dd} /></QB>-cup servings. How many servings can you measure out of <QA><Frac n={an} d={bd} /></QA> cup of yogurt?
-    </>
-  ) : (
-    <>
-      A rectangular strip of land has an area of <QA><Frac n={an} d={bd} /></QA> square miles and a length of <QB><Frac n={cn} d={dd} /></QB> miles. How wide is the strip?
-    </>
-  );
-
   return {
-    title: useServings ? "Measuring out servings" : "Width of a strip of land",
-    story,
-    visual: () => (useServings ? <FractionMeasureStrip dividend={[an, bd]} divisor={[cn, dd]} /> : <AreaRectangle area={[an, bd]} length={[cn, dd]} unit="mi" />),
+    title: find === "width" ? "Width of a strip of land" : "Length of a strip of land",
+    story: (
+      <>
+        A rectangular strip of land has an area of <QA><Frac n={an} d={bd} /></QA> square miles and a {knownLabel} of <QB><Frac n={cn} d={dd} /></QB> miles. How {find === "width" ? "wide" : "long"} is the strip?
+      </>
+    ),
+    visual: () =>
+      find === "width" ? (
+        <AreaRectangle length={[cn, dd]} width={[qn, qd]} find="width" unit="mi" />
+      ) : (
+        <AreaRectangle length={[qn, qd]} width={[cn, dd]} find="length" unit="mi" />
+      ),
     steps: [
       choice(
         {
           prompt: "Which expression finds the answer?",
-          hint: useServings
-            ? "You're asking \"how many of the smaller amount fit into the larger one?\" — that's division."
-            : "Area = length × width, so width = area ÷ length.",
-          explain: useServings
-            ? "Finding how many groups of one size fit into a total is division."
-            : "Since area = length × width, solving for width means dividing the area by the length: width = area ÷ length.",
+          hint: `Area = length × width, so ${find} = area ÷ ${knownLabel}.`,
+          explain: `Since area = length × width, solving for ${find} means dividing the area by the ${knownLabel}: ${find} = area ÷ ${knownLabel}.`,
         },
         `${an}/${bd} ÷ ${cn}/${dd}`,
         [`${an}/${bd} × ${cn}/${dd}`, `${cn}/${dd} ÷ ${an}/${bd}`]
@@ -822,6 +974,7 @@ function measurementProblem(): Problem {
         kind: "number",
         frac: true,
         fracAnswer: [qn, qd],
+        suffix: "mi",
         prompt: <>Now multiply straight across: <Frac n={redAn} d={redBd} /> × <Frac n={redDd} d={redCn} />. What's the product?</>,
         hint: `Multiply the numerators (${redAn} × ${redDd}) and the denominators (${redBd} × ${redCn}).`,
         explain: <><Frac n={redAn} d={redBd} /> × <Frac n={redDd} d={redCn} /> = <Quotient n={qn} d={qd} />.</>,
@@ -829,15 +982,11 @@ function measurementProblem(): Problem {
       },
       choice(
         { prompt: "What does this answer mean?", hint: "Reread the question — what were you asked to find?", explain: "The quotient answers exactly what the question asked." },
-        useServings ? "The number of full servings you can measure out" : "The width of the strip, in miles",
-        useServings ? ["The total cups of yogurt", "The size of one serving"] : ["The area, in square miles", "The length, in miles"]
+        `The ${find} of the strip, in miles`,
+        ["The area, in square miles", `The ${knownLabel} of the strip, in miles`]
       ),
     ],
-    wrapUp: useServings ? (
-      <>You can measure out <Quotient n={qn} d={qd} /> full servings.</>
-    ) : (
-      <>The strip is <Quotient n={qn} d={qd} /> miles wide.</>
-    ),
+    wrapUp: <>The strip is <Quotient n={qn} d={qd} /> miles {find === "width" ? "wide" : "long"}.</>,
   };
 }
 
@@ -936,6 +1085,198 @@ function relationshipProblem(): Problem {
   };
 }
 
+// ============================================================================
+// PROBLEM TYPE 4 — recipes (partitive division, dividend can be whole/proper/mixed)
+// ============================================================================
+
+/** A whole number, a proper fraction, or a mixed number. */
+interface RandomAmount {
+  whole?: number;
+  n?: number;
+  d?: number;
+}
+
+interface RecipeIngredientTemplate {
+  name: string;
+  /** Singular form — RecipeCard pluralizes it when the generated amount is more than 1. */
+  unit: string;
+}
+
+interface RecipeTemplate {
+  title: string;
+  ingredients: RecipeIngredientTemplate[];
+}
+
+const RECIPES: RecipeTemplate[] = [
+  {
+    title: "Garden salad",
+    ingredients: [
+      { name: "lettuce", unit: "cup" },
+      { name: "tomato slices", unit: "cup" },
+      { name: "cucumber slices", unit: "cup" },
+      { name: "croutons", unit: "cup" },
+    ],
+  },
+  {
+    title: "Artichoke dip",
+    ingredients: [
+      { name: "artichokes", unit: "cup" },
+      { name: "cream cheese", unit: "cup" },
+      { name: "onion", unit: "teaspoon" },
+      { name: "lemon juice", unit: "teaspoon" },
+      { name: "garlic", unit: "teaspoon" },
+      { name: "salt", unit: "teaspoon" },
+    ],
+  },
+  {
+    title: "Nutty peanut sauce",
+    ingredients: [
+      { name: "peanut butter", unit: "cup" },
+      { name: "sugar", unit: "tablespoon" },
+      { name: "soy sauce", unit: "tablespoon" },
+      { name: "garlic", unit: "tablespoon" },
+      { name: "chile paste", unit: "tablespoon" },
+      { name: "sesame oil", unit: "tablespoon" },
+      { name: "lime juice", unit: "tablespoon" },
+    ],
+  },
+  {
+    title: "Chocolate-chip cookies",
+    ingredients: [
+      { name: "sugar", unit: "cup" },
+      { name: "flour", unit: "cup" },
+      { name: "butter", unit: "cup" },
+      { name: "baking soda", unit: "teaspoon" },
+      { name: "salt", unit: "teaspoon" },
+      { name: "chocolate chips", unit: "cup" },
+    ],
+  },
+  {
+    title: "Fruit smoothie",
+    ingredients: [
+      { name: "strawberries", unit: "cup" },
+      { name: "banana slices", unit: "cup" },
+      { name: "yogurt", unit: "cup" },
+      { name: "honey", unit: "tablespoon" },
+      { name: "milk", unit: "cup" },
+    ],
+  },
+];
+
+const RECIPE_SCALES: { n: number; word: string }[] = [
+  { n: 2, word: "half" },
+  { n: 3, word: "third" },
+  { n: 4, word: "quarter" },
+];
+
+/** A random whole number, proper fraction, or mixed number — recipe-sized (small). */
+function randomRecipeAmount(): RandomAmount {
+  const kind = randInt(1, 3);
+  const d = randInt(2, 8);
+  const rawN = randInt(1, d - 1);
+  const [n, fd] = simplify(rawN, d);
+  if (kind === 1) return { whole: randInt(1, 4) };
+  if (kind === 2) return { n, d: fd };
+  return { whole: randInt(1, 3), n, d: fd };
+}
+
+/** A RandomAmount as an improper fraction, e.g. {whole:1,n:1,d:3} -> [4,3]. */
+function amountToFraction({ whole, n, d }: RandomAmount): [number, number] {
+  if (n !== undefined && d !== undefined) return [(whole ?? 0) * d + n, d];
+  return [whole ?? 0, 1];
+}
+
+/** Plain text for a RandomAmount, e.g. "9 2/3" — for use in ChoiceStep's plain-string options. */
+function amountPlainText({ whole, n, d }: RandomAmount): string {
+  const parts: string[] = [];
+  if (whole !== undefined) parts.push(String(whole));
+  if (n !== undefined && d !== undefined) parts.push(`${n}/${d}`);
+  return parts.join(" ");
+}
+
+/** A RandomAmount in "regular" fraction style, for use inside a prompt/story. */
+function AmountText({ value }: { value: RandomAmount }) {
+  return (
+    <>
+      {value.whole !== undefined && <>{value.whole} </>}
+      {value.n !== undefined && value.d !== undefined && <Frac n={value.n} d={value.d} />}
+    </>
+  );
+}
+
+function recipeProblem(): Problem {
+  const recipe = pick(RECIPES);
+  const amounts = recipe.ingredients.map(() => randomRecipeAmount());
+  const targetIndex = randInt(0, recipe.ingredients.length - 1);
+  const target = recipe.ingredients[targetIndex];
+  const targetAmount = amounts[targetIndex];
+  const [an, bd] = amountToFraction(targetAmount);
+
+  const scale = pick(RECIPE_SCALES);
+  const n = scale.n;
+  const [qn, qd] = simplify(an, bd * n);
+  const quotientVal = an / (bd * n);
+  const unitPlural = `${target.unit}s`;
+
+  return {
+    title: recipe.title,
+    story: (
+      <>
+        What quantity of <QA>{target.name}</QA> would you need to make a {scale.word} of the original recipe?
+      </>
+    ),
+    visual: () => (
+      <RecipeCard
+        title={recipe.title}
+        ingredients={recipe.ingredients.map((ing, i) => ({ ...ing, ...amounts[i], highlight: i === targetIndex }))}
+      />
+    ),
+    steps: [
+      choice(
+        {
+          prompt: "Which expression finds the answer?",
+          hint: `Making a ${scale.word} of a recipe means splitting each amount into ${n} equal parts and keeping one — that's division.`,
+          explain: `Splitting an amount into ${n} equal parts and keeping one is division.`,
+        },
+        `${amountPlainText(targetAmount)} ÷ ${n}`,
+        [`${amountPlainText(targetAmount)} × ${n}`, `${n} ÷ ${amountPlainText(targetAmount)}`]
+      ),
+      {
+        kind: "number",
+        frac: true,
+        fracAnswer: [qn, qd],
+        suffix: unitPlural,
+        prompt: (
+          <>
+            Write {n} as a fraction (<Frac n={1} d={n} />) and multiply: <QA><AmountText value={targetAmount} /></QA> × <Frac n={1} d={n} />. What's the amount, in simplest form?
+          </>
+        ),
+        hint: `First write ${amountPlainText(targetAmount)} as a fraction (${an}/${bd}), then multiply the numerators and the denominators.`,
+        explain: (
+          <>
+            <Frac n={an} d={bd} /> × <Frac n={1} d={n} /> simplifies to <Quotient n={qn} d={qd} />.
+          </>
+        ),
+        answer: quotientVal,
+      },
+      choice(
+        {
+          prompt: "Does this answer make sense?",
+          hint: "Compare the new amount to the original — a smaller part of the recipe should need less of each ingredient.",
+          explain: "The new amount is smaller than the original, since you're only making part of the recipe.",
+        },
+        "Yes — the new amount is smaller than the original",
+        ["No — the new amount should be bigger than the original", "No — the answer should be a whole number"]
+      ),
+    ],
+    wrapUp: (
+      <>
+        You'd need <Quotient n={qn} d={qd} /> {unitPlural} of {target.name}.
+      </>
+    ),
+  };
+}
+
 /** Static snapshot for the cover page's preview carousel — see shared/components/UnitPreviewCarousel.tsx. */
 function Preview() {
   return <FractionBar numerator={2} denominator={5} label="2/5" width={220} height={48} />;
@@ -967,6 +1308,7 @@ export const fractionDivision: Unit = {
   problems: [
     { label: "Measuring", make: measurementProblem },
     { label: "Sharing", make: sharingProblem },
+    { label: "Recipes", make: recipeProblem },
     { label: "Prove it", make: relationshipProblem },
   ],
   test: fractionDivisionTest,

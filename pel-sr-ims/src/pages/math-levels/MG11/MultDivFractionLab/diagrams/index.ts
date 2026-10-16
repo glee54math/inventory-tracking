@@ -12,3 +12,5 @@ export { FactorRectangle } from "./FactorRectangle";
 export type { FactorRectangleProps } from "./FactorRectangle";
 export { MultiplesLine } from "./MultiplesLine";
 export type { MultiplesLineProps } from "./MultiplesLine";
+export { RecipeCard } from "./RecipeCard";
+export type { RecipeCardProps, RecipeIngredient } from "./RecipeCard";

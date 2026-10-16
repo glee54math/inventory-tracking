@@ -72,7 +72,7 @@ function widthQuestion(): TestQuestion[] {
   const [qn, qd] = quotientOf(an, bd, cn, dd);
   return [
     {
-      visual: <AreaRectangle area={[an, bd]} length={[cn, dd]} unit="mi" />,
+      visual: <AreaRectangle length={[cn, dd]} width={[qn, qd]} find="width" unit="mi" />,
       difficulty: "hard",
       step: {
         kind: "number",
