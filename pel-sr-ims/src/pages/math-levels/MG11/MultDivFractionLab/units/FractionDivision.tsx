@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AreaRectangle, FractionBar, FractionMeasureStrip, RecipeCard } from "../diagrams";
+import { AreaRectangle, FractionBar, FractionMeasureStrip, RecipeCard, SharingBars } from "../diagrams";
 import { gcd, pick, randInt, simplify } from "../../../shared/lib/math";
 import { choice, fracMultiply, type Problem, type Step } from "../../../shared/engine/types";
 import { Frac, QA, QB } from "../../../shared/engine/controls";
@@ -1007,11 +1007,11 @@ function sharingProblem(): Problem {
         {n} people share <QA><Frac n={an} d={bd} /></QA> lb of chocolate equally. How much chocolate does each person get?
       </>
     ),
-    // Rescale to a common denominator (bd×n) before drawing: that always makes the
-    // shaded amount (an×n cells) divide evenly by n, so the bar can show the actual
-    // n-way split (and highlight one share) no matter what an/bd/n happen to be —
-    // not just the cases where bd was already a multiple of n.
-    visual: () => <FractionBar numerator={an * n} denominator={bd * n} shareCount={n} highlightShare={0} label={`${an}/${bd} lb shared ${n} ways`} />,
+    // Two stacked bars instead of one rescaled bar: the top shows an/bd exactly as
+    // given (no rescaling, so it always matches the story word for word), and the
+    // bottom zooms the SAME width into bd×n equal slices, highlighting one slice
+    // per shaded group — an of them total, which is exactly the share's numerator.
+    visual: () => <SharingBars numerator={an} denominator={bd} shareCount={n} />,
     steps: [
       choice(
         { prompt: "Which expression finds one share?", hint: "Sharing a total equally among a number of people is division.", explain: `Dividing the whole amount by the number of people gives one share.` },

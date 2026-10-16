@@ -14,3 +14,5 @@ export { MultiplesLine } from "./MultiplesLine";
 export type { MultiplesLineProps } from "./MultiplesLine";
 export { RecipeCard } from "./RecipeCard";
 export type { RecipeCardProps, RecipeIngredient } from "./RecipeCard";
+export { SharingBars } from "./SharingBars";
+export type { SharingBarsProps } from "./SharingBars";
