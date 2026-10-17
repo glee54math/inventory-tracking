@@ -35,8 +35,16 @@ type Op = "add" | "subtract" | "multiply" | "divide";
 
 function Explore() {
   const [op, setOp] = useState<Op>("add");
-  const [top, setTop] = useState(23.4);
-  const [bottom, setBottom] = useState(8.15);
+  // Text state, not number: binding the input's `value` straight to a number
+  // forces every keystroke through Number(...) and back, which silently drops
+  // an in-progress trailing "." (typing "23." becomes "23" the instant you type
+  // the dot, and a 4th keystroke lands on "236" instead of "23.6"). Keeping the
+  // raw text lets the field hold whatever's actually been typed, while `top`/
+  // `bottom` below parse it for the diagram to consume.
+  const [topText, setTopText] = useState("23.4");
+  const [bottomText, setBottomText] = useState("8.15");
+  const top = parseFloat(topText) || 0;
+  const bottom = parseFloat(bottomText) || 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -62,11 +70,11 @@ function Explore() {
       <div className="controls">
         <label>
           First number{" "}
-          <input className="answer" style={{ width: 80 }} value={top} onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setTop(v); }} />
+          <input className="answer" style={{ width: 80 }} value={topText} onChange={(e) => setTopText(e.target.value)} />
         </label>
         <label>
           Second number{" "}
-          <input className="answer" style={{ width: 80 }} value={bottom} onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setBottom(v); }} />
+          <input className="answer" style={{ width: 80 }} value={bottomText} onChange={(e) => setBottomText(e.target.value)} />
         </label>
       </div>
     </div>

@@ -39,6 +39,12 @@ export function PlaceValueColumns({ operation, top, bottom, done }: PlaceValueCo
   const b = padDecimals(bottom, places);
   const width = Math.max(a.length, b.length) + 1;
   const result = operation === "add" ? top + bottom : top - bottom;
+  // This unit doesn't cover negative numbers yet (that's planned as its own
+  // later topic) — rather than silently compute and display a wrong positive
+  // answer when the 2nd number is bigger (e.g. 10 − 12 rendering as "2"),
+  // swap the digit result for an explanation. Only possible for subtraction;
+  // addition is commutative so there's no invalid order to guard against.
+  const needsBiggerFirst = operation === "subtract" && bottom > top;
 
   // Each operand row is laid out as `width` individually-sized 1em character
   // boxes (so the decimal points land in the same column regardless of how
@@ -67,7 +73,13 @@ export function PlaceValueColumns({ operation, top, bottom, done }: PlaceValueCo
         {renderDigits(b.padStart(width - 1, " "))}
       </div>
       <div style={{ borderTop: `2px solid ${palette.ink}`, width: `${width}em`, marginLeft: "auto" }} />
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.1em" }}>{renderDigits(resultStr)}</div>
+      {needsBiggerFirst ? (
+        <div style={{ fontFamily: "inherit", fontSize: 13, color: palette.c, textAlign: "right", marginTop: 4, maxWidth: `${Math.max(width * 2, 16)}em`, marginLeft: "auto" }}>
+          Not yet — the first number needs to be bigger than the second, so the answer isn't negative.
+        </div>
+      ) : (
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.1em" }}>{renderDigits(resultStr)}</div>
+      )}
     </div>
   );
 }
