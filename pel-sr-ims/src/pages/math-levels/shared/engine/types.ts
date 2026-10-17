@@ -54,6 +54,17 @@ export interface NumberStep extends BaseStep {
    * when a fraction happens to be the cleaner display format.
    */
   fracRequired?: boolean;
+  /**
+   * Generalizes `money`'s "exactly two decimal places" rule to any digit
+   * count — require the typed answer to show exactly this many digits after
+   * the decimal point, even though it's numerically the same value with
+   * fewer (or more). For exercises specifically about writing placeholder
+   * zeros (e.g. "rewrite 8.15 with 3 decimal places" expects "8.150", not
+   * the numerically-equal "8.15"), where the format itself is the point,
+   * not just the value. Same two-tier right-value/wrong-format message as
+   * `money` — see check() and answerText() in engine/StepProblem.tsx.
+   */
+  padTo?: number;
 }
 
 export interface RatioStep extends BaseStep {

@@ -718,6 +718,7 @@
   min-width: 220px;
 }
 .ratio-lab .segmented {
+  position: relative;
   display: inline-flex;
   flex-wrap: wrap;
   gap: 4px;
@@ -727,7 +728,20 @@
   width: fit-content;
   max-width: 100%;
 }
+.ratio-lab .segmented-indicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: 0 1px 3px rgba(27, 37, 64, 0.18);
+  transition: transform 0.2s ease, width 0.2s ease;
+  pointer-events: none;
+}
 .ratio-lab .segmented button {
+  position: relative;
+  z-index: 1;
   border: 0;
   background: none;
   padding: 7px 14px;
@@ -735,11 +749,10 @@
   font-weight: 600;
   font-size: 14px;
   color: var(--muted);
+  transition: color 0.2s ease;
 }
 .ratio-lab .segmented button.on {
-  background: var(--card);
   color: var(--ink);
-  box-shadow: 0 1px 3px rgba(27, 37, 64, 0.18);
 }
 
 /* ---------- explore ---------- */

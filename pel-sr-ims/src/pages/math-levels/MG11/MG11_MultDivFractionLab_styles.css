@@ -650,6 +650,7 @@
   min-width: 220px;
 }
 .mdf-lab .segmented {
+  position: relative;
   display: inline-flex;
   flex-wrap: wrap;
   gap: 4px;
@@ -659,7 +660,20 @@
   width: fit-content;
   max-width: 100%;
 }
+.mdf-lab .segmented-indicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: 0 1px 3px rgba(27, 37, 64, 0.18);
+  transition: transform 0.2s ease, width 0.2s ease;
+  pointer-events: none;
+}
 .mdf-lab .segmented button {
+  position: relative;
+  z-index: 1;
   border: 0;
   background: none;
   padding: 7px 14px;
@@ -667,11 +681,10 @@
   font-weight: 600;
   font-size: 14px;
   color: var(--muted);
+  transition: color 0.2s ease;
 }
 .mdf-lab .segmented button.on {
-  background: var(--card);
   color: var(--ink);
-  box-shadow: 0 1px 3px rgba(27, 37, 64, 0.18);
 }
 
 /* ---------- explore: live fraction-stepper equation ---------- */
@@ -1379,6 +1392,131 @@
 .mdf-lab .feedback.bad {
   color: var(--bad);
   animation: mdfLabNudge 0.3s;
+}
+.mdf-lab .feedback.good {
+  color: var(--good);
+}
+.mdf-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.mdf-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.mdf-lab .align-drill .controls {
+  margin: 12px 0;
+}
+.mdf-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.mdf-lab .align-columns {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.mdf-lab .align-row {
+  display: flex;
+  gap: 2px;
+}
+.mdf-lab .align-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1em;
+  height: 1.3em;
+  font-family: "Courier New", monospace;
+  font-size: 20px;
+  color: var(--ink);
+}
+.mdf-lab .align-slot-sign {
+  color: var(--muted);
+  font-weight: 700;
+}
+input.align-slot.align-slot-input {
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  text-align: center;
+}
+.mdf-lab .align-rule {
+  border-top: 2px solid var(--ink);
+  margin-top: 4px;
+}
+.mdf-lab .align-drill-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-start;
+}
+.mdf-lab .align-drill-text {
+  flex: 1 1 280px;
+  min-width: 260px;
+}
+.mdf-lab .placeholder-zero-example {
+  flex: 0 0 auto;
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  border: 1px solid var(--line);
+  text-align: center;
+}
+.mdf-lab .pz-equation {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  font-family: "Courier New", monospace;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.mdf-lab .pz-eq {
+  color: var(--muted);
+  font-size: 22px;
+}
+.mdf-lab .pz-value-group {
+  display: flex;
+  align-items: baseline;
+}
+/* position:relative + the caption positioned absolutely below is deliberate:
+   a flex column here (the first attempt) sizes itself to its widest child,
+   which is the wider "placeholder" caption text, not the narrow "0" box —
+   that centered the box inside its own too-wide container and was the actual
+   source of the gap before "2.5", not a margin that needed nudging. Taking
+   the caption out of flow leaves the wrap exactly as wide as the "0" box. */
+.mdf-lab .pz-zero-wrap {
+  position: relative;
+  display: inline-block;
+}
+.mdf-lab .pz-zero {
+  display: inline-block;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--qc-soft);
+  color: var(--qc-text);
+  border: 2px solid var(--qc);
+}
+.mdf-lab .pz-zero-caption {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 2px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--qc-text);
+  white-space: nowrap;
+}
+.mdf-lab .pz-caption {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 220px;
 }
 @keyframes mdfLabNudge {
   25% {

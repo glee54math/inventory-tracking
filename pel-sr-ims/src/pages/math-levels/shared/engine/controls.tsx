@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 
 /**
  * Quantity words, colored to match the diagrams. `color` overrides the default
@@ -80,10 +80,32 @@ export function Slider({ label, value, min, max, step = 1, onChange, display }: 
   );
 }
 
-/** A picker for small sets of options (presets, contexts). */
+/**
+ * A picker for small sets of options (presets, contexts). The highlighted
+ * background is one element that slides between buttons on selection, rather
+ * than each button drawing its own "on" background — options are rarely the
+ * same width (e.g. "Add" vs "Multiply"), so the indicator's position/width
+ * are measured off the actual selected button's DOM rect rather than assumed
+ * from a fraction of the container (which only works for equal-width items).
+ */
 export function Segmented<T extends string>({ options, value, onChange, label }: { options: { id: T; label: string }[]; value: T; onChange: (v: T) => void; label: string }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      const track = trackRef.current;
+      const active = track?.querySelector<HTMLButtonElement>('button[aria-checked="true"]');
+      if (track && active) setIndicator({ left: active.offsetLeft, width: active.offsetWidth });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [value, options]);
+
   return (
-    <div className="segmented" role="radiogroup" aria-label={label}>
+    <div className="segmented" role="radiogroup" aria-label={label} ref={trackRef}>
+      {indicator && <span className="segmented-indicator" style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }} aria-hidden="true" />}
       {options.map((o) => (
         <button key={o.id} role="radio" aria-checked={o.id === value} className={o.id === value ? "on" : ""} onClick={() => onChange(o.id)}>
           {o.label}

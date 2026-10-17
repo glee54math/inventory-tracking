@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import "./MG11_MultDivFractionLab_styles.css";
 import { units, type Unit } from "./MultDivFractionLab/units";
 import { StepProblem } from "../shared/engine/StepProblem";
+import { Segmented } from "../shared/engine/controls";
 import { UnitTestView } from "../shared/engine/UnitTest";
 import { UnitPreviewCarousel } from "../shared/components/UnitPreviewCarousel";
 import { pick } from "../shared/lib/math";
@@ -158,16 +159,12 @@ function UnitView({
       {tab === "practice" && (
         <div className="panel" role="tabpanel">
           <div className="practice-bar">
-            <div className="segmented" role="radiogroup" aria-label="Problem type">
-              <button role="radio" aria-checked={typeIdx === "mix"} className={typeIdx === "mix" ? "on" : ""} onClick={() => setTypeIdx("mix")}>
-                Mixed
-              </button>
-              {unit.problems.map((p, i) => (
-                <button key={p.label} role="radio" aria-checked={typeIdx === i} className={typeIdx === i ? "on" : ""} onClick={() => setTypeIdx(i)}>
-                  {p.label}
-                </button>
-              ))}
-            </div>
+            <Segmented
+              label="Problem type"
+              value={typeIdx === "mix" ? "mix" : String(typeIdx)}
+              onChange={(id) => setTypeIdx(id === "mix" ? "mix" : Number(id))}
+              options={[{ id: "mix", label: "Mixed" }, ...unit.problems.map((p, i) => ({ id: String(i), label: p.label }))]}
+            />
             <button className="btn ghost" onClick={() => setSeed((s) => s + 1)}>
               New problem
             </button>

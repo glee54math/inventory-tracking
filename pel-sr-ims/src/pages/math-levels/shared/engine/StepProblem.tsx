@@ -19,7 +19,7 @@ export const fresh = (): StepState => ({ inputs: ["", ""], wrong: 0, hint: false
 export const answerText = (s: Step): string => {
   if (s.kind === "number") {
     if (s.frac && s.fracAnswer) return `${s.prefix ?? ""}${fracText(s.fracAnswer[0], s.fracAnswer[1])}${s.suffix ? " " + s.suffix : ""}`;
-    const val = s.money ? (s.answer % 1 ? s.answer.toFixed(2) : String(s.answer)) : fmt(s.answer);
+    const val = s.padTo !== undefined ? s.answer.toFixed(s.padTo) : s.money ? (s.answer % 1 ? s.answer.toFixed(2) : String(s.answer)) : fmt(s.answer);
     return `${s.prefix ?? ""}${val}${s.suffix ? " " + s.suffix : ""}`;
   }
   if (s.kind === "ratio") return `${s.answer[0]} : ${s.answer[1]}`;
@@ -82,6 +82,12 @@ export const check = (s: Step, inputs: string[]): { ok: boolean; msg: string } =
     if (numbersMatch(v, s.answer)) {
       if (s.money && s.answer % 1 !== 0 && !/^\d+\.\d{2}$/.test(raw)) {
         return { ok: false, msg: `That's the right amount, but money answers need exactly two decimal places — write it like $${v.toFixed(2)}.` };
+      }
+      if (s.padTo !== undefined) {
+        const digitsAfterPoint = raw.includes(".") ? raw.split(".")[1].length : 0;
+        if (digitsAfterPoint !== s.padTo) {
+          return { ok: false, msg: `That's the right value, but it needs exactly ${s.padTo} decimal place${s.padTo === 1 ? "" : "s"} — write it like ${v.toFixed(s.padTo)}.` };
+        }
       }
       if (s.frac) {
         const typed = rawFraction(raw.trim());
