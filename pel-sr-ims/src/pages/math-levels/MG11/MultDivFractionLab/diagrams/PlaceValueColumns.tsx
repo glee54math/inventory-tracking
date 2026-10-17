@@ -40,29 +40,34 @@ export function PlaceValueColumns({ operation, top, bottom, done }: PlaceValueCo
   const width = Math.max(a.length, b.length) + 1;
   const result = operation === "add" ? top + bottom : top - bottom;
 
+  // Each operand row is laid out as `width` individually-sized 1em character
+  // boxes (so the decimal points land in the same column regardless of how
+  // many digits either number has) — the result row must be built the exact
+  // same way, not as one plain right-aligned text node, or its digits drift
+  // out of step with the rows above: Courier New's natural glyph advance is
+  // narrower than the forced 1em box, so a plain string compresses faster
+  // than the padded rows expand, throwing off alignment one column per digit.
+  const renderDigits = (str: string) =>
+    str.split("").map((ch, i) => (
+      <span key={i} style={{ width: "1em", textAlign: "center", color: ch === "." ? palette.c : palette.ink, fontWeight: ch === "." ? 700 : 400 }}>
+        {ch}
+      </span>
+    ));
+  const resultStr = done > 0 ? padDecimals(Math.round(result * 1e6) / 1e6, places).padStart(width, " ") : "?".padStart(width, " ");
+
   return (
     <div
       role="img"
       aria-label={`${top} ${operation === "add" ? "plus" : "minus"} ${bottom}`}
       style={{ fontFamily: "'Courier New', monospace", fontSize: 20, color: palette.ink }}
     >
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.1em" }}>{renderDigits(a.padStart(width, " "))}</div>
       <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.1em" }}>
-        {a.padStart(width, " ").split("").map((ch, i) => (
-          <span key={i} style={{ width: "1em", textAlign: "center", color: ch === "." ? palette.c : palette.ink, fontWeight: ch === "." ? 700 : 400 }}>
-            {ch}
-          </span>
-        ))}
-      </div>
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.1em" }}>
-        <span style={{ width: "1em" }}>{operation === "add" ? "+" : "−"}</span>
-        {b.padStart(width - 1, " ").split("").map((ch, i) => (
-          <span key={i} style={{ width: "1em", textAlign: "center", color: ch === "." ? palette.c : palette.ink, fontWeight: ch === "." ? 700 : 400 }}>
-            {ch}
-          </span>
-        ))}
+        <span style={{ width: "1em", textAlign: "center" }}>{operation === "add" ? "+" : "−"}</span>
+        {renderDigits(b.padStart(width - 1, " "))}
       </div>
       <div style={{ borderTop: `2px solid ${palette.ink}`, width: `${width}em`, marginLeft: "auto" }} />
-      <div style={{ textAlign: "right" }}>{done > 0 ? (Math.round(result * 1e6) / 1e6) : "?"}</div>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.1em" }}>{renderDigits(resultStr)}</div>
     </div>
   );
 }
