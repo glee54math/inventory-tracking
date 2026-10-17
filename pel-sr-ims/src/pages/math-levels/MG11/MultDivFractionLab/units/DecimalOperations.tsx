@@ -430,20 +430,79 @@ function addProblem(): Problem {
 // ============================================================================
 
 function subtractProblem(): Problem {
+  // Same reasoning as addProblem: sometimes a and b already share a decimal-
+  // place count, sometimes they don't, so "do these need placeholder zeros?"
+  // has a genuine two-way answer. b must still land below a (this unit
+  // doesn't cover negative numbers yet — see PlaceValueColumns.tsx's own
+  // needsBiggerFirst guard, built for the same reason), so the b >= a
+  // fallback is checked AFTER settling on which generator produced b.
+  const needsPad = randInt(1, 10) <= 7;
   const a = randMoney2(20, 90);
-  let b = randMoney1(1, Math.max(1, Math.floor(a) - 1));
+  let b = needsPad ? randMoney1(1, Math.max(1, Math.floor(a) - 1)) : randMoney2(1, Math.max(1, Math.floor(a) - 1));
   if (b >= a) b = round2(a / 2);
   const diff = round2(a - b);
+
+  const aPlaces = decimalPlaces(a);
+  const bPlaces = decimalPlaces(b);
+  const places = Math.max(aPlaces, bPlaces);
+  const needsPlaceholder = aPlaces !== bPlaces;
+  const shorterIsA = aPlaces < bPlaces;
+  const shorterVal = shorterIsA ? a : b;
+  const pluralPlaces = (n: number) => `${n} decimal place${n === 1 ? "" : "s"}`;
+
+  const padChoiceStep = choice(
+    {
+      prompt: (
+        <>
+          Do <QA>{a}</QA> and <QB>{b}</QB> need placeholder zeros before you can line up their decimal points?
+        </>
+      ),
+      hint: `Count the digits after the decimal point in each number — ${a} has ${pluralPlaces(aPlaces)}, and ${b} has ${pluralPlaces(bPlaces)}.`,
+      explain: needsPlaceholder
+        ? `${a} has ${pluralPlaces(aPlaces)} and ${b} has ${pluralPlaces(bPlaces)} — since they're different, the shorter number needs placeholder zeros.`
+        : `${a} and ${b} already both have ${pluralPlaces(aPlaces)} — no placeholder zeros needed.`,
+    },
+    needsPlaceholder ? "Yes — they have different numbers of decimal places" : "No — they already have the same number of decimal places",
+    [needsPlaceholder ? "No — they already have the same number of decimal places" : "Yes — they have different numbers of decimal places"]
+  );
+
+  const padWriteStep: Step = {
+    kind: "number",
+    padTo: places,
+    prompt: shorterIsA ? (
+      <>
+        Rewrite <QA>{a}</QA> with the same number of decimal places as <QB>{b}</QB>, using placeholder zeros.
+      </>
+    ) : (
+      <>
+        Rewrite <QB>{b}</QB> with the same number of decimal places as <QA>{a}</QA>, using placeholder zeros.
+      </>
+    ),
+    hint: `${shorterVal} has ${pluralPlaces(Math.min(aPlaces, bPlaces))}. Add zeros after its last digit until it has ${pluralPlaces(places)}.`,
+    explain: `${shorterVal} = ${padToPlaces(shorterVal, places)} — adding zeros after the last digit doesn't change its value.`,
+    answer: shorterVal,
+  };
+
+  const revealAt = needsPlaceholder ? 3 : 2;
+  const sumAt = needsPlaceholder ? 4 : 3;
+
   return {
     title: "Subtracting decimals",
     story: `Subtract ${a} − ${b}.`,
-    visual: (done: number) => <PlaceValueColumns operation="subtract" top={a} bottom={b} done={done} />,
+    visual: (done: number) =>
+      done < revealAt ? (
+        <p className="muted small">Work out whether placeholder zeros are needed first — the lined-up numbers will appear here once you do.</p>
+      ) : (
+        <PlaceValueColumns operation="subtract" top={a} bottom={b} done={done >= sumAt ? 1 : 0} />
+      ),
     steps: [
       choice(
         { prompt: "What's the first step, just like with addition?", hint: "Same first move as decimal addition.", explain: "Lining up the decimal points keeps each place value aligned." },
         "Line up the decimal points",
         ["Subtract the whole-number parts only", "Round both numbers first"]
       ),
+      padChoiceStep,
+      ...(needsPlaceholder ? [padWriteStep] : []),
       {
         kind: "number",
         prompt: `What is ${a} − ${b}?`,
