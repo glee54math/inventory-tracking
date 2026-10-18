@@ -1395,11 +1395,20 @@ function multiplyProblem(): Problem {
 // ============================================================================
 
 function divideProblem(): Problem {
-  const divisor = randMoney1(1, 9);
+  // Randomly pick a 2-decimal divisor under 1 (needs a ×100 shift) or a
+  // 1-decimal divisor from 1-9 (needs a ×10 shift), so students practice
+  // both shift amounts, not just one. The dividend's own decimal places can
+  // end up fewer than the shift needs (e.g. dividing by 0.25 often lands on
+  // a dividend with fewer decimal places than that) — that's fine, the
+  // placeholder-zero case is worth practicing too, not something to avoid.
+  const twoPlaces = Math.random() < 0.5;
+  const divisor = twoPlaces ? randMoney2(0.01, 0.99) : randMoney1(1.1, 9.9);
+  const places = decimalPlaces(divisor);
+  const shiftBy = Math.pow(10, places);
   const quotient = randInt(3, 40);
   const dividend = round2(divisor * quotient);
-  const shiftedDivisor = Math.round(divisor * 10);
-  const shiftedDividend = Math.round(dividend * 10);
+  const shiftedDivisor = Math.round(divisor * shiftBy);
+  const shiftedDividend = Math.round(dividend * shiftBy);
   const cycles = cycleSteps(shiftedDividend, shiftedDivisor);
 
   return {
@@ -1417,9 +1426,9 @@ function divideProblem(): Problem {
         tones: "none",
         labels: ["new dividend", "new divisor"],
         frame: ["", "÷", ""],
-        prompt: `${divisor} has ${decimalPlaces(divisor)} decimal place. Multiply both numbers by 10. What's the new dividend and new divisor?`,
-        hint: `${dividend} × 10 and ${divisor} × 10.`,
-        explain: `${dividend} × 10 = ${shiftedDividend}, and ${divisor} × 10 = ${shiftedDivisor}.`,
+        prompt: `${divisor} has ${places} decimal place${places === 1 ? "" : "s"}. Multiply both numbers by ${shiftBy}. What's the new dividend and new divisor?`,
+        hint: `${dividend} × ${shiftBy} and ${divisor} × ${shiftBy}.`,
+        explain: `${dividend} × ${shiftBy} = ${shiftedDividend}, and ${divisor} × ${shiftBy} = ${shiftedDivisor}.`,
         answer: [shiftedDividend, shiftedDivisor],
       },
       ...cycles,
