@@ -1,18 +1,34 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import "./MG11_MultDivFractionLab_styles.css";
 import { units, type Unit } from "./MultDivFractionLab/units";
 import { StepProblem } from "../shared/engine/StepProblem";
 import { Segmented } from "../shared/engine/controls";
 import { UnitTestView } from "../shared/engine/UnitTest";
 import { UnitPreviewCarousel } from "../shared/components/UnitPreviewCarousel";
-import { pick } from "../shared/lib/math";
+import type { Problem } from "../shared/engine/types";
+import { shuffle } from "../shared/lib/math";
 import { MASTERY_GOAL, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
 import { useStudentContext } from "../../../components/student_portal/StudentContext";
 
 const MODULE_ID = "MG11_MultDivFractionLab";
 
-function Stars({ p, size = "sm" }: { p?: UnitProgress; size?: "sm" | "lg" }) {
-  const n = Math.min(MASTERY_GOAL, p?.clean ?? 0);
+/** A unit is mastered at MASTERY_GOAL clean solves — AND, for a unit that
+ *  declares `requiredBuckets`, a clean solve covering every one of those
+ *  scenario-classes at least once, not just MASTERY_GOAL solves from
+ *  wherever random generation happened to land. Units without
+ *  requiredBuckets behave exactly as before. */
+function isMastered(unit: Unit, p?: UnitProgress): boolean {
+  if ((p?.clean ?? 0) < MASTERY_GOAL) return false;
+  if (!unit.requiredBuckets) return true;
+  const covered = p?.coveredBuckets ?? [];
+  return unit.requiredBuckets.every((b) => covered.includes(b));
+}
+
+function Stars({ unit, p, size = "sm" }: { unit: Unit; p?: UnitProgress; size?: "sm" | "lg" }) {
+  // The last star only lights up at true mastery (bucket coverage included,
+  // where that applies) — clean count alone fills at most MASTERY_GOAL - 1,
+  // so "all stars lit" never overstates what's actually been proven.
+  const n = isMastered(unit, p) ? MASTERY_GOAL : Math.min(MASTERY_GOAL - 1, p?.clean ?? 0);
   return (
     <span className={`stars ${size}`} aria-label={`${n} of ${MASTERY_GOAL} mastery stars`}>
       {Array.from({ length: MASTERY_GOAL }, (_, i) => (
@@ -25,7 +41,7 @@ function Stars({ p, size = "sm" }: { p?: UnitProgress; size?: "sm" | "lg" }) {
 }
 
 function Home({ onPick, progress }: { onPick: (i: number) => void; progress: Record<string, UnitProgress> }) {
-  const next = units.findIndex((u) => (progress[u.id]?.clean ?? 0) < MASTERY_GOAL);
+  const next = units.findIndex((u) => !isMastered(u, progress[u.id]));
   return (
     <div className="home">
       <section className="hero">
@@ -53,7 +69,7 @@ function Home({ onPick, progress }: { onPick: (i: number) => void; progress: Rec
                   <span className="path-title">{u.title}</span>
                   <span className="path-goal">{u.goal}</span>
                 </span>
-                <Stars p={progress[u.id]} />
+                <Stars unit={u} p={progress[u.id]} />
               </button>
             </li>
           ))}
@@ -93,14 +109,33 @@ function UnitView({
   const [typeIdx, setTypeIdx] = useState<number | "mix">("mix");
   const [seed, setSeed] = useState(0);
 
+  // A shuffle bag, not independent random draws per problem — every item in
+  // the bag gets exactly one guaranteed turn (in shuffled order) before any
+  // repeats, instead of relying on chance to eventually surface everything.
+  // In "mix" mode the bag holds one slot per problem type, except a type
+  // that declares `buckets` (today just Divide, whose 4 scenario-classes a
+  // mastery star requires seeing) expands into one slot per bucket instead
+  // of a single slot for the whole type — so a full cycle guarantees every
+  // type AND every required bucket its own turn. Selecting a single type
+  // (not "mix") gets its own smaller bag of just that type's own buckets,
+  // when it has any. Resets whenever the mode (mix vs a specific type)
+  // changes, or naturally refills+reshuffles once exhausted.
+  const bagRef = useRef<{ key: string; items: Array<() => Problem> }>({ key: "", items: [] });
+
   const problem = useMemo(() => {
-    const t = typeIdx === "mix" ? pick(unit.problems) : unit.problems[typeIdx];
-    return t.make();
-    // seed forces a fresh problem
+    const key = typeIdx === "mix" ? "mix" : String(typeIdx);
+    if (bagRef.current.key !== key || bagRef.current.items.length === 0) {
+      const types = typeIdx === "mix" ? unit.problems : [unit.problems[typeIdx]];
+      const items = types.flatMap((pt) => (pt.buckets && pt.buckets.length > 0 ? pt.buckets.map((b) => () => pt.make(b)) : [() => pt.make()]));
+      bagRef.current = { key, items: shuffle(items) };
+    }
+    const make = bagRef.current.items.pop()!;
+    return make();
+    // seed forces drawing a fresh problem from the bag
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unit, typeIdx, seed]);
 
-  const mastered = (progress?.clean ?? 0) >= MASTERY_GOAL;
+  const mastered = isMastered(unit, progress);
   // Grandfather in anyone who already has practice history from before this unit
   // had a required intro — only ever gate a student who's never touched Practice.
   // reintroEverySolved (optional) adds periodic re-gating on top of that: once
@@ -118,7 +153,7 @@ function UnitView({
           <p className="goal">{unit.goal}</p>
         </div>
         <div className="unit-stars">
-          <Stars p={progress} size="lg" />
+          <Stars unit={unit} p={progress} size="lg" />
           <span className="small muted">{progress?.solved ?? 0} solved</span>
           <span className="small muted">Standard {unit.standard}</span>
           {unit.test && <TestBadge p={progress} passScore={unit.test.passScore} />}
@@ -231,7 +266,7 @@ function MultDivFractionLab() {
                 <button className={current === i ? "on" : ""} aria-current={current === i ? "page" : undefined} onClick={() => go(i)}>
                   <span className="rail-num">{i + 1}</span>
                   <span className="rail-title">{u.title}</span>
-                  <Stars p={progress[u.id]} />
+                  <Stars unit={u} p={progress[u.id]} />
                 </button>
               </li>
             ))}

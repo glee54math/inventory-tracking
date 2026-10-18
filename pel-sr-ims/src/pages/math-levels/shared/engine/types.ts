@@ -180,7 +180,28 @@ export interface VerticalMultiplyStep extends BaseStep {
   bottom: number;
 }
 
-export type Step = NumberStep | RatioStep | ChoiceStep | SentenceStep | FracMultiplyStep | VerticalMultiplyStep;
+/**
+ * An escape hatch for a step whose interaction is a whole pre-built,
+ * self-validating widget (its own internal digit-by-digit checking, its own
+ * stage gating) rather than something expressible as one number/ratio/choice
+ * answer — e.g. ManualDivisionLadder, embedded as a single Practice step
+ * instead of being reimplemented as a run of NumberStep/RatioStep questions.
+ * `render` receives `onDone`, which the widget calls itself once IT decides
+ * the step is complete — StepProblem has no way to grade an arbitrary custom
+ * widget's internals, so "done" is the widget's call, not check()'s.
+ * `resultText` fills the answer-chip shown once this step is done, since
+ * there's no generic way to derive a canonical answer string from `render`.
+ */
+export interface CustomStep extends BaseStep {
+  kind: "custom";
+  render: (onDone: () => void) => ReactNode;
+  resultText: string;
+}
+
+export type Step = NumberStep | RatioStep | ChoiceStep | SentenceStep | FracMultiplyStep | VerticalMultiplyStep | CustomStep;
+
+/** Build a CustomStep — see CustomStep's doc comment for when to reach for this. */
+export const customStep = (base: BaseStep, render: (onDone: () => void) => ReactNode, resultText: string): CustomStep => ({ ...base, kind: "custom", render, resultText });
 
 export interface Problem {
   title: string;
@@ -207,7 +228,24 @@ export interface Problem {
 
 export interface ProblemType {
   label: string;
-  make: () => Problem;
+  /**
+   * `targetBucket`, when passed, asks the generator to deliberately land in
+   * that specific bucket (typically via rejection sampling — reroll until it
+   * lands — rather than hand-deriving arithmetic that guarantees it) instead
+   * of leaving bucket coverage to chance. Only meaningful for a generator
+   * that actually sets Problem.bucket; most generators ignore the argument.
+   */
+  make: (targetBucket?: string) => Problem;
+  /**
+   * Declares which buckets this type can target. When set, Mixed-mode's
+   * shuffle bag (see MG11_MultDivFractionLab.tsx's UnitView) expands this
+   * type into one bag slot per bucket — each slot calling make(bucket) — in
+   * place of a single generic slot for the whole type, so every bucket gets
+   * its own guaranteed-even turn instead of being an incidental side effect
+   * of however often this type itself gets picked. Should match (or be a
+   * subset of) the owning Unit's own requiredBuckets.
+   */
+  buckets?: string[];
 }
 
 /**

@@ -35,6 +35,7 @@ export const answerText = (s: Step): string => {
     const { wholeTop, wholeBottom, partials, finalWhole } = verticalMultiplyBreakdown(s.top, s.bottom);
     return `${wholeTop} × ${wholeBottom} = ${partials.join(" + ")} = ${finalWhole}`;
   }
+  if (s.kind === "custom") return s.resultText;
   return s.choices[s.correct];
 };
 
@@ -125,6 +126,10 @@ export const check = (s: Step, inputs: string[]): { ok: boolean; msg: string } =
     const ok = typed.every((v, i) => v.trim() === expectedDigits[i]);
     return ok ? { ok: true, msg: "" } : { ok: false, msg: "Not yet. Check each partial product, then add them up for the final answer." };
   }
+  // Grading already happened inside the widget itself — it only ever calls
+  // onDone (which submits this step) once every one of its own digits is
+  // confirmed correct, so by the time we get here there's nothing left to check.
+  if (s.kind === "custom") return { ok: true, msg: "" };
   const a = parseAnswer(inputs[0]);
   const b = parseAnswer(inputs[1]);
   if (a === null || b === null) return { ok: false, msg: "Fill in both boxes with numbers." };
@@ -244,7 +249,7 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
                       )}
                       {st.hint && <p className="hint">💡 {step.hint}</p>}
                       <div className="step-tools">
-                        {step.kind !== "choice" && (
+                        {step.kind !== "choice" && step.kind !== "custom" && (
                           <button className="btn primary" onClick={() => submit(i)}>
                             Check
                           </button>
@@ -308,6 +313,9 @@ export function StepInput({ step, state, onChange, onSubmit }: { step: Step; sta
         ))}
       </div>
     );
+  }
+  if (step.kind === "custom") {
+    return <div className="custom-step">{step.render(() => onSubmit(["done"]))}</div>;
   }
   if (step.kind === "sentence") {
     const renderBlank = (i: 0 | 1) => {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
-import { DivisionLadder, PlaceValueColumns, computeLongDivision } from "../diagrams";
+import { PlaceValueColumns, computeLongDivision } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
-import { choice, verticalMultiply, type Problem, type Step } from "../../../shared/engine/types";
+import { choice, customStep, verticalMultiply, type Problem, type Step } from "../../../shared/engine/types";
 import { QA, QB, Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { decimalOperationsTest } from "./DecimalOperationsTest";
@@ -11,21 +11,15 @@ const randMoney2 = (min: number, max: number) => randInt(min * 100, max * 100) /
 const randMoney1 = (min: number, max: number) => randInt(min * 10, max * 10) / 10; // 1 decimal place
 const decimalPlaces = (n: number) => (String(n).split(".")[1] ?? "").length;
 
-/** Shared with LongDivision.tsx's own copy — small and self-contained per this
- *  package's own units, same convention MM1 uses for its unit-local helpers. */
-function cycleSteps(dividend: number, divisor: number): Step[] {
-  const { cycles } = computeLongDivision(dividend, divisor);
-  return cycles.map((c, i) => ({
-    kind: "ratio",
-    tones: "none",
-    labels: ["digit", "remainder so far"],
-    frame: ["", "R", ""],
-    prompt: i === 0 ? "What's the first digit of the quotient, and the remainder after this step?" : "Bring down the next digit. What's the next quotient digit, and the remainder after this step?",
-    hint: `${c.current} ÷ ${divisor} — how many times does ${divisor} go into ${c.current}?`,
-    explain: `${divisor} × ${c.qDigit} = ${c.product}, and ${c.current} − ${c.product} = ${c.remainder}.`,
-    answer: [c.qDigit, c.remainder],
-  }));
-}
+/** Rerolls `gen` until it lands on a value that isn't a whole number —
+ *  randMoney1/randMoney2 can land on one whenever their trailing digit(s)
+ *  happen to be zero (e.g. randMoney1 drawing 20/10 = "2"), which some
+ *  operands (an addend, a factor, a divisor) should never visibly be. */
+const nonInteger = (gen: () => number): number => {
+  let v = gen();
+  while (v % 1 === 0) v = gen();
+  return v;
+};
 
 // ============================================================================
 // EXPLORE
@@ -1088,6 +1082,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [bottomText, setBottomText] = useState("8.15");
   const top = parseFloat(topText) || 0;
   const bottom = parseFloat(bottomText) || 0;
+  // Shift BOTH numbers by the DIVISOR's own decimal-place count — not a
+  // fixed ×10 — since that's what actually makes the divisor whole. A fixed
+  // ×10 silently produced the wrong division whenever bottom had more than
+  // one decimal place (e.g. 23.4 ÷ 8.15 was rendered as 234 ÷ 82, off the
+  // true 23.4 ÷ 8.15 ≈ 2.87 because 8.15 × 10 = 81.5 still isn't whole).
+  const divPlaces = decimalPlaces(bottom);
+  const divShiftBy = Math.pow(10, divPlaces);
+  const shiftedTop = Math.round(top * divShiftBy);
+  const shiftedBottom = Math.round(bottom * divShiftBy);
+  const sandboxCycles = shiftedBottom !== 0 ? computeLongDivision(shiftedTop, shiftedBottom).cycles : [];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -1140,7 +1144,15 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       {/* Same non-mandatory-but-still-gate-satisfying treatment as Multiply. */}
       {showDrill && op === "divide" && <DivideDecimalsDrill key={op} onComplete={onIntroDone} prefilled={!introActive} />}
       {op === "divide" ? (
-        <DivisionLadder dividend={Math.round(top * 10)} divisor={Math.round(bottom * 10)} done={99} />
+        shiftedBottom === 0 ? (
+          <p className="muted small">Enter a non-zero second number to divide by.</p>
+        ) : (
+          // Reuses the same hands-on, fill-every-digit component as the
+          // guide's own Step 3, instead of a passively-already-solved
+          // display — so trying your own numbers here is practice too, not
+          // just a readout.
+          <ManualDivisionLadder key={`${topText}-${bottomText}`} dividend={shiftedTop} divisor={shiftedBottom} cycles={sandboxCycles} />
+        )
       ) : (
         <PlaceValueColumns operation={op} top={top} bottom={bottom} done={1} />
       )}
@@ -1172,8 +1184,8 @@ function addProblem(): Problem {
   // the determination question has a genuine two-way answer, not just "Yes"
   // every time.
   const needsPad = randInt(1, 10) <= 7;
-  const a = randMoney2(1, 60); // 2 decimal places
-  const b = needsPad ? randMoney1(1, 25) : randMoney2(1, 25); // 1 or 2 decimal places
+  const a = nonInteger(() => randMoney2(1, 60)); // 2 decimal places
+  const b = needsPad ? nonInteger(() => randMoney1(1, 25)) : nonInteger(() => randMoney2(1, 25)); // 1 or 2 decimal places
   const sum = round2(a + b);
 
   const aPlaces = decimalPlaces(a);
@@ -1352,18 +1364,32 @@ function subtractProblem(): Problem {
 // PROBLEM TYPE 3 — multiplication
 // ============================================================================
 
+/** Draws a value in [min, max] with 1 or 2 decimal places, chosen at random
+ *  each call (and never a whole number — see nonInteger) — so a factor is
+ *  sometimes "2.3" and sometimes "4.37", not always the same shape. */
+const randMoneyMixedPlaces = (min: number, max: number): number =>
+  nonInteger(Math.random() < 0.5 ? () => randMoney1(min, max) : () => randMoney2(min, max));
+
 function multiplyProblem(): Problem {
-  // `a` used to go up to 40 (a 3-digit whole number once scaled), fine for a
-  // single "what's the product" box but too many digit boxes for the vertical
-  // step below — narrowed to match `b`'s own single-digit-dollar range, so
-  // every partial product and the final sum stay at most 2-3 digits.
-  const a = randMoney1(1, 9);
-  const b = randMoney1(2, 9);
-  const wholeA = Math.round(a * 10);
-  const wholeB = Math.round(b * 10);
+  // `a` used to go up to 40 (a 3-digit whole number once scaled) and was
+  // narrowed to a single-digit-dollar range to keep the vertical step's
+  // digit-box count down — still true here, but now each factor can ALSO
+  // independently land on 1 or 2 decimal places, so wholeA/wholeB/totalPlaces
+  // below read each factor's ACTUAL decimal-place count (never assume 1)
+  // so every combination places the point correctly. A 2-decimal factor's
+  // own whole-number form is a digit longer (e.g. "437" instead of "23"),
+  // so the hardest combination (both factors 2-decimal) does mean more
+  // digit boxes than before — worth an eye on whether that's still a good
+  // fit for Practice, not just correctness.
+  const a = randMoneyMixedPlaces(1, 9);
+  const b = randMoneyMixedPlaces(2, 9);
+  const placesA = decimalPlaces(a);
+  const placesB = decimalPlaces(b);
+  const wholeA = Math.round(a * Math.pow(10, placesA));
+  const wholeB = Math.round(b * Math.pow(10, placesB));
   const wholeProduct = wholeA * wholeB;
-  const totalPlaces = decimalPlaces(a) + decimalPlaces(b);
-  const product = round2(a * b);
+  const totalPlaces = placesA + placesB;
+  const product = Number(placeDecimalPoint(wholeProduct, totalPlaces));
   return {
     title: "Multiplying decimals",
     story: `Multiply ${a} × ${b}.`,
@@ -1380,7 +1406,7 @@ function multiplyProblem(): Problem {
       ),
       {
         kind: "number",
-        prompt: `${a} has ${decimalPlaces(a)} decimal place${decimalPlaces(a) === 1 ? "" : "s"}, and ${b} has ${decimalPlaces(b)} — that's ${totalPlaces} total. Counting from the right of ${wholeProduct}, place the decimal point. What's the final product?`,
+        prompt: `${a} has ${placesA} decimal place${placesA === 1 ? "" : "s"}, and ${b} has ${placesB} — that's ${totalPlaces} total. Counting from the right of ${wholeProduct}, place the decimal point. What's the final product?`,
         hint: `Count ${totalPlaces} digit${totalPlaces === 1 ? "" : "s"} from the right of ${wholeProduct} and put the decimal point there.`,
         explain: `${a} × ${b} = ${product}.`,
         answer: product,
@@ -1394,51 +1420,87 @@ function multiplyProblem(): Problem {
 // PROBLEM TYPE 4 — division
 // ============================================================================
 
-function divideProblem(): Problem {
+function divideProblem(targetBucket?: string): Problem {
   // Randomly pick a 2-decimal divisor under 1 (needs a ×100 shift) or a
   // 1-decimal divisor from 1-9 (needs a ×10 shift), so students practice
   // both shift amounts, not just one. The dividend's own decimal places can
   // end up fewer than the shift needs (e.g. dividing by 0.25 often lands on
   // a dividend with fewer decimal places than that) — that's fine, the
   // placeholder-zero case is worth practicing too, not something to avoid.
-  const twoPlaces = Math.random() < 0.5;
-  const divisor = twoPlaces ? randMoney2(0.01, 0.99) : randMoney1(1.1, 9.9);
-  const places = decimalPlaces(divisor);
-  const shiftBy = Math.pow(10, places);
-  const quotient = randInt(3, 40);
-  const dividend = round2(divisor * quotient);
+  //
+  // When a shuffle bag (decimalOperations.problems' Divide entry, below)
+  // hands this a specific targetBucket instead of leaving it to chance,
+  // honor it: fix the shift amount directly (it's just which random range
+  // to draw the divisor from) and reroll the divisor/quotient — rejection
+  // sampling, not hand-derived arithmetic — until the pad/clean outcome
+  // matches too. Both dials converge in only a handful of rerolls in
+  // practice (pad is a ~1-in-5 to ~1-in-10 outcome per the generator's own
+  // simulated trial run), so a generous iteration cap is just a safety net
+  // against a malformed bucket string, never something normal play hits.
+  const bucketMatch = targetBucket?.match(/^shift([12])-(clean|pad)$/);
+  const targetPlaces = bucketMatch ? Number(bucketMatch[1]) : undefined;
+  const targetPad = bucketMatch ? bucketMatch[2] === "pad" : undefined;
+
+  let divisor: number, places: number, shiftBy: number, quotient: number, dividend: number, needsPad: boolean;
+  let tries = 0;
+  do {
+    const twoPlaces = targetPlaces !== undefined ? targetPlaces === 2 : Math.random() < 0.5;
+    divisor = twoPlaces ? randMoney2(0.01, 0.99) : randMoney1(1.1, 9.9);
+    places = decimalPlaces(divisor);
+    shiftBy = Math.pow(10, places);
+    quotient = randInt(3, 40);
+    dividend = round2(divisor * quotient);
+    needsPad = decimalPlaces(dividend) < places;
+    tries++;
+    // places doesn't always match twoPlaces' intended range: a trailing zero
+    // collapses it (e.g. drawing 0.50 from the 2-decimal range leaves only 1
+    // actual decimal place; drawing 2.0 from the 1-decimal range leaves 0) —
+    // so re-check the ACTUAL places against the target too, not just pad.
+    // places === 0 also catches the divisor landing on a whole number (e.g.
+    // that same 2.0) — the divisor should never visibly be an integer,
+    // regardless of whether a target bucket was requested at all.
+  } while (tries < 500 && (places === 0 || (targetPlaces !== undefined && places !== targetPlaces) || (targetPad !== undefined && needsPad !== targetPad)));
+
   const shiftedDivisor = Math.round(divisor * shiftBy);
   const shiftedDividend = Math.round(dividend * shiftBy);
-  const cycles = cycleSteps(shiftedDividend, shiftedDivisor);
+  const { cycles } = computeLongDivision(shiftedDividend, shiftedDivisor);
+  // See decimalOperations.requiredBuckets below — "pad" covers the
+  // placeholder-zero case, "clean" the straightforward one, crossed with
+  // which shift amount this instance landed on.
+  const bucket = `shift${places}-${needsPad ? "pad" : "clean"}`;
 
   return {
     title: "Dividing decimals",
+    bucket,
     story: `Divide ${dividend} ÷ ${divisor}.`,
-    visual: (done: number) => <DivisionLadder dividend={shiftedDividend} divisor={shiftedDivisor} done={Math.min(Math.max(done - 2, 0), cycles.length)} />,
+    visual: (done: number) =>
+      done < 1 ? (
+        <p className="muted small">Answer the question first — the division ladder appears below once you do.</p>
+      ) : (
+        <p className="muted small">Work through the ladder below, one box at a time: quotient digit, subtract, bring down, repeat.</p>
+      ),
     steps: [
       choice(
         { prompt: "To divide by a decimal, what should you do first?", hint: "You need the divisor to become a whole number before doing long division.", explain: "Multiplying both numbers by the same power of 10 keeps the value of the division the same, but makes the divisor a whole number." },
         "Multiply both the divisor and the dividend by the same power of 10",
         ["Round the divisor to the nearest whole number", "Divide the whole-number parts only"]
       ),
-      {
-        kind: "ratio",
-        tones: "none",
-        labels: ["new dividend", "new divisor"],
-        frame: ["", "÷", ""],
-        prompt: `${divisor} has ${places} decimal place${places === 1 ? "" : "s"}. Multiply both numbers by ${shiftBy}. What's the new dividend and new divisor?`,
-        hint: `${dividend} × ${shiftBy} and ${divisor} × ${shiftBy}.`,
-        explain: `${dividend} × ${shiftBy} = ${shiftedDividend}, and ${divisor} × ${shiftBy} = ${shiftedDivisor}.`,
-        answer: [shiftedDividend, shiftedDivisor],
-      },
-      ...cycles,
-      {
-        kind: "number",
-        prompt: `What's the final quotient?`,
-        hint: "This should match your last cycle's digit.",
-        explain: `${shiftedDividend} ÷ ${shiftedDivisor} = ${quotient}, so ${dividend} ÷ ${divisor} = ${quotient} too.`,
-        answer: quotient,
-      },
+      // Replaces what used to be a separate "what's the new dividend/divisor"
+      // question plus one question per long-division cycle plus a final
+      // "what's the quotient" question — ManualDivisionLadder already covers
+      // all of that itself (converting to the equivalent whole-number
+      // division, then every quotient/subtract/bring-down digit) as one
+      // self-contained, self-validating widget, so there's nothing left for
+      // separate Q&A steps to ask.
+      customStep(
+        {
+          prompt: `Write ${dividend} ÷ ${divisor} as the equivalent whole-number division, then divide it out below.`,
+          hint: `${divisor} has ${places} decimal place${places === 1 ? "" : "s"} — multiply both numbers by ${shiftBy} first (giving ${shiftedDividend} ÷ ${shiftedDivisor}), then divide the way you would on paper.`,
+          explain: `${shiftedDividend} ÷ ${shiftedDivisor} = ${quotient}, so ${dividend} ÷ ${divisor} = ${quotient} too.`,
+        },
+        (onDone) => <ManualDivisionLadder dividend={shiftedDividend} divisor={shiftedDivisor} cycles={cycles} onComplete={onDone} />,
+        `${dividend} ÷ ${divisor} = ${quotient}`
+      ),
     ],
     wrapUp: `${dividend} ÷ ${divisor} = ${quotient}.`,
   };
@@ -1448,6 +1510,12 @@ function divideProblem(): Problem {
 function Preview() {
   return <PlaceValueColumns operation="add" top={12.5} bottom={3.25} done={1} />;
 }
+
+// Shared by both the Divide ProblemType's own `buckets` (which Mixed-mode's
+// shuffle bag reads to expand Divide into one bag slot per bucket) and the
+// Unit's `requiredBuckets` (which mastery-gates on) — one list, not two
+// copies that could drift apart.
+const DIVIDE_BUCKETS = ["shift1-clean", "shift1-pad", "shift2-clean", "shift2-pad"];
 
 export const decimalOperations: Unit = {
   id: "decimalOperations",
@@ -1472,7 +1540,12 @@ export const decimalOperations: Unit = {
     { label: "Add", make: addProblem },
     { label: "Subtract", make: subtractProblem },
     { label: "Multiply", make: multiplyProblem },
-    { label: "Divide", make: divideProblem },
+    { label: "Divide", make: divideProblem, buckets: DIVIDE_BUCKETS },
   ],
+  // Only divideProblem() tags a bucket today (the other 3 generators don't
+  // set Problem.bucket) — a mastery star now requires seeing all 4 of these
+  // at least once, cleanly, not just MASTERY_GOAL clean solves from wherever
+  // "Mixed" happened to land. See the pilot write-up this was built for.
+  requiredBuckets: DIVIDE_BUCKETS,
   test: decimalOperationsTest,
 };
