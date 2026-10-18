@@ -1,7 +1,7 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { DivisionLadder, PlaceValueColumns, computeLongDivision } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
-import { choice, type Problem, type Step } from "../../../shared/engine/types";
+import { choice, verticalMultiply, type Problem, type Step } from "../../../shared/engine/types";
 import { QA, QB, Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { decimalOperationsTest } from "./DecimalOperationsTest";
@@ -257,6 +257,819 @@ function AlignDecimalsDrill({
   );
 }
 
+// Dedicated example for the multiply drill below — chosen (like ALIGN_TOP/
+// ALIGN_BOTTOM above) so its own numbers land cleanly on step 3 with no
+// leading-zero fuss, since cramming the placeholder-zero edge case into the
+// same gated example would force step 3 to depend on step 4 finishing first.
+// The small paired example in MultiplyPlaceholderExample handles that case
+// instead, the same division of labor PlaceholderZeroExample has for add/subtract.
+const MULT_A = 2.3;
+const MULT_B = 1.4;
+
+/** Inserts a decimal point `places` digits from the right of a whole-number
+ *  product, padding with leading zeros first if the product is too short —
+ *  e.g. placeDecimalPoint(6, 3) = "0.006". */
+const placeDecimalPoint = (product: number, places: number): string => {
+  const padded = String(product).padStart(places + 1, "0");
+  const whole = padded.slice(0, padded.length - places) || "0";
+  const frac = padded.slice(padded.length - places);
+  return places > 0 ? `${whole}.${frac}` : whole;
+};
+
+const HOP_BOX_W = 36;
+
+/**
+ * Shows the decimal point visibly hopping leftward, one digit at a time,
+ * from the end of a whole-number product to its final position `places`
+ * digits in from the right — the physical move Step 3 asks a student to do
+ * by counting. `placeholderCount` badges that many of the LEADING digits as
+ * added placeholders, so one illustration carries both ideas at once: which
+ * digits got padded in, and where the point lands after them.
+ *
+ * Plays once on mount as a short timed sequence (not a scrubbable player —
+ * this is a quick illustration, not its own teaching sequence with
+ * controls), then settles; skips straight to the settled position under
+ * prefers-reduced-motion, the same convention FlipStep uses elsewhere in
+ * this lab.
+ */
+function DecimalPointHop({ digits, places, placeholderCount = 0 }: { digits: string; places: number; placeholderCount?: number }) {
+  const reducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const [hop, setHop] = useState(reducedMotion ? places : 0);
+  const L = digits.length;
+
+  useEffect(() => {
+    if (reducedMotion || hop >= places) return;
+    const id = setTimeout(() => setHop((h) => h + 1), hop === 0 ? 600 : 700);
+    return () => clearTimeout(id);
+  }, [hop, places, reducedMotion]);
+
+  const gapX = (h: number) => (L - h) * HOP_BOX_W;
+  const settled = hop >= places;
+  const whole = digits.slice(0, L - places) || "0";
+  const frac = digits.slice(L - places);
+
+  return (
+    <div className="decimal-hop">
+      <div className="decimal-hop-track" style={{ width: L * HOP_BOX_W }} role="img" aria-label={`Counting ${places} place${places === 1 ? "" : "s"} from the right of ${digits} places the decimal point, giving ${whole}.${frac}`}>
+        {digits.split("").map((d, i) => (
+          <span key={i} className={i < placeholderCount ? "decimal-hop-digit decimal-hop-placeholder" : "decimal-hop-digit"}>
+            {d}
+          </span>
+        ))}
+        {Array.from({ length: places }, (_, i) => {
+          const h = i + 1;
+          return (
+            <span key={h} className={hop >= h ? "decimal-hop-mark passed" : "decimal-hop-mark"} style={{ left: gapX(h) }}>
+              {h}
+            </span>
+          );
+        })}
+        <span className="decimal-hop-point" style={{ left: gapX(hop) }}>
+          .
+        </span>
+      </div>
+      <p className="decimal-hop-caption">
+        {settled ? (
+          <>
+            = <b>{whole}.{frac}</b>
+          </>
+        ) : (
+          `Counting ${hop} of ${places} place${places === 1 ? "" : "s"}…`
+        )}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * A small standalone example (a different number pair than the drill's own
+ * 2.3/1.4, so a student sees the idea apply twice) showing what happens when
+ * the whole-number product has FEWER digits than the decimal places you
+ * need — step 4 of the guide. Placeholder zeros go in FRONT of the product
+ * here, unlike addition's placeholder zeros, which go after it.
+ */
+function MultiplyPlaceholderExample() {
+  const decA = 0.3;
+  const decB = 0.2;
+  const wholeA = 3;
+  const wholeB = 2;
+  const product = 6;
+  const places = 2; // decA and decB each have 1 decimal place
+  return (
+    <div className="placeholder-zero-example">
+      <p className="pz-caption" style={{ margin: "0 0 10px" }}>
+        {decA} × {decB} — ignore the points:
+      </p>
+      {/* A standalone, individually-true fact (3 × 2 = 6) first, THEN the
+          padding-and-hopping illustration below — stating them as one line
+          ("3 × 2 = 006") would read as a wrong multiplication fact. */}
+      <div className="pz-equation" style={{ fontSize: 22, marginBottom: 4 }}>
+        <span className="pz-value">
+          {wholeA} × {wholeB} = {product}
+        </span>
+      </div>
+      <p className="pz-caption" style={{ margin: "0 0 4px" }}>
+        {product} needs {places} decimal places but is only 1 digit long, so a placeholder zero (highlighted) is added to the front. Watch the point count over:
+      </p>
+      <DecimalPointHop digits="06" places={places} placeholderCount={1} />
+    </div>
+  );
+}
+
+/**
+ * The multiply-decimals counterpart to AlignDecimalsDrill: the same gated,
+ * check-your-work-before-the-next-stage-unlocks structure, now following the
+ * "multiply as whole numbers → count decimal places → place the point"
+ * guide instead of "line up the decimal points → combine column by column."
+ * Multiplying never needs the decimal points lined up, so there's no digit-
+ * box column rebuild here — the three gated stages below map directly onto
+ * steps 1-3 of the guide. Step 4 (placeholder zeros) isn't exercised by this
+ * drill's own numbers; see MultiplyPlaceholderExample for that case.
+ */
+function MultiplyDecimalsDrill({
+  onComplete,
+  prefilled,
+}: {
+  onComplete?: () => void;
+  /** Reviewing a drill the student already passed — open straight to the
+   *  fully-correct, fully-checked state instead of making them redo the
+   *  typing to see what they already proved they can do. Same role as
+   *  AlignDecimalsDrill's own `prefilled` prop; needed here too since this
+   *  whole component unmounts (losing all its state) whenever the student
+   *  leaves the Explore tab and comes back. */
+  prefilled?: boolean;
+}) {
+  const wholeA = Math.round(MULT_A * 10);
+  const wholeB = Math.round(MULT_B * 10);
+  const wholeProduct = wholeA * wholeB;
+  const placesA = decimalPlaces(MULT_A);
+  const placesB = decimalPlaces(MULT_B);
+  const totalPlaces = placesA + placesB;
+  const finalProduct = placeDecimalPoint(wholeProduct, totalPlaces);
+
+  // Step 1 breaks wholeA × wholeB into its two partial products (wholeB's
+  // tens digit and ones digit, multiplied separately) rather than asking for
+  // the product in one jump — the standard "partial products" method a 4th
+  // grader learns before the compact algorithm, and input boxes for each
+  // piece instead of just the final total.
+  const bTens = Math.floor(wholeB / 10) * 10;
+  const bOnes = wholeB % 10;
+  const partialOnes = wholeA * bOnes;
+  const partialTens = wholeA * bTens;
+
+  const [p1, setP1] = useState(prefilled ? String(partialOnes) : "");
+  const [p2, setP2] = useState(prefilled ? String(partialTens) : "");
+  const [s1, setS1] = useState(prefilled ? String(wholeProduct) : "");
+  const [checked1, setChecked1] = useState(!!prefilled);
+  const okP1 = Number(p1) === partialOnes;
+  const okP2 = Number(p2) === partialTens;
+  const ok1 = Number(s1) === wholeProduct;
+  const allOk1 = okP1 && okP2 && ok1;
+
+  const [s2a, setS2a] = useState(prefilled ? String(placesA) : "");
+  const [s2b, setS2b] = useState(prefilled ? String(placesB) : "");
+  const [s2c, setS2c] = useState(prefilled ? String(totalPlaces) : "");
+  const [checked2, setChecked2] = useState(!!prefilled);
+  const ok2a = Number(s2a) === placesA;
+  const ok2b = Number(s2b) === placesB;
+  const ok2c = Number(s2c) === totalPlaces;
+  const allOk2 = ok2a && ok2b && ok2c;
+
+  const [s3, setS3] = useState(prefilled ? finalProduct : "");
+  const [checked3, setChecked3] = useState(!!prefilled);
+  const ok3 = s3.trim() === finalProduct;
+
+  // The capstone below the 3 numbered steps: the same partial products and
+  // final answer, rewritten in the standard vertical form.
+  const [v1, setV1] = useState(prefilled ? String(partialOnes) : "");
+  const [v2, setV2] = useState(prefilled ? String(partialTens) : "");
+  const [v3, setV3] = useState(prefilled ? finalProduct : "");
+  const [checked4, setChecked4] = useState(!!prefilled);
+  const okV1 = Number(v1) === partialOnes;
+  const okV2 = Number(v2) === partialTens;
+  const okV3 = v3.trim() === finalProduct;
+  const allOk4 = okV1 && okV2 && okV3;
+
+  useEffect(() => {
+    if (checked4 && allOk4) onComplete?.();
+  }, [checked4, allOk4, onComplete]);
+
+  const fieldStyle = (ok: boolean, isChecked: boolean): CSSProperties => (isChecked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+
+  return (
+    <div className="align-drill">
+      <div className="align-drill-top">
+        <div className="align-drill-text">
+          <p className="intro-gate-title">Step 1: Multiply as whole numbers</p>
+          <p>
+            Ignore the decimal points completely — multiply <b>{MULT_A}</b> and <b>{MULT_B}</b> like regular whole numbers: <b>{wholeA}</b> × <b>{wholeB}</b>. You do not need to line up the decimal points at all.
+          </p>
+          <div className="controls">
+            <div className="control-row">
+              <label>
+                Break {wholeB} into {bTens} + {bOnes}. What is {wholeA} × {bOnes}?{" "}
+                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 60, ...fieldStyle(okP1, checked1) }} value={p1} onChange={(e) => setP1(e.target.value)} />
+              </label>
+            </div>
+            <div className="control-row">
+              <label>
+                What is {wholeA} × {bTens}?{" "}
+                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 70, ...fieldStyle(okP2, checked1) }} value={p2} onChange={(e) => setP2(e.target.value)} />
+              </label>
+            </div>
+            <div className="control-row">
+              <label>
+                Add your two answers above together — what's {wholeA} × {wholeB}?{" "}
+                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 70, ...fieldStyle(ok1, checked1) }} value={s1} onChange={(e) => setS1(e.target.value)} />
+              </label>
+            </div>
+          </div>
+          <button className="btn primary" onClick={() => setChecked1(true)}>
+            Check my work
+          </button>
+          {checked1 && (
+            <p className={`feedback ${allOk1 ? "good" : "bad"}`} role="alert">
+              {allOk1
+                ? `Exactly — ${wholeA} × ${bOnes} = ${partialOnes}, ${wholeA} × ${bTens} = ${partialTens}, and ${partialOnes} + ${partialTens} = ${wholeProduct}.`
+                : `Not quite — multiply ${wholeA} by each part of ${wholeB} (${bOnes} and ${bTens}) separately, then add those two results together.`}
+            </p>
+          )}
+        </div>
+        <MultiplyPlaceholderExample />
+      </div>
+
+      {checked1 && allOk1 && (
+        <div className="align-stack-wrap">
+          <p className="intro-gate-title">Step 2: Count the decimal places</p>
+          <p>Look at the ORIGINAL numbers (before you ignored the points) and count the digits to the right of each decimal point.</p>
+          <div className="controls">
+            <div className="control-row">
+              <label>
+                Decimal places in {MULT_A}?{" "}
+                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok2a, checked2) }} value={s2a} onChange={(e) => setS2a(e.target.value)} />
+              </label>
+            </div>
+            <div className="control-row">
+              <label>
+                Decimal places in {MULT_B}?{" "}
+                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok2b, checked2) }} value={s2b} onChange={(e) => setS2b(e.target.value)} />
+              </label>
+            </div>
+            <div className="control-row">
+              <label>
+                Total decimal places needed?{" "}
+                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok2c, checked2) }} value={s2c} onChange={(e) => setS2c(e.target.value)} />
+              </label>
+            </div>
+          </div>
+          <button className="btn primary" onClick={() => setChecked2(true)}>
+            Check my work
+          </button>
+          {checked2 && (
+            <p className={`feedback ${allOk2 ? "good" : "bad"}`} role="alert">
+              {allOk2
+                ? `Right — ${placesA} + ${placesB} = ${totalPlaces} decimal places total. Now place the decimal point in your product:`
+                : "Not quite — count the digits after the decimal point in each ORIGINAL number, then add the two counts together."}
+            </p>
+          )}
+        </div>
+      )}
+
+      {checked2 && allOk2 && (
+        <div className="align-stack-wrap">
+          <p className="intro-gate-title">Step 3: Place the decimal point</p>
+          <label>
+            Start at the far right of {wholeProduct} and count {totalPlaces} place{totalPlaces === 1 ? "" : "s"} to the left. What's the final product?{" "}
+            <input className="answer" autoComplete="off" style={{ width: 90, ...fieldStyle(ok3, checked3) }} value={s3} onChange={(e) => setS3(e.target.value)} />
+          </label>
+          <button className="btn primary" style={{ marginLeft: 14 }} onClick={() => setChecked3(true)}>
+            Check my answer
+          </button>
+          {checked3 && (
+            <p className={`feedback ${ok3 ? "good" : "bad"}`} role="alert">
+              {ok3 ? `Correct — ${MULT_A} × ${MULT_B} = ${finalProduct}.` : `Not quite — counting ${totalPlaces} places from the right of ${wholeProduct} gives ${finalProduct}.`}
+            </p>
+          )}
+        </div>
+      )}
+      {/* A capstone, not a new numbered guide step — the same two partial
+          products and final answer from steps 1-3, just rewritten in the
+          standard vertical form a student would actually use on paper,
+          decimal points and all, so the sentence-based steps above and the
+          written form connect as the same procedure instead of two
+          different-looking things. */}
+      {checked3 && ok3 && (
+        <div className="align-stack-wrap">
+          <p className="intro-gate-title">Now try it the way you'd write it on paper</p>
+          <div className="decimal-vert">
+            <div className="decimal-vert-row decimal-vert-given">{MULT_A}</div>
+            <div className="decimal-vert-row decimal-vert-given">
+              <span className="decimal-vert-op">×</span> {MULT_B}
+            </div>
+            <div className="decimal-vert-rule" />
+            <div className="decimal-vert-row">
+              <input
+                className="answer"
+                inputMode="numeric"
+                autoComplete="off"
+                aria-label={`${wholeA} times ${bOnes}`}
+                style={{ width: 90, textAlign: "right", fontFamily: "'Courier New', monospace", fontSize: 20, ...fieldStyle(okV1, checked4) }}
+                value={v1}
+                onChange={(e) => setV1(e.target.value)}
+              />
+            </div>
+            <div className="decimal-vert-row">
+              <input
+                className="answer"
+                inputMode="numeric"
+                autoComplete="off"
+                aria-label={`${wholeA} times ${bTens}`}
+                style={{ width: 90, textAlign: "right", fontFamily: "'Courier New', monospace", fontSize: 20, ...fieldStyle(okV2, checked4) }}
+                value={v2}
+                onChange={(e) => setV2(e.target.value)}
+              />
+            </div>
+            <div className="decimal-vert-rule" />
+            <div className="decimal-vert-row">
+              <input
+                className="answer"
+                autoComplete="off"
+                aria-label={`${MULT_A} times ${MULT_B}, with the decimal point`}
+                style={{ width: 90, textAlign: "right", fontFamily: "'Courier New', monospace", fontSize: 20, ...fieldStyle(okV3, checked4) }}
+                value={v3}
+                onChange={(e) => setV3(e.target.value)}
+              />
+            </div>
+          </div>
+          <button className="btn primary" onClick={() => setChecked4(true)}>
+            Check my work
+          </button>
+          {checked4 && (
+            <p className={`feedback ${allOk4 ? "good" : "bad"}`} role="alert">
+              {allOk4
+                ? `Exactly — the same two partial products and final answer as before, just written the standard way.`
+                : `Not quite — these are the same two partial products and final answer from steps 1-3, written in the standard vertical form: ${wholeA} × ${bOnes}, then ${wholeA} × ${bTens} shifted one place left, then their sum with the point placed.`}
+            </p>
+          )}
+        </div>
+      )}
+      {checked4 && allOk4 && <PlaceValueColumns operation="multiply" top={MULT_A} bottom={MULT_B} done={1} />}
+    </div>
+  );
+}
+
+// Dedicated example for the divide drill — chosen (like MULT_A/MULT_B above)
+// so shifting by its own decimal-place count lands cleanly (both numbers
+// become whole with nothing left over) and the resulting long division runs
+// 2 full cycles with a genuine nonzero intermediate remainder, instead of
+// collapsing to a single trivial step.
+const DIV_DIVIDEND = 15.6;
+const DIV_DIVISOR = 1.2;
+
+/**
+ * Two numbers' decimal points moving right together, the same number of
+ * places, at the same time — the division counterpart to DecimalPointHop.
+ * Multiplying both dividend and divisor by the same power of 10 doesn't
+ * change what the division equals, and seeing both points move in lockstep
+ * is the one part of this step that's genuinely hard to picture from text
+ * alone. A faint "ghost" marks where each point started; once settled, a
+ * curved arrow sweeps from there to where it landed, with a solid point at
+ * the new spot — the classic "arrow shows the point's move" picture, not
+ * just a dot relocating. Plays once on mount, respects prefers-reduced-motion.
+ */
+function DecimalShiftHop({ top, bottom, places }: { top: number; bottom: number; places: number }) {
+  const reducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const [settled, setSettled] = useState(!!reducedMotion);
+
+  useEffect(() => {
+    if (reducedMotion) return;
+    const id = setTimeout(() => setSettled(true), 700);
+    return () => clearTimeout(id);
+  }, [reducedMotion]);
+
+  const ARROW_H = 28;
+
+  const renderTrack = (value: number, key: string) => {
+    const [whole, frac = ""] = String(value).split(".");
+    const digits = whole + frac;
+    const fromX = whole.length * HOP_BOX_W;
+    const toX = (whole.length + places) * HOP_BOX_W;
+    const midX = (fromX + toX) / 2;
+    const trackW = digits.length * HOP_BOX_W;
+    return (
+      <div className="decimal-shift-row" key={key}>
+        <svg width={trackW} height={ARROW_H} viewBox={`0 0 ${trackW} ${ARROW_H}`} style={{ display: "block", overflow: "visible" }} aria-hidden="true">
+          <defs>
+            <marker id={`arrowhead-${key}`} markerWidth="8" markerHeight="8" refX="5.5" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="var(--qc, #8A4FD8)" />
+            </marker>
+          </defs>
+          {settled && (
+            <path
+              d={`M ${fromX} ${ARROW_H - 4} Q ${midX} 2 ${toX} ${ARROW_H - 4}`}
+              fill="none"
+              stroke="var(--qc, #8A4FD8)"
+              strokeWidth="2.5"
+              markerEnd={`url(#arrowhead-${key})`}
+              className="decimal-shift-arrow-path"
+            />
+          )}
+        </svg>
+        <div className="decimal-hop-track" style={{ width: trackW, margin: "0 0 6px" }}>
+          {digits.split("").map((d, i) => (
+            <span key={i} className="decimal-hop-digit">
+              {d}
+            </span>
+          ))}
+          <span className="decimal-hop-point decimal-hop-point-ghost" style={{ left: fromX }}>
+            .
+          </span>
+          {settled && (
+            <span className="decimal-hop-point" style={{ left: toX }}>
+              .
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="decimal-hop">
+      {renderTrack(top, "top")}
+      {renderTrack(bottom, "bottom")}
+      <p className="decimal-hop-caption">{settled ? <>× {Math.pow(10, places)} — now both are whole numbers</> : "Watch both decimal points move…"}</p>
+    </div>
+  );
+}
+
+const LADDER_CELL_EM = 2.2;
+// verticalAlign:"top" is load-bearing, not cosmetic: inline-block spans
+// default to baseline alignment, and an EMPTY inline-block (a not-yet-
+// reached column, no text inside) computes its baseline differently than one
+// with a digit in it — mixing the two in the same row visibly shifts them
+// relative to each other. Pinning every cell to its box's top edge removes
+// that font-baseline ambiguity entirely, for every row in this ladder.
+const ladderCellStyle: CSSProperties = { display: "inline-block", width: `${LADDER_CELL_EM}em`, textAlign: "center", verticalAlign: "top" };
+// Border + padding of the bracket's inner box, in em — kept in em (not px) so
+// it scales with the same font-size everything else here uses, making this
+// an exact offset rather than a value that only happens to line up at 20px.
+const BRACKET_INSET_EM = 0.3;
+
+/** One fill-in digit, as a (row, column) position in the ladder's shared
+ *  grid — column is the dividend digit index this box lines up under. */
+interface DigitSlot {
+  col: number;
+  expected: number;
+}
+
+/** The fill-in boxes for one cycle: the quotient digit (above the bracket),
+ *  the subtraction product (one box per digit, under the group just
+ *  divided), and the result row (the remainder's digits, immediately
+ *  followed — same row — by the next digit brought down from the dividend,
+ *  if there is one). Three separate stages a student clears in order; a
+ *  stage's boxes all appear together and can be filled in any order, the
+ *  next stage unlocking once every box in this one is correct. */
+interface CycleSlots {
+  quotient: DigitSlot;
+  product: DigitSlot[];
+  result: DigitSlot[];
+}
+
+function buildCycleSlots(dividendDigits: number[], cycles: ReturnType<typeof computeLongDivision>["cycles"]): CycleSlots[] {
+  return cycles.map((c, i) => {
+    const productDigits = String(c.product).split("").map(Number);
+    const productStart = c.atIndex - productDigits.length + 1;
+    const product = productDigits.map((d, k) => ({ col: productStart + k, expected: d }));
+
+    const remainderDigits = String(c.remainder).split("").map(Number);
+    const remainderStart = c.atIndex - remainderDigits.length + 1;
+    const result: DigitSlot[] = remainderDigits.map((d, k) => ({ col: remainderStart + k, expected: d }));
+    if (i < cycles.length - 1) {
+      const bringDownCol = c.atIndex + 1;
+      result.push({ col: bringDownCol, expected: dividendDigits[bringDownCol] });
+    }
+
+    return { quotient: { col: c.atIndex, expected: c.qDigit }, product, result };
+  });
+}
+
+/**
+ * The fully manual counterpart to DivisionLadder — every digit a student
+ * would write by hand (the quotient digit, the subtraction product, the
+ * remainder, and each digit brought down from the dividend) is its own fill-
+ * in box, planted in its real column of a single shared grid so the bracket,
+ * quotient row, and every cycle's rows are guaranteed to line up — not
+ * approximated with hand-tuned offsets per row. A stage's boxes (e.g. both
+ * digits of a 2-digit product) appear together and can be filled in any
+ * order; the stage confirms once every box in it is right, which reveals the
+ * next stage — quotient digit → product → remainder (+ bring-down) → next
+ * cycle's quotient digit — same order as solving it on paper. Always starts
+ * blank: this step's whole point is the student doing the work by hand, so
+ * unlike the gated concept-check steps above it, it never opens pre-solved.
+ */
+function ManualDivisionLadder({ dividend, divisor, cycles, onComplete }: { dividend: number; divisor: number; cycles: ReturnType<typeof computeLongDivision>["cycles"]; onComplete?: () => void }) {
+  const dividendDigits = String(dividend).split("").map(Number);
+  const divisorDigits = String(divisor).split("").map(Number);
+  const cycleSlots = buildCycleSlots(dividendDigits, cycles);
+  // Stage 0: write the equivalent whole-number division itself — converting
+  // "15.6 ÷ 1.2" to "156 ÷ 12" is a real part of the skill, not a given the
+  // ladder should just hand the student. Its slots are the divisor's digits
+  // followed by the dividend's — one combined stage, same as a cycle's
+  // product/result rows, so every digit in it appears together and can be
+  // filled in in any order.
+  const bracketStage = { kind: "bracket" as const, slots: [...divisorDigits.map((d) => ({ col: -1, expected: d })), ...dividendDigits.map((d) => ({ col: -1, expected: d }))] };
+  const stages = [
+    bracketStage,
+    ...cycleSlots.flatMap((cs) => [
+      { kind: "quotient" as const, slots: [cs.quotient] },
+      { kind: "product" as const, slots: cs.product },
+      { kind: "result" as const, slots: cs.result },
+    ]),
+  ];
+  const STAGE_OFFSET = 1; // every cycle stage index shifts by 1 to make room for the bracket stage
+
+  const [values, setValues] = useState<string[][]>(() => stages.map((st) => st.slots.map(() => "")));
+  const [confirmed, setConfirmed] = useState<boolean[][]>(() => stages.map((st) => st.slots.map(() => false)));
+
+  const stageDone = (i: number) => confirmed[i].every(Boolean);
+  const stageReached = (i: number) => i === 0 || stageDone(i - 1);
+  const allDone = stageDone(stages.length - 1);
+
+  useEffect(() => {
+    if (allDone) onComplete?.();
+  }, [allDone, onComplete]);
+
+  const onSlotChange = (stageIdx: number, slotIdx: number, raw: string) => {
+    const v = raw.replace(/[^0-9]/g, "").slice(-1);
+    setValues((prev) => prev.map((row, si) => (si === stageIdx ? row.map((x, k) => (k === slotIdx ? v : x)) : row)));
+    if (v !== "" && Number(v) === stages[stageIdx].slots[slotIdx].expected) {
+      setConfirmed((prev) => prev.map((row, si) => (si === stageIdx ? row.map((x, k) => (k === slotIdx ? true : x)) : row)));
+    }
+  };
+
+  const colOffset = (col: number) => `${divisorDigits.length * LADDER_CELL_EM + BRACKET_INSET_EM + col * LADDER_CELL_EM}em`;
+  const badStyle = (value: string, expected: number): CSSProperties | undefined => (value !== "" && Number(value) !== expected ? { borderColor: "var(--bad)" } : undefined);
+
+  const renderSlot = (stageIdx: number, slotIdx: number, label: string) => {
+    if (confirmed[stageIdx][slotIdx]) return stages[stageIdx].slots[slotIdx].expected;
+    return (
+      <input
+        className="division-digit-input"
+        inputMode="numeric"
+        maxLength={1}
+        autoComplete="off"
+        aria-label={label}
+        value={values[stageIdx][slotIdx]}
+        onChange={(e) => onSlotChange(stageIdx, slotIdx, e.target.value)}
+        style={badStyle(values[stageIdx][slotIdx], stages[stageIdx].slots[slotIdx].expected)}
+      />
+    );
+  };
+
+  return (
+    <div role="group" aria-label={`Long division of ${dividend} by ${divisor}`} style={{ fontFamily: "'Courier New', monospace", fontSize: 24, color: "var(--ink)", display: "inline-block" }}>
+      {/* quotient row — stays blank until the bracket stage (0) is done */}
+      <div style={{ marginLeft: colOffset(0) }}>
+        {dividendDigits.map((_, col) => {
+          const cycIdx = cycleSlots.findIndex((cs) => cs.quotient.col === col);
+          if (cycIdx === -1) return <span key={col} style={ladderCellStyle} />;
+          const stageIdx = STAGE_OFFSET + cycIdx * 3; // quotient is always the first of each cycle's 3 stages
+          if (!stageReached(stageIdx)) return <span key={col} style={ladderCellStyle} />;
+          return (
+            <span key={col} style={{ ...ladderCellStyle, ...(confirmed[stageIdx][0] ? { color: "var(--qa, #3157D5)", fontWeight: 700 } : {}) }}>
+              {renderSlot(stageIdx, 0, `quotient digit, cycle ${cycIdx + 1}`)}
+            </span>
+          );
+        })}
+      </div>
+      {/* bracket + dividend — the equivalent whole-number division itself is
+          stage 0, one fill-in box per digit of both the divisor and the
+          dividend, not given text. */}
+      <div style={{ display: "flex", alignItems: "flex-start" }}>
+        {divisorDigits.map((_, i) => (
+          <span key={i} style={ladderCellStyle}>
+            {renderSlot(0, i, `divisor digit ${i + 1} of ${divisorDigits.length}`)}
+          </span>
+        ))}
+        <div style={{ borderTop: "0.15em solid var(--ink)", borderLeft: "0.15em solid var(--ink)", paddingLeft: "0.15em", paddingTop: "0.05em" }}>
+          {dividendDigits.map((_, i) => (
+            <span key={i} style={ladderCellStyle}>
+              {renderSlot(0, divisorDigits.length + i, `dividend digit ${i + 1} of ${dividendDigits.length}`)}
+            </span>
+          ))}
+        </div>
+      </div>
+      {/* cycles: product row (with the bring-down arrow as its trailing
+          cell), then the result row (remainder + bring-down) */}
+      {cycleSlots.map((cs, cycIdx) => {
+        const qStage = STAGE_OFFSET + cycIdx * 3;
+        const prodStage = qStage + 1;
+        const resultStage = qStage + 2;
+        if (!stageReached(prodStage)) return null;
+        const prodWidth = `${cs.product.length * LADDER_CELL_EM}em`;
+        const hasBringDown = cycIdx < cycleSlots.length - 1;
+        const bringDownSlot = hasBringDown ? cs.result[cs.result.length - 1] : null;
+        return (
+          <div key={cycIdx}>
+            {/* The "−" sign sits absolutely positioned just left of the row,
+                outside the row's own flow — it must NOT consume horizontal
+                space before the first box, or every box in the row shifts
+                right of the column it's supposed to land in. The bring-down
+                arrow is a trailing cell of this SAME row (not a separate row
+                below it) — it lands in the right column for free since it's
+                just one more ladderCellStyle cell after the product's own. */}
+            <div style={{ marginLeft: colOffset(cs.product[0].col), position: "relative", color: "var(--muted)" }}>
+              <span style={{ position: "absolute", right: "100%", marginRight: "0.25em" }} aria-hidden="true">
+                −
+              </span>
+              {cs.product.map((slot, slotIdx) => (
+                <span key={slotIdx} style={ladderCellStyle}>
+                  {renderSlot(prodStage, slotIdx, `subtraction digit ${slotIdx + 1} of ${cs.product.length}, cycle ${cycIdx + 1}`)}
+                </span>
+              ))}
+              {stageDone(prodStage) && bringDownSlot && (
+                <span style={{ ...ladderCellStyle, color: "var(--qb, #E39A1E)", fontWeight: 700 }} aria-hidden="true">
+                  ↓
+                </span>
+              )}
+            </div>
+            <div style={{ marginLeft: colOffset(cs.product[0].col), borderTop: "1px solid var(--line)", width: prodWidth }} />
+            {stageReached(resultStage) && (
+              <div style={{ marginLeft: colOffset(cs.result[0].col), fontWeight: stageDone(resultStage) ? 700 : 400, color: stageDone(resultStage) ? "var(--qc, #8A4FD8)" : "var(--ink)" }}>
+                {cs.result.map((slot, slotIdx) => {
+                  const isBringDown = hasBringDown && slotIdx === cs.result.length - 1;
+                  const label = isBringDown ? `bring down the next digit, cycle ${cycIdx + 1}` : `remainder digit ${slotIdx + 1}, cycle ${cycIdx + 1}`;
+                  return (
+                    <span key={slotIdx} style={ladderCellStyle}>
+                      {renderSlot(resultStage, slotIdx, label)}
+                      </span>
+                    );
+                  })}
+                </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * A small standalone example (different numbers than the drill's own
+ * 15.6 ÷ 1.2, so a student sees the idea apply twice) showing what happens
+ * when shifting the decimal points DOESN'T make the division come out even
+ * in the original digits — division's equivalent of a placeholder zero:
+ * bring down a zero and keep going, same as long division with whole
+ * numbers that don't divide evenly.
+ */
+function DividePlaceholderExample() {
+  return (
+    <div className="placeholder-zero-example">
+      <p className="pz-caption" style={{ margin: "0 0 10px" }}>
+        0.5 ÷ 0.4 — shift both by 10:
+      </p>
+      <div className="pz-equation" style={{ fontSize: 20, marginBottom: 4 }}>
+        <span className="pz-value">5 ÷ 4 = 1 R1</span>
+      </div>
+      <p className="pz-caption" style={{ margin: "0 0 4px" }}>
+        There's a remainder, and no digits left to bring down — so bring down a <b>placeholder zero</b> instead (and put a point in the quotient):
+      </p>
+      <div className="pz-equation" style={{ fontSize: 20, marginBottom: 4 }}>
+        <span className="pz-value">10 ÷ 4 = 2 R2</span>
+      </div>
+      <p className="pz-caption" style={{ margin: "0 0 4px" }}>Still a remainder — bring down another zero:</p>
+      <div className="pz-equation" style={{ fontSize: 20, marginBottom: 4 }}>
+        <span className="pz-value">20 ÷ 4 = 5 R0</span>
+      </div>
+      <p className="pz-caption">
+        No remainder — done: <b>0.5 ÷ 0.4 = 1.25</b>.
+      </p>
+    </div>
+  );
+}
+
+/**
+ * The divide-decimals counterpart to AlignDecimalsDrill/MultiplyDecimalsDrill
+ * — same gated, check-before-the-next-stage-unlocks structure, now following
+ * "make the divisor whole → shift both numbers → long-divide" instead of
+ * either of those. Unlike the other two, the "written form" IS the gated
+ * content here — DivisionLadder fills in one cycle at a time as each cycle's
+ * question is answered, rather than a separate capstone connecting sentence
+ * steps to a written form shown only at the end; there's nothing to connect,
+ * the cycles already are the written form.
+ */
+function DivideDecimalsDrill({ onComplete, prefilled }: { onComplete?: () => void; prefilled?: boolean }) {
+  const places = decimalPlaces(DIV_DIVISOR);
+  const shiftedDivisor = Math.round(DIV_DIVISOR * Math.pow(10, places));
+  const shiftedDividend = Math.round(DIV_DIVIDEND * Math.pow(10, places));
+  const { cycles } = computeLongDivision(shiftedDividend, shiftedDivisor);
+
+  const [s1, setS1] = useState(prefilled ? String(places) : "");
+  const [checked1, setChecked1] = useState(!!prefilled);
+  const ok1 = Number(s1) === places;
+
+  const [s2a, setS2a] = useState(prefilled ? String(shiftedDividend) : "");
+  const [s2b, setS2b] = useState(prefilled ? String(shiftedDivisor) : "");
+  const [checked2, setChecked2] = useState(!!prefilled);
+  const ok2a = Number(s2a) === shiftedDividend;
+  const ok2b = Number(s2b) === shiftedDivisor;
+  const allOk2 = ok2a && ok2b;
+
+  // Step 3 manages its own fill-in-every-digit state internally (see
+  // ManualDivisionLadder) and — unlike steps 1/2 — always starts blank, even
+  // on a prefilled reopen, since doing the division by hand is the entire
+  // point of this step. So divideDone always starts false too, regardless of
+  // `prefilled`, or this wrap-up line would show above a blank ladder.
+  const [divideDone, setDivideDone] = useState(false);
+  const handleDivideComplete = useCallback(() => {
+    setDivideDone(true);
+    onComplete?.();
+  }, [onComplete]);
+
+  const fieldStyle = (ok: boolean, isChecked: boolean): CSSProperties => (isChecked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+
+  return (
+    <div className="align-drill">
+      <p style={{ fontSize: 17, fontWeight: 700, margin: "0 0 14px" }}>
+        Divide {DIV_DIVIDEND} ÷ {DIV_DIVISOR}
+      </p>
+      <div className="align-drill-top">
+        <div className="align-drill-text">
+          <p className="intro-gate-title">Step 1: Make the divisor a whole number</p>
+          <p>
+            To divide by <b>{DIV_DIVISOR}</b>, first turn it into a whole number. How many decimal places does {DIV_DIVISOR} have?
+          </p>
+          <div className="controls">
+            <div className="control-row">
+              <label>
+                Decimal places in {DIV_DIVISOR}?{" "}
+                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok1, checked1) }} value={s1} onChange={(e) => setS1(e.target.value)} />
+              </label>
+            </div>
+          </div>
+          <button className="btn primary" onClick={() => setChecked1(true)}>
+            Check my work
+          </button>
+          {checked1 && (
+            <p className={`feedback ${ok1 ? "good" : "bad"}`} role="alert">
+              {ok1 ? `Right — ${DIV_DIVISOR} has ${places} decimal place${places === 1 ? "" : "s"}, so both numbers shift ${places} place${places === 1 ? "" : "s"}.` : `Count the digits after the decimal point in ${DIV_DIVISOR}.`}
+            </p>
+          )}
+        </div>
+        <DividePlaceholderExample />
+      </div>
+
+      {checked1 && ok1 && (
+        <div className="align-stack-wrap">
+          <p className="intro-gate-title">Step 2: Shift both numbers</p>
+          <p>
+            Multiply <b>both</b> {DIV_DIVIDEND} and {DIV_DIVISOR} by 10 — multiplying both by the same amount doesn't change what the division equals, but it makes the divisor a whole number.
+          </p>
+          <DecimalShiftHop top={DIV_DIVIDEND} bottom={DIV_DIVISOR} places={places} />
+          <div className="controls">
+            <div className="control-row">
+              <label>
+                {DIV_DIVIDEND} × 10 ={" "}
+                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 70, ...fieldStyle(ok2a, checked2) }} value={s2a} onChange={(e) => setS2a(e.target.value)} />
+              </label>
+            </div>
+            <div className="control-row">
+              <label>
+                {DIV_DIVISOR} × 10 ={" "}
+                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 70, ...fieldStyle(ok2b, checked2) }} value={s2b} onChange={(e) => setS2b(e.target.value)} />
+              </label>
+            </div>
+          </div>
+          <button className="btn primary" onClick={() => setChecked2(true)}>
+            Check my work
+          </button>
+          {checked2 && (
+            <p className={`feedback ${allOk2 ? "good" : "bad"}`} role="alert">
+              {allOk2 ? `Right — ${shiftedDividend} ÷ ${shiftedDivisor} now, same value as ${DIV_DIVIDEND} ÷ ${DIV_DIVISOR}. Now divide:` : `Multiply each number by 10 — move the decimal point one place to the right.`}
+            </p>
+          )}
+        </div>
+      )}
+
+      {checked2 && allOk2 && (
+        <div className="align-stack-wrap">
+          <p className="intro-gate-title">Step 3: Divide</p>
+          <p className="muted small" style={{ margin: "0 0 10px" }}>
+            Write the equivalent whole-number division, then work it out the way you would on paper — quotient digit, subtract, bring down the next digit, repeat. Each box confirms as soon as it's right.
+          </p>
+          <ManualDivisionLadder dividend={shiftedDividend} divisor={shiftedDivisor} cycles={cycles} onComplete={handleDivideComplete} />
+          {divideDone && (
+            <p className="feedback good" role="alert" style={{ marginTop: 10 }}>
+              Correct — {DIV_DIVIDEND} ÷ {DIV_DIVISOR} = {cycles.map((c) => c.qDigit).join("")}.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   // Once the gate is already satisfied, the drill is optional — hidden by
@@ -289,9 +1102,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           { id: "divide", label: "Divide" },
         ]}
       />
-      {!introActive && (op === "add" || op === "subtract") && (
+      {/* Add/subtract hide this while their own gate is still due, since
+          AlignDecimalsDrill is shown mandatorily instead in that case (see
+          below). Multiply and divide have no mandatory variant, so their
+          toggle stays visible regardless of introActive — otherwise
+          switching to either while the add/subtract gate is still due shows
+          no drill AND no way to reach one, which is what this condition used
+          to do. */}
+      {((!introActive && (op === "add" || op === "subtract")) || op === "multiply" || op === "divide") && (
         <button className="btn ghost" style={{ width: "fit-content" }} onClick={() => setShowDrill((v) => !v)}>
-          {showDrill ? "Hide the lining-up drill" : "Show the lining-up drill"}
+          {showDrill ? "Hide the" : "Show the"} {op === "add" || op === "subtract" ? "lining-up drill" : "step-by-step guide"}
         </button>
       )}
       {/* Mandatory (and always shown) when the parent says the gate is
@@ -306,6 +1126,19 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       {(introActive || showDrill) && (op === "add" || op === "subtract") && (
         <AlignDecimalsDrill key={op} operation={op} onComplete={onIntroDone} prefilled={!introActive} />
       )}
+      {/* Multiply's step-by-step guide is never shown MANDATORILY (that only
+          ever covers whichever of add/subtract is active by default) — it's
+          always just the optional toggle above. But finishing it still
+          satisfies the same gate add/subtract's drill does: a student who
+          goes straight to Multiply and completes it has just as validly
+          proven they can do the required activity, and Practice unlocking
+          only for whoever happened to click Add or Subtract first — while
+          Multiply shows every sign of being "the activity" too, down to its
+          own Check-my-work buttons and completion feedback — was confusing,
+          not intentional gatekeeping. */}
+      {showDrill && op === "multiply" && <MultiplyDecimalsDrill key={op} onComplete={onIntroDone} prefilled={!introActive} />}
+      {/* Same non-mandatory-but-still-gate-satisfying treatment as Multiply. */}
+      {showDrill && op === "divide" && <DivideDecimalsDrill key={op} onComplete={onIntroDone} prefilled={!introActive} />}
       {op === "divide" ? (
         <DivisionLadder dividend={Math.round(top * 10)} divisor={Math.round(bottom * 10)} done={99} />
       ) : (
@@ -520,7 +1353,11 @@ function subtractProblem(): Problem {
 // ============================================================================
 
 function multiplyProblem(): Problem {
-  const a = randMoney1(2, 40);
+  // `a` used to go up to 40 (a 3-digit whole number once scaled), fine for a
+  // single "what's the product" box but too many digit boxes for the vertical
+  // step below — narrowed to match `b`'s own single-digit-dollar range, so
+  // every partial product and the final sum stay at most 2-3 digits.
+  const a = randMoney1(1, 9);
   const b = randMoney1(2, 9);
   const wholeA = Math.round(a * 10);
   const wholeB = Math.round(b * 10);
@@ -532,13 +1369,15 @@ function multiplyProblem(): Problem {
     story: `Multiply ${a} × ${b}.`,
     visual: (done: number) => <PlaceValueColumns operation="multiply" top={a} bottom={b} done={done >= 2 ? 1 : 0} />,
     steps: [
-      {
-        kind: "number",
-        prompt: `Ignore the decimal points for a moment. What is ${wholeA} × ${wholeB}?`,
-        hint: "Multiply as if both numbers were whole numbers.",
-        explain: `${wholeA} × ${wholeB} = ${wholeProduct}.`,
-        answer: wholeProduct,
-      },
+      verticalMultiply(
+        {
+          prompt: `Ignore the decimal points and multiply ${a} × ${b} the standard way: one partial product per digit of ${wholeB}, then add them up.`,
+          hint: `Multiply ${wholeA} by each digit of ${wholeB} separately — ones digit first, then tens — writing each partial product one place further left, then add them together.`,
+          explain: `${wholeA} × ${wholeB} = ${wholeProduct}.`,
+        },
+        a,
+        b
+      ),
       {
         kind: "number",
         prompt: `${a} has ${decimalPlaces(a)} decimal place${decimalPlaces(a) === 1 ? "" : "s"}, and ${b} has ${decimalPlaces(b)} — that's ${totalPlaces} total. Counting from the right of ${wholeProduct}, place the decimal point. What's the final product?`,

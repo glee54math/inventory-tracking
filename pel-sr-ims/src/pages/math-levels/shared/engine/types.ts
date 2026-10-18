@@ -163,7 +163,24 @@ export interface FracMultiplyStep extends BaseStep {
   tones?: ["a" | "b" | "c", "a" | "b" | "c"] | "none";
 }
 
-export type Step = NumberStep | RatioStep | ChoiceStep | SentenceStep | FracMultiplyStep;
+/**
+ * The standard "long multiplication" written form for two decimals — stacked
+ * factors, multiplied into one partial product per digit of the bottom
+ * factor (each shifted one place further left), then summed — with every
+ * digit of every partial product AND the final sum as its own fill-in box,
+ * not one box per whole number. Placing the decimal point itself is a
+ * separate step elsewhere (this one only ever asks for whole-number digits,
+ * ignoring both factors' decimal points), so `top`/`bottom` are the full
+ * decimal values just for display; everything checked is derived from them
+ * via verticalMultiplyBreakdown (shared/lib/math.ts), not passed in here.
+ */
+export interface VerticalMultiplyStep extends BaseStep {
+  kind: "verticalMultiply";
+  top: number;
+  bottom: number;
+}
+
+export type Step = NumberStep | RatioStep | ChoiceStep | SentenceStep | FracMultiplyStep | VerticalMultiplyStep;
 
 export interface Problem {
   title: string;
@@ -238,3 +255,6 @@ export const fracMultiply = (
   answers: number[],
   tones?: FracMultiplyStep["tones"]
 ): FracMultiplyStep => ({ ...base, kind: "fracMultiply", leftNum, leftDen, rightNum, rightDen, answer: answers, tones });
+
+/** Build a VerticalMultiplyStep — top/bottom are the two full decimal factors. */
+export const verticalMultiply = (base: BaseStep, top: number, bottom: number): VerticalMultiplyStep => ({ ...base, kind: "verticalMultiply", top, bottom });

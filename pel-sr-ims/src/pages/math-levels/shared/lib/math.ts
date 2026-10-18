@@ -88,6 +88,38 @@ export const rawFraction = (raw: string): [number, number] | null => {
   return [Number(m[1]), d];
 };
 
+/** Counts the digits after the decimal point, e.g. decimalPlaces(2.3) === 1.
+ *  (Trailing zeros don't round-trip through JS's Number→String — 2.30 is
+ *  already just 2.3 by the time this sees it.) */
+export const decimalPlaces = (n: number): number => (String(n).split(".")[1] ?? "").length;
+
+export interface VerticalMultiplyBreakdown {
+  wholeTop: number;
+  wholeBottom: number;
+  /** One partial product per digit of wholeBottom, ones-digit first — each
+   *  already scaled by its place value (e.g. the tens digit's partial is
+   *  ×10), so right-aligning these by magnitude alone reproduces the
+   *  standard one-place-further-left staircase with no separate shift logic. */
+  partials: number[];
+  finalWhole: number;
+  /** Decimal places in `top` plus decimal places in `bottom` — how far from
+   *  the right the point belongs in finalWhole, not applied here. */
+  totalPlaces: number;
+}
+
+/** The long-multiplication breakdown of two decimals, ignoring their decimal
+ *  points entirely (that's a separate step — see DecimalOperations.tsx) —
+ *  just the whole-number partial products and their sum. */
+export const verticalMultiplyBreakdown = (top: number, bottom: number): VerticalMultiplyBreakdown => {
+  const placesTop = decimalPlaces(top);
+  const placesBottom = decimalPlaces(bottom);
+  const wholeTop = Math.round(top * Math.pow(10, placesTop));
+  const wholeBottom = Math.round(bottom * Math.pow(10, placesBottom));
+  const bottomDigits = String(wholeBottom).split("").reverse();
+  const partials = bottomDigits.map((d, i) => wholeTop * Number(d) * Math.pow(10, i));
+  return { wholeTop, wholeBottom, partials, finalWhole: wholeTop * wholeBottom, totalPlaces: placesTop + placesBottom };
+};
+
 export const near = (a: number, b: number, tol = 1e-6): boolean => Math.abs(a - b) <= tol * Math.max(1, Math.abs(b));
 
 /** Answers like 0.33 for 1/3 are accepted when rounded to 2 decimals. */

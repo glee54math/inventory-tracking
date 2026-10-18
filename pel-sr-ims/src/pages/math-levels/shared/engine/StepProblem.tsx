@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { Problem, SentenceBlank, Step } from "./types";
-import { fmt, fracText, gcd, numbersMatch, parseAnswer, rawFraction } from "../lib/math";
+import { fmt, fracText, gcd, numbersMatch, parseAnswer, rawFraction, verticalMultiplyBreakdown } from "../lib/math";
 
 /** Exported so the end-of-unit test (engine/UnitTest.tsx) can type its own
  *  per-question answer state the same shape StepInput expects. */
@@ -30,6 +30,10 @@ export const answerText = (s: Step): string => {
     let i = 0;
     const [ln, ld, rn, rd] = [s.leftNum, s.leftDen, s.rightNum, s.rightDen].map((v) => v ?? s.answer[i++]);
     return `${ln}/${ld} × ${rn}/${rd}`;
+  }
+  if (s.kind === "verticalMultiply") {
+    const { wholeTop, wholeBottom, partials, finalWhole } = verticalMultiplyBreakdown(s.top, s.bottom);
+    return `${wholeTop} × ${wholeBottom} = ${partials.join(" + ")} = ${finalWhole}`;
   }
   return s.choices[s.correct];
 };
@@ -112,6 +116,14 @@ export const check = (s: Step, inputs: string[]): { ok: boolean; msg: string } =
     if (vals.some((v) => v === null)) return { ok: false, msg: n === 1 ? "Fill in the box with a number." : "Fill in both boxes with numbers." };
     const ok = vals.every((v, i) => numbersMatch(v as number, s.answer[i]));
     return ok ? { ok: true, msg: "" } : { ok: false, msg: "Not yet. Check your cancelling and try again." };
+  }
+  if (s.kind === "verticalMultiply") {
+    const { partials, finalWhole } = verticalMultiplyBreakdown(s.top, s.bottom);
+    const expectedDigits = [...partials, finalWhole].flatMap((n) => String(n).split(""));
+    const typed = inputs.slice(0, expectedDigits.length);
+    if (typed.some((v) => v.trim() === "")) return { ok: false, msg: "Fill in every digit box." };
+    const ok = typed.every((v, i) => v.trim() === expectedDigits[i]);
+    return ok ? { ok: true, msg: "" } : { ok: false, msg: "Not yet. Check each partial product, then add them up for the final answer." };
   }
   const a = parseAnswer(inputs[0]);
   const b = parseAnswer(inputs[1]);
@@ -393,6 +405,58 @@ export function StepInput({ step, state, onChange, onSubmit }: { step: Step; sta
           <span className="frac-slot-bar" />
           {renderSlot(step.rightDen, inputIndex[3], "second fraction's denominator")}
         </span>
+      </div>
+    );
+  }
+  if (step.kind === "verticalMultiply") {
+    const { wholeTop, wholeBottom, partials, finalWhole } = verticalMultiplyBreakdown(step.top, step.bottom);
+    const width = String(finalWhole).length;
+    const ruleWidth = { width: `${width * 1.1}em` };
+    let idx = 0;
+    const renderRow = (value: number, key: string) => (
+      <div className="align-row" key={key}>
+        {String(value)
+          .padStart(width, " ")
+          .split("")
+          .map((ch, i) => {
+            if (ch === " ") return <span key={i} className="align-slot align-slot-static" />;
+            const myIdx = idx++;
+            return (
+              <input
+                key={i}
+                className="align-slot align-slot-input"
+                inputMode="numeric"
+                maxLength={1}
+                autoComplete="off"
+                aria-label={`digit ${myIdx + 1}`}
+                value={state.inputs[myIdx] ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/[^0-9]/g, "").slice(-1);
+                  const next = [...state.inputs];
+                  next[myIdx] = v;
+                  onChange(next);
+                }}
+                onKeyDown={enter}
+              />
+            );
+          })}
+      </div>
+    );
+    return (
+      <div className="decimal-vert">
+        <div className="decimal-vert-row decimal-vert-given">{step.top}</div>
+        <div className="decimal-vert-row decimal-vert-given">
+          <span className="decimal-vert-op">×</span> {step.bottom}
+        </div>
+        <div className="decimal-vert-rule" style={ruleWidth} />
+        <div className="align-columns">
+          {partials.map((p, i) => renderRow(p, `p${i}`))}
+          <div className="align-rule" style={ruleWidth} />
+          {renderRow(finalWhole, "sum")}
+        </div>
+        <p className="muted small" style={{ margin: "6px 0 0" }}>
+          {wholeTop} × {wholeBottom} ignoring the decimal points for now.
+        </p>
       </div>
     );
   }
