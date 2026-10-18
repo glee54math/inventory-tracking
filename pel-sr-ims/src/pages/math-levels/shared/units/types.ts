@@ -55,6 +55,17 @@ export interface Unit {
   /** Randomized, step-by-step practice problems. */
   problems: ProblemType[];
   /**
+   * The full set of scenario-class "bucket" keys (see Problem.bucket) this
+   * unit's generators can produce. When set, a mastery star requires a clean
+   * solve of every bucket here at least once — not just MASTERY_GOAL clean
+   * solves total — so passing actually certifies the hard cases got seen,
+   * not just that the student got lucky on the easy end of the range N
+   * times. Omit for a unit whose problems() don't tag a `bucket` (today,
+   * that's almost all of them) — mastery then falls back to the plain clean
+   * >= MASTERY_GOAL check, unchanged. See UnitProgress.coveredBuckets.
+   */
+  requiredBuckets?: string[];
+  /**
    * End-of-unit test: a fixed, curated set of questions (unlike `problems`,
    * which are picked randomly one at a time). Optional — units without one
    * simply get no "Test" tab. `questions` is an array of generator functions

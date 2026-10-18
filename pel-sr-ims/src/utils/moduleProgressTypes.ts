@@ -14,6 +14,14 @@ export interface UnitProgress {
   introDone?: boolean;
   /** `solved` count at the moment introDone was last set — see Unit.reintroEverySolved. */
   introDoneAtSolved?: number;
+  /**
+   * Bucket keys (see Problem.bucket) this student has cleanly solved at least
+   * once. Only present for units whose generator tags its problems and whose
+   * Unit.requiredBuckets declares the full vocabulary to check against —
+   * absent (not an empty array) for every other unit, same as the other
+   * optional fields above. See the mastery check in useModuleProgress.ts.
+   */
+  coveredBuckets?: string[];
 }
 
 export type ProgressMap = Record<string, UnitProgress>;
@@ -35,5 +43,7 @@ export interface ModuleAttempt {
   clean?: boolean;
   /** Present when mode === "test": raw score out of 10 for that attempt. */
   score?: number;
+  /** Present when mode === "problem" and the generator tagged this instance — see Problem.bucket. */
+  bucket?: string;
   timestamp: Date;
 }

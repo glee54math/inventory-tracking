@@ -143,8 +143,13 @@ export const check = (s: Step, inputs: string[]): { ok: boolean; msg: string } =
 
 export interface StepProblemProps {
   problem: Problem;
-  /** Called once when the last step is finished. `clean` = no revealed answers and at most one hint. */
-  onComplete?: (clean: boolean) => void;
+  /**
+   * Called once when the last step is finished. `clean` = no revealed
+   * answers and at most one hint. `bucket` forwards problem.bucket as-is
+   * (undefined for the large majority of problems that don't set one) — see
+   * Problem.bucket and UnitProgress.coveredBuckets for what it's for.
+   */
+  onComplete?: (clean: boolean, bucket?: string) => void;
   onNext?: () => void;
 }
 
@@ -175,9 +180,9 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
       reported.current = true;
       const hints = states.filter((s) => s.hint).length;
       const reveals = states.filter((s) => s.revealed).length;
-      onComplete?.(reveals === 0 && hints <= 1);
+      onComplete?.(reveals === 0 && hints <= 1, problem.bucket);
     }
-  }, [finished, states, onComplete]);
+  }, [finished, states, onComplete, problem.bucket]);
 
   const update = (i: number, patch: Partial<StepState>) => setStates((all) => all.map((s, k) => (k === i ? { ...s, ...patch } : s)));
 

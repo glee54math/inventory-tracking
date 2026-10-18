@@ -44,6 +44,10 @@ function mergeProgress(remote: ProgressMap, local: ProgressMap): ProgressMap {
           testScore: Math.max(r.testScore ?? 0, l.testScore ?? 0) || undefined,
           introDone: (r.introDone || l.introDone) || undefined,
           introDoneAtSolved: Math.max(r.introDoneAtSolved ?? 0, l.introDoneAtSolved ?? 0) || undefined,
+          coveredBuckets:
+            r.coveredBuckets || l.coveredBuckets
+              ? Array.from(new Set([...(r.coveredBuckets ?? []), ...(l.coveredBuckets ?? [])]))
+              : undefined,
         }
       : r;
   }
@@ -104,18 +108,28 @@ export function useModuleProgress(
   );
 
   const record = useCallback(
-    (unitId: string, clean: boolean) => {
+    (unitId: string, clean: boolean, bucket?: string) => {
       setProgress((p) => {
         const cur = p[unitId] ?? { solved: 0, clean: 0 };
+        // Only a CLEAN solve counts as covering a bucket — same bar as the
+        // `clean` counter itself, so a star still means "solved it properly,"
+        // not just "saw every scenario at some point, however messily."
+        const coveredBuckets =
+          clean && bucket && !cur.coveredBuckets?.includes(bucket) ? [...(cur.coveredBuckets ?? []), bucket] : cur.coveredBuckets;
         const next = {
           ...p,
-          [unitId]: { ...cur, solved: cur.solved + 1, clean: cur.clean + (clean ? 1 : 0) },
+          [unitId]: {
+            ...cur,
+            solved: cur.solved + 1,
+            clean: cur.clean + (clean ? 1 : 0),
+            ...(coveredBuckets ? { coveredBuckets } : {}),
+          },
         };
         persist(next);
         return next;
       });
       if (studentId && location) {
-        logModuleAttempt(location, studentId, moduleId, { unitId, mode: "problem", clean }).catch(
+        logModuleAttempt(location, studentId, moduleId, { unitId, mode: "problem", clean, ...(bucket ? { bucket } : {}) }).catch(
           () => {}
         );
       }

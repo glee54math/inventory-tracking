@@ -84,7 +84,7 @@ function UnitView({
 }: {
   unit: Unit;
   progress?: UnitProgress;
-  onSolved: (clean: boolean) => void;
+  onSolved: (clean: boolean, bucket?: string) => void;
   onTest: (score: number) => void;
   onIntroDone: () => void;
   onNextUnit?: () => void;
@@ -174,7 +174,12 @@ function UnitView({
               Practicing one type is great for extra reps, but only <b>Mixed</b> problems count toward your mastery stars.
             </p>
           )}
-          <StepProblem key={`${unit.id}-${seed}-${String(typeIdx)}`} problem={problem} onComplete={(clean) => onSolved(clean && typeIdx === "mix")} onNext={() => setSeed((s) => s + 1)} />
+          <StepProblem
+            key={`${unit.id}-${seed}-${String(typeIdx)}`}
+            problem={problem}
+            onComplete={(clean, bucket) => onSolved(clean && typeIdx === "mix", bucket)}
+            onNext={() => setSeed((s) => s + 1)}
+          />
           {mastered && onNextUnit && (
             <div className="mastered">
               <span>You've mastered {unit.title.toLowerCase()}.</span>
@@ -209,7 +214,7 @@ function MultDivFractionLab() {
     window.scrollTo({ top: 0 });
   }, []);
   const unit = current === null ? null : units[current];
-  const onSolved = useCallback((clean: boolean) => unit && record(unit.id, clean), [unit, record]);
+  const onSolved = useCallback((clean: boolean, bucket?: string) => unit && record(unit.id, clean, bucket), [unit, record]);
   const onTest = useCallback((score: number) => unit && recordTest(unit.id, score), [unit, recordTest]);
   const onIntroDone = useCallback(() => unit && recordIntroDone(unit.id), [unit, recordIntroDone]);
 

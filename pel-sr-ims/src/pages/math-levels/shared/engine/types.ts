@@ -194,6 +194,15 @@ export interface Problem {
   visual: (done: number) => ReactNode;
   /** Final sentence shown when every step is done. */
   wrapUp: ReactNode;
+  /**
+   * Which scenario-class this generated instance falls into, if the
+   * generator tracks that (e.g. "shift2-pad" for a 2-decimal-place divisor
+   * whose dividend needed a placeholder zero) — optional, and meaningless on
+   * its own; only matters paired with a Unit.requiredBuckets vocabulary,
+   * which is what turns "solved N problems" into "covered every scenario
+   * that unit cares about." Most units never set this. See moduleProgressTypes.ts.
+   */
+  bucket?: string;
 }
 
 export interface ProblemType {
