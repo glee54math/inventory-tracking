@@ -1,0 +1,116 @@
+/* Scoped under .div1-lab (the wrapper div in MG8_OneDigitDivisionLab.tsx) instead of
+   :root/html/body, since this file is imported into one page of a much larger app, not
+   a standalone site — same reasoning as MG11_MultDivFractionLab_styles.css and
+   MM1_RatioLab_styles.css. This lab reuses the SAME shared engine chrome those two do
+   (shared/styles/lab-base.css), so this file only holds: this lab's own color palette
+   (light + dark), and anything genuinely unique to this lab's own content — which, for
+   a lab built entirely on the shared ManualDivisionLadder component, is nothing yet.
+   Import BOTH stylesheets, and add "lab-base" alongside "div1-lab" on the wrapper div. */
+
+.div1-lab {
+  --bg: #f4f8f6;
+  --card: #ffffff;
+  --ink: #1b2540;
+  --muted: #5d6782;
+  --line: #c9d0e2;
+  --grid: #e9f0ec;
+  --qa: #1f8a7a;
+  --qa-soft: #dcf0ec;
+  --qa-text: #166b5f;
+  --qb: #c9821e;
+  --qb-soft: #fbebcf;
+  --qb-text: #9a5d0f;
+  --qc: #5b4fd8;
+  --qc-soft: #e2e0fa;
+  --qc-text: #4534b8;
+  --good: #1f8f5f;
+  --good-soft: #d7f2e4;
+  --bad: #c93848;
+  --bad-soft: #fbe1e4;
+  --item-red: #c4432e;
+  --item-red-soft: #f6ddd6;
+  --item-red-text: #9a3420;
+  --item-green: #4c8c2b;
+  --item-green-soft: #e1edd4;
+  --item-green-text: #386b1f;
+  --item-yellow: #d4a72c;
+  --item-yellow-soft: #fbf1d1;
+  --item-yellow-text: #8c6b14;
+  --on-q: #ffffff;
+  --radius-lg: 18px;
+  --radius-sm: 10px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  -webkit-font-smoothing: antialiased;
+}
+@media (prefers-color-scheme: dark) {
+  .div1-lab:not([data-theme="light"]) {
+    --bg: #11201d;
+    --card: #182a26;
+    --ink: #e8f5f1;
+    --muted: #9bb4ac;
+    --line: #345450;
+    --grid: #203c36;
+    --qa: #5fd4bd;
+    --qa-soft: #1f453d;
+    --qa-text: #8fe6d2;
+    --qb: #f2b15a;
+    --qb-soft: #4a3718;
+    --qb-text: #f5c88a;
+    --qc: #a79af5;
+    --qc-soft: #332a5c;
+    --qc-text: #c0b4fa;
+    --good: #4cc98f;
+    --good-soft: #173d2e;
+    --bad: #ff6b7a;
+    --bad-soft: #45202a;
+    --item-red: #e8775e;
+    --item-red-soft: #4a2a22;
+    --item-red-text: #f2a68f;
+    --item-green: #7fc44b;
+    --item-green-soft: #243318;
+    --item-green-text: #a3db7a;
+    --item-yellow: #e8c455;
+    --item-yellow-soft: #4a3c14;
+    --item-yellow-text: #f2d98a;
+    --on-q: #0e1a17;
+  }
+}
+.div1-lab[data-theme="dark"] {
+  --bg: #11201d;
+  --card: #182a26;
+  --ink: #e8f5f1;
+  --muted: #9bb4ac;
+  --line: #345450;
+  --grid: #203c36;
+  --qa: #5fd4bd;
+  --qa-soft: #1f453d;
+  --qa-text: #8fe6d2;
+  --qb: #f2b15a;
+  --qb-soft: #4a3718;
+  --qb-text: #f5c88a;
+  --qc: #a79af5;
+  --qc-soft: #332a5c;
+  --qc-text: #c0b4fa;
+  --good: #4cc98f;
+  --good-soft: #173d2e;
+  --bad: #ff6b7a;
+  --bad-soft: #45202a;
+  --item-red: #e8775e;
+  --item-red-soft: #4a2a22;
+  --item-red-text: #f2a68f;
+  --item-green: #7fc44b;
+  --item-green-soft: #243318;
+  --item-green-text: #a3db7a;
+  --item-yellow: #e8c455;
+  --item-yellow-soft: #4a3c14;
+  --item-yellow-text: #f2d98a;
+  --on-q: #0e1a17;
+}

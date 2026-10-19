@@ -152,6 +152,15 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       componentExport: "RatioLab",
     },
   ],
+  MG8: [
+    {
+      type: "standalone",
+      skillId: "OneDigitDivisionLab",
+      label: "One-Digit Division",
+      componentFile: "MG8_OneDigitDivisionLab",
+      componentExport: "OneDigitDivisionLab",
+    },
+  ],
 };
 
 export function getSkillsForLevel(level: string): LevelSkill[] {
