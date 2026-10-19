@@ -151,6 +151,13 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       componentFile: "MM1_RatioLab",
       componentExport: "RatioLab",
     },
+    {
+      type: "standalone",
+      skillId: "NegativeNumbersLab",
+      label: "Negative Numbers",
+      componentFile: "MM1_NegativeNumbersLab",
+      componentExport: "NegativeNumbersLab",
+    },
   ],
   MG8: [
     {
@@ -175,15 +182,6 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       label: "Multi-Digit Multiplication",
       componentFile: "MG9_MultiDigitMultiplicationLab",
       componentExport: "MultiDigitMultiplicationLab",
-    },
-  ],
-  MG10: [
-    {
-      type: "standalone",
-      skillId: "NegativeNumbersLab",
-      label: "Negative Numbers",
-      componentFile: "MG10_NegativeNumbersLab",
-      componentExport: "NegativeNumbersLab",
     },
   ],
 };
