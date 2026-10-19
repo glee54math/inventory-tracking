@@ -1095,6 +1095,80 @@
   box-shadow: 0 0 0 3px var(--qa-soft);
 }
 
+/* Digit-grid primitives: one box per place-value digit, columns lined up
+   by a shared grid rather than hand-tuned per-row offsets. Used by TWO
+   different things that both need "one fill-in box per digit, several rows
+   stacked and right-aligned" — a lab's own column-alignment exercise (e.g.
+   decimal addition/subtraction lining up the decimal point) AND the shared
+   VerticalMultiplyStep renderer below (partial products + final sum). A
+   lab's own alignment exercise may add its own sign column (e.g.
+   .align-slot-sign for +/−) on top of these — that part stays local to
+   whichever lab needs it, since not every use of this grid has a sign row. */
+.lab-base .align-columns {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.lab-base .align-row {
+  display: flex;
+  gap: 2px;
+}
+.lab-base .align-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1em;
+  height: 1.3em;
+  font-family: "Courier New", monospace;
+  font-size: 20px;
+  color: var(--ink);
+}
+input.align-slot.align-slot-input {
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+  text-align: center;
+}
+.lab-base .align-rule {
+  border-top: 2px solid var(--ink);
+  margin-top: 4px;
+}
+
+/* VerticalMultiplyStep's own wrapper (shared/engine/StepProblem.tsx) — the
+   two given factors stacked above the align-columns grid above. Named
+   "vmult", not "decimal-vert" (its old name): the step itself is generic —
+   see types.ts's VerticalMultiplyStep doc comment — so nothing here should
+   read as decimal-specific, even though today's only caller happens to be. */
+.lab-base .vmult-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  font-family: "Courier New", monospace;
+  font-size: 20px;
+  color: var(--ink);
+  margin: 10px 0;
+}
+.lab-base .vmult-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  min-width: 90px;
+}
+.lab-base .vmult-op {
+  color: var(--muted);
+  font-weight: 700;
+}
+.lab-base .vmult-rule {
+  border-top: 2px solid var(--ink);
+  width: 90px;
+}
+
 @keyframes unitCarouselIn {
   from {
     opacity: 0;

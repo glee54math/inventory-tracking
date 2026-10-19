@@ -169,6 +169,22 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       componentFile: "MG9_TwoDigitDivisionLab",
       componentExport: "TwoDigitDivisionLab",
     },
+    {
+      type: "standalone",
+      skillId: "MultiDigitMultiplicationLab",
+      label: "Multi-Digit Multiplication",
+      componentFile: "MG9_MultiDigitMultiplicationLab",
+      componentExport: "MultiDigitMultiplicationLab",
+    },
+  ],
+  MG10: [
+    {
+      type: "standalone",
+      skillId: "NegativeNumbersLab",
+      label: "Negative Numbers",
+      componentFile: "MG10_NegativeNumbersLab",
+      componentExport: "NegativeNumbersLab",
+    },
   ],
 };
 

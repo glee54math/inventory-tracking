@@ -648,42 +648,14 @@
 .mdf-lab .align-stack-wrap {
   margin-top: 14px;
 }
-.mdf-lab .align-columns {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-.mdf-lab .align-row {
-  display: flex;
-  gap: 2px;
-}
-.mdf-lab .align-slot {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.1em;
-  height: 1.3em;
-  font-family: "Courier New", monospace;
-  font-size: 20px;
-  color: var(--ink);
-}
+/* .align-columns/.align-row/.align-slot/.align-slot-input/.align-rule now
+   live in shared/styles/lab-base.css — this exercise's own digit grid
+   (AlignDecimalsDrill, below) shares that same primitive with
+   VerticalMultiplyStep's renderer. Only the +/− sign column stays local:
+   not every use of the shared grid has a sign row. */
 .mdf-lab .align-slot-sign {
   color: var(--muted);
   font-weight: 700;
-}
-input.align-slot.align-slot-input {
-  padding: 0;
-  border: 2px solid var(--line);
-  border-radius: 4px;
-  background: var(--card);
-  color: var(--ink);
-  text-align: center;
-}
-.mdf-lab .align-rule {
-  border-top: 2px solid var(--ink);
-  margin-top: 4px;
 }
 .mdf-lab .align-drill-top {
   display: flex;
@@ -757,31 +729,8 @@ input.align-slot.align-slot-input {
   color: var(--muted);
   max-width: 220px;
 }
-.mdf-lab .decimal-vert {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  font-family: "Courier New", monospace;
-  font-size: 20px;
-  color: var(--ink);
-  margin: 10px 0;
-}
-.mdf-lab .decimal-vert-row {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 6px;
-  min-width: 90px;
-}
-.mdf-lab .decimal-vert-op {
-  color: var(--muted);
-  font-weight: 700;
-}
-.mdf-lab .decimal-vert-rule {
-  border-top: 2px solid var(--ink);
-  width: 90px;
-}
+/* .decimal-vert* renamed and moved to shared/styles/lab-base.css as
+   .vmult-* — VerticalMultiplyStep itself is generic, not decimal-specific. */
 .mdf-lab .decimal-hop {
   display: flex;
   flex-direction: column;

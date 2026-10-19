@@ -556,13 +556,13 @@ function MultiplyDecimalsDrill({
       {checked3 && ok3 && (
         <div className="align-stack-wrap">
           <p className="intro-gate-title">Now try it the way you'd write it on paper</p>
-          <div className="decimal-vert">
-            <div className="decimal-vert-row decimal-vert-given">{MULT_A}</div>
-            <div className="decimal-vert-row decimal-vert-given">
-              <span className="decimal-vert-op">×</span> {MULT_B}
+          <div className="vmult-stack">
+            <div className="vmult-row vmult-given">{MULT_A}</div>
+            <div className="vmult-row vmult-given">
+              <span className="vmult-op">×</span> {MULT_B}
             </div>
-            <div className="decimal-vert-rule" />
-            <div className="decimal-vert-row">
+            <div className="vmult-rule" />
+            <div className="vmult-row">
               <input
                 className="answer"
                 inputMode="numeric"
@@ -573,7 +573,7 @@ function MultiplyDecimalsDrill({
                 onChange={(e) => setV1(e.target.value)}
               />
             </div>
-            <div className="decimal-vert-row">
+            <div className="vmult-row">
               <input
                 className="answer"
                 inputMode="numeric"
@@ -584,8 +584,8 @@ function MultiplyDecimalsDrill({
                 onChange={(e) => setV2(e.target.value)}
               />
             </div>
-            <div className="decimal-vert-rule" />
-            <div className="decimal-vert-row">
+            <div className="vmult-rule" />
+            <div className="vmult-row">
               <input
                 className="answer"
                 autoComplete="off"

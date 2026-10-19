@@ -455,21 +455,24 @@ export function StepInput({ step, state, onChange, onSubmit }: { step: Step; sta
           })}
       </div>
     );
+    const hasDecimalPoint = step.top % 1 !== 0 || step.bottom % 1 !== 0;
     return (
-      <div className="decimal-vert">
-        <div className="decimal-vert-row decimal-vert-given">{step.top}</div>
-        <div className="decimal-vert-row decimal-vert-given">
-          <span className="decimal-vert-op">×</span> {step.bottom}
+      <div className="vmult-stack">
+        <div className="vmult-row vmult-given">{step.top}</div>
+        <div className="vmult-row vmult-given">
+          <span className="vmult-op">×</span> {step.bottom}
         </div>
-        <div className="decimal-vert-rule" style={ruleWidth} />
+        <div className="vmult-rule" style={ruleWidth} />
         <div className="align-columns">
           {partials.map((p, i) => renderRow(p, `p${i}`))}
           <div className="align-rule" style={ruleWidth} />
           {renderRow(finalWhole, "sum")}
         </div>
-        <p className="muted small" style={{ margin: "6px 0 0" }}>
-          {wholeTop} × {wholeBottom} ignoring the decimal points for now.
-        </p>
+        {hasDecimalPoint && (
+          <p className="muted small" style={{ margin: "6px 0 0" }}>
+            {wholeTop} × {wholeBottom} ignoring the decimal points for now.
+          </p>
+        )}
       </div>
     );
   }
