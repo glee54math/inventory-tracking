@@ -49,7 +49,7 @@ function Home({ onPick, progress }: { onPick: (i: number) => void; progress: Rec
         <div className="hero-text">
           <h1>36 + 8 = 4 × (9 + 2)</h1>
           <p>
-            This lab covers dividing fractions by fractions, long division, decimal arithmetic, and factors &amp; multiples — the number-system skills behind every fraction, decimal, and factoring problem you'll see next.
+            This lab covers dividing fractions by fractions, decimal arithmetic, and factors &amp; multiples — the number-system skills behind every fraction, decimal, and factoring problem you'll see next.
           </p>
           <button className="btn primary big" onClick={() => onPick(next === -1 ? 0 : next)}>
             {next <= 0 ? "Start with dividing fractions" : `Continue: ${units[next].title}`}
