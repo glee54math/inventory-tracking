@@ -1,4 +1,5 @@
-import { DivisionLadder, PlaceValueColumns } from "../diagrams";
+import { PlaceValueColumns } from "../diagrams";
+import { DivisionLadder } from "../../../shared/diagrams";
 import { randInt } from "../../../shared/lib/math";
 import type { TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";

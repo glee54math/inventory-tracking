@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import "../shared/styles/lab-base.css";
 import "./MG11_MultDivFractionLab_styles.css";
 import { units, type Unit } from "./MultDivFractionLab/units";
 import { StepProblem } from "../shared/engine/StepProblem";
@@ -254,7 +255,7 @@ function MultDivFractionLab() {
   const onIntroDone = useCallback(() => unit && recordIntroDone(unit.id), [unit, recordIntroDone]);
 
   return (
-    <div className="mdf-lab">
+    <div className="mdf-lab lab-base">
       <div className="app">
         <nav className="rail" aria-label="Units">
           <button className="brand" onClick={() => go(null)}>

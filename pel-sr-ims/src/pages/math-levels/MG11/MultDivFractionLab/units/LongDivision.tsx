@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DivisionLadder, computeLongDivision } from "../diagrams";
+import { DivisionLadder, computeLongDivision } from "../../../shared/diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type Problem, type Step } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";

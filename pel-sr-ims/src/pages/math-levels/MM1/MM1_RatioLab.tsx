@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import "../shared/styles/lab-base.css";
 import "./MM1_RatioLab_styles.css";
 import { units, type Unit } from "./units";
 import { moduleTest, moduleTestStars, MODULE_TEST_TOTAL } from "./units/ModuleTest";
@@ -283,7 +284,7 @@ function RatioLab() {
   const onIntroDone = useCallback(() => unit && recordIntroDone(unit.id), [unit, recordIntroDone]);
 
   return (
-    <div className="ratio-lab">
+    <div className="ratio-lab lab-base">
       <div className="app">
         <nav className="rail" aria-label="Units">
           <button className="brand" onClick={() => go(null)}>
