@@ -161,6 +161,15 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       componentExport: "OneDigitDivisionLab",
     },
   ],
+  MG9: [
+    {
+      type: "standalone",
+      skillId: "TwoDigitDivisionLab",
+      label: "Two-Digit Division",
+      componentFile: "MG9_TwoDigitDivisionLab",
+      componentExport: "TwoDigitDivisionLab",
+    },
+  ],
 };
 
 export function getSkillsForLevel(level: string): LevelSkill[] {
