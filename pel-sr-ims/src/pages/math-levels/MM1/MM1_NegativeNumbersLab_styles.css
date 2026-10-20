@@ -51,6 +51,24 @@
   background-size: 28px 28px;
   -webkit-font-smoothing: antialiased;
 }
+/* .align-drill/.align-stack-wrap/.intro-gate-title aren't in lab-base.css —
+   they're the box chrome AlignDecimalsDrill (MG11) introduced for a mandatory
+   gated exercise, reused here for PositiveNegativePreCheck's same role. */
+.neg-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.neg-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.neg-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.neg-lab .feedback.good {
+  color: var(--good);
+}
 @media (prefers-color-scheme: dark) {
   .neg-lab:not([data-theme="light"]) {
     --bg: #121a26;

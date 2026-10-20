@@ -51,7 +51,11 @@ function Explore() {
         <Stepper label="First number" value={a} min={-RANGE} max={RANGE} step={1} onChange={setA} tone="a" />
         <Stepper label="Second number" value={b} min={-RANGE} max={RANGE} step={1} onChange={setB} tone="b" />
       </div>
-      <NumberLine min={-RANGE} max={RANGE} points={[{ value: a, label: String(a), tone: "a" }, { value: b, label: String(b), tone: "b" }]} />
+      <NumberLine
+        min={-RANGE}
+        max={RANGE}
+        points={[{ value: a, label: String(a), tone: "a", onChange: setA }, { value: b, label: String(b), tone: "b", onChange: setB }]}
+      />
       {a === b ? (
         <p className="muted small">Those are equal — try changing one of them.</p>
       ) : (

@@ -33,7 +33,11 @@ function Explore() {
       <NumberLine
         min={-RANGE}
         max={RANGE}
-        points={value === 0 ? [{ value: 0, tone: "a" }] : [{ value, label: String(value), tone: "a" }, { value: opposite, label: String(opposite), tone: "c" }]}
+        points={
+          value === 0
+            ? [{ value: 0, tone: "a", onChange: setValue }]
+            : [{ value, label: String(value), tone: "a", onChange: setValue }, { value: opposite, label: String(opposite), tone: "c" }]
+        }
       />
       <p className="muted small">
         {value === 0
