@@ -50,6 +50,16 @@ const CONTEXTS: Record<Context, ContextConfig> = {
 
 const CONTEXT_KEYS = Object.keys(CONTEXTS) as Context[];
 
+// Display names for the Situation toggle in Explore — kept separate from
+// ContextConfig.label, which stays lowercase/sentence-style for embedding in
+// prose (e.g. "a deposit of 5 dollars"). Matches the Practice problem-type
+// labels exactly (Temperature / Elevation / Account Balance).
+const SITUATION_LABELS: Record<Context, string> = {
+  temperature: "Temperature",
+  elevation: "Elevation",
+  money: "Account Balance",
+};
+
 // ============================================================================
 // PRE-CHECK — mandatory gate before Practice unlocks
 // ============================================================================
@@ -79,9 +89,10 @@ const fmtSigned = (n: number) => (n < 0 ? `−${Math.abs(n)}` : String(n));
 // a one-time "do you get the idea at all" check, not a practice problem, so
 // every student sees the exact same questions. One block per context, since
 // Practice is now split the same way (Temperature / Elevation / Account
-// Balance), so the comprehension check covers all 3 before any of them unlock.
-const PRECHECKS: PreCheckConfig[] = [
-  {
+// Balance) — keyed by Context (like CONTEXTS itself) so the Quick Check can
+// show just the block matching whichever "Situation" toggle is selected.
+const PRECHECKS: Record<Context, PreCheckConfig> = {
+  temperature: {
     heading: "Temperature",
     ineqValue: -4,
     dragMin: -30,
@@ -96,7 +107,7 @@ const PRECHECKS: PreCheckConfig[] = [
     pickCorrectExplain: "−15°F is colder than −13°F, since −15 is farther below zero.",
     pickWrongExplain: "Not quite — colder means a lower (more negative) number. Which one is farther below zero?",
   },
-  {
+  elevation: {
     heading: "Elevation",
     ineqValue: -150,
     dragMin: -250,
@@ -111,7 +122,7 @@ const PRECHECKS: PreCheckConfig[] = [
     pickCorrectExplain: "−180 ft is lower than −120 ft, since −180 is farther below sea level.",
     pickWrongExplain: "Not quite — lower means a more negative elevation. Which one is farther below sea level?",
   },
-  {
+  money: {
     heading: "Account Balance",
     ineqValue: -25,
     dragMin: -40,
@@ -126,7 +137,7 @@ const PRECHECKS: PreCheckConfig[] = [
     pickCorrectExplain: "−$35 is a bigger debt than −$20, since −35 is farther below zero.",
     pickWrongExplain: "Not quite — owing more money means a lower (more negative) balance. Which one is farther below zero?",
   },
-];
+};
 
 /**
  * One context's 3-question comprehension check: select the comparison
@@ -251,14 +262,18 @@ function PreCheckBlock({ config, onComplete }: { config: PreCheckConfig; onCompl
 }
 
 /**
- * All 3 contexts' comprehension checks together — fires onComplete only once
- * every block has been passed, since Practice now offers all 3 contexts
- * separately and the gate is meant to certify readiness for all of them, not
- * just whichever one happened to be shown first.
+ * All 3 contexts' comprehension checks, one at a time — shows only the block
+ * matching whichever "Situation" toggle (temperature/elevation/money) is
+ * currently selected in Explore, remounting fresh (key={context}) on switch
+ * the same way DecimalOperations' AlignDecimalsDrill remounts on key={op}.
+ * Completion per context persists in `done` across switches, and
+ * onComplete only fires once every context has been passed — Practice now
+ * offers all 3 contexts separately, so the gate is meant to certify
+ * readiness for all of them, not just whichever one happened to be shown first.
  */
-function PositiveNegativePreCheck({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState<boolean[]>(() => PRECHECKS.map(() => false));
-  const allDone = done.every(Boolean);
+function PositiveNegativePreCheck({ context, onComplete }: { context: Context; onComplete?: () => void }) {
+  const [done, setDone] = useState<Record<Context, boolean>>({ temperature: false, elevation: false, money: false });
+  const allDone = CONTEXT_KEYS.every((k) => done[k]);
   useEffect(() => {
     if (allDone) onComplete?.();
   }, [allDone, onComplete]);
@@ -266,13 +281,11 @@ function PositiveNegativePreCheck({ onComplete }: { onComplete?: () => void }) {
   return (
     <div className="align-drill">
       <p className="intro-gate-title">Quick check: let's make sure positive and negative numbers make sense before you try practice problems.</p>
-      {PRECHECKS.map((config, i) => (
-        <PreCheckBlock
-          key={config.heading}
-          config={config}
-          onComplete={() => setDone((d) => (d[i] ? d : d.map((v, j) => (j === i ? true : v))))}
-        />
-      ))}
+      <PreCheckBlock
+        key={context}
+        config={PRECHECKS[context]}
+        onComplete={() => setDone((d) => (d[context] ? d : { ...d, [context]: true }))}
+      />
     </div>
   );
 }
@@ -297,12 +310,17 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {!introActive && (
-        <button className="btn ghost" style={{ width: "fit-content" }} onClick={() => setShowCheck((v) => !v)}>
-          {showCheck ? "Hide" : "Show"} the quick check
+        <button
+          type="button"
+          className="btn ghost"
+          style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+          onClick={() => setShowCheck((v) => !v)}
+        >
+          Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <PositiveNegativePreCheck onComplete={onIntroDone} />}
-      <Segmented label="Situation" value={context} onChange={setContext} options={CONTEXT_KEYS.map((k) => ({ id: k, label: CONTEXTS[k].label }))} />
+      {(introActive || showCheck) && <PositiveNegativePreCheck context={context} onComplete={onIntroDone} />}
+      <Segmented label="Situation" value={context} onChange={setContext} options={CONTEXT_KEYS.map((k) => ({ id: k, label: SITUATION_LABELS[k] }))} />
       <div className="controls">
         <Stepper label="Value" value={value} min={-cfg.range} max={cfg.range} step={1} onChange={setValue} tone="a" />
       </div>
@@ -328,12 +346,36 @@ function realWorldProblem(context: Context): Problem {
   const value = isNegative ? -magnitude : magnitude;
   const phrase = isNegative ? cfg.negativePhrase(magnitude) : cfg.positivePhrase(magnitude);
 
+  // A second value, distinct from the first, for the reverse-direction
+  // question below (number -> phrase, instead of phrase -> number) — using
+  // the SAME value for both would just have the student re-type the same
+  // fact instead of practicing the translation both ways.
+  let magnitude2 = randInt(1, cfg.range);
+  let isNegative2 = Math.random() < 0.5;
+  let value2 = isNegative2 ? -magnitude2 : magnitude2;
+  while (value2 === value) {
+    magnitude2 = randInt(1, cfg.range);
+    isNegative2 = Math.random() < 0.5;
+    value2 = isNegative2 ? -magnitude2 : magnitude2;
+  }
+  const phrase2 = isNegative2 ? cfg.negativePhrase(magnitude2) : cfg.positivePhrase(magnitude2);
+  // The sign-flipped phrase at the same magnitude — the one distractor that
+  // actually tests whether the student reads the sign, not just the number.
+  const oppositePhrase2 = isNegative2 ? cfg.positivePhrase(magnitude2) : cfg.negativePhrase(magnitude2);
+
   return {
     title: `Positive and negative ${cfg.label}`,
     bucket: context,
     story: `Write this as a signed number: ${phrase}.`,
     visual: (done: number) => (
-      <NumberLine min={-cfg.range} max={cfg.range} points={done >= 1 ? [{ value, tone: "a" }] : []} />
+      <NumberLine
+        min={-cfg.range}
+        max={cfg.range}
+        points={[
+          ...(done >= 1 ? [{ value, tone: "a" as const }] : []),
+          ...(done >= 2 ? [{ value: value2, label: `${value2}${cfg.unit}`, tone: "c" as const }] : []),
+        ]}
+      />
     ),
     steps: [
       {
@@ -345,6 +387,18 @@ function realWorldProblem(context: Context): Problem {
       },
       choice(
         {
+          prompt: `What does ${value2}${cfg.unit} mean in this situation?`,
+          hint:
+            value2 < 0
+              ? "A negative number here means below zero (or in debt, or below sea level)."
+              : "A positive number here means above zero (or a deposit, or above sea level).",
+          explain: `${value2}${cfg.unit} means ${phrase2}.`,
+        },
+        phrase2,
+        [oppositePhrase2, cfg.zeroMeaning]
+      ),
+      choice(
+        {
           prompt: `What does 0${cfg.unit} mean in this situation?`,
           hint: "Think about what's neither positive nor negative here.",
           explain: `0${cfg.unit} means ${cfg.zeroMeaning}.`,
@@ -353,7 +407,7 @@ function realWorldProblem(context: Context): Problem {
         cfg.zeroDistractors
       ),
     ],
-    wrapUp: `"${phrase}" = ${value}${cfg.unit}.`,
+    wrapUp: `"${phrase}" = ${value}${cfg.unit}, and ${value2}${cfg.unit} means "${phrase2}".`,
   };
 }
 
