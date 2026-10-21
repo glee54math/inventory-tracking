@@ -47,7 +47,7 @@ function Explore() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="controls">
+      <div className="control-row">
         <Stepper label="First number" value={a} min={-RANGE} max={RANGE} step={1} onChange={setA} tone="a" />
         <Stepper label="Second number" value={b} min={-RANGE} max={RANGE} step={1} onChange={setB} tone="b" />
       </div>

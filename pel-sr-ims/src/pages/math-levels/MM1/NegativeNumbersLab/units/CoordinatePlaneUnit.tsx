@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CoordinatePlane } from "../../../shared/diagrams";
+import { CoordinatePlane, QUADRANT_HIGHLIGHT } from "../../../shared/diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
@@ -29,19 +29,44 @@ const quadrantOf = (x: number, y: number): 1 | 2 | 3 | 4 => {
 // EXPLORE
 // ============================================================================
 
+const QUADRANT_LABELS: Record<1 | 2 | 3 | 4, string> = { 1: "Quadrant I", 2: "Quadrant II", 3: "Quadrant III", 4: "Quadrant IV" };
+
 function Explore() {
   const [x, setX] = useState(3);
   const [y, setY] = useState(-4);
+  const [hoverQuadrant, setHoverQuadrant] = useState<1 | 2 | 3 | 4 | null>(null);
   const onAxis = x === 0 || y === 0;
   const quadrant = onAxis ? null : quadrantOf(x, y);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="controls">
+      <div className="control-row">
         <Stepper label="x" value={x} min={-RANGE} max={RANGE} step={1} onChange={setX} tone="a" />
         <Stepper label="y" value={y} min={-RANGE} max={RANGE} step={1} onChange={setY} tone="b" />
       </div>
-      <CoordinatePlane range={RANGE} points={[{ x, y, label: `(${x}, ${y})`, tone: "a" }]} />
+      <div className="control-row">
+        {([1, 2, 3, 4] as const).map((q) => (
+          <button
+            key={q}
+            type="button"
+            className="btn ghost"
+            style={{ background: hoverQuadrant === q ? QUADRANT_HIGHLIGHT : undefined }}
+            onMouseEnter={() => setHoverQuadrant(q)}
+            onMouseLeave={() => setHoverQuadrant((cur) => (cur === q ? null : cur))}
+          >
+            {QUADRANT_LABELS[q]}
+          </button>
+        ))}
+      </div>
+      <CoordinatePlane
+        range={RANGE}
+        points={[{ x, y, label: `(${x}, ${y})`, tone: "a" }]}
+        onPointClick={(nx, ny) => {
+          setX(nx);
+          setY(ny);
+        }}
+        highlightQuadrant={hoverQuadrant}
+      />
       <p className="muted small">
         {onAxis
           ? `(${x}, ${y}) sits right on an axis, not inside any quadrant.`

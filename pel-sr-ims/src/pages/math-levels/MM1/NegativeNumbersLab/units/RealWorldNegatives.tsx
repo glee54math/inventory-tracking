@@ -321,7 +321,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       )}
       {(introActive || showCheck) && <PositiveNegativePreCheck context={context} onComplete={onIntroDone} />}
       <Segmented label="Situation" value={context} onChange={setContext} options={CONTEXT_KEYS.map((k) => ({ id: k, label: SITUATION_LABELS[k] }))} />
-      <div className="controls">
+      <div className="control-row">
         <Stepper label="Value" value={value} min={-cfg.range} max={cfg.range} step={1} onChange={setValue} tone="a" />
       </div>
       <NumberLine min={-cfg.range} max={cfg.range} points={[{ value, tone: "a", onChange: setValue }]} />

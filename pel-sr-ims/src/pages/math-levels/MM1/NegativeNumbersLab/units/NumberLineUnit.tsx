@@ -27,7 +27,7 @@ function Explore() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="controls">
+      <div className="control-row">
         <Stepper label="Number" value={value} min={-RANGE} max={RANGE} step={1} onChange={setValue} tone="a" />
       </div>
       <NumberLine
@@ -58,6 +58,7 @@ function numberLineProblem(targetBucket?: string): Problem {
   if (bucket === "opposite") {
     const n = randNonzero(RANGE);
     const opposite = -n;
+    const distance = 2 * Math.abs(n);
     return {
       title: "Opposites on the number line",
       bucket,
@@ -73,18 +74,47 @@ function numberLineProblem(targetBucket?: string): Problem {
           explain: `The opposite of ${n} is ${opposite} — the same distance from 0, on the other side.`,
           answer: opposite,
         },
+        {
+          kind: "number",
+          prompt: `Now what is the opposite of ${opposite}?`,
+          hint: "The opposite of the opposite of a number is the number itself.",
+          explain: `The opposite of ${opposite} is ${n} — opposite-of-opposite brings you right back to where you started.`,
+          answer: n,
+        },
+        {
+          kind: "number",
+          prompt: `What is the distance between ${n} and ${opposite}?`,
+          hint: `${n} and ${opposite} are each ${Math.abs(n)} away from 0, on opposite sides — add both distances together.`,
+          explain: `${n} to 0 is ${Math.abs(n)}, and 0 to ${opposite} is another ${Math.abs(n)}, so the total distance is ${Math.abs(n)} + ${Math.abs(n)} = ${distance}.`,
+          answer: distance,
+        },
       ],
-      wrapUp: `The opposite of ${n} is ${opposite}.`,
+      wrapUp: `The opposite of ${n} is ${opposite}, the opposite of ${opposite} is ${n} again, and the distance between ${n} and ${opposite} is ${distance}.`,
     };
   }
 
   const isNegative = bucket === "read-negative";
   const value = isNegative ? -randInt(1, RANGE) : randInt(1, RANGE);
+  const opposite = -value;
+  const distance = 2 * Math.abs(value);
   return {
     title: "Reading the number line",
     bucket,
     story: "What number is marked on the number line?",
-    visual: () => <NumberLine min={-RANGE} max={RANGE} points={[{ value, tone: "a" }]} />,
+    // The marked point stays unlabeled until it's actually been answered
+    // (step 1 IS "what number is this" — labeling it early would give the
+    // answer away); its opposite only appears once THAT question (step 2)
+    // is answered, for the same reason.
+    visual: (done: number) => (
+      <NumberLine
+        min={-RANGE}
+        max={RANGE}
+        points={[
+          { value, label: done >= 1 ? String(value) : undefined, tone: "a" },
+          ...(done >= 2 ? [{ value: opposite, label: String(opposite), tone: "c" as const }] : []),
+        ]}
+      />
+    ),
     steps: [
       {
         kind: "number",
@@ -93,8 +123,22 @@ function numberLineProblem(targetBucket?: string): Problem {
         explain: `The marked point is ${value}.`,
         answer: value,
       },
+      {
+        kind: "number",
+        prompt: `What is the opposite of ${value}?`,
+        hint: "Opposites are the same distance from 0, but on the other side of it.",
+        explain: `The opposite of ${value} is ${opposite} — the same distance from 0, on the other side.`,
+        answer: opposite,
+      },
+      {
+        kind: "number",
+        prompt: `What is the distance between ${value} and its opposite, ${opposite}?`,
+        hint: `${value} and ${opposite} are each ${Math.abs(value)} away from 0, on opposite sides — add both distances together.`,
+        explain: `${value} to 0 is ${Math.abs(value)}, and 0 to ${opposite} is another ${Math.abs(value)}, so the total distance is ${Math.abs(value)} + ${Math.abs(value)} = ${distance}.`,
+        answer: distance,
+      },
     ],
-    wrapUp: `The marked point is ${value}.`,
+    wrapUp: `The marked point is ${value}. Its opposite is ${opposite}, and the distance between them is ${distance}.`,
   };
 }
 
