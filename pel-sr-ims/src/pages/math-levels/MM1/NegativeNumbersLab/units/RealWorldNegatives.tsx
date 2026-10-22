@@ -4,6 +4,7 @@ import { randInt } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
+import { realWorldNegativesTest } from "./RealWorldNegativesTest";
 
 type Context = "temperature" | "elevation" | "money";
 
@@ -444,4 +445,5 @@ export const realWorldNegatives: Unit = {
   // student solved at least one of each in Mixed mode, not just whichever
   // context Mixed happened to draw most often.
   requiredBuckets: CONTEXT_KEYS,
+  test: realWorldNegativesTest,
 };

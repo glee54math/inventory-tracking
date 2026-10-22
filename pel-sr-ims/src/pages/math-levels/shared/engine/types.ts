@@ -67,6 +67,19 @@ export interface NumberStep extends BaseStep {
   padTo?: number;
 }
 
+/**
+ * A single free-typed "(x, y)" answer — unlike RatioStep's two separate
+ * boxes (with the parentheses/comma supplied as static UI chrome around
+ * them), this is ONE text field the student fills in themselves, punctuation
+ * included, graded by parsing that text — see check() in StepProblem.tsx.
+ * Use this whenever remembering the "(x, y)" notation itself is part of what
+ * a question is testing, not just the two numbers.
+ */
+export interface CoordinateStep extends BaseStep {
+  kind: "coordinate";
+  answer: [number, number];
+}
+
 export interface RatioStep extends BaseStep {
   kind: "ratio";
   answer: [number, number];
@@ -198,10 +211,13 @@ export interface CustomStep extends BaseStep {
   resultText: string;
 }
 
-export type Step = NumberStep | RatioStep | ChoiceStep | SentenceStep | FracMultiplyStep | VerticalMultiplyStep | CustomStep;
+export type Step = NumberStep | RatioStep | CoordinateStep | ChoiceStep | SentenceStep | FracMultiplyStep | VerticalMultiplyStep | CustomStep;
 
 /** Build a CustomStep — see CustomStep's doc comment for when to reach for this. */
 export const customStep = (base: BaseStep, render: (onDone: () => void) => ReactNode, resultText: string): CustomStep => ({ ...base, kind: "custom", render, resultText });
+
+/** Build a CoordinateStep — see its doc comment for when to reach for this over RatioStep. */
+export const coordinateStep = (base: BaseStep, x: number, y: number): CoordinateStep => ({ ...base, kind: "coordinate", answer: [x, y] });
 
 export interface Problem {
   title: string;

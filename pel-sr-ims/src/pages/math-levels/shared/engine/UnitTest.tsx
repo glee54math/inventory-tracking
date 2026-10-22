@@ -14,7 +14,7 @@ export interface UnitTestViewProps {
 const studentAnswerText = (step: Step, inputs: string[]): string => {
   if (!inputs[0]) return "(blank)";
   if (step.kind === "choice") return step.choices[Number(inputs[0])] ?? "(blank)";
-  if (step.kind === "number") return inputs[0];
+  if (step.kind === "number" || step.kind === "coordinate") return inputs[0];
   if (step.kind === "sentence") {
     if (!inputs[1]) return "(blank)";
     const blankText = (b: (typeof step.blanks)[number], raw: string): string => (b.kind === "select" ? (b.choices[Number(raw)] ?? "?") : raw);
@@ -127,7 +127,13 @@ export function UnitTestView({ test, onComplete }: UnitTestViewProps) {
               ← Previous question
             </button>
           )}
-          {q.step.kind !== "choice" && (
+          {/* Excludes "custom" the same way StepProblem.tsx's own Check button
+              does — check() always grades a custom step as correct once its
+              own onDone fires (see its comment above), so a generic advance
+              button here would let a student skip the widget entirely
+              (type nothing, click this) and still pass the question. The
+              widget supplies its own way to advance once genuinely correct. */}
+          {q.step.kind !== "choice" && q.step.kind !== "custom" && (
             <button className="btn primary" onClick={() => next(st.inputs)}>
               {current + 1 < questions.length ? "Next question" : "Finish test"}
             </button>

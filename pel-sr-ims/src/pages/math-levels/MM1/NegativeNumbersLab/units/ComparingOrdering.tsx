@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { NumberLine } from "../../../shared/diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
+import { comparingOrderingTest } from "./ComparingOrderingTest";
 
 const RANGE = 20;
 
@@ -36,10 +37,271 @@ const randDistinctPositive = (min: number, max: number): [number, number] => {
 };
 
 // ============================================================================
+// CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
+// ============================================================================
+
+const fieldStyle = (ok: boolean, checked: boolean): CSSProperties => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+
+/**
+ * Debt vs. balance — the unit's own signature trap (a MORE negative balance
+ * means a BIGGER debt but a SMALLER balance), phrased so both vocabulary
+ * terms have to be held at once instead of asking about just one of them.
+ * Fixed example (not randomized), same convention as every other Check for
+ * Understanding / Quick Check in this lab.
+ */
+function DebtBalanceQuestion({ onComplete }: { onComplete?: () => void }) {
+  const BALANCE_A = -40;
+  const BALANCE_B = -15;
+  const OPTIONS = ["Account A", "Account B"];
+  const [debtPick, setDebtPick] = useState("");
+  const [balancePick, setBalancePick] = useState("");
+  const [checked, setChecked] = useState(false);
+  const debtOk = debtPick === "Account A";
+  const balanceOk = balancePick === "Account B";
+  const ok = debtOk && balanceOk;
+  useEffect(() => {
+    if (checked && ok) onComplete?.();
+  }, [checked, ok, onComplete]);
+
+  return (
+    <div className="align-stack-wrap">
+      <p>
+        <b>1.</b> Account A has a balance of {BALANCE_A} dollars. Account B has a balance of {BALANCE_B} dollars.
+      </p>
+      <div className="control-row" style={{ alignItems: "center" }}>
+        <label>
+          Greater debt:{" "}
+          <select className="answer" value={debtPick} onChange={(e) => setDebtPick(e.target.value)} style={fieldStyle(debtOk, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            {OPTIONS.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Greater balance:{" "}
+          <select className="answer" value={balancePick} onChange={(e) => setBalancePick(e.target.value)} style={fieldStyle(balanceOk, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            {OPTIONS.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+          Check Answer
+        </button>
+      </div>
+      {checked && (
+        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+          {ok
+            ? `Correct — Account A owes more (${Math.abs(BALANCE_A)} > ${Math.abs(BALANCE_B)}), but Account B has the greater balance (${BALANCE_B} > ${BALANCE_A}). "Greater debt" and "greater balance" point in opposite directions here.`
+            : "Not quite — debt and balance aren't the same thing. The MORE negative balance means the BIGGER debt, but the LESSER (smaller) balance."}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Three related questions about the same two divers — separates the
+ * colloquial sense of "deeper" from the mathematical sense of "greater,"
+ * instead of asking only one of them.
+ */
+function DiverQuestion({ onComplete }: { onComplete?: () => void }) {
+  const DEPTH_A = -12;
+  const DEPTH_B = -20;
+  const OPTIONS = ["Diver A", "Diver B"];
+  const [deeperPick, setDeeperPick] = useState("");
+  const [closerPick, setCloserPick] = useState("");
+  const [greaterPick, setGreaterPick] = useState("");
+  const [checked, setChecked] = useState(false);
+  const deeperOk = deeperPick === "Diver B";
+  const closerOk = closerPick === "Diver A";
+  const greaterOk = greaterPick === "Diver A";
+  const ok = deeperOk && closerOk && greaterOk;
+  useEffect(() => {
+    if (checked && ok) onComplete?.();
+  }, [checked, ok, onComplete]);
+
+  const selectRow = (label: string, value: string, setValue: (v: string) => void, isOk: boolean) => (
+    <label>
+      {label}:{" "}
+      <select className="answer" value={value} onChange={(e) => setValue(e.target.value)} style={fieldStyle(isOk, checked)}>
+        <option value="" disabled>
+          choose
+        </option>
+        {OPTIONS.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+
+  return (
+    <div className="align-stack-wrap">
+      <p>
+        <b>2.</b> Diver A is at {DEPTH_A} feet. Diver B is at {DEPTH_B} feet.
+      </p>
+      <div className="control-row" style={{ alignItems: "center" }}>
+        {selectRow("Deeper", deeperPick, setDeeperPick, deeperOk)}
+        {selectRow("Closer to the surface", closerPick, setCloserPick, closerOk)}
+        {selectRow("Greater depth number", greaterPick, setGreaterPick, greaterOk)}
+        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+          Check Answer
+        </button>
+      </div>
+      {checked && (
+        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+          {ok
+            ? `Correct — Diver B is deeper (farther below the surface), Diver A is closer to the surface, and ${DEPTH_A} is the greater number since ${DEPTH_A} > ${DEPTH_B}.`
+            : "Not quite — deeper means farther below 0, closer to the surface means closer to 0, and \"greater number\" just means farther right on the number line."}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** What the '>' symbol itself means, geometrically — not just how to apply it. */
+function InequalityVocabQuestion({ onComplete }: { onComplete?: () => void }) {
+  const [picked, setPicked] = useState("");
+  const [checked, setChecked] = useState(false);
+  const ok = picked === "right";
+  useEffect(() => {
+    if (checked && ok) onComplete?.();
+  }, [checked, ok, onComplete]);
+
+  return (
+    <div className="align-stack-wrap">
+      <p>
+        <b>3.</b> On a number line, "&gt;" means the first number is located to the{" "}
+        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
+          <option value="" disabled>
+            choose
+          </option>
+          <option value="right">right</option>
+          <option value="left">left</option>
+          <option value="same place as">same place as</option>
+        </select>{" "}
+        of the second number.
+      </p>
+      <div className="control-row">
+        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+          Check Answer
+        </button>
+      </div>
+      {checked && (
+        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+          {ok
+            ? 'Correct — "greater than" always means farther right on the number line, no matter the sign of either number.'
+            : "Not quite — think about where the greater of two numbers always sits compared to the smaller one."}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Ordering by VALUE and ordering by DISTANCE FROM 0 are different operations
+ *  that can disagree — then a generalization question so the insight doesn't
+ *  stop at this one example. */
+function OrderVsDistanceQuestion({ onComplete }: { onComplete?: () => void }) {
+  const VALUES = ["−9", "−5", "3"];
+  const [smallestPick, setSmallestPick] = useState("");
+  const [farthestPick, setFarthestPick] = useState("");
+  const [alwaysPick, setAlwaysPick] = useState("");
+  const [checked, setChecked] = useState(false);
+  const smallestOk = smallestPick === "−9";
+  const farthestOk = farthestPick === "−9";
+  const alwaysOk = alwaysPick === "No";
+  const ok = smallestOk && farthestOk && alwaysOk;
+  useEffect(() => {
+    if (checked && ok) onComplete?.();
+  }, [checked, ok, onComplete]);
+
+  const selectRow = (label: string, value: string, setValue: (v: string) => void, options: string[], isOk: boolean) => (
+    <label>
+      {label}:{" "}
+      <select className="answer" value={value} onChange={(e) => setValue(e.target.value)} style={fieldStyle(isOk, checked)}>
+        <option value="" disabled>
+          choose
+        </option>
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+
+  return (
+    <div className="align-stack-wrap">
+      <p>
+        <b>4.</b> Look at −9, −5, and 3.
+      </p>
+      <div className="control-row" style={{ alignItems: "center" }}>
+        {selectRow("Smallest (least)", smallestPick, setSmallestPick, VALUES, smallestOk)}
+        {selectRow("Farthest from 0", farthestPick, setFarthestPick, VALUES, farthestOk)}
+      </div>
+      <p>Is the smallest (least) number always the same as the number farthest from 0?</p>
+      <div className="control-row" style={{ alignItems: "center" }}>
+        {selectRow("Always the same?", alwaysPick, setAlwaysPick, ["Yes", "No"], alwaysOk)}
+        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+          Check Answer
+        </button>
+      </div>
+      {checked && (
+        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+          {ok
+            ? "Correct — here −9 happens to be both the smallest AND the farthest from 0, but that's not guaranteed. With −3, −5, and 10, for example, the smallest is −5, but 10 is farthest from 0."
+            : "Not quite — check which of the three is smallest (farthest left), and which has the biggest distance from 0, then think about whether that match was guaranteed or just happened here."}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** All 4 questions together — fires onComplete only once every one has been
+ *  answered correctly. */
+function ComparingCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
+  const [done, setDone] = useState({ debtBalance: false, diver: false, inequalityVocab: false, orderVsDistance: false });
+  const allDone = Object.values(done).every(Boolean);
+  useEffect(() => {
+    if (allDone) onComplete?.();
+  }, [allDone, onComplete]);
+  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
+
+  return (
+    <div className="align-drill">
+      <p className="intro-gate-title">Check for understanding: let's connect a few ideas before you try practice problems.</p>
+      <DebtBalanceQuestion onComplete={mark("debtBalance")} />
+      <DiverQuestion onComplete={mark("diver")} />
+      <InequalityVocabQuestion onComplete={mark("inequalityVocab")} />
+      <OrderVsDistanceQuestion onComplete={mark("orderVsDistance")} />
+    </div>
+  );
+}
+
+// ============================================================================
 // EXPLORE
 // ============================================================================
 
-function Explore() {
+function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
+  const introActive = !!onIntroDone;
+  // Once the gate is already satisfied, the check is optional — hidden by
+  // default so a returning student isn't forced through it again, but still
+  // reachable with one click for review (same convention as every other
+  // Check for Understanding in this lab).
+  const [showCheck, setShowCheck] = useState(false);
   const [a, setA] = useState(-3);
   const [b, setB] = useState(-7);
   const bigger = Math.max(a, b);
@@ -50,7 +312,18 @@ function Explore() {
       <div className="control-row">
         <Stepper label="First number" value={a} min={-RANGE} max={RANGE} step={1} onChange={setA} tone="a" />
         <Stepper label="Second number" value={b} min={-RANGE} max={RANGE} step={1} onChange={setB} tone="b" />
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Check for Understanding
+          </button>
+        )}
       </div>
+      {(introActive || showCheck) && <ComparingCheckForUnderstanding onComplete={onIntroDone} />}
       <NumberLine
         min={-RANGE}
         max={RANGE}
@@ -153,8 +426,17 @@ function comparingProblem(targetBucket?: string): Problem {
           explain: `|${n}| = ${Math.abs(n)}, the distance from 0 to ${n}.`,
           answer: Math.abs(n),
         },
+        choice(
+          {
+            prompt: `What does |${n}| represent?`,
+            hint: "Absolute value is a DISTANCE — think about what two points that distance is measured between.",
+            explain: `|${n}| is the distance from 0 to ${n} — not the distance to its opposite, and not the opposite itself.`,
+          },
+          `The distance from 0 to ${n}`,
+          [`The distance from ${n} to its opposite, ${-n}`, `The opposite of ${n}`]
+        ),
       ],
-      wrapUp: `|${n}| = ${Math.abs(n)}.`,
+      wrapUp: `|${n}| = ${Math.abs(n)} — the distance from 0 to ${n}.`,
     };
   }
 
@@ -206,6 +488,8 @@ export const comparingOrdering: Unit = {
     </>
   ),
   Explore,
+  requiresIntro: true,
   problems: [{ label: "Compare & Order", make: comparingProblem, buckets: BUCKETS }],
   requiredBuckets: BUCKETS,
+  test: comparingOrderingTest,
 };

@@ -69,6 +69,65 @@
 .neg-lab .feedback.good {
   color: var(--good);
 }
+/* lab-base.css's .answer styling is scoped to `input.answer` only — the
+   Coordinate Plane Check for Understanding's dropdowns are <select>s, which
+   that selector doesn't match, so they need their own rule (same pattern as
+   MG9_IntroToFractionsLab_styles.css's .itf-lab select.answer). */
+.neg-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.neg-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+/* Module test nav/card — same rules as MM1_RatioLab_styles.css's own module
+   test chrome, since the two labs share this feature's markup verbatim. */
+.neg-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.neg-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.neg-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.neg-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.neg-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.neg-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+.neg-lab .module-test-back {
+  margin-bottom: 20px;
+}
 @media (prefers-color-scheme: dark) {
   .neg-lab:not([data-theme="light"]) {
     --bg: #121a26;

@@ -23,6 +23,7 @@ export const answerText = (s: Step): string => {
     return `${s.prefix ?? ""}${val}${s.suffix ? " " + s.suffix : ""}`;
   }
   if (s.kind === "ratio") return `${s.answer[0]} : ${s.answer[1]}`;
+  if (s.kind === "coordinate") return `(${s.answer[0]}, ${s.answer[1]})`;
   if (s.kind === "sentence") {
     return `${s.parts[0]}${sentenceBlankText(s.blanks[0])}${s.parts[1]}${sentenceBlankText(s.blanks[1])}${s.parts[2]}`;
   }
@@ -105,6 +106,18 @@ export const check = (s: Step, inputs: string[]): { ok: boolean; msg: string } =
     if (s.answer !== 0 && numbersMatch(v, 1 / s.answer)) return { ok: false, msg: "That's the flip of the answer. Check which quantity you divided by which." };
     if (numbersMatch(v * 10, s.answer) || numbersMatch(v / 10, s.answer)) return { ok: false, msg: "Close: the digits are right but the size is off by a factor of 10." };
     return { ok: false, msg: "Not yet. Look at the diagram and try again." };
+  }
+  if (s.kind === "coordinate") {
+    const normalized = (inputs[0] ?? "").replace(/\s+/g, "");
+    if (normalized === "") return { ok: false, msg: "Type the coordinates, including the parentheses and comma — like (3, -5)." };
+    const match = normalized.match(/^\((-?\d+),(-?\d+)\)$/);
+    if (!match) return { ok: false, msg: "Don't forget the parentheses and the comma — write it like (3, -5)." };
+    const [x, y] = s.answer;
+    const a = Number(match[1]);
+    const b = Number(match[2]);
+    if (numbersMatch(a, x) && numbersMatch(b, y)) return { ok: true, msg: "" };
+    if (numbersMatch(a, y) && numbersMatch(b, x)) return { ok: false, msg: "x comes first, then y — your numbers are switched." };
+    return { ok: false, msg: "Not yet. Check each number against the marked point." };
   }
   if (s.kind === "sentence") {
     if (inputs[0] === "" || inputs[1] === "") return { ok: false, msg: "Fill in both blanks." };
@@ -376,6 +389,21 @@ export function StepInput({ step, state, onChange, onSubmit }: { step: Step; sta
           onKeyDown={enter}
         />
         {step.suffix && <span className="affix">{step.suffix}</span>}
+      </div>
+    );
+  }
+  if (step.kind === "coordinate") {
+    return (
+      <div className="answer-row">
+        <input
+          className="answer"
+          autoComplete="off"
+          aria-label="Your answer"
+          placeholder="(x, y)"
+          value={state.inputs[0]}
+          onChange={(e) => onChange([e.target.value, ""])}
+          onKeyDown={enter}
+        />
       </div>
     );
   }

@@ -4,6 +4,7 @@ import { randInt } from "../../../shared/lib/math";
 import { type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
+import { numberLineUnitTest } from "./NumberLineUnitTest";
 
 const RANGE = 15;
 
@@ -156,4 +157,5 @@ export const numberLineUnit: Unit = {
   Explore,
   problems: [{ label: "Number Line", make: numberLineProblem, buckets: ["read-negative", "read-positive", "opposite"] }],
   requiredBuckets: ["read-negative", "read-positive", "opposite"],
+  test: numberLineUnitTest,
 };
