@@ -1,0 +1,180 @@
+/* Scoped under .itf-lab (the wrapper div in MG9_IntroToFractionsLab.tsx)
+   instead of :root/html/body, since this file is imported into one page of a much
+   larger app, not a standalone site — same reasoning as MG11_MultDivFractionLab_styles.css
+   and MM1_RatioLab_styles.css. This lab reuses the SAME shared engine chrome those do
+   (shared/styles/lab-base.css), so this file only holds: this lab's own color palette
+   (light + dark), and anything genuinely unique to this lab's own content — which, for
+   a lab built entirely on shared Step kinds and shared/promoted diagrams, is nothing yet.
+   Import BOTH stylesheets, and add "lab-base" alongside "itf-lab" on the wrapper div. */
+
+.itf-lab {
+  --bg: #f5fafa;
+  --card: #ffffff;
+  --ink: #16302d;
+  --muted: #5d7773;
+  --line: #c9ddd9;
+  --grid: #e6f2f0;
+  --qa: #0e8a7d;
+  --qa-soft: #d6f0ec;
+  --qa-text: #0a6a60;
+  --qb: #d9486b;
+  --qb-soft: #fbdde3;
+  --qb-text: #b22e4e;
+  --qc: #5b5fc7;
+  --qc-soft: #e3e3fa;
+  --qc-text: #4347a3;
+  --good: #1f8f5f;
+  --good-soft: #d7f2e4;
+  --bad: #c93848;
+  --bad-soft: #fbe1e4;
+  --item-red: #c4432e;
+  --item-red-soft: #f6ddd6;
+  --item-red-text: #9a3420;
+  --item-green: #4c8c2b;
+  --item-green-soft: #e1edd4;
+  --item-green-text: #386b1f;
+  --item-yellow: #d4a72c;
+  --item-yellow-soft: #fbf1d1;
+  --item-yellow-text: #8c6b14;
+  --on-q: #ffffff;
+  --radius-lg: 18px;
+  --radius-sm: 10px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  -webkit-font-smoothing: antialiased;
+}
+@media (prefers-color-scheme: dark) {
+  .itf-lab:not([data-theme="light"]) {
+    --bg: #0f1e1c;
+    --card: #17302c;
+    --ink: #eaf5f3;
+    --muted: #a7c2bd;
+    --line: #37524d;
+    --grid: #1f3733;
+    --qa: #4ad9c4;
+    --qa-soft: #1b4541;
+    --qa-text: #8ce8d9;
+    --qb: #f27a95;
+    --qb-soft: #4a2230;
+    --qb-text: #f5a3b6;
+    --qc: #9a9ef0;
+    --qc-soft: #302f5c;
+    --qc-text: #c0c3f7;
+    --good: #4cc98f;
+    --good-soft: #173d2e;
+    --bad: #ff6b7a;
+    --bad-soft: #45202a;
+    --item-red: #e8775e;
+    --item-red-soft: #4a2a22;
+    --item-red-text: #f2a68f;
+    --item-green: #7fc44b;
+    --item-green-soft: #243318;
+    --item-green-text: #a3db7a;
+    --item-yellow: #e8c455;
+    --item-yellow-soft: #4a3c14;
+    --item-yellow-text: #f2d98a;
+    --on-q: #0d1a18;
+  }
+}
+.itf-lab[data-theme="dark"] {
+  --bg: #0f1e1c;
+  --card: #17302c;
+  --ink: #eaf5f3;
+  --muted: #a7c2bd;
+  --line: #37524d;
+  --grid: #1f3733;
+  --qa: #4ad9c4;
+  --qa-soft: #1b4541;
+  --qa-text: #8ce8d9;
+  --qb: #f27a95;
+  --qb-soft: #4a2230;
+  --qb-text: #f5a3b6;
+  --qc: #9a9ef0;
+  --qc-soft: #302f5c;
+  --qc-text: #c0c3f7;
+  --good: #4cc98f;
+  --good-soft: #173d2e;
+  --bad: #ff6b7a;
+  --bad-soft: #45202a;
+  --item-red: #e8775e;
+  --item-red-soft: #4a2a22;
+  --item-red-text: #f2a68f;
+  --item-green: #7fc44b;
+  --item-green-soft: #243318;
+  --item-green-text: #a3db7a;
+  --item-yellow: #e8c455;
+  --item-yellow-soft: #4a3c14;
+  --item-yellow-text: #f2d98a;
+  --on-q: #0d1a18;
+}
+
+/* Not in shared/styles/lab-base.css yet (that extraction predates this gated-
+   drill pattern) — genuinely unique to this lab's Fraction Forms intro gate,
+   same small set MG11_MultDivFractionLab_styles.css defines for its own
+   Decimal Operations warm-up drill. */
+.itf-lab .feedback.good {
+  color: var(--good);
+}
+.itf-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.itf-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.itf-lab .align-drill .controls {
+  margin: 12px 0;
+}
+
+/* The shared Frac component (shared/engine/controls.tsx) has no styling in
+   lab-base.css — that extraction predates/missed it, and MG11/MM1 each carry
+   their own local copy rather than a promoted one. Without this, <Frac n d>
+   renders as two unstyled inline spans sitting flush against each other
+   (numerator immediately followed by denominator, e.g. "17" and "6" reading
+   as the single number "176") instead of a stacked fraction. Same rule
+   MG11_MultDivFractionLab_styles.css defines. */
+.itf-lab .frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  margin: 0 0.15em;
+  font-size: 0.82em;
+  line-height: 1.05;
+}
+.itf-lab .frac-n,
+.itf-lab .frac-d {
+  padding: 0 0.12em;
+}
+.itf-lab .frac-n {
+  border-bottom: 1.5px solid currentColor;
+}
+
+/* lab-base.css's .answer styling is scoped to `input.answer` only — this
+   lab's Fraction Forms self-check dropdown is a <select>, which that
+   selector doesn't match, so it needs its own rule to look like the same
+   kind of control instead of an unstyled native dropdown. */
+.itf-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.itf-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}

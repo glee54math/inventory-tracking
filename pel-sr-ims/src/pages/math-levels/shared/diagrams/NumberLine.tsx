@@ -28,6 +28,27 @@ export interface NumberLineProps {
   min: number;
   max: number;
   points?: NumberLinePoint[];
+  /**
+   * Subdivides each whole-unit interval into this many equal minor ticks
+   * (e.g. 4 draws unlabeled ticks at every quarter) — for MG9's Introduction
+   * To Fractions lab, where a point's `value` is often fractional and the
+   * line itself needs to show why (1/4 sits a quarter of the way between 0
+   * and 1, visibly, not just by coordinate). Only rendered when major ticks
+   * already land on every integer (`step === 1` below) — on a wide range
+   * compressed to every-Nth-integer major ticks, minor ticks finer than a
+   * whole unit would be meaningless clutter, so they're silently skipped
+   * rather than drawn somewhere confusing. Omit for the plain integer line
+   * every existing caller (MM1/NegativeNumbersLab) already uses — this is
+   * purely additive, nothing changes when it's left unset.
+   */
+  minorTicksPerUnit?: number;
+  /**
+   * When any point is draggable (`onChange` set), snap the dragged value to
+   * the nearest multiple of 1/snapDenominator instead of the nearest whole
+   * number. Pair with `minorTicksPerUnit` (usually the same number) so the
+   * dot can only ever land exactly on a drawn tick.
+   */
+  snapDenominator?: number;
 }
 
 const MAX_UNIT_PX = 24; // today's spacing for a "normal"-sized range — never exceeded
@@ -78,7 +99,7 @@ function niceStep(unitPx: number, minLabelPx: number): number {
  *  normal range already uses, with only every Nth integer labeled, so
  *  points still render at a normal, visible size and tick labels stay
  *  legibly spaced apart, however wide the underlying range is. */
-export function NumberLine({ min, max, points = [] }: NumberLineProps) {
+export function NumberLine({ min, max, points = [], minorTicksPerUnit, snapDenominator }: NumberLineProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const span = max - min;
   const unitPx = Math.min(MAX_UNIT_PX, TARGET_WIDTH / span);
@@ -92,22 +113,34 @@ export function NumberLine({ min, max, points = [] }: NumberLineProps) {
   if (min <= 0 && max >= 0 && !tickValues.includes(0)) tickValues.push(0);
   tickValues.sort((a, b) => a - b);
 
+  // Minor (unlabeled) ticks subdividing each whole-unit interval — only when
+  // major ticks already land on every integer; on a compressed wide range
+  // (step > 1) a sub-unit tick wouldn't line up with anything meaningful.
+  const minorTickValues: number[] = [];
+  if (minorTicksPerUnit && minorTicksPerUnit > 1 && step === 1) {
+    for (let v = Math.ceil(min); v < max; v++) {
+      for (let k = 1; k < minorTicksPerUnit; k++) minorTickValues.push(v + k / minorTicksPerUnit);
+    }
+  }
+
   const toX = (value: number) => PAD_X + (value - min) * unitPx;
   // The SVG itself can render smaller than its logical `width` (see the
   // style below — it shrinks to fit a narrow container, capped at its
   // natural size, never stretches past it). When that happens, 1 logical
   // unit no longer equals 1 on-screen pixel, so dragging has to convert
   // through that same scale factor or the dot would trail behind the
-  // pointer. Drag precision itself is always to the nearest whole unit,
+  // pointer. Drag precision is to the nearest whole unit by default,
   // independent of `step` — the tick labels thin out on a wide range, but
   // the dot can still land on (and the question can still ask about) any
-  // integer in between.
+  // integer in between — or, when `snapDenominator` is set, the nearest
+  // 1/snapDenominator instead, for a fraction-plotting number line.
   const toValue = (clientX: number): number => {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect) return min;
     const scale = rect.width / width;
     const raw = min + (clientX - rect.left - PAD_X * scale) / (unitPx * scale);
-    return Math.min(max, Math.max(min, Math.round(raw)));
+    const snapped = snapDenominator ? Math.round(raw * snapDenominator) / snapDenominator : Math.round(raw);
+    return Math.min(max, Math.max(min, snapped));
   };
 
   return (
@@ -121,6 +154,9 @@ export function NumberLine({ min, max, points = [] }: NumberLineProps) {
       style={{ display: "block", width: "100%", maxWidth: width, height: "auto", fontFamily: diagramFont }}
     >
       <line x1={PAD_X} y1={MID_Y} x2={width - PAD_X} y2={MID_Y} stroke={palette.line} strokeWidth={2} />
+      {minorTickValues.map((v) => (
+        <line key={`minor-${v}`} x1={toX(v)} y1={MID_Y - 3} x2={toX(v)} y2={MID_Y + 3} stroke={palette.line} strokeWidth={1} />
+      ))}
       {tickValues.map((v) => (
         <g key={v}>
           <line x1={toX(v)} y1={MID_Y - 6} x2={toX(v)} y2={MID_Y + 6} stroke={v === 0 ? palette.ink : palette.line} strokeWidth={v === 0 ? 2.5 : 1.5} />

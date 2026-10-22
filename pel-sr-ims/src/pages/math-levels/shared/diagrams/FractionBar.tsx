@@ -1,5 +1,4 @@
-import { palette } from "../../../shared/lib/palette";
-import { gcd } from "../../../shared/lib/math";
+import { palette } from "../lib/palette";
 
 export interface FractionBarProps {
   numerator: number;
@@ -24,10 +23,13 @@ export interface FractionBarProps {
 
 /**
  * A single fraction as a shaded bar, split into `denominator` equal cells with
- * the first `numerator` shaded. The base building block for the fraction-
- * division unit's visuals — used alone for partitive sharing problems (with
- * shareCount/highlightShare), and as a component of FractionMeasureStrip for
- * quotitive (measurement) problems.
+ * the first `numerator` shaded. Originally built MG11-local for the fraction-
+ * division unit (partitive sharing with shareCount/highlightShare, and as a
+ * component of FractionMeasureStrip for quotitive/measurement problems) —
+ * promoted here once MG9's Introduction To Fractions needed the same plain
+ * single-fraction bar for forms/equivalence/comparing, none of which are
+ * division-specific. `MultDivFractionLab/diagrams/index.ts` re-exports this
+ * rather than keeping its own copy.
  */
 export function FractionBar({ numerator, denominator, width = 320, height = 64, shareCount, highlightShare, label }: FractionBarProps) {
   const cellW = width / denominator;
@@ -67,9 +69,3 @@ export function FractionBar({ numerator, denominator, width = 320, height = 64, 
     </svg>
   );
 }
-
-/** Reduce a/b for display captions elsewhere, without pulling in all of lib/math. */
-export const simplifyCaption = (a: number, b: number): string => {
-  const g = gcd(a, b);
-  return g > 1 ? `${a / g}/${b / g}` : `${a}/${b}`;
-};

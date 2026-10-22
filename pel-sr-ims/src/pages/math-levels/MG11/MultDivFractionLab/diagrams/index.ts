@@ -1,5 +1,5 @@
-export { FractionBar, simplifyCaption } from "./FractionBar";
-export type { FractionBarProps } from "./FractionBar";
+export { FractionBar } from "../../../shared/diagrams";
+export type { FractionBarProps } from "../../../shared/diagrams";
 export { FractionMeasureStrip } from "./FractionMeasureStrip";
 export type { FractionMeasureStripProps } from "./FractionMeasureStrip";
 export { AreaRectangle } from "./AreaRectangle";

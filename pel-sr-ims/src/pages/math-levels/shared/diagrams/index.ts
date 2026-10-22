@@ -1,5 +1,9 @@
 export { DivisionLadder, ManualDivisionLadder, computeLongDivision } from "./DivisionLadder";
 export type { DivisionLadderProps } from "./DivisionLadder";
+export { FractionBar } from "./FractionBar";
+export type { FractionBarProps } from "./FractionBar";
+export { TwoTierBars } from "./TwoTierBars";
+export type { TwoTierBarsProps, TierSpec, TierCellStyle } from "./TwoTierBars";
 export { NumberLine } from "./NumberLine";
 export type { NumberLineProps, NumberLinePoint } from "./NumberLine";
 export { CoordinatePlane, QUADRANT_HIGHLIGHT } from "./CoordinatePlane";

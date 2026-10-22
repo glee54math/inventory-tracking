@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { AreaRectangle, FractionBar, FractionMeasureStrip, RecipeCard, SharingBars } from "../diagrams";
 import { gcd, pick, randInt, simplify } from "../../../shared/lib/math";
 import { choice, fracMultiply, type Problem, type Step } from "../../../shared/engine/types";
-import { Frac, QA, QB } from "../../../shared/engine/controls";
+import { Frac, QA, QB, Quotient } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { fractionDivisionTest } from "./FractionDivisionTest";
 
@@ -12,11 +12,6 @@ function properFraction(): [number, number] {
   const n = randInt(1, d - 1);
   const g = gcd(n, d);
   return [n / g, d / g];
-}
-
-/** Renders a quotient as a plain whole number when it reduces to one, otherwise as a stacked fraction. */
-function Quotient({ n, d }: { n: number; d: number }) {
-  return d === 1 ? <>{n}</> : <Frac n={n} d={d} />;
 }
 
 // ============================================================================

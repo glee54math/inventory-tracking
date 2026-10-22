@@ -183,6 +183,13 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       componentFile: "MG9_MultiDigitMultiplicationLab",
       componentExport: "MultiDigitMultiplicationLab",
     },
+    {
+      type: "standalone",
+      skillId: "IntroToFractionsLab",
+      label: "Introduction To Fractions",
+      componentFile: "MG9_IntroToFractionsLab",
+      componentExport: "IntroToFractionsLab",
+    },
   ],
 };
 

@@ -30,6 +30,15 @@ export const Frac = ({ n, d }: { n: React.ReactNode; d: React.ReactNode }) => (
   </span>
 );
 
+/**
+ * Renders a quotient as a plain whole number when it reduces to one, instead
+ * of a stacked fraction with denominator 1 (which would read oddly, e.g.
+ * "6 over 1"). Promoted here after this exact function showed up verbatim a
+ * third time (FractionDivision.tsx and FractionDivisionTest.tsx both had
+ * their own copy) — every caller now imports this instead of redeclaring it.
+ */
+export const Quotient = ({ n, d }: { n: number; d: number }) => (d === 1 ? <>{n}</> : <Frac n={n} d={d} />);
+
 export interface StepperProps {
   label: React.ReactNode;
   value: number;

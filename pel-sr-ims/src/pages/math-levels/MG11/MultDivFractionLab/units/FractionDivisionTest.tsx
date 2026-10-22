@@ -1,13 +1,8 @@
 import { AreaRectangle, RecipeCard, SharingBars } from "../diagrams";
 import { gcd, pick, randInt, simplify } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
-import { Frac, QA, QB } from "../../../shared/engine/controls";
+import { Frac, QA, QB, Quotient } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
-
-/** Renders a quotient as a plain whole number when it reduces to one, otherwise as a stacked fraction. */
-function Quotient({ n, d }: { n: number; d: number }) {
-  return d === 1 ? <>{n}</> : <Frac n={n} d={d} />;
-}
 
 function properFraction(): [number, number] {
   const d = randInt(2, 9);

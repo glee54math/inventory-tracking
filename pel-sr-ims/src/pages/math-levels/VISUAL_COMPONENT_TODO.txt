@@ -65,7 +65,69 @@ ELEMENTARY
          (MG7/MG7.tsx itself is still an empty shell — that's fine, the skill
          components are what's actually used, not the level shell file.)
 [ ] MG8
-[ ] MG9
+[x] MG9  — TwoDigitDivisionLab          (MG9/MG9_TwoDigitDivisionLab.tsx) — wired,
+          standard 6.NS.2. Was already live in LEVEL_SKILLS but had never been
+          logged in this file — backfilled 2026-10-21 while wiring
+          IntroToFractionsLab below, since "wired but undocumented" is the
+          same kind of gap this file exists to catch, just in the other
+          direction from "authored but not wired."
+         — MultiDigitMultiplicationLab   (MG9/MG9_MultiDigitMultiplicationLab.tsx) —
+          wired, standard 5.NBT.5. Same backfill as above. Uses the
+          isMastered()/shuffle-bag practice-picker pattern (bucket-aware
+          mastery + guaranteed bucket coverage per practice cycle) that
+          IntroToFractionsLab below also adopted.
+         — IntroToFractionsLab          (MG9/MG9_IntroToFractionsLab.tsx) — wired
+          2026-10-21 as a THIRD "standalone" skill in MG9 (alongside
+          TwoDigitDivisionLab and MultiDigitMultiplicationLab — all three
+          entries coexist in LEVEL_SKILLS' MG9 array, same multi-standalone-
+          skill pattern MG11 already uses for PowersOfTen + MultDivFractionLab).
+          Prerequisite content for MG11_MultDivFractionLab's harder grade-6
+          fraction operations: four units — Fraction Forms (proper/improper/
+          mixed + conversions, 4.NF.3, the one gated unit via requiresIntro),
+          Equivalent Fractions (4.NF.1), Comparing Fractions (4.NF.2, uses
+          Unit.requiredBuckets for same-denominator/same-numerator/cross-
+          multiply coverage), and Simplifying Fractions (4.NF.1, also
+          requiredBuckets for the "reduces" vs "already simplest" cases) —
+          each with a required Explore/Practice/Test tab. Entry file + styles
+          (MG9_IntroToFractionsLab_styles.css, scoped under .itf-lab) are flat
+          in MG9/ (admin file browser glob, same reasoning as every other
+          standalone skill's entry file); supporting diagrams/ and units/ live
+          one level deeper, inside MG9/IntroToFractionsLab/, to avoid
+          colliding with the two existing MG9 skills' own flat files.
+
+          Built on shared/styles/lab-base.css (extracted 2026-10, ahead of
+          this module — see that file's own doc comment) rather than
+          duplicating lab chrome CSS from scratch; MG9_IntroToFractionsLab_styles.css
+          holds only this lab's palette + two small classes
+          (.align-drill/.feedback.good) lab-base.css doesn't have yet, for
+          Fraction Forms' gated intro drill.
+
+          Promoted three MG11-local pieces to shared/ while building this
+          (all three now also used by MG11_MultDivFractionLab, verified
+          unchanged after the move):
+            - FractionBar.tsx -> shared/diagrams/ (was MultDivFractionLab-local;
+              its own simplifyCaption export was dropped in the move — no
+              consumers, fully redundant with shared/lib/math.ts's fracText).
+            - the local `Quotient` helper (was duplicated verbatim in
+              FractionDivision.tsx AND FractionDivisionTest.tsx) -> now a
+              single export in shared/engine/controls.tsx, next to Frac.
+            - SharingBars.tsx's "two stacked bars, one shared pixel width,
+              dashed guides" geometry -> extracted into a new
+              shared/diagrams/TwoTierBars.tsx primitive (fill/caption/divider
+              content fully caller-supplied); SharingBars.tsx now renders on
+              top of it instead of duplicating the geometry. IntroToFractionsLab's
+              EquivalentBars.tsx and SimplifyBeforeAfter.tsx are thin wrappers
+              on the same primitive.
+          Also extended shared/diagrams/NumberLine.tsx (previously integer-
+          only) with optional minorTicksPerUnit/snapDenominator props for
+          fractional tick marks and drag-snapping — purely additive, every
+          existing caller (MM1/NegativeNumbersLab) is unaffected when they're
+          left unset.
+
+          FactorRectangle.tsx stayed MG11-local (imported directly by
+          SimplifyingFractions.tsx from MG11/MultDivFractionLab/diagrams/
+          rather than promoted) — only a second consumer exists today, below
+          the threshold applied to the three promotions above.
 [ ] MG10
 [x] MG11 — PowersOf10Practice          (MG11/MG11_PowersOfTen.tsx) — wired 2026-10-01
           as a "standalone" skill (multi-file, same pattern as MG6_BarModel).
