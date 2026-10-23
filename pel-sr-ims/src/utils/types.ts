@@ -260,7 +260,14 @@ export const ENGLISH_GRADE_LEVELS: Record<string, string[]> = {
 export const SCHOOL_YEAR_START_MONTH = 7; // August (0-indexed)
 export const SCHOOL_YEAR_START_DAY = 15;
 
-// Voice-to-Action (VTA) testing: shows a feedback modal ~5s after any new
-// action is created, asking whether voice was used and whether it filled in
-// the right values unassisted. Flip to false once VTA testing is done.
-export const SHOW_VTA_FEEDBACK_MODAL = true;
+// Voice-to-Action (VTA): master switch for the whole feature. Off as of
+// 2026-10-23 — too many parsing inconsistencies to leave on in production.
+// Flip to true to bring the mic/voice-command bar back; code is otherwise
+// untouched. See ActionContainer.tsx for where this gates rendering.
+export const VOICE_TO_ACTION_ENABLED = false;
+
+// VTA testing: shows a feedback modal ~12s after any new action is created,
+// asking whether voice was used and whether it filled in the right values
+// unassisted. Pointless while VOICE_TO_ACTION_ENABLED is false, so it's off
+// too — flip both back on together when VTA testing resumes.
+export const SHOW_VTA_FEEDBACK_MODAL = false;

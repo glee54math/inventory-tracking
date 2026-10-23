@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Student, SubmittedAction } from "../../utils/types";
-import { SHOW_VTA_FEEDBACK_MODAL } from "../../utils/types";
+import { SHOW_VTA_FEEDBACK_MODAL, VOICE_TO_ACTION_ENABLED } from "../../utils/types";
 import Action from "./Action";
 import {
   assignHWToStudent,
@@ -366,7 +366,7 @@ function ActionContainer({
 
   return (
     <div className="space-y-4 overflow-auto">
-      <VoiceCommandBar onActionCreated={handleVoiceActionCreated} />
+      {VOICE_TO_ACTION_ENABLED && <VoiceCommandBar onActionCreated={handleVoiceActionCreated} />}
 
       <div className="mb-4">
         {actionList.length === 0 && (
