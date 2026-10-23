@@ -30,7 +30,14 @@ don't duplicate it here.
    luck on the easy cases alone). Reference how the standard's own sub-parts
    map to buckets, the way 6.NS.6's (a)/(b)/(c) sub-parts mapped to opposites
    / number-line position / reflections-and-quadrants across two units last
-   time.
+   time. Also flag, per unit: whether it has one load-bearing prerequisite
+   idea that should gate Practice (default yes — the builder's standard
+   Check-for-Understanding convention), and whether any of its content is a
+   fact meant to be memorized long-term rather than re-derived each time
+   (a candidate for periodic re-checking, not just one-time proof). If this
+   plan adds units to an EXISTING lab rather than a new one, flag that
+   explicitly too — the builder must grandfather students who already have
+   practice history predating any new gate.
 4. State the target audience framing explicitly in the plan (default: built
    for a student seeing this for the first time, regardless of the standard's
    posted grade level — adjust only if the user says otherwise for this lab).
