@@ -1,4 +1,4 @@
-import { palette } from "../../../shared/lib/palette";
+import { palette } from "../lib/palette";
 
 export interface FactorRectangleProps {
   rows: number;
@@ -22,6 +22,15 @@ const MAX_GRIDLINES = 12;
  * that the block is shown as a single proportional region with edge tick
  * labels only, so numbers up to 100 stay readable instead of rendering
  * hundreds of unit squares.
+ *
+ * Promoted here from MG11/MultDivFractionLab/diagrams/ (2026-10-23) once a
+ * third real consumer showed up (MM1/ExponentsAndExpressionsLab's
+ * distributive-property unit) — it already had two separate-lab consumers
+ * (MG11_MultDivFractionLab's own FactorsMultiples.tsx, and
+ * MG9_IntroToFractionsLab's SimplifyingFractions.tsx importing it cross-folder),
+ * right at the documented "promote once a third use shows up" threshold.
+ * Behavior is unchanged — only the palette import path moved (one less
+ * directory level from shared/diagrams/ than from MG11/MultDivFractionLab/diagrams/).
  */
 export function FactorRectangle({ rows, cols, width = 320, height = 160, splitCols, label }: FactorRectangleProps) {
   const cellW = width / cols;

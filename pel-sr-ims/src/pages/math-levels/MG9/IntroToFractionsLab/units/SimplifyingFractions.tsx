@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { SimplifyBeforeAfter } from "../diagrams";
-// FactorRectangle stays MG11-local (not promoted — only this one other
-// consumer exists today, below the "promote once a third use shows up"
-// threshold this codebase applies elsewhere); imported directly from its
-// home rather than re-exported through this module's own diagrams barrel,
-// which otherwise only holds genuinely local or shared/promoted diagrams.
-import { FactorRectangle } from "../../../MG11/MultDivFractionLab/diagrams";
+// Promoted to shared/diagrams/ (2026-10-23) once a third real consumer
+// showed up (MM1/ExponentsAndExpressionsLab) — now imported from there
+// instead of reaching across into MG11/MultDivFractionLab/diagrams/.
+import { FactorRectangle } from "../../../shared/diagrams";
 import { gcd, lcm, randInt, simplify } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
 import { Frac, Quotient, Stepper } from "../../../shared/engine/controls";

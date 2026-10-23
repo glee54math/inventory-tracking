@@ -435,6 +435,55 @@ MIDDLE SCHOOL
           synthetic "module" key in the same ProgressMap useModuleProgress already uses (no
           type changes needed — recordTest/mergeProgress already iterate keys generically).
           Reachable from a new card on the Home page and a button in the left rail; no gating.
+         — ExponentsAndExpressionsLab      (MM1/MM1_ExponentsAndExpressionsLab.tsx) — wired
+          2026-10-23 as a THIRD "standalone" skill in MM1 (alongside RatioLab and
+          NegativeNumbersLab — all three entries coexist in LEVEL_SKILLS' MM1 array).
+          Covers all of 6.EE ("Apply and extend previous understandings of arithmetic
+          to algebraic expressions") in one module: Exponents (6.EE.1), Writing &
+          Reading Expressions (6.EE.2a/2b), Evaluating Expressions & Order of
+          Operations (6.EE.2c), Equivalent Expressions via Properties (6.EE.3), and
+          Identifying Equivalent Expressions (6.EE.4) — five units, each with a
+          required Explore/Check-for-Understanding/Practice/Test tab, plus a
+          cumulative 25-question Module Test (deliberately weighted 3/6/5/6/5 toward
+          units 2-5, per the approved plan, since those build on each other more than
+          unit 1's exponent-notation skill does). Entry file + styles
+          (MM1_ExponentsAndExpressionsLab_styles.css, scoped under .eae-lab) are flat
+          in MM1/ (admin file browser glob, same reasoning as RatioLab and Negative
+          Numbers); supporting units/ lives one level deeper, inside
+          MM1/ExponentsAndExpressionsLab/, to avoid colliding with the other two labs'
+          own flat files. No new diagrams/ subfolder was needed — Explore visuals are
+          either plain styled HTML (factor "chips" for repeated multiplication,
+          progressive-reveal expression text for order of operations, a small
+          side-by-side evaluation table for checking equivalence) or the shared
+          FactorRectangle for the distributive property.
+
+          Promoted FactorRectangle.tsx from MG11/MultDivFractionLab/diagrams/ to
+          shared/diagrams/ while building this: it already had two separate-lab
+          consumers (MG11_MultDivFractionLab's own FactorsMultiples.tsx, and
+          MG9_IntroToFractionsLab's SimplifyingFractions.tsx importing it cross-folder
+          — both calls already noted in code comments as sitting right at this
+          codebase's "promote once a third use shows up" threshold), and this lab's
+          Equivalent Expressions via Properties unit became that third consumer.
+          Behavior is unchanged for the two existing consumers; only the relative
+          palette import path moved. MG11's own diagrams/index.ts and MG9's
+          SimplifyingFractions.tsx now both import it from shared/diagrams instead.
+
+          Two real distractor-collision bugs were caught by the brute-force
+          verification script (20,000 trials/bucket) and fixed before shipping: (1)
+          Exponents practice's repeated-mult bucket had a choice distractor
+          "base × exponent" that text-collided with the correct expanded form itself
+          whenever base=2, exponent=2 (both render "2 × 2") — fixed by excluding that
+          combination; (2) ExponentsTest.tsx's notationMatchQuestion had a
+          "exponent^base" (operand-swapped) distractor that collided with the correct
+          "base^exponent" answer whenever base === exponent (e.g. both "3^3") — fixed
+          by replacing it with a same-direction off-by-one distractor instead, and
+          generalizing the base-vs-exponent guard to cover every case, not just the
+          original 2/2 special case.
+
+          No new Step kinds or shared/engine capabilities were needed — every unit
+          uses only the existing "number" (with the existing frac/fracAnswer pair,
+          for the standard's own s=1/2 fractional-cube-formula case) and "choice" step
+          kinds.
 [ ] MM2
 [ ] MM3
 

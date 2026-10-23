@@ -8,3 +8,5 @@ export { NumberLine } from "./NumberLine";
 export type { NumberLineProps, NumberLinePoint } from "./NumberLine";
 export { CoordinatePlane, QUADRANT_HIGHLIGHT } from "./CoordinatePlane";
 export type { CoordinatePlaneProps, PlanePoint } from "./CoordinatePlane";
+export { FactorRectangle } from "./FactorRectangle";
+export type { FactorRectangleProps } from "./FactorRectangle";

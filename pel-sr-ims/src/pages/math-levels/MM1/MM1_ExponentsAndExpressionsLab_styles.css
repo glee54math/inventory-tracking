@@ -1,0 +1,170 @@
+/* Scoped under .eae-lab (the wrapper div in MM1_ExponentsAndExpressionsLab.tsx) instead
+   of :root/html/body, since this file is imported into one page of a much larger app, not
+   a standalone site — same reasoning as MM1_NegativeNumbersLab_styles.css and
+   MM1_RatioLab_styles.css. This lab reuses the SAME shared engine chrome those do
+   (shared/styles/lab-base.css), so this file only holds: this lab's own color palette
+   (light + dark), and the small handful of classes genuinely unique to this lab's own
+   content (.align-drill/.intro-gate-title/.align-stack-wrap for the gated Check for
+   Understanding drills, and select.answer, both copied from Negative Numbers' own
+   stylesheet rather than reinvented, since the markup is identical).
+   Import BOTH stylesheets, and add "lab-base" alongside "eae-lab" on the wrapper div. */
+
+.eae-lab {
+  --bg: #f4f1fb;
+  --card: #ffffff;
+  --ink: #241b40;
+  --muted: #655d82;
+  --line: #d5c9e2;
+  --grid: #ece6f6;
+  --qa: #5a3fc4;
+  --qa-soft: #e3dcf9;
+  --qa-text: #4530a0;
+  --qb: #c2410c;
+  --qb-soft: #fbe3d4;
+  --qb-text: #9a3408;
+  --qc: #1f8f5f;
+  --qc-soft: #d7f2e4;
+  --qc-text: #156a46;
+  --good: #1f8f5f;
+  --good-soft: #d7f2e4;
+  --bad: #c93848;
+  --bad-soft: #fbe1e4;
+  --on-q: #ffffff;
+  --radius-lg: 18px;
+  --radius-sm: 10px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  -webkit-font-smoothing: antialiased;
+}
+/* .align-drill/.align-stack-wrap/.intro-gate-title aren't in lab-base.css —
+   they're the box chrome AlignDecimalsDrill (MG11) introduced for a mandatory
+   gated exercise, reused here (and by MM1_NegativeNumbersLab) for every
+   unit's own Check for Understanding drill. */
+.eae-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.eae-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.eae-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.eae-lab .feedback.good {
+  color: var(--good);
+}
+/* lab-base.css's .answer styling is scoped to `input.answer` only — every
+   CFU question's dropdowns are <select>s, which that selector doesn't
+   match, so they need their own rule (same pattern as
+   MG9_IntroToFractionsLab_styles.css's .itf-lab select.answer, and
+   MM1_NegativeNumbersLab_styles.css's .neg-lab select.answer). */
+.eae-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.eae-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+/* Module test nav/card — same rules as every other lab's own module test
+   chrome, since the markup is shared verbatim. */
+.eae-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.eae-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.eae-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.eae-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.eae-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.eae-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+.eae-lab .module-test-back {
+  margin-bottom: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  .eae-lab:not([data-theme="light"]) {
+    --bg: #1a1530;
+    --card: #241d3d;
+    --ink: #ece7fa;
+    --muted: #ac9fcf;
+    --line: #43356b;
+    --grid: #2b2248;
+    --qa: #a68bff;
+    --qa-soft: #352a5c;
+    --qa-text: #c8b6ff;
+    --qb: #f2976a;
+    --qb-soft: #4a3018;
+    --qb-text: #f5b38f;
+    --qc: #4cc98f;
+    --qc-soft: #173d2e;
+    --qc-text: #7fe0b2;
+    --good: #4cc98f;
+    --good-soft: #173d2e;
+    --bad: #ff6b7a;
+    --bad-soft: #45202a;
+    --on-q: #140f26;
+  }
+}
+.eae-lab[data-theme="dark"] {
+  --bg: #1a1530;
+  --card: #241d3d;
+  --ink: #ece7fa;
+  --muted: #ac9fcf;
+  --line: #43356b;
+  --grid: #2b2248;
+  --qa: #a68bff;
+  --qa-soft: #352a5c;
+  --qa-text: #c8b6ff;
+  --qb: #f2976a;
+  --qb-soft: #4a3018;
+  --qb-text: #f5b38f;
+  --qc: #4cc98f;
+  --qc-soft: #173d2e;
+  --qc-text: #7fe0b2;
+  --good: #4cc98f;
+  --good-soft: #173d2e;
+  --bad: #ff6b7a;
+  --bad-soft: #45202a;
+  --on-q: #140f26;
+}

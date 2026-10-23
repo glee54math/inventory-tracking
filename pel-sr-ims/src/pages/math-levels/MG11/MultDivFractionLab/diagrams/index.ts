@@ -6,8 +6,11 @@ export { AreaRectangle } from "./AreaRectangle";
 export type { AreaRectangleProps } from "./AreaRectangle";
 export { PlaceValueColumns } from "./PlaceValueColumns";
 export type { PlaceValueColumnsProps } from "./PlaceValueColumns";
-export { FactorRectangle } from "./FactorRectangle";
-export type { FactorRectangleProps } from "./FactorRectangle";
+// Promoted to shared/diagrams/ (2026-10-23) once a third real consumer
+// showed up (MM1/ExponentsAndExpressionsLab) — re-exported here so this
+// lab's own units keep importing it from "../diagrams" unchanged.
+export { FactorRectangle } from "../../../shared/diagrams";
+export type { FactorRectangleProps } from "../../../shared/diagrams";
 export { MultiplesLine } from "./MultiplesLine";
 export type { MultiplesLineProps } from "./MultiplesLine";
 export { RecipeCard } from "./RecipeCard";

@@ -158,6 +158,13 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       componentFile: "MM1_NegativeNumbersLab",
       componentExport: "NegativeNumbersLab",
     },
+    {
+      type: "standalone",
+      skillId: "ExponentsAndExpressionsLab",
+      label: "Exponents & Expressions",
+      componentFile: "MM1_ExponentsAndExpressionsLab",
+      componentExport: "ExponentsAndExpressionsLab",
+    },
   ],
   MG8: [
     {
