@@ -4,6 +4,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { exponentsTest } from "./ExponentsTest";
+import { toSuperscript } from "./formatExponent";
 
 /** The repeated-multiplication string, e.g. (3, 4) -> "3 × 3 × 3 × 3" — the
  *  SAME function the Explore diagram and the Practice steps both read from,
@@ -494,12 +495,12 @@ function exponentsProblem(targetBucket?: string): Problem {
         steps: [
           choice(
             { prompt: <>Which is the same as {expanded}, written with an exponent?</>, hint: "Count how many times the base appears.", explain: <>{expanded} has {base} appearing {exponent} times, so it's {base}<sup>{exponent}</sup>.</> },
-            `${base}^${exponent}`,
+            `${base}${toSuperscript(exponent)}`,
             // Off-by-one in each direction, targeting the "count the factors
             // carefully" mistake — never the base/exponent-swapped form,
             // which can text-collide with the correct answer when base ===
-            // exponent (e.g. both "3^3").
-            [`${base}^${exponent - 1}`, `${base}^${exponent + 1}`]
+            // exponent (e.g. both "3³").
+            [`${base}${toSuperscript(exponent - 1)}`, `${base}${toSuperscript(exponent + 1)}`]
           ),
           { kind: "number", prompt: <>What value does that equal?</>, hint: "Multiply it out.", explain: `${expanded} = ${value}.`, answer: value },
         ],
@@ -523,7 +524,7 @@ function exponentsProblem(targetBucket?: string): Problem {
                 Which is the same as {base}<sup>{exponent}</sup>, as repeated multiplication?
               </>
             ),
-            hint: `${base}^${exponent} means ${base} multiplied by itself ${exponent} times — not ${base} multiplied by ${exponent}.`,
+            hint: `${base}${toSuperscript(exponent)} means ${base} multiplied by itself ${exponent} times — not ${base} multiplied by ${exponent}.`,
             explain: (
               <>
                 {base}<sup>{exponent}</sup> = {expanded}.

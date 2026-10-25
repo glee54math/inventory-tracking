@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { equivalentExpressionsPropertiesTest } from "./EquivalentExpressionsPropertiesTest";
+import { toSuperscript } from "./formatExponent";
 
 const fieldStyle = (ok: boolean, checked: boolean): CSSProperties => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
@@ -358,9 +359,9 @@ function propertiesProblem(targetBucket?: string): Problem {
       steps: [
         { kind: "number", prompt: "How many y's are being added together?", hint: "Count each y in the expression.", explain: `There are ${n} copies of y.`, answer: n },
         choice(
-          { prompt: `So what is ${expr} simplified?`, hint: "This is repeated ADDITION, not repeated multiplication.", explain: `${n} copies of y added together is ${n}y — not y^${n}, which would mean multiplying y by itself.` },
+          { prompt: `So what is ${expr} simplified?`, hint: "This is repeated ADDITION, not repeated multiplication.", explain: `${n} copies of y added together is ${n}y — not y${toSuperscript(n)}, which would mean multiplying y by itself.` },
           `${n}y`,
-          [`y^${n}`]
+          [`y${toSuperscript(n)}`]
         ),
       ],
       wrapUp: `${expr} = ${n}y.`,

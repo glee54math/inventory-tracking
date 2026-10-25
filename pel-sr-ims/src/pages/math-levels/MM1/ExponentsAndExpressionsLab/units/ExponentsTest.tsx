@@ -1,6 +1,7 @@
 import { randInt } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
+import { toSuperscript } from "./formatExponent";
 
 // ---------- end-of-unit test: Exponents ----------
 // 10 single-question generators covering the same 5 skills Practice
@@ -74,12 +75,12 @@ export const notationMatchQuestion = (direction: "toExpanded" | "toExponent", di
               </>
             ),
           },
-          `${base}^${exponent}`,
+          `${base}${toSuperscript(exponent)}`,
           // Off-by-one in each direction, targeting the "count the factors
           // carefully" mistake — never the base/exponent-swapped form, which
           // can text-collide with the correct answer when base === exponent
-          // (e.g. both "3^3"), as the brute-force verification script caught.
-          [`${base}^${exponent - 1}`, `${base}^${exponent + 1}`]
+          // (e.g. both "3³"), as the brute-force verification script caught.
+          [`${base}${toSuperscript(exponent - 1)}`, `${base}${toSuperscript(exponent + 1)}`]
         ),
       },
     ];
@@ -95,7 +96,7 @@ export const notationMatchQuestion = (direction: "toExpanded" | "toExponent", di
               Which is the same as {base}<sup>{exponent}</sup>, written as repeated multiplication?
             </>
           ),
-          hint: `${base}^${exponent} means ${base} multiplied by itself ${exponent} times — not ${base} multiplied by ${exponent}.`,
+          hint: `${base}${toSuperscript(exponent)} means ${base} multiplied by itself ${exponent} times — not ${base} multiplied by ${exponent}.`,
           explain: (
             <>
               {base}<sup>{exponent}</sup> = {expanded} ({base} appears {exponent} times).

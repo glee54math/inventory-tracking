@@ -1,6 +1,7 @@
 import { randInt } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
+import { toSuperscript } from "./formatExponent";
 
 // ---------- end-of-unit test: Equivalent Expressions via Properties ----------
 // 10 single-question generators across the 5 Practice skills: distributing
@@ -71,10 +72,10 @@ export const combineBasicQuestion = (difficulty: "easy" | "medium"): TestQuestio
         {
           prompt: `Simplify: ${expr}.`,
           hint: "This is repeated ADDITION, not multiplication — count how many y's are being added.",
-          explain: `${expr} is ${n} copies of y added together, which is ${n}y — NOT y^${n} (that would be repeated MULTIPLICATION, a different operation).`,
+          explain: `${expr} is ${n} copies of y added together, which is ${n}y — NOT y${toSuperscript(n)} (that would be repeated MULTIPLICATION, a different operation).`,
         },
         `${n}y`,
-        [`y^${n}`] // the signature y+y+y vs y^n conflation
+        [`y${toSuperscript(n)}`] // the signature y+y+y vs y^n conflation
       ),
     },
   ];
