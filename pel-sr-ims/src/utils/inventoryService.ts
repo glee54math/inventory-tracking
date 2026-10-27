@@ -330,17 +330,26 @@ export async function assignHWToStudent(student: Student, hwPackets: HomeworkAss
   }
 }
 // Worker Management Functions
-export async function createNewWorker(firstName: string, lastName: string, location: string = "san-ramon"): Promise<boolean> {
-  // Generate initials from first and last name
-  const initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
-  const tempPIN = '';
 
-  // Create new worker object (pin will be empty string initially)
-  const newWorker: Worker = {
-    firstName,
-    lastName,
-    initials,
-  };
+// Given a base set of initials (e.g. "JL") and the workers already on file,
+// returns the base initials if they're free, otherwise appends the lowest
+// available suffix starting at 2 (e.g. "JL2", "JL3", ...).
+function resolveUniqueInitials(baseInitials: string, existingWorkers: Worker[]): string {
+  const takenInitials = new Set(existingWorkers.map((w) => w.initials));
+  if (!takenInitials.has(baseInitials)) {
+    return baseInitials;
+  }
+
+  let suffix = 2;
+  while (takenInitials.has(`${baseInitials}${suffix}`)) {
+    suffix++;
+  }
+  return `${baseInitials}${suffix}`;
+}
+
+export async function createNewWorker(firstName: string, lastName: string, location: string = "san-ramon"): Promise<string | null> {
+  // Generate base initials from first and last name
+  const baseInitials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
 
   try {
     // Get the workers document for the specified location
@@ -349,23 +358,22 @@ export async function createNewWorker(firstName: string, lastName: string, locat
 
     if (!workersSnap.exists()) {
       // If document doesn't exist, create it with the new worker
+      const newWorker: Worker = { firstName, lastName, initials: baseInitials };
       await setDoc(workersDocRef, {
         workers: [{ ...newWorker, pin: "" }]
       });
-      console.log(`✅ Created workers document and added ${firstName} ${lastName} (${initials})`);
-      return true;
+      console.log(`✅ Created workers document and added ${firstName} ${lastName} (${baseInitials})`);
+      return baseInitials;
     }
 
     // Document exists, get current workers array
     const data = workersSnap.data();
     const currentWorkers = data.workers as Worker[];
 
-    // Check if worker with same initials already exists
-    const existingWorker = currentWorkers.find((w: Worker) => w.initials === initials);
-    if (existingWorker) {
-      console.log(`❌ Worker with initials ${initials} already exists`);
-      return false;
-    }
+    // Resolve a unique set of initials, suffixing with 2, 3, ... on collision
+    // (e.g. "JL" is taken, so the next worker with those initials becomes "JL2")
+    const initials = resolveUniqueInitials(baseInitials, currentWorkers);
+    const newWorker: Worker = { firstName, lastName, initials };
 
     // Add new worker to the array
     const updatedWorkers = [...currentWorkers, { ...newWorker, pin: "" }];
@@ -376,10 +384,10 @@ export async function createNewWorker(firstName: string, lastName: string, locat
     });
 
     console.log(`✅ Added ${firstName} ${lastName} (${initials}) to ${location} workers`);
-    return true;
+    return initials;
   } catch (error) {
     console.error("Error creating worker:", error);
-    return false;
+    return null;
   }
 }
 
