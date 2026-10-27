@@ -5,7 +5,7 @@ import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { writingReadingExpressionsTest } from "./WritingReadingExpressionsTest";
 
-const NAMES = ["y", "n", "m", "k"] as const;
+const NAMES = ["x", "y", "n", "m", "k"] as const;
 const fieldStyle = (ok: boolean, checked: boolean): CSSProperties => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
 // ============================================================================
@@ -326,22 +326,35 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 }
 
 // ============================================================================
-// PROBLEM TYPE — writing & reading expressions
+// PROBLEM TYPES — split into Addition/Subtraction and Multiplication/Division
+// subsections (plus the automatic "Mixed" tab the engine builds from
+// unit.problems — see MM1_ExponentsAndExpressionsLab.tsx's UnitView). Keeping
+// each operation family in its own bucket pool means a student gets real
+// repetition on one family's phrasing conventions before moving to the next,
+// instead of 15+ phrasings across 4 operations all competing in one pool.
 // ============================================================================
 
-type Bucket = "word-to-expr-straight" | "word-to-expr-flip" | "expr-to-word" | "identify-parts" | "paren-dual";
-const BUCKETS: Bucket[] = ["word-to-expr-straight", "word-to-expr-flip", "expr-to-word", "identify-parts", "paren-dual"];
+type AddSubBucket = "word-to-expr-straight-addsub" | "word-to-expr-flip-addsub" | "expr-to-word-addsub" | "identify-parts";
+const ADDSUB_BUCKETS: AddSubBucket[] = ["word-to-expr-straight-addsub", "word-to-expr-flip-addsub", "expr-to-word-addsub", "identify-parts"];
 
-function writingReadingProblem(targetBucket?: string): Problem {
-  const bucket = (targetBucket as Bucket | undefined) ?? BUCKETS[randInt(0, BUCKETS.length - 1)];
+type MultDivBucket = "word-to-expr-straight-multdiv" | "word-to-expr-flip-multdiv" | "expr-to-word-multdiv" | "paren-dual";
+const MULTDIV_BUCKETS: MultDivBucket[] = ["word-to-expr-straight-multdiv", "word-to-expr-flip-multdiv", "expr-to-word-multdiv", "paren-dual"];
+
+function additionSubtractionProblem(targetBucket?: string): Problem {
+  const bucket = (targetBucket as AddSubBucket | undefined) ?? pick(ADDSUB_BUCKETS);
   const v = pick(NAMES);
 
-  if (bucket === "word-to-expr-straight") {
+  if (bucket === "word-to-expr-straight-addsub") {
     const n = randInt(2, 15);
     const templates = [
       { phrase: `${n} more than ${v}`, correct: `${v}+${n}`, trap: `${n}-${v}` },
       { phrase: `${v} increased by ${n}`, correct: `${v}+${n}`, trap: `${n}-${v}` },
-      { phrase: `the product of ${n} and ${v}`, correct: `${n}${v}`, trap: `${v}/${n}` },
+      { phrase: `the sum of ${v} and ${n}`, correct: `${v}+${n}`, trap: `${n}-${v}` },
+      { phrase: `${v} plus ${n}`, correct: `${v}+${n}`, trap: `${n}-${v}` },
+      { phrase: `${n} added to ${v}`, correct: `${v}+${n}`, trap: `${n}-${v}` },
+      { phrase: `${v} minus ${n}`, correct: `${v}-${n}`, trap: `${n}-${v}` },
+      { phrase: `the difference of ${v} and ${n}`, correct: `${v}-${n}`, trap: `${n}-${v}` },
+      { phrase: `${v} decreased by ${n}`, correct: `${v}-${n}`, trap: `${n}-${v}` },
     ];
     const t = pick(templates);
     return {
@@ -355,23 +368,18 @@ function writingReadingProblem(targetBucket?: string): Problem {
       ),
       steps: [
         choice(
-          { prompt: `Which expression represents "${t.phrase}"?`, hint: "Read it left to right exactly as written — nothing here reverses the order.", explain: `"${t.phrase}" = ${t.correct}.` },
+          { prompt: `Which expression represents "${t.phrase}"?`, hint: "Read it left to right exactly as written.", explain: `"${t.phrase}" = ${t.correct}.` },
           t.correct,
           [t.trap]
-        ),
-        choice(
-          { prompt: "Does this phrase change the order of the two numbers, or keep it the same?", hint: "Compare the order in the words to the order in the expression you just picked.", explain: "This one keeps the same order — no flip needed." },
-          "keeps the same order",
-          ["flips the order"]
         ),
       ],
       wrapUp: `"${t.phrase}" = ${t.correct}.`,
     };
   }
 
-  if (bucket === "word-to-expr-flip") {
+  if (bucket === "word-to-expr-flip-addsub") {
     const n = randInt(2, 15);
-    const kind = Math.random() < 0.5 ? "subtractFrom" : "dividedInto";
+    const kind = pick(["subtractFrom", "lessThan"] as const);
     if (kind === "subtractFrom") {
       const correct = `${n}-${v}`;
       const trap = `${v}-${n}`;
@@ -395,35 +403,36 @@ function writingReadingProblem(targetBucket?: string): Problem {
         wrapUp: `"subtract ${v} from ${n}" = ${correct}.`,
       };
     }
-    const correct = `${v}/${n}`;
-    const trap = `${n}/${v}`;
+    // lessThan
+    const correct = `${v}-${n}`;
+    const trap = `${n}-${v}`;
     return {
       title: "Words to an expression — watch the order",
       bucket,
-      story: `Write "${n} divided into ${v}" as an algebraic expression.`,
-      visual: () => <p className="muted small">"{n} divided into {v}"</p>,
+      story: `Write "${n} less than ${v}" as an algebraic expression.`,
+      visual: () => <p className="muted small">"{n} less than {v}"</p>,
       steps: [
         choice(
-          { prompt: `Which expression represents "${n} divided into ${v}"?`, hint: `"A divided into B" means B ÷ A — the amount being split (${v}) comes first.`, explain: `"${n} divided into ${v}" means ${v} split into groups of size ${n}: ${correct}.` },
+          { prompt: `Which expression represents "${n} less than ${v}"?`, hint: `"A less than B" means B − A — the number named FIRST ("${n}") is the one being taken away, not where you start.`, explain: `"${n} less than ${v}" means start at ${v} and take away ${n}: ${correct}.` },
           correct,
           [trap]
         ),
         choice(
-          { prompt: `In general, "A divided into B" means...`, hint: "Which letter is the one being split up?", explain: "\"A divided into B\" always means B ÷ A." },
-          "B ÷ A",
-          ["A ÷ B"]
+          { prompt: `In general, "A less than B" means...`, hint: "Which letter is named first in the sentence — and is that really where you start?", explain: "\"A less than B\" always means B − A, even though A is named first." },
+          "B − A",
+          ["A − B"]
         ),
       ],
-      wrapUp: `"${n} divided into ${v}" = ${correct}.`,
+      wrapUp: `"${n} less than ${v}" = ${correct}.`,
     };
   }
 
-  if (bucket === "expr-to-word") {
+  if (bucket === "expr-to-word-addsub") {
     const n = randInt(2, 15);
     const kinds = [
+      { expr: `${v}+${n}`, correct: `the sum of ${v} and ${n}`, trap: `the difference of ${v} and ${n}` },
       { expr: `${v}-${n}`, correct: `${n} less than ${v}`, trap: `${v} less than ${n}` },
       { expr: `${n}-${v}`, correct: `${v} subtracted from ${n}`, trap: `${n} subtracted from ${v}` },
-      { expr: `${n}${v}`, correct: `${n} times ${v}`, trap: `${v} divided by ${n}` },
     ];
     const t = pick(kinds);
     return {
@@ -442,36 +451,170 @@ function writingReadingProblem(targetBucket?: string): Problem {
     };
   }
 
-  if (bucket === "identify-parts") {
-    const a = randInt(2, 9);
-    const b = randInt(2, 15);
-    const expr = `${a}${v}+${b}`;
+  // identify-parts — vary the expression's shape (mx+b, a+bx, or mx-b for a
+  // negative constant — never a leading negative constant) instead of always
+  // the same coefficient-first, positive-constant layout. The coefficient
+  // and the constant are also kept numerically distinct on purpose: if they
+  // happen to match (e.g. 7x+7), a student can get the right answer to "what
+  // is the coefficient" by accidentally reading the constant instead, without
+  // ever having to actually distinguish the two roles.
+  const a = randInt(2, 9);
+  let b = randInt(2, 15);
+  while (b === a) b = randInt(2, 15);
+  const negative = Math.random() < 0.4;
+  const constantFirst = !negative && Math.random() < 0.5;
+  const constantDisplay = negative ? `-${b}` : `${b}`;
+  const coeffDisplay = `${a}${v}`;
+  const expr = constantFirst ? `${b}+${coeffDisplay}` : negative ? `${coeffDisplay}-${b}` : `${coeffDisplay}+${b}`;
+  const tokens: { text: string; color?: string }[] = constantFirst
+    ? [
+        { text: `${b}`, color: "var(--qb-text)" },
+        { text: "+" },
+        { text: `${a}`, color: "var(--qa-text)" },
+        { text: v },
+      ]
+    : [
+        { text: `${a}`, color: "var(--qa-text)" },
+        { text: v },
+        { text: negative ? "−" : "+" },
+        { text: `${b}`, color: "var(--qb-text)" },
+      ];
+  return {
+    title: "Parts of an expression",
+    bucket,
+    story: `Look at the expression ${expr}.`,
+    visual: () => (
+      <div style={{ fontSize: 26, fontWeight: 700, textAlign: "center", display: "flex", gap: 4, justifyContent: "center" }}>
+        {tokens.map((tok, i) => (
+          <span key={i} style={tok.color ? { color: tok.color } : undefined}>
+            {tok.text}
+          </span>
+        ))}
+      </div>
+    ),
+    steps: [
+      { kind: "number", prompt: `What is the coefficient of ${v} in ${expr}?`, hint: "The coefficient is the number multiplying the variable.", explain: `The coefficient of ${v} is ${a}.`, answer: a },
+      choice(
+        { prompt: `How many terms does ${expr} have?`, hint: `Terms are separated by + or − signs. Count the parts of ${expr}.`, explain: `${expr} has two terms: ${coeffDisplay} and ${constantDisplay}.` },
+        "2",
+        ["1", "3"]
+      ),
+      choice(
+        { prompt: `What is ${constantDisplay} called, relative to the whole expression?`, hint: "It's one of the two terms being added together.", explain: `${constantDisplay} is a term of ${expr} — the term with no variable (a constant term).` },
+        "a term",
+        ["a factor", "a coefficient"]
+      ),
+    ],
+    wrapUp: `${expr}: coefficient of ${v} is ${a}, and the expression has 2 terms (${coeffDisplay} and ${constantDisplay}).`,
+  };
+}
+
+function multiplicationDivisionProblem(targetBucket?: string): Problem {
+  const bucket = (targetBucket as MultDivBucket | undefined) ?? pick(MULTDIV_BUCKETS);
+  const v = pick(NAMES);
+
+  if (bucket === "word-to-expr-straight-multdiv") {
+    const n = randInt(2, 15);
+    const templates = [
+      { phrase: `the product of ${n} and ${v}`, correct: `${n}${v}`, trap: `${v}/${n}` },
+      { phrase: `${v} times ${n}`, correct: `${n}${v}`, trap: `${v}/${n}` },
+      { phrase: `${n} multiplied by ${v}`, correct: `${n}${v}`, trap: `${v}+${n}` },
+      { phrase: `twice ${v}`, correct: `2${v}`, trap: `${v}+2` },
+      { phrase: `triple ${v}`, correct: `3${v}`, trap: `${v}+3` },
+      // var/number form
+      { phrase: `${v} divided by ${n}`, correct: `${v}/${n}`, trap: `${n}/${v}` },
+      { phrase: `the quotient of ${v} and ${n}`, correct: `${v}/${n}`, trap: `${n}/${v}` },
+      // number/var form — so the correct answer isn't always "variable on top"
+      { phrase: `${n} divided by ${v}`, correct: `${n}/${v}`, trap: `${v}/${n}` },
+      { phrase: `the quotient of ${n} and ${v}`, correct: `${n}/${v}`, trap: `${v}/${n}` },
+    ];
+    const t = pick(templates);
     return {
-      title: "Parts of an expression",
+      title: "Words to an expression",
       bucket,
-      story: `Look at the expression ${expr}.`,
+      story: `Write "${t.phrase}" as an algebraic expression.`,
       visual: () => (
-        <div style={{ fontSize: 26, fontWeight: 700, textAlign: "center", display: "flex", gap: 4, justifyContent: "center" }}>
-          <span style={{ color: "var(--qa-text)" }}>{a}</span>
-          <span>{v}</span>
-          <span>+</span>
-          <span style={{ color: "var(--qb-text)" }}>{b}</span>
+        <div style={{ fontSize: 20, textAlign: "center" }}>
+          <p className="muted small">"{t.phrase}"</p>
         </div>
       ),
       steps: [
-        { kind: "number", prompt: `What is the coefficient of ${v} in ${expr}?`, hint: "The coefficient is the number multiplying the variable.", explain: `The coefficient of ${v} is ${a}.`, answer: a },
         choice(
-          { prompt: `How many terms does ${expr} have?`, hint: `Terms are separated by + or − signs. Count the parts of ${expr}.`, explain: `${expr} has two terms: ${a}${v} and ${b}.` },
-          "2",
-          ["1", "3"]
-        ),
-        choice(
-          { prompt: `What is ${b} called, relative to the whole expression?`, hint: "It's one of the two parts being added together.", explain: `${b} is a term of ${expr} — the term with no variable (a constant term).` },
-          "a term",
-          ["a factor", "a coefficient"]
+          { prompt: `Which expression represents "${t.phrase}"?`, hint: "Read it left to right exactly as written.", explain: `"${t.phrase}" = ${t.correct}.` },
+          t.correct,
+          [t.trap]
         ),
       ],
-      wrapUp: `${expr}: coefficient of ${v} is ${a}, and the expression has 2 terms (${a}${v} and ${b}).`,
+      wrapUp: `"${t.phrase}" = ${t.correct}.`,
+    };
+  }
+
+  if (bucket === "word-to-expr-flip-multdiv") {
+    // Deliberately PAIRED rather than drawn as independent random
+    // alternates: "the quotient of A and B" (never flips) and "A divided
+    // into B" (always flips) use the SAME v, n and land on the SAME
+    // expression here, so a student can't learn "division always/never
+    // flips" from seeing just one phrasing in isolation — they have to
+    // notice the two different rules land in the same place by coincidence
+    // of which numbers were named, not because the rules are the same.
+    const n = randInt(2, 15);
+    // Randomize which symbol plays the numerator role, so the correct
+    // answer isn't always "variable on top" — sometimes the variable is the
+    // divisor instead ("the quotient of N and V" = N/V).
+    const varOnTop = Math.random() < 0.5;
+    const numerator = varOnTop ? v : n;
+    const denominator = varOnTop ? n : v;
+    const correct = `${numerator}/${denominator}`;
+    const trap = `${denominator}/${numerator}`;
+    return {
+      title: "Two division phrases, same answer — for different reasons",
+      bucket,
+      story: `Compare two ways to describe dividing ${numerator} by ${denominator}.`,
+      visual: () => (
+        <div style={{ fontSize: 17, textAlign: "center", display: "flex", flexDirection: "column", gap: 4 }}>
+          <p className="muted small">"the quotient of {numerator} and {denominator}"</p>
+          <p className="muted small">"{denominator} divided into {numerator}"</p>
+        </div>
+      ),
+      steps: [
+        choice(
+          { prompt: `Which expression represents "the quotient of ${numerator} and ${denominator}"?`, hint: `"The quotient of A and B" reads straightforwardly: A ÷ B.`, explain: `"The quotient of ${numerator} and ${denominator}" = ${correct}.` },
+          correct,
+          [trap]
+        ),
+        choice(
+          { prompt: `Which expression represents "${denominator} divided into ${numerator}"?`, hint: `"A divided into B" means B ÷ A — the amount being split (${numerator}) comes first.`, explain: `"${denominator} divided into ${numerator}" means ${numerator} split into groups of ${denominator}: ${correct}.` },
+          correct,
+          [trap]
+        ),
+      ],
+      wrapUp: `"the quotient of ${numerator} and ${denominator}" and "${denominator} divided into ${numerator}" both equal ${correct}, but for different reasons — read each phrase carefully instead of assuming a pattern.`,
+    };
+  }
+
+  if (bucket === "expr-to-word-multdiv") {
+    const n = randInt(2, 15);
+    const kinds = [
+      { expr: `${n}${v}`, correct: `${n} times ${v}`, trap: `${v} divided by ${n}` },
+      { expr: `${v}/${n}`, correct: `the quotient of ${v} and ${n}`, trap: `the quotient of ${n} and ${v}` },
+      { expr: `${v}/${n}`, correct: `${n} divided into ${v}`, trap: `${v} divided into ${n}` },
+      { expr: `${n}/${v}`, correct: `the quotient of ${n} and ${v}`, trap: `the quotient of ${v} and ${n}` },
+      { expr: `${n}/${v}`, correct: `${v} divided into ${n}`, trap: `${n} divided into ${v}` },
+    ];
+    const t = pick(kinds);
+    return {
+      title: "Reading an expression in words",
+      bucket,
+      story: `Read the expression ${t.expr} aloud as a phrase.`,
+      visual: () => <div style={{ fontSize: 26, fontWeight: 700, textAlign: "center" }}>{t.expr}</div>,
+      steps: [
+        choice(
+          { prompt: `Which phrase matches the expression ${t.expr}?`, hint: "Say the expression out loud, in the order the operation actually happens.", explain: `${t.expr} reads as "${t.correct}".` },
+          t.correct,
+          [t.trap]
+        ),
+      ],
+      wrapUp: `${t.expr} reads as "${t.correct}".`,
     };
   }
 
@@ -528,7 +671,13 @@ export const writingReadingExpressions: Unit = {
   // usable once — so the guided Check for Understanding periodically
   // re-surfaces, same convention as MM1_RatioLab's Conversion unit.
   reintroEverySolved: 20,
-  problems: [{ label: "Writing & Reading", make: writingReadingProblem, buckets: BUCKETS }],
-  requiredBuckets: BUCKETS,
+  // Two subsections (plus the automatic "Mixed" tab) so a student gets real
+  // repetition within one operation family's phrasing before mixing all
+  // four together — see the PROBLEM TYPES comment above.
+  problems: [
+    { label: "Addition & Subtraction", make: additionSubtractionProblem, buckets: ADDSUB_BUCKETS },
+    { label: "Multiplication & Division", make: multiplicationDivisionProblem, buckets: MULTDIV_BUCKETS },
+  ],
+  requiredBuckets: [...ADDSUB_BUCKETS, ...MULTDIV_BUCKETS],
   test: writingReadingExpressionsTest,
 };

@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
-import { Stepper } from "../../../shared/engine/controls";
+import { Stepper, QA, QB, QC } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { evaluatingExpressionsTest } from "./EvaluatingExpressionsTest";
 
@@ -26,11 +26,13 @@ function multiStepBreakdown(a: number, b: number, c: number) {
 /** Q1: multiplication before addition. */
 function MultiplyFirstQuestion({ onComplete }: { onComplete?: () => void }) {
   const [orderPick, setOrderPick] = useState("");
+  const [interPick, setInterPick] = useState("");
   const [valuePick, setValuePick] = useState("");
   const [checked, setChecked] = useState(false);
   const orderOk = orderPick === "multiply first";
+  const interOk = interPick === "12";
   const valueOk = valuePick === "14";
-  const ok = orderOk && valueOk;
+  const ok = orderOk && interOk && valueOk;
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -48,10 +50,26 @@ function MultiplyFirstQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="add first">add first</option>
           <option value="multiply first">multiply first</option>
         </select>
-        <label>
-          What is 2 + 3 × 4?{" "}
-          <input className="answer" style={{ width: 55 }} inputMode="numeric" value={valuePick} onChange={(e) => setValuePick(e.target.value)} />
-        </label>
+        {orderPick === "multiply first" && (
+          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            2 + 3 × 4 = 2 +{" "}
+            <input
+              className="answer"
+              style={{ width: 45, ...fieldStyle(interOk, checked) }}
+              inputMode="numeric"
+              value={interPick}
+              onChange={(e) => setInterPick(e.target.value)}
+            />{" "}
+            ={" "}
+            <input
+              className="answer"
+              style={{ width: 45, ...fieldStyle(valueOk, checked) }}
+              inputMode="numeric"
+              value={valuePick}
+              onChange={(e) => setValuePick(e.target.value)}
+            />
+          </label>
+        )}
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -133,8 +151,8 @@ function LeftToRightTrapQuestion({ onComplete }: { onComplete?: () => void }) {
       {checked && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
-            ? "Correct — False. Exponents and multiplication/division always outrank addition/subtraction, no matter where they sit in the expression. 3 + 4 × 2 = 11, not (3+4) × 2 = 14."
-            : "Not quite — try 3 + 4 × 2. Working strictly left to right gives (3+4) × 2 = 14, but the correct order-of-operations answer is 3 + 8 = 11."}
+            ? "Correct — False. Exponents and multiplication/division always outrank addition/subtraction, no matter where they sit in the expression. 2 + 3 × 4 = 14, not (2+3) × 4 = 20."
+            : "Not quite — try 2 + 3 × 4 (the first question above). Working strictly left to right gives (2+3) × 4 = 20, but the correct order-of-operations answer is 2 + 12 = 14."}
         </p>
       )}
     </div>
@@ -227,20 +245,28 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         )}
       </div>
       {(introActive || showCheck) && <EvaluatingCheckForUnderstanding onComplete={onIntroDone} />}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 20, fontWeight: 700 }}>
-        <div>
-          {c} + {a} × {b}
-          <sup>2</sup>
+      <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", alignItems: "baseline", rowGap: 10, columnGap: 14, fontSize: 20, fontWeight: 700 }}>
+        <div style={{ gridColumn: "1 / -1" }}>
+          <QC>{c}</QC> + <QA>{a}</QA> × <QB>{b}<sup>2</sup></QB>
         </div>
-        <div className="muted small" style={{ fontWeight: 400 }}>
-          Step 1 — exponent: {b}² = <span style={{ color: "var(--qb-text)", fontWeight: 700 }}>{square}</span>
-        </div>
-        <div className="muted small" style={{ fontWeight: 400 }}>
-          Step 2 — multiply: {a} × {square} = <span style={{ color: "var(--qa-text)", fontWeight: 700 }}>{product}</span>
-        </div>
-        <div className="muted small" style={{ fontWeight: 400 }}>
-          Step 3 — add: {c} + {product} = <span style={{ color: "var(--good)", fontWeight: 700 }}>{total}</span>
-        </div>
+        <span>
+          = <QC>{c}</QC> + <QA>{a}</QA> × <QB>{square}</QB>
+        </span>
+        <span className="muted small" style={{ fontWeight: 400 }}>
+          Step 1 — exponent: <QB>{b}<sup>2</sup></QB> = <QB>{square}</QB>
+        </span>
+        <span>
+          = <QC>{c}</QC> + <QA>{product}</QA>
+        </span>
+        <span className="muted small" style={{ fontWeight: 400 }}>
+          Step 2 — multiply: <QA>{a}</QA> × <QB>{square}</QB> = <QA>{product}</QA>
+        </span>
+        <span>
+          = <span style={{ color: "var(--good)" }}>{total}</span>
+        </span>
+        <span className="muted small" style={{ fontWeight: 400 }}>
+          Step 3 — add: <QC>{c}</QC> + <QA>{product}</QA> = <span style={{ color: "var(--good)", fontWeight: 700 }}>{total}</span>
+        </span>
       </div>
       <p className="muted small">
         Change a, b, or c above and watch every step update — the exponent is always evaluated first, then multiplication, then addition, no
