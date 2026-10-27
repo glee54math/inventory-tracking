@@ -3,6 +3,7 @@ import { SUBJECTS, MOVEMENTS, SUBSECTIONS } from "../../utils/types";
 import dataMath from "../../assets/dataMath.json";
 import dataEnglish from "../../assets/data.json";
 import { loadInventory, loadStudentsFromDB, loadInventoryFlags, toggleInventoryFlag } from "../../utils/inventoryService";
+import { predictForSubject, getActiveSubjects, type PredictionChip, type SubjectPrediction } from "../../utils/homeworkPrediction";
 import { useEffect, useState } from "react";
 import { NewStudentForm } from "./NewStudent";
 
@@ -19,6 +20,7 @@ function Action({ index, data, onChange }: ActionProps) {
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student>({} as Student);
   const [newStudentFormPopUp, setNewStudentFormPopUp] = useState<boolean>(false);
+  const [subjectPredictions, setSubjectPredictions] = useState<SubjectPrediction[]>([]);
   const [backInventoryValues, setBackInventoryValues] = useState<Record<string, Record<string,number>[]>>({});
   const [frontInventoryValues, setFrontInventoryValues] = useState<Record<string, Record<string,number>[]>>({});
 
@@ -34,6 +36,42 @@ function Action({ index, data, onChange }: ActionProps) {
     };
     getStudents();
   }, []);
+
+  // Once a student is picked (via either student selector), compute their suggested
+  // assignments for BOTH subjects — not just the ones listed in subjects_startDate_Map.
+  // That field is enrollment metadata and isn't always kept in sync; hwkAssigned (what
+  // predictForSubject actually reads) is the real source of truth, so a student can have
+  // genuine Math history worth predicting from even if Math isn't listed there. The map is
+  // only used below to decide the auto-select/shortcut-chip behavior, not to gate which
+  // subjects get a prediction at all.
+  useEffect(() => {
+    if (!selectedStudent?.firstName) {
+      setSubjectPredictions([]);
+      return;
+    }
+
+    const activeSubjects = getActiveSubjects(selectedStudent);
+    const predictions = SUBJECTS
+      .map((subject) => predictForSubject(selectedStudent, subject))
+      .filter((p): p is SubjectPrediction => p !== null);
+    setSubjectPredictions(predictions);
+
+    if (activeSubjects.length === 1 && !data.subject) {
+      const onlySubject = activeSubjects[0];
+      const prediction = predictions.find((p) => p.subject === onlySubject);
+      onChange({
+        ...data,
+        toStudent: selectedStudent,
+        subject: onlySubject,
+        level: prediction?.level ?? data.level,
+        selectedSubsections: [],
+        movementMap: {},
+        movementNumOfCopiesMap: {},
+      });
+    }
+    // Only re-run when the selected student actually changes, not on every data/onChange change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStudent?.firstName, selectedStudent?.lastName]);
 
   // Auto-load inventory values and flags whenever subject + level are both set.
   // This ensures auto-created actions (from cell edits) show B/F values and flags
@@ -143,19 +181,23 @@ function Action({ index, data, onChange }: ActionProps) {
       selectedSubsections: [],
       movementMap: {},
       movementNumOfCopiesMap: {},
-      toStudent: {} as Student,
     });
   };
 
   const handleSubjectChange = (newSubject: Subject | "") => {
+    // Prefill the predicted level too (same source as the auto-select-single-subject path
+    // and the subject-shortcut chips), so manually picking Subject still surfaces the
+    // suggestion chips below instead of leaving Level blank for the worker to guess.
+    const prediction =
+      newSubject !== "" ? subjectPredictions.find((p) => p.subject === newSubject) : undefined;
+
     onChange({
       ...data,
       subject: newSubject === "" ? null : newSubject,
-      level: "",
+      level: prediction?.level ?? "",
       selectedSubsections: [],
       movementMap: {},
       movementNumOfCopiesMap: {},
-      toStudent: {} as Student,
     });
     setBackFlags({});
     setFrontFlags({});
@@ -168,7 +210,6 @@ function Action({ index, data, onChange }: ActionProps) {
       selectedSubsections: [],
       movementMap: {},
       movementNumOfCopiesMap: {},
-      toStudent: {} as Student,
     });
     setBackFlags({});
     setFrontFlags({});
@@ -190,6 +231,28 @@ function Action({ index, data, onChange }: ActionProps) {
       toStudent: temp[0]
     })
   }
+
+  // Applies a suggestion chip: fills subject/level/ranges/copies in one click, and defaults
+  // movement to FrontToStudent for every range (same as the common manual choice) — still
+  // fully editable afterward via the normal per-range movement dropdown below.
+  const handleApplyChip = (subject: Subject, chip: PredictionChip) => {
+    const movementMap: Record<string, MovementType> = {};
+    const movementNumOfCopiesMap: Record<string, number> = {};
+    chip.ranges.forEach((range) => {
+      movementMap[range] = "FrontToStudent";
+      movementNumOfCopiesMap[range] = chip.copiesByRange[range] ?? 1;
+    });
+
+    onChange({
+      ...data,
+      toStudent: selectedStudent,
+      subject,
+      level: chip.level,
+      selectedSubsections: chip.ranges,
+      movementMap,
+      movementNumOfCopiesMap,
+    });
+  };
 
   // Helper: render a flag button for a given side and range
   const FlagButton = ({ side, range }: { side: "back" | "front"; range: string }) => {
@@ -217,6 +280,67 @@ function Action({ index, data, onChange }: ActionProps) {
     <div>
       <form name="Action" className="flex items-start gap-1">
         <div className="flex items-start gap-1">
+          {/* Optional accelerator: pick the student first to get suggested assignments
+              below, instead of picking Subject/Level/ranges manually. Purely a shortcut —
+              the "Select Student" dropdown further down still works for non-student
+              movements (restocks, shipments) that don't need this. */}
+          <div className="flex flex-col gap-1 mr-1">
+            <select
+              name="StudentFirst"
+              id={`student-first-${index}`}
+              value={
+                selectedStudent?.firstName
+                  ? selectedStudent.firstName + " " + selectedStudent.lastName
+                  : ""
+              }
+              onChange={(e) => handleToStudentChange(e.target.value)}
+              className="border px-1 py-1 rounded field-sizing-content"
+              title="Pick a student first to get suggested assignments"
+            >
+              <option value="">Assign to student…</option>
+              {allStudents.map((student: Student) => (
+                <option
+                  key={student.firstName + " " + student.lastName}
+                  value={student.firstName + " " + student.lastName}
+                >
+                  {student.firstName + " " + student.lastName}
+                </option>
+              ))}
+              <option key="add" value="Add New Student">Add New Student</option>
+            </select>
+
+            {/* Subject shortcuts: only needed when the student has 2+ active subjects
+                (per subjects_startDate_Map) with history — a single active subject is
+                auto-selected instead. Deliberately scoped to active subjects only, unlike
+                the full 3-chip row below which works for any subject with real history. */}
+            {!data.subject && (() => {
+              const activeSubjects = getActiveSubjects(selectedStudent);
+              const activePredictions = subjectPredictions.filter((p) =>
+                activeSubjects.includes(p.subject)
+              );
+              if (activePredictions.length <= 1) return null;
+
+              return (
+                <div className="flex flex-col gap-1">
+                  {activePredictions.map((prediction) => {
+                    const chip =
+                      prediction.chips.find((c) => c.key === "advance") ?? prediction.chips[0];
+                    return (
+                      <button
+                        key={prediction.subject}
+                        type="button"
+                        onClick={() => handleApplyChip(prediction.subject, chip)}
+                        className="text-xs border rounded-full px-2 py-1 bg-blue-50 hover:bg-blue-100 text-left"
+                      >
+                        {prediction.subject}: {prediction.level} {chip.ranges.join(", ")}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+
           <div className="flex flex-col item-start gap-1">
             <select
               name="Subject"
@@ -319,7 +443,43 @@ function Action({ index, data, onChange }: ActionProps) {
               </select>
             )}
           </div>
-          
+
+          {/* Suggested assignment chips, computed from this student's hwkHistory for the
+              current subject+level. Purely a prefill — clicking one just checks the
+              matching range boxes below and fills movement/copies; nothing here is final
+              until the worker submits. */}
+          {data.subject && data.level && (() => {
+            const prediction = subjectPredictions.find(
+              (p) => p.subject === data.subject && p.level === data.level
+            );
+            if (!prediction) return null;
+
+            return (
+              <div className="flex flex-col gap-1 border rounded p-2 bg-gray-50 max-w-48">
+                <span className="text-xs text-gray-500">Suggested:</span>
+                {prediction.chips.map((chip) => {
+                  const isApplied =
+                    chip.ranges.length === data.selectedSubsections.length &&
+                    chip.ranges.every((r) => data.selectedSubsections.includes(r));
+                  return (
+                    <button
+                      key={chip.key}
+                      type="button"
+                      onClick={() => handleApplyChip(data.subject as Subject, chip)}
+                      className={`text-xs border rounded-full px-2 py-1 text-left ${
+                        isApplied
+                          ? "bg-blue-100 border-blue-400"
+                          : "bg-white hover:bg-blue-50"
+                      }`}
+                    >
+                      {chip.label}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
           {/* Subsections */}
           {data.subject && data.level && (
             <div className="flex flex-col gap-2 border p-2 rounded max-h-90 overflow-y-auto">
