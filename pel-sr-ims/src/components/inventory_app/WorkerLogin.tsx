@@ -193,33 +193,34 @@ export default function WorkerLogin() {
     setError("");
 
     try {
-      const success = await createNewWorker(
-        newWorkerFirstName.trim(), 
-        newWorkerLastName.trim(), 
+      const assignedInitials = await createNewWorker(
+        newWorkerFirstName.trim(),
+        newWorkerLastName.trim(),
         newWorkerLocation
       );
-      
-      if (success) {
+
+      if (assignedInitials) {
         // Reload workers list
         await loadWorkers();
-        
-        // Clear form and show success message
-        const initials = (newWorkerFirstName.charAt(0) + newWorkerLastName.charAt(0)).toUpperCase();
+
         setError(""); // Clear any errors
-        
+
+        const addedFirstName = newWorkerFirstName;
+        const addedLastName = newWorkerLastName;
+
         // Reset form
         setNewWorkerFirstName("");
         setNewWorkerLastName("");
-        
+
         // Go back to select worker and show success
         setLoginStep("selectWorker");
-        
+
         // Set a temporary success message
         setTimeout(() => {
-          alert(`✅ Successfully added ${newWorkerFirstName} ${newWorkerLastName} (${initials}). You can now select them to login.`);
+          alert(`✅ Successfully added ${addedFirstName} ${addedLastName} (${assignedInitials}). You can now select them to login.`);
         }, 100);
       } else {
-        setError("Failed to add worker. A worker with these initials may already exist.");
+        setError("Failed to add worker. Please try again.");
       }
     } catch (err) {
       setError("An error occurred while adding the worker.");
