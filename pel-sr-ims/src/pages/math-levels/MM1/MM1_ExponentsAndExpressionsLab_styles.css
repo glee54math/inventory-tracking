@@ -25,6 +25,7 @@
   --qc: #1f8f5f;
   --qc-soft: #d7f2e4;
   --qc-text: #156a46;
+  --qd-text: #1f6a8a;
   --good: #1f8f5f;
   --good-soft: #d7f2e4;
   --bad: #c93848;
@@ -139,6 +140,7 @@
     --qc: #4cc98f;
     --qc-soft: #173d2e;
     --qc-text: #7fe0b2;
+    --qd-text: #8fdef2;
     --good: #4cc98f;
     --good-soft: #173d2e;
     --bad: #ff6b7a;
@@ -162,6 +164,7 @@
   --qc: #4cc98f;
   --qc-soft: #173d2e;
   --qc-text: #7fe0b2;
+  --qd-text: #8fdef2;
   --good: #4cc98f;
   --good-soft: #173d2e;
   --bad: #ff6b7a;

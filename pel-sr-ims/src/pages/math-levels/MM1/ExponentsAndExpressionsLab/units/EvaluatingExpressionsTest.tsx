@@ -3,12 +3,15 @@ import { choice, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 
 // ---------- end-of-unit test: Evaluating Expressions & Order of Operations ----------
-// 10 single-question generators across the 5 Practice skills: plain
+// 14 single-question generators across the 9 Practice buckets: plain
 // substitution, substitution with an exponent, multi-step order of
 // operations with no parentheses, real-world formula substitution (V=s³,
 // A=6s², including a fractional s=1/2 case the plan specifically calls
-// for), and substituting multiple variables at once. Self-contained — no
-// import from EvaluatingExpressions.tsx (see ExponentsTest.tsx's comment).
+// for), substituting multiple variables at once, parentheses-first,
+// division ranking with multiplication, same-rank left-to-right chains, and
+// a hardest-tier question combining parentheses + exponent + multiply +
+// divide + subtract. Self-contained — no import from EvaluatingExpressions.tsx
+// (see ExponentsTest.tsx's comment).
 
 /** 3(a) substitute into a simple expression, no exponent. */
 export const simpleSubQuestion = (difficulty: "easy" | "medium"): TestQuestion[] => {
@@ -172,6 +175,101 @@ export const leftToRightTrapQuestion = (): TestQuestion[] => [
   },
 ];
 
+/** 3(f) parentheses are simplified before anything outside them. */
+export const parensBasicQuestion = (difficulty: "medium" | "hard"): TestQuestion[] => {
+  const a = randInt(2, 9);
+  const b = randInt(2, 9);
+  const c = randInt(2, 12);
+  const sum = a + b;
+  const total = sum * c;
+  return [
+    {
+      visual: null,
+      difficulty,
+      step: {
+        kind: "number",
+        prompt: `Evaluate (${a} + ${b}) × ${c}.`,
+        hint: `Parentheses are always simplified first: ${a} + ${b} = ${sum}, then multiply by ${c}.`,
+        explain: `${a} + ${b} = ${sum}; ${sum} × ${c} = ${total}.`,
+        answer: total,
+      },
+    },
+  ];
+};
+
+/** 3(g) division ranks with multiplication, not addition. */
+export const divisionComboQuestion = (difficulty: "medium" | "hard"): TestQuestion[] => {
+  const c = randInt(2, 6);
+  const q = randInt(2, 9);
+  const b = c * q;
+  const a = randInt(1, 20);
+  const total = a + q;
+  return [
+    {
+      visual: null,
+      difficulty,
+      step: {
+        kind: "number",
+        prompt: `Evaluate ${a} + ${b} ÷ ${c}.`,
+        hint: `Division ranks with multiplication — it happens before addition: ${b} ÷ ${c} = ${q}.`,
+        explain: `${b} ÷ ${c} = ${q}; ${a} + ${q} = ${total}.`,
+        answer: total,
+      },
+    },
+  ];
+};
+
+/** 3(h) multiplication and division are equal rank — resolved left to right. */
+export const multDivChainQuestion = (difficulty: "medium" | "hard"): TestQuestion[] => {
+  const b = randInt(2, 6);
+  const m = randInt(2, 6);
+  const a = b * m;
+  const c = randInt(2, 9);
+  const quotient = m;
+  const total = quotient * c;
+  return [
+    {
+      visual: null,
+      difficulty,
+      step: {
+        kind: "number",
+        prompt: `Evaluate ${a} ÷ ${b} × ${c}.`,
+        hint: `Division and multiplication rank equally — work left to right: ${a} ÷ ${b} = ${quotient} first.`,
+        explain: `${a} ÷ ${b} = ${quotient}; ${quotient} × ${c} = ${total}.`,
+        answer: total,
+      },
+    },
+  ];
+};
+
+/** 3(i) hardest tier — parentheses, exponent, multiply, divide, AND subtract in one expression. */
+export const fullPemdasQuestion = (): TestQuestion[] => {
+  const a = randInt(2, 6);
+  const b = randInt(2, 6);
+  const c = randInt(2, 6);
+  const sum = b + c;
+  const sq = sum * sum;
+  const product = a * sq;
+  const e = randInt(2, 6);
+  const k = randInt(2, 9);
+  const d = e * k;
+  const quotient = k;
+  const total = product - quotient;
+  return [
+    {
+      visual: null,
+      difficulty: "hard",
+      step: {
+        kind: "number",
+        prompt: `Evaluate ${a} × (${b} + ${c})² − ${d} ÷ ${e}.`,
+        hint: `Parentheses first (${b}+${c}=${sum}), then the exponent (${sum}²=${sq}), then multiply (${a}×${sq}=${product}) and divide (${d}÷${e}=${quotient}), then subtract.`,
+        explain: `${b} + ${c} = ${sum}; ${sum}² = ${sq}; ${a} × ${sq} = ${product}; ${d} ÷ ${e} = ${quotient}; ${product} − ${quotient} = ${total}.`,
+        answer: total,
+      },
+    },
+  ];
+};
+
 export const evaluatingExpressionsTest: Unit["test"] = {
   questions: [
     () => simpleSubQuestion("easy"),
@@ -184,6 +282,10 @@ export const evaluatingExpressionsTest: Unit["test"] = {
     () => formulaQuestion("surfaceArea", true, "hard"), // the fractional s=1/2 case, as required
     () => multiVariableQuestion("medium"),
     leftToRightTrapQuestion,
+    () => parensBasicQuestion("medium"),
+    () => divisionComboQuestion("medium"),
+    () => multDivChainQuestion("hard"),
+    fullPemdasQuestion,
   ],
-  passScore: 9,
+  passScore: 13,
 };
