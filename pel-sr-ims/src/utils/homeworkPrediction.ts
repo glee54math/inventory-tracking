@@ -5,12 +5,21 @@
 
 import type { Student, HomeworkHistoryEntry, Subject } from "./types";
 import { SUBSECTIONS } from "./types";
-import { buildHwkHistoryFromAssignments, toDate } from "./progressService";
+import { buildHwkHistoryFromAssignments, getNextLevel, toDate } from "./progressService";
 
 // Packets from one submission are pushed to Firestore within milliseconds of each other
 // (see ActionContainer.tsx's studentHWPacketsToDatabase loop), so a generous window still
 // won't merge two genuinely separate visits.
 const VISIT_GROUPING_WINDOW_MS = 2 * 60 * 1000;
+
+// Math's Advance chip is always exactly 2 chunks (20 pages) — a fixed size rather than
+// mirrored from history, per director preference.
+const MATH_ADVANCE_CHUNK_COUNT = 2;
+
+// English rollover chips (restart this level / move to the next one) have no "last visit"
+// to size against, since neither option has actually happened yet. This default is
+// deliberately arbitrary — just a reasonable starting point to edit from.
+const ROLLOVER_CHUNK_COUNT = 4;
 
 export interface PredictionChip {
   key: "advance" | "reinforce" | "repeat";
@@ -130,11 +139,10 @@ export function predictForSubject(student: Student, subject: Subject): SubjectPr
   // moving on, so all 3 chips apply there.
   const repeatsApply = subject === "Math";
 
-  // Advance: next unassigned chunk(s). For Math, sized to mirror how many NEW chunks were
-  // introduced last visit (so a student who's usually given 2 new chunks a visit keeps that
-  // pace). For English, sized to the full last visit, since every chunk given is new by
-  // definition — "EG4 1-30" assigned means "EG4 31-60" is next, not just one chunk.
-  const advanceCount = repeatsApply ? Math.max(frontier.length, 1) : Math.max(fullLastVisit.length, 1);
+  // Advance: next unassigned chunk(s). Math is always a fixed 2 chunks (20 pages). English
+  // is sized to the full last visit, since every chunk given is new by definition —
+  // "EG4 1-30" assigned means "EG4 31-60" is next, not just one chunk.
+  const advanceCount = repeatsApply ? MATH_ADVANCE_CHUNK_COUNT : Math.max(fullLastVisit.length, 1);
   const advanceRanges: string[] = [];
   for (let i = maxIndexEver + 1; i < SUBSECTIONS.length && advanceRanges.length < advanceCount; i++) {
     advanceRanges.push(SUBSECTIONS[i]);
@@ -147,6 +155,31 @@ export function predictForSubject(student: Student, subject: Subject): SubjectPr
       ranges: advanceRanges,
       copiesByRange: Object.fromEntries(advanceRanges.map((r) => [r, defaultCopies])),
     });
+  } else if (!repeatsApply) {
+    // English hit the end of this level (every chunk already assigned) — straight-across
+    // progression has no room left to advance within currentLevel. Offer to either restart
+    // this level fresh or move into the next one, rather than showing nothing.
+    const nextLevel = getNextLevel(currentLevel, subject);
+    const rolloverRanges = SUBSECTIONS.slice(0, ROLLOVER_CHUNK_COUNT);
+    const rolloverCopies = Object.fromEntries(rolloverRanges.map((r) => [r, defaultCopies]));
+
+    chips.push({
+      key: "repeat",
+      label: `Repeat ${currentLevel} → ${rolloverRanges.join(", ")}`,
+      level: currentLevel,
+      ranges: rolloverRanges,
+      copiesByRange: rolloverCopies,
+    });
+
+    if (nextLevel) {
+      chips.push({
+        key: "advance",
+        label: `Advance ${nextLevel} → ${rolloverRanges.join(", ")}`,
+        level: nextLevel,
+        ranges: rolloverRanges,
+        copiesByRange: rolloverCopies,
+      });
+    }
   }
 
   if (repeatsApply) {
@@ -176,6 +209,12 @@ export function predictForSubject(student: Student, subject: Subject): SubjectPr
       copiesByRange: { ...lastVisit.copiesByRange },
     });
   }
+
+  // Should be unreachable given the branches above (Math always gets a Repeat chip;
+  // English always gets either an Advance or a rollover Repeat chip) — kept as a guard
+  // against a chip-less prediction reaching the UI and crashing it, since that's exactly
+  // what happened before the rollover branch existed.
+  if (chips.length === 0) return null;
 
   return { subject, level: currentLevel, chips };
 }

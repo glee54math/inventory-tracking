@@ -216,15 +216,26 @@ function Action({ index, data, onChange }: ActionProps) {
   };
 
   const handleToStudentChange = (studentName: string) => {
-    // need to handle "Add New Student"
+    // "Add New Student" opens the popup — it isn't an actual student to look up, so stop
+    // here rather than falling through to a lookup that will never match and would wipe
+    // out whatever student was already selected.
     if (studentName === "Add New Student") {
       setNewStudentFormPopUp(true);
+      return;
+    }
+
+    if (studentName === "") {
+      setSelectedStudent({} as Student);
+      onChange({ ...data, toStudent: {} as Student });
+      return;
     }
 
     // selectedStudent: ability to assign work to Student.
     const temp = (allStudents.filter((stud) => {
       return (stud.firstName + " " + stud.lastName) === studentName;
     }));
+    if (temp.length === 0) return; // no match — leave the current selection untouched
+
     setSelectedStudent(temp[0]);  // should only have 1, given there isn't two students with the same name.
     onChange({
       ...data,
@@ -313,7 +324,7 @@ function Action({ index, data, onChange }: ActionProps) {
                 (per subjects_startDate_Map) with history — a single active subject is
                 auto-selected instead. Deliberately scoped to active subjects only, unlike
                 the full 3-chip row below which works for any subject with real history. */}
-            {!data.subject && (() => {
+            {!data.subject && selectedStudent?.firstName && (() => {
               const activeSubjects = getActiveSubjects(selectedStudent);
               const activePredictions = subjectPredictions.filter((p) =>
                 activeSubjects.includes(p.subject)
@@ -332,7 +343,7 @@ function Action({ index, data, onChange }: ActionProps) {
                         onClick={() => handleApplyChip(prediction.subject, chip)}
                         className="text-xs border rounded-full px-2 py-1 bg-blue-50 hover:bg-blue-100 text-left"
                       >
-                        {prediction.subject}: {prediction.level} {chip.ranges.join(", ")}
+                        {prediction.subject} — {chip.label}
                       </button>
                     );
                   })}
@@ -459,6 +470,7 @@ function Action({ index, data, onChange }: ActionProps) {
                 <span className="text-xs text-gray-500">Suggested:</span>
                 {prediction.chips.map((chip) => {
                   const isApplied =
+                    chip.level === data.level &&
                     chip.ranges.length === data.selectedSubsections.length &&
                     chip.ranges.every((r) => data.selectedSubsections.includes(r));
                   return (
