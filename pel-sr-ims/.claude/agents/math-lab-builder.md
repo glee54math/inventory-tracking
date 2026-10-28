@@ -87,6 +87,39 @@ component is invisible to students (it has happened: a live "no practice
 problems" bug) and nothing short of remembering to do it catches that. Tick
 the lab in `VISUAL_COMPONENT_TODO.txt`'s status legend at the same time.
 
+### Stars / mastery (shell's `isMastered`/`Stars`)
+Import `isMastered` and `starCount` from `src/hooks/useModuleProgress.ts`
+(alongside `MASTERY_GOAL`/`useModuleProgress`) — do NOT reimplement the
+mastery math locally. Every existing lab's shell used to carry its own
+hand-copied version of this logic (8 near-identical copies by the time it
+was consolidated); keep it that way at one. Your shell file should contain
+only thin per-lab wrappers that supply `unit.requiredBuckets` and
+`MASTERY_GOAL`, e.g.:
+
+```ts
+function isMastered(unit: Unit, p?: UnitProgress): boolean {
+  return sharedIsMastered(MASTERY_GOAL, unit.requiredBuckets, p);
+}
+function starCount(unit: Unit, p?: UnitProgress): number {
+  return sharedStarCount(MASTERY_GOAL, unit.requiredBuckets, p);
+}
+```
+(importing the shared ones `as sharedIsMastered`/`as sharedStarCount` to
+avoid shadowing — see `MM1_ExponentsAndExpressionsLab.tsx` for the exact
+pattern.) `Stars` then just calls `starCount(unit, p)` for its `n`.
+
+Stars divide up evenly across `requiredBuckets` coverage via
+`Math.ceil(MASTERY_GOAL * coveredCount / totalBuckets)`, capped at
+`MASTERY_GOAL - 1` until EVERY bucket is covered, at which point it jumps to
+the full `MASTERY_GOAL` — not "N-1 stars from clean-solve count, then a
+separate pass/fail cliff for the last star." If a unit has no
+`requiredBuckets` at all, both functions fall back to the plain
+clean-solve-count bar automatically — nothing extra to handle for that case.
+Update the "Your path" helper paragraph under the star list to describe
+this (see `MM1_ExponentsAndExpressionsLab.tsx`'s copy) rather than leaving
+stale "earn a star for each problem you solve" wording once any unit in the
+lab has `requiredBuckets`.
+
 ## Per-unit build
 
 ### Explore

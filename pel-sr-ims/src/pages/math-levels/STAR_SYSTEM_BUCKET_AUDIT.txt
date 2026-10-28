@@ -1,0 +1,196 @@
+STAR SYSTEM / BUCKET-COVERAGE AUDIT
+Generated while rolling out the new ceil()-based star formula project-wide.
+Read this, then tell me which section to tackle next — nothing below has
+been changed except what's explicitly marked DONE.
+
+================================================================================
+THE NEW FORMULA (now shared — see "CODE STATUS" below)
+================================================================================
+Lives in src/hooks/useModuleProgress.ts as two exported functions:
+
+  isMastered(goal, requiredBuckets, p)
+  starCount(goal, requiredBuckets, p)
+
+For a unit with NO requiredBuckets: unchanged old behavior — stars = clean
+solve count, capped at `goal`.
+
+For a unit WITH requiredBuckets: stars = Math.ceil(goal * coveredCount /
+totalBuckets), capped at goal-1 UNTIL every bucket is covered, at which
+point it jumps to the full `goal`. (Worked example, 9 buckets, goal=5:
+1 bucket->1 star, 2->2, 3->2, 4->3, 5->3, 6->4, 7->4, 8->4 [would
+naturally ceil to 5, but held back], 9/9->5.)
+
+A "bucket" = one scenario-class a problem generator can produce, declared
+via Problem.bucket on each generated problem and Unit.requiredBuckets on
+the unit as a whole (see shared/engine/types.ts and shared/units/types.ts
+doc comments). "Clean solve" = solved with at most one hint.
+
+================================================================================
+CODE STATUS — what's actually been changed so far
+================================================================================
+DONE — migrated to the shared isMastered/starCount, local copies deleted:
+  - MM1_ExponentsAndExpressionsLab.tsx
+  - MM1_NegativeNumbersLab.tsx
+  - MG8_OneDigitDivisionLab.tsx
+  - MG9_IntroToFractionsLab.tsx
+  - MG9_MultiDigitMultiplicationLab.tsx
+  - MG9_TwoDigitDivisionLab.tsx
+  - MG11_MultDivFractionLab.tsx
+  Each of these still has its own small `Stars` JSX component (unchanged
+  visually) and thin `isMastered`/`starCount` wrapper functions that just
+  delegate to the shared ones with that lab's own `unit.requiredBuckets`.
+  The "Your path" helper text under the star list was also reworded to
+  describe the new mechanic.
+
+NOT YET migrated (see "DIFFERENT ARCHITECTURE" and "NO BUCKETS AT ALL"
+sections below for why each one is its own decision, not just "run the
+same edit again"):
+  - MM1_RatioLab.tsx
+  - MG11_GeometryLab.tsx (+ GeometryLab/modules/Area.tsx)
+  - MG11_PowersOfTen_PracticeCard.tsx
+
+================================================================================
+SECTION A — units that ALREADY have requiredBuckets (fully wired)
+================================================================================
+These get the new ceil() formula automatically now that their lab shell is
+migrated (see CODE STATUS). Nothing to do here except maybe audit whether
+each one's buckets are still the *right* scenario breakdown.
+
+MM1_ExponentsAndExpressionsLab — ALL 5 units bucketed:
+  - Exponents
+  - WritingReadingExpressions
+  - EvaluatingExpressions  (9 buckets — the one this whole project started from)
+  - EquivalentExpressionsProperties
+  - IdentifyingEquivalentExpressions
+
+MM1_NegativeNumbersLab — ALL 4 units bucketed:
+  - RealWorldNegatives
+  - NumberLineUnit
+  - CoordinatePlaneUnit
+  - ComparingOrdering
+
+MG8_OneDigitDivisionLab — its 1 unit bucketed:
+  - Divide
+
+MG9_MultiDigitMultiplicationLab — its 1 unit bucketed:
+  - Multiply
+
+MG9_TwoDigitDivisionLab — its 1 unit bucketed:
+  - Divide
+
+================================================================================
+SECTION B — labs that are PARTIALLY bucketed (some units yes, some no)
+================================================================================
+The lab shell is migrated, so the bucketed units below already use the new
+formula. The un-bucketed units in the same lab just fall back to the old
+plain clean-count star bar until/unless they get buckets too.
+
+MG9_IntroToFractionsLab (4 units):
+  HAS buckets: ComparingFractions, SimplifyingFractions
+  NO buckets:  FractionForms, EquivalentFractions
+    - FractionForms.tsx already has 3 separate named problem generators
+      (classifyProblem, improperToMixedProblem, mixedToImproperProblem) —
+      looks like an easy retrofit, each generator is plausibly its own
+      bucket already in spirit, just untagged.
+    - EquivalentFractions.tsx already has 3 separate named problem
+      generators (missingNumberProblem, spotEquivalentProblem,
+      buildEquivalentProblem) — same situation, looks like an easy retrofit.
+
+MG11_MultDivFractionLab (3 units):
+  HAS buckets: DecimalOperations
+  NO buckets:  FractionDivision, FactorsMultiples
+    - FactorsMultiples.tsx has 3 separate named problem generators
+      (gcfProblem, lcmProblem, distributiveProblem) — looks like an easy
+      retrofit.
+    - FractionDivision.tsx has 4 separate named problem generators
+      (measurementProblem, sharingProblem, relationshipProblem,
+      recipeProblem) — plausible retrofit, but this file is big (1300+
+      lines), so give it a closer read before assuming the split is that
+      clean.
+
+================================================================================
+SECTION C — on the shared star mechanism, but ZERO bucket-tracking
+================================================================================
+MM1_RatioLab — 6 units, NONE bucketed:
+  - RatioLanguage   (already has 2 problems[] entries: "Picture groups" /
+                      "Word problem" — a labeled-subsection split already
+                      exists, just not wired into requiredBuckets/mastery)
+  - UnitRate
+  - TablesGraphs
+  - RateProblems
+  - Percent
+  - Conversions
+  RatioLab's Stars/Home/UnitView code is also structurally different from
+  the other 7 labs — its Stars component never took a `unit` prop at all
+  (nothing to check buckets against), and "next incomplete unit" logic was
+  written inline against `clean` rather than through an isMastered()
+  function. Migrating it to the shared helper is more than a drop-in swap;
+  it needs that plumbing added first. NOT migrated yet for that reason —
+  today RatioLab's "Five stars = mastered" text is still accurate as-is,
+  since there's no bucket coverage story to describe yet.
+
+================================================================================
+SECTION D — different architecture entirely (not Unit[]-engine-based)
+================================================================================
+MG11_GeometryLab.tsx (+ GeometryLab/modules/Area.tsx, Volume.tsx,
+Coordinate.tsx, Nets.tsx, WordProblems.tsx):
+  "Ported from a converted Claude Artifact" (per its own header comment).
+  Doesn't use the Unit/ProblemType/StepProblem engine the rest of the labs
+  share. Has its OWN separate Stars component (GeometryLab/components/ui.tsx)
+  and its own AREA_SHAPE_MASTERY_GOAL = 3 (not 5) for per-shape mastery
+  inside the Area module specifically; Volume/Coordinate/Nets/WordProblems
+  tabs use plain `Stars n={progress[t.id]?.clean} max={MASTERY_GOAL}` with
+  no bucket concept at all. The new shared starCount()/isMastered() ARE
+  generalized to accept any `goal` (so goal=3 for Area would work), but
+  wiring this lab up means touching its own separate Stars component and
+  deciding what "buckets" even means per shape/tab here. Needs a dedicated
+  look, not a copy-paste of the other 7 labs' edit.
+
+MG11_PowersOfTen_PracticeCard.tsx:
+  "This module has no real sub-units... progress is tracked under a single
+  synthetic unit id" (per its own comment). Uses a completely different
+  question-bank architecture (TOPICS/createQuestionBank/TopicChoice from
+  MG11_PowersOfTen_questions.tsx) instead of the Unit/Problem engine. Its
+  current star line is `Math.min(MASTERY_GOAL, progress[UNIT_ID]?.clean)` —
+  plain clean-count, no bucket concept. BUT: it already has a `TOPICS` /
+  `TopicChoice` dimension in its question bank that looks like a very
+  natural fit for `requiredBuckets` if/when this one gets retrofitted —
+  worth a closer look, this might be one of the *easier* Section-D
+  retrofits despite the architecture difference.
+
+================================================================================
+SECTION E — real content, but NO star/progress system at all
+================================================================================
+These don't call useModuleProgress / MASTERY_GOAL anywhere — standalone
+interactive pages/drills, not part of the star-mastery story. Out of scope
+for this effort unless you want to pull them into the practice-tracking
+system as a separate project.
+  - MG1/MG1.tsx
+  - MG2/MG2.tsx
+  - MG3/MG3.tsx
+  - MG5/MG5.tsx
+  - MG6/* (MG6_BarModel.tsx, MG6_TwoDigitVisualAddition.tsx, MG6_VerticalAddition.tsx)
+  - MG7/* (MG7_Nx1DigitMultiplication.tsx, Nx1VertMult.tsx)
+
+================================================================================
+SECTION F — grade folders not built yet (empty placeholder files)
+================================================================================
+MG4, MH1, MH2, MH3, MH4, MH5, MH6, MHG, MHT, MK1, MK2, MK3, MK4, MM2, MM3
+  Each is a single 0-line .tsx stub. Nothing to audit — flagging only so
+  "comprehensive" actually means every folder got looked at, not just the
+  ones that happened to show up in a grep.
+
+================================================================================
+SUGGESTED NEXT STEPS (your call — just flagging, not deciding)
+================================================================================
+1. Section B retrofits look cheapest: 4 files (FractionForms,
+   EquivalentFractions, FactorsMultiples, maybe FractionDivision) already
+   have multiple named problem-generator functions — tagging them with
+   `bucket` + adding `requiredBuckets` to their Unit objects is probably a
+   small, mechanical change each, similar to what EvaluatingExpressions.tsx
+   already does.
+2. RatioLab (Section C) needs the `unit`-aware plumbing added to its
+   Home/UnitView/Stars before it can even consider buckets — a prerequisite
+   step independent of whether any of its 6 units get buckets afterward.
+3. Section D (GeometryLab, PowersOfTen) are each their own project — don't
+   bundle them with the Section B/C work above.

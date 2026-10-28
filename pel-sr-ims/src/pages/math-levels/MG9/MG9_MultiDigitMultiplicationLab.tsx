@@ -8,28 +8,25 @@ import { UnitTestView } from "../shared/engine/UnitTest";
 import { UnitPreviewCarousel } from "../shared/components/UnitPreviewCarousel";
 import type { Problem } from "../shared/engine/types";
 import { shuffle } from "../shared/lib/math";
-import { MASTERY_GOAL, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
+import { MASTERY_GOAL, isMastered as sharedIsMastered, starCount as sharedStarCount, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
 import { useStudentContext } from "../../../components/student_portal/StudentContext";
 
 const MODULE_ID = "MG9_MultiDigitMultiplicationLab";
 
-/** A unit is mastered at MASTERY_GOAL clean solves — AND, for a unit that
- *  declares `requiredBuckets`, a clean solve covering every one of those
- *  scenario-classes at least once, not just MASTERY_GOAL solves from
- *  wherever random generation happened to land. Units without
- *  requiredBuckets behave exactly as before. */
+// isMastered/starCount math itself now lives in useModuleProgress.ts, shared
+// across every lab — these are just thin per-lab wrappers so every other
+// call site in this file can keep passing a `Unit` instead of its raw
+// `requiredBuckets` array.
 function isMastered(unit: Unit, p?: UnitProgress): boolean {
-  if ((p?.clean ?? 0) < MASTERY_GOAL) return false;
-  if (!unit.requiredBuckets) return true;
-  const covered = p?.coveredBuckets ?? [];
-  return unit.requiredBuckets.every((b) => covered.includes(b));
+  return sharedIsMastered(MASTERY_GOAL, unit.requiredBuckets, p);
+}
+
+function starCount(unit: Unit, p?: UnitProgress): number {
+  return sharedStarCount(MASTERY_GOAL, unit.requiredBuckets, p);
 }
 
 function Stars({ unit, p, size = "sm" }: { unit: Unit; p?: UnitProgress; size?: "sm" | "lg" }) {
-  // The last star only lights up at true mastery (bucket coverage included,
-  // where that applies) — clean count alone fills at most MASTERY_GOAL - 1,
-  // so "all stars lit" never overstates what's actually been proven.
-  const n = isMastered(unit, p) ? MASTERY_GOAL : Math.min(MASTERY_GOAL - 1, p?.clean ?? 0);
+  const n = starCount(unit, p);
   return (
     <span className={`stars ${size}`} aria-label={`${n} of ${MASTERY_GOAL} mastery stars`}>
       {Array.from({ length: MASTERY_GOAL }, (_, i) => (
@@ -73,7 +70,7 @@ function Home({ onPick, progress }: { onPick: (i: number) => void; progress: Rec
             </li>
           ))}
         </ol>
-        <p className="muted small">Earn a star for each Mixed-mode problem you solve with at most one hint. Five stars = mastered.</p>
+        <p className="muted small">Stars fill in as you cleanly solve (at most one hint) every different kind of problem in Mixed mode — the last star needs all of them.</p>
       </section>
     </div>
   );

@@ -4,11 +4,53 @@ import {
   logModuleAttempt,
   saveModuleProgress,
 } from "../utils/moduleProgressService";
-import type { ProgressMap } from "../utils/moduleProgressTypes";
+import type { ProgressMap, UnitProgress } from "../utils/moduleProgressTypes";
 
 export type { ProgressMap, UnitProgress } from "../utils/moduleProgressTypes";
 
 export const MASTERY_GOAL = 5;
+
+/**
+ * An entry (unit, shape, topic — whatever `record()`'s `unitId` names) is
+ * mastered once every one of its `requiredBuckets` scenario-classes has at
+ * least one clean solve — not a separate `goal`-clean-solves floor on top of
+ * that, since covering every bucket already implies at least that many
+ * clean solves (each newly-covered bucket costs one, per `record()` above).
+ * A single bucket-coverage bar is also simpler for a student to reason about
+ * than two overlapping ones. Entries with no bucket list (requiredBuckets
+ * undefined or empty — most of the project, today) fall back to the plain
+ * "clean solves >= goal" bar, since there's nothing to divide evenly across.
+ * Deliberately decoupled from the math-levels `Unit` type (plain
+ * `requiredBuckets`/`goal` params instead) so this hook stays generic —
+ * callers pass `unit.requiredBuckets`, but a caller with no `Unit` object at
+ * all (e.g. a per-shape or per-topic progress entry) can use it too.
+ */
+export function isMastered(goal: number, requiredBuckets: string[] | undefined, p?: UnitProgress): boolean {
+  if (!requiredBuckets || requiredBuckets.length === 0) return (p?.clean ?? 0) >= goal;
+  const covered = p?.coveredBuckets ?? [];
+  return requiredBuckets.every((b) => covered.includes(b));
+}
+
+/**
+ * Stars divide up evenly across bucket coverage instead of "goal-1 stars
+ * from clean-solve count, then a separate pass/fail cliff for the last
+ * star" — ceil() means the very first bucket already lights a star (not
+ * "do several problems before anything happens"), and each new bucket can
+ * either bump the star count or not depending on where the fraction lands,
+ * same as any ceil-based progress bar. The one exception: even though the
+ * ceil'd fraction can round all the way up to `goal` before every bucket is
+ * covered (e.g. 8 of 9 buckets → ceil(5×8/9) = 5), the last star is
+ * reserved for TRUE completion via `isMastered` — otherwise "all stars lit"
+ * would overstate what's actually been proven. Entries with no bucket list
+ * keep the old plain clean-count bar (nothing to divide evenly across).
+ */
+export function starCount(goal: number, requiredBuckets: string[] | undefined, p?: UnitProgress): number {
+  if (isMastered(goal, requiredBuckets, p)) return goal;
+  if (!requiredBuckets || requiredBuckets.length === 0) return Math.min(goal - 1, p?.clean ?? 0);
+  const covered = p?.coveredBuckets ?? [];
+  const coveredCount = requiredBuckets.filter((b) => covered.includes(b)).length;
+  return Math.min(goal - 1, Math.ceil((goal * coveredCount) / requiredBuckets.length));
+}
 
 const cacheKey = (studentId: string | null, location: string | null, moduleId: string) =>
   studentId && location

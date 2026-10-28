@@ -9,7 +9,7 @@ import { UnitTestView } from "../shared/engine/UnitTest";
 import { UnitPreviewCarousel } from "../shared/components/UnitPreviewCarousel";
 import type { Problem } from "../shared/engine/types";
 import { shuffle } from "../shared/lib/math";
-import { MASTERY_GOAL, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
+import { MASTERY_GOAL, isMastered as sharedIsMastered, starCount as sharedStarCount, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
 import { useStudentContext } from "../../../components/student_portal/StudentContext";
 
 const MODULE_ID = "MM1_ExponentsAndExpressionsLab";
@@ -18,37 +18,16 @@ const MODULE_ID = "MM1_ExponentsAndExpressionsLab";
 // convention as MM1 Ratio Lab's and Negative Numbers' own module tests).
 const MODULE_PROGRESS_KEY = "module";
 
-/** A unit is mastered once every one of its `requiredBuckets` scenario-classes
- *  has at least one clean solve — not a separate MASTERY_GOAL-clean-solves
- *  floor on top, since covering every bucket already implies that many clean
- *  solves (each new covered bucket costs one). A single bucket-coverage bar
- *  is also simpler for a student to reason about than two overlapping ones.
- *  Units without `requiredBuckets` fall back to the plain clean-count bar. */
+// isMastered/starCount math itself now lives in useModuleProgress.ts, shared
+// across every lab — these are just thin per-lab wrappers so every other
+// call site in this file can keep passing a `Unit` instead of its raw
+// `requiredBuckets` array.
 function isMastered(unit: Unit, p?: UnitProgress): boolean {
-  if (!unit.requiredBuckets) return (p?.clean ?? 0) >= MASTERY_GOAL;
-  const covered = p?.coveredBuckets ?? [];
-  return unit.requiredBuckets.every((b) => covered.includes(b));
+  return sharedIsMastered(MASTERY_GOAL, unit.requiredBuckets, p);
 }
 
-/**
- * Stars divide up evenly across bucket coverage instead of "4 stars from
- * clean-solve count, then a separate pass/fail cliff for the 5th" — ceil()
- * means the very first bucket already lights a star (not "do several
- * problems before anything happens"), and each new bucket can either bump
- * the star count or not depending on where the fraction lands, same as any
- * ceil-based progress bar. The one exception: even though the ceil'd
- * fraction can round all the way up to MASTERY_GOAL before every bucket is
- * covered (e.g. 8/9 buckets → ceil(5×8/9) = 5), the last star is reserved
- * for TRUE completion — otherwise "all stars lit" would overstate what's
- * actually been proven. Units without `requiredBuckets` keep the old plain
- * clean-count bar (nothing to divide evenly across).
- */
 function starCount(unit: Unit, p?: UnitProgress): number {
-  if (isMastered(unit, p)) return MASTERY_GOAL;
-  if (!unit.requiredBuckets) return Math.min(MASTERY_GOAL - 1, p?.clean ?? 0);
-  const covered = p?.coveredBuckets ?? [];
-  const coveredCount = unit.requiredBuckets.filter((b) => covered.includes(b)).length;
-  return Math.min(MASTERY_GOAL - 1, Math.ceil((MASTERY_GOAL * coveredCount) / unit.requiredBuckets.length));
+  return sharedStarCount(MASTERY_GOAL, unit.requiredBuckets, p);
 }
 
 function Stars({ unit, p, size = "sm" }: { unit: Unit; p?: UnitProgress; size?: "sm" | "lg" }) {
