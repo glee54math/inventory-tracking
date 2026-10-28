@@ -351,6 +351,10 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ padding: "10px 14px", borderRadius: "var(--radius-sm)", background: "var(--grid)", fontSize: 15 }}>
+        <b>PEMDAS</b> — the order to simplify any expression: <b>P</b>arentheses → <b>E</b>xponents → <b>M</b>ultiplication/<b>D</b>ivision (left to
+        right) → <b>A</b>ddition/<b>S</b>ubtraction (left to right).
+      </div>
       <div className="control-row">
         <Stepper label="a" value={a} min={1} max={9} step={1} onChange={setA} tone="a" />
         <Stepper label="b" value={b} min={1} max={6} step={1} onChange={setB} tone="b" />
@@ -475,13 +479,23 @@ function simplifyingProblem(targetBucket?: string): Problem {
           <div>
             {c} + {a} × {b}<sup>2</sup>
           </div>
-          {done >= 1 && <div>{c} + {a} × {square}</div>}
-          {done >= 2 && <div>{c} + {product}</div>}
-          {done >= 3 && <div style={{ color: "var(--good)" }}>= {total}</div>}
+          {done >= 2 && <div>{c} + {a} × {square}</div>}
+          {done >= 4 && <div>{c} + {product}</div>}
+          {done >= 5 && <div style={{ color: "var(--good)" }}>= {total}</div>}
         </div>
       ),
       steps: [
-        { kind: "number", prompt: <>First, what is {b}<sup>2</sup> by itself?</>, hint: `${b}² = ${b} × ${b}.`, explain: `${b}² = ${square}.`, answer: square },
+        choice(
+          { prompt: <>Looking at {c} + {a} × {b}<sup>2</sup>, what do you simplify first?</>, hint: "The exponent always outranks addition, no matter which is written first.", explain: <>The exponent {b}<sup>2</sup> is simplified first — not the addition, even though {c} is written first.</> },
+          `the exponent (${b}²)`,
+          ["the addition"]
+        ),
+        { kind: "number", prompt: <>What is {b}<sup>2</sup> by itself?</>, hint: `${b}² = ${b} × ${b}.`, explain: `${b}² = ${square}.`, answer: square },
+        choice(
+          { prompt: "Now what's next?", hint: "Multiplication outranks addition.", explain: `${a} × ${square} is simplified next — multiplication always outranks addition.` },
+          `the multiplication (${a} × ${square})`,
+          ["the addition"]
+        ),
         { kind: "number", prompt: <>Now what is {a} × {b}<sup>2</sup>?</>, hint: `You found ${b}² = ${square}. Multiply by ${a}.`, explain: `${a} × ${square} = ${product}.`, answer: product },
         { kind: "number", prompt: <>Finally, what is {c} + {a} × {b}<sup>2</sup>?</>, hint: `You found ${a} × ${b}² = ${product}. Add ${c}.`, explain: `${c} + ${product} = ${total}.`, answer: total },
       ],
@@ -512,18 +526,18 @@ function simplifyingProblem(targetBucket?: string): Problem {
           <div>
             ({a} + {b}) × {c}
           </div>
-          {done >= 1 && <div>{sum} × {c}</div>}
-          {done >= 2 && <div style={{ color: "var(--good)" }}>= {total}</div>}
+          {done >= 2 && <div>{sum} × {c}</div>}
+          {done >= 3 && <div style={{ color: "var(--good)" }}>= {total}</div>}
         </div>
       ),
       steps: [
-        { kind: "number", prompt: <>First, what is the sum inside the parentheses: {a} + {b}?</>, hint: "Parentheses are simplified before anything outside them.", explain: `${a} + ${b} = ${sum}.`, answer: sum },
-        { kind: "number", prompt: <>Now what is {sum} × {c}?</>, hint: `Multiply the result of the parentheses by ${c}.`, explain: `${sum} × ${c} = ${total}.`, answer: total },
         choice(
-          { prompt: "Which happens first here — the addition inside the parentheses, or the multiplication outside?", hint: "Look at the order you just worked in.", explain: "Parentheses are always simplified first, before any operation outside them." },
+          { prompt: "Which do you simplify first?", hint: "Parentheses are always simplified before anything outside them.", explain: "Parentheses are always simplified first, before any operation outside them." },
           "the addition inside the parentheses",
           ["the multiplication outside"]
         ),
+        { kind: "number", prompt: <>What is the sum inside the parentheses: {a} + {b}?</>, hint: "Parentheses are simplified before anything outside them.", explain: `${a} + ${b} = ${sum}.`, answer: sum },
+        { kind: "number", prompt: <>Now what is {sum} × {c}?</>, hint: `Multiply the result of the parentheses by ${c}.`, explain: `${sum} × ${c} = ${total}.`, answer: total },
       ],
       wrapUp: (
         <>
@@ -548,18 +562,18 @@ function simplifyingProblem(targetBucket?: string): Problem {
           <div>
             {a} + {b} ÷ {c}
           </div>
-          {done >= 1 && <div>{a} + {q}</div>}
-          {done >= 2 && <div style={{ color: "var(--good)" }}>= {total}</div>}
+          {done >= 2 && <div>{a} + {q}</div>}
+          {done >= 3 && <div style={{ color: "var(--good)" }}>= {total}</div>}
         </div>
       ),
       steps: [
-        { kind: "number", prompt: `First, what is ${b} ÷ ${c}?`, hint: "Division ranks with multiplication — it happens before addition.", explain: `${b} ÷ ${c} = ${q}.`, answer: q },
-        { kind: "number", prompt: `Now what is ${a} + ${b} ÷ ${c}?`, hint: `You found ${b} ÷ ${c} = ${q}. Add ${a}.`, explain: `${a} + ${q} = ${total}.`, answer: total },
         choice(
-          { prompt: "Which ranks higher here — division, or addition?", hint: "Look at which operation you did first.", explain: "Division ranks with multiplication, above addition — it's always done first, no matter which is written first." },
-          "division",
-          ["addition"]
+          { prompt: "Which do you simplify first?", hint: "Division ranks with multiplication, above addition — it's always done first.", explain: "Division ranks with multiplication, above addition — it's always done first, no matter which is written first." },
+          `the division (${b} ÷ ${c})`,
+          ["the addition"]
         ),
+        { kind: "number", prompt: `What is ${b} ÷ ${c}?`, hint: "Division ranks with multiplication — it happens before addition.", explain: `${b} ÷ ${c} = ${q}.`, answer: q },
+        { kind: "number", prompt: `Now what is ${a} + ${b} ÷ ${c}?`, hint: `You found ${b} ÷ ${c} = ${q}. Add ${a}.`, explain: `${a} + ${q} = ${total}.`, answer: total },
       ],
       wrapUp: `${a} + ${b} ÷ ${c} = ${a} + ${q} = ${total}.`,
     };
@@ -581,12 +595,17 @@ function simplifyingProblem(targetBucket?: string): Problem {
           <div>
             {a} ÷ {b} × {c}
           </div>
-          {done >= 1 && <div>{quotient} × {c}</div>}
-          {done >= 2 && <div style={{ color: "var(--good)" }}>= {total}</div>}
+          {done >= 2 && <div>{quotient} × {c}</div>}
+          {done >= 3 && <div style={{ color: "var(--good)" }}>= {total}</div>}
         </div>
       ),
       steps: [
-        { kind: "number", prompt: `Division and multiplication rank equally — work left to right. First, what is ${a} ÷ ${b}?`, hint: `${a} ÷ ${b} is written first, so it happens first.`, explain: `${a} ÷ ${b} = ${quotient}.`, answer: quotient },
+        choice(
+          { prompt: "Division and multiplication rank equally, so work left to right. Which do you simplify first?", hint: "Whichever operation is written first (leftmost) happens first.", explain: `${a} ÷ ${b} is written first, so it's simplified first — not ${b} × ${c}, even though multiplication is named second in "PEMDAS."` },
+          `${a} ÷ ${b}`,
+          [`${b} × ${c}`]
+        ),
+        { kind: "number", prompt: `What is ${a} ÷ ${b}?`, hint: `${a} ÷ ${b} is written first, so it happens first.`, explain: `${a} ÷ ${b} = ${quotient}.`, answer: quotient },
         { kind: "number", prompt: `Now what is ${quotient} × ${c}?`, hint: `Multiply the quotient you just found by ${c}.`, explain: `${quotient} × ${c} = ${total}.`, answer: total },
         choice(
           { prompt: "Since division and multiplication are equal rank here, how do you decide which happens first?", hint: "Think about the order they're written in.", explain: "When operations are the same rank, work left to right through the expression — not always multiplication first." },
@@ -624,18 +643,38 @@ function simplifyingProblem(targetBucket?: string): Problem {
         <div>
           {a} × ({b} + {c})<sup>2</sup> − {d} ÷ {e}
         </div>
-        {done >= 1 && <div>{a} × {sum}<sup>2</sup> − {d} ÷ {e}</div>}
-        {done >= 2 && <div>{a} × {sq} − {d} ÷ {e}</div>}
-        {done >= 3 && <div>{product} − {d} ÷ {e}</div>}
-        {done >= 4 && <div>{product} − {quotient}</div>}
-        {done >= 5 && <div style={{ color: "var(--good)" }}>= {total}</div>}
+        {done >= 2 && <div>{a} × {sum}<sup>2</sup> − {d} ÷ {e}</div>}
+        {done >= 4 && <div>{a} × {sq} − {d} ÷ {e}</div>}
+        {done >= 6 && <div>{product} − {d} ÷ {e}</div>}
+        {done >= 8 && <div>{product} − {quotient}</div>}
+        {done >= 9 && <div style={{ color: "var(--good)" }}>= {total}</div>}
       </div>
     ),
     steps: [
-      { kind: "number", prompt: <>First, simplify the parentheses: {b} + {c}?</>, hint: "Parentheses always go first, before exponents or anything else.", explain: `${b} + ${c} = ${sum}.`, answer: sum },
-      { kind: "number", prompt: <>Now square that result: {sum}²?</>, hint: `${sum}² = ${sum} × ${sum}.`, explain: `${sum}² = ${sq}.`, answer: sq },
-      { kind: "number", prompt: <>Next, what is {a} × {sum}²?</>, hint: `Multiply ${a} by the ${sq} you just found.`, explain: `${a} × ${sq} = ${product}.`, answer: product },
-      { kind: "number", prompt: `Separately, what is ${d} ÷ ${e}?`, hint: "Division ranks with multiplication — you can work this out on its own, in any order relative to the steps above.", explain: `${d} ÷ ${e} = ${quotient}.`, answer: quotient },
+      choice(
+        { prompt: "What do you simplify first?", hint: "Parentheses always go first, before anything else in the expression.", explain: "Parentheses are always simplified first, no matter how far they sit from the start of the expression." },
+        `the parentheses (${b} + ${c})`,
+        ["the subtraction at the end"]
+      ),
+      { kind: "number", prompt: <>What is {b} + {c}?</>, hint: "Parentheses always go first, before exponents or anything else.", explain: `${b} + ${c} = ${sum}.`, answer: sum },
+      choice(
+        { prompt: "Now what's next?", hint: "The exponent applies to the whole parenthesized group — it outranks the multiplication outside it.", explain: <>The exponent is simplified next: ({sum})<sup>2</sup>, not {a} × {sum} — squaring the WHOLE group, before multiplying by {a}.</> },
+        `square the result (${sum}²)`,
+        [`multiply by ${a} first (${a} × ${sum})`]
+      ),
+      { kind: "number", prompt: <>What is {sum}<sup>2</sup>?</>, hint: `${sum}² = ${sum} × ${sum}.`, explain: `${sum}² = ${sq}.`, answer: sq },
+      choice(
+        { prompt: "Now what's next?", hint: `Multiplication outranks subtraction — and that ${d} still needs to be divided by ${e} before it can be subtracted anyway.`, explain: <>{a} × {sq} is next — multiplication outranks subtraction, and {d} can't be subtracted yet since it still needs to be divided by {e} first.</> },
+        `${a} × ${sq}`,
+        [`${sq} − ${d}`]
+      ),
+      { kind: "number", prompt: <>Now what is {a} × {sum}<sup>2</sup>?</>, hint: `Multiply ${a} by the ${sq} you just found.`, explain: `${a} × ${sq} = ${product}.`, answer: product },
+      choice(
+        { prompt: "Now what's next?", hint: "Division outranks subtraction.", explain: <>{d} ÷ {e} is next — division outranks subtraction, so {d} can't be subtracted from {product} until it's divided by {e} first.</> },
+        `${d} ÷ ${e}`,
+        [`${product} − ${d}`]
+      ),
+      { kind: "number", prompt: `What is ${d} ÷ ${e}?`, hint: "Division ranks with multiplication — it happens before the final subtraction.", explain: `${d} ÷ ${e} = ${quotient}.`, answer: quotient },
       { kind: "number", prompt: <>Finally, what is {product} − {quotient}?</>, hint: "Subtract the quotient from the product.", explain: `${product} − ${quotient} = ${total}.`, answer: total },
     ],
     wrapUp: (
@@ -664,45 +703,94 @@ function evaluatingProblem(targetBucket?: string): Problem {
           <div>
             {a}x + {b}, x = {x}
           </div>
-          {done >= 1 && <div>{a}({x}) + {b}</div>}
-          {done >= 1 && <div style={{ color: "var(--good)" }}>= {term} + {b} = {total}</div>}
+          {done >= 2 && <div>{term} + {b}</div>}
+          {done >= 3 && <div style={{ color: "var(--good)" }}>= {total}</div>}
         </div>
       ),
       steps: [
-        { kind: "number", prompt: `Evaluate ${a}x + ${b} when x = ${x}.`, hint: `Substitute ${x} for x: ${a}(${x}) + ${b}.`, explain: `${a}(${x}) + ${b} = ${term} + ${b} = ${total}.`, answer: total },
+        choice(
+          { prompt: `After substituting x = ${x}, what's the next step?`, hint: "Multiplication outranks addition.", explain: `${a} × ${x} is next — multiplication always happens before addition, even though ${b} is written right next to it.` },
+          `${a} × ${x}`,
+          [`${x} + ${b}`]
+        ),
+        { kind: "number", prompt: `What is ${a} × ${x}?`, hint: `${a} × ${x}.`, explain: `${a}(${x}) = ${term}.`, answer: term },
+        { kind: "number", prompt: `Now what is ${term} + ${b}?`, hint: `Add ${b} to the ${term} you just found.`, explain: `${term} + ${b} = ${total}.`, answer: total },
       ],
       wrapUp: `${a}x + ${b} at x = ${x} is ${total}.`,
     };
   }
 
   if (bucket === "sub-with-exponent") {
-    const b = randInt(1, 10);
-    const x = randInt(2, 8);
+    // Deliberately PAIRED (same convention as WritingReadingExpressions'
+    // word-to-expr-flip-multdiv bucket): ax² + b and (ax)² + b use the SAME
+    // a, x, b, so a student can't treat "where do the parentheses go" as
+    // cosmetic — grouping x alone vs. grouping ax under the exponent changes
+    // which value actually gets squared, and therefore the final answer.
+    const a = randInt(2, 5);
+    const x = randInt(2, 6);
+    const b = randInt(1, 15);
     const square = x * x;
-    const total = square + b;
+    const term1 = a * square;
+    const total1 = term1 + b;
+    const inner = a * x;
+    const sq2 = inner * inner;
+    const total2 = sq2 + b;
     return {
-      title: "Substituting with an exponent",
+      title: "Where you put the parentheses changes everything",
       bucket,
-      story: `Evaluate x² + ${b} when x = ${x}.`,
+      story: (
+        <>
+          Compare {a}x<sup>2</sup> + {b} and ({a}x)<sup>2</sup> + {b}, both at x = {x}.
+        </>
+      ),
       visual: (done: number) => (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 20, fontWeight: 700 }}>
           <div>
-            x² + {b}, x = {x}
+            {a}x<sup>2</sup> + {b}, x = {x}
           </div>
-          {done >= 1 && <div>{x}² + {b} = {square} + {b}</div>}
-          {done >= 2 && <div style={{ color: "var(--good)" }}>= {total}</div>}
+          {done >= 2 && <div>{a} × {square} + {b}</div>}
+          {done >= 3 && <div>{term1} + {b}</div>}
+          {done >= 4 && <div style={{ color: "var(--good)" }}>= {total1}</div>}
+          <div style={{ marginTop: 8 }}>
+            ({a}x)<sup>2</sup> + {b}, x = {x}
+          </div>
+          {done >= 6 && <div>({inner})<sup>2</sup> + {b}</div>}
+          {done >= 7 && <div>{sq2} + {b}</div>}
+          {done >= 8 && <div style={{ color: "var(--good)" }}>= {total2}</div>}
         </div>
       ),
       steps: [
-        { kind: "number", prompt: `First, substitute and evaluate x² when x = ${x}.`, hint: `${x}² = ${x} × ${x}.`, explain: `${x}² = ${square}.`, answer: square },
-        { kind: "number", prompt: `Now evaluate x² + ${b} when x = ${x}.`, hint: `You already found x² = ${square}. Add ${b}.`, explain: `${square} + ${b} = ${total}.`, answer: total },
         choice(
-          { prompt: "Which happens first here — the exponent, or the addition?", hint: "Look at the order you just worked in.", explain: "Exponents are always evaluated before addition." },
-          "the exponent",
-          ["the addition"]
+          { prompt: <>For {a}x<sup>2</sup> + {b}, what do you do first?</>, hint: `There are no parentheses grouping ${a} with x, so the exponent applies to x alone.`, explain: `The exponent applies to x alone here — simplify x² first, THEN multiply by ${a}. Multiplying ${a} in first would square the wrong thing.` },
+          "simplify the exponent first",
+          [`multiply ${a} in first`]
+        ),
+        { kind: "number", prompt: <>What is x<sup>2</sup> when x = {x}?</>, hint: `${x}² = ${x} × ${x}.`, explain: `${x}² = ${square}.`, answer: square },
+        { kind: "number", prompt: `Now what is ${a} × ${square}?`, hint: `Multiply ${a} by the x² you just found.`, explain: `${a} × ${square} = ${term1}.`, answer: term1 },
+        { kind: "number", prompt: `Finally, what is ${term1} + ${b}?`, hint: `Add ${b} to the ${term1} you just found.`, explain: `${term1} + ${b} = ${total1}.`, answer: total1 },
+        choice(
+          { prompt: <>Now for ({a}x)<sup>2</sup> + {b}, what do you do first?</>, hint: `The parentheses group ${a} with x, so the exponent applies to the WHOLE group (${a}x), not x alone.`, explain: `The parentheses group ${a}x together — multiply ${a} by x FIRST, then square the result. Squaring x alone would ignore what the parentheses are grouping.` },
+          `multiply ${a} in first`,
+          ["simplify the exponent first"]
+        ),
+        { kind: "number", prompt: `What is ${a} × ${x}?`, hint: `The parentheses group ${a}x together — simplify inside them first.`, explain: `${a} × ${x} = ${inner}.`, answer: inner },
+        { kind: "number", prompt: <>Now what is ({inner})<sup>2</sup>?</>, hint: `${inner}² = ${inner} × ${inner}.`, explain: `${inner}² = ${sq2}.`, answer: sq2 },
+        { kind: "number", prompt: `Finally, what is ${sq2} + ${b}?`, hint: `Add ${b} to the ${sq2} you just found.`, explain: `${sq2} + ${b} = ${total2}.`, answer: total2 },
+        choice(
+          {
+            prompt: `Both expressions use the same numbers, but give different answers — ${total1} vs. ${total2}. Why?`,
+            hint: "Think about which value actually got squared in each case.",
+            explain: `Without parentheses, ${a}x² squares x alone, then multiplies by ${a}. With parentheses, (${a}x)² squares the product ${a}×${x} = ${inner}. Same numbers, different grouping, different answer.`,
+          },
+          "the parentheses change which value gets squared",
+          ["one of the two answers must be a mistake"]
         ),
       ],
-      wrapUp: `x² + ${b} at x = ${x} is ${total}.`,
+      wrapUp: (
+        <>
+          {a}x<sup>2</sup> + {b} = {total1}, but ({a}x)<sup>2</sup> + {b} = {total2} — the parentheses change which value gets squared.
+        </>
+      ),
     };
   }
 
@@ -736,11 +824,16 @@ function evaluatingProblem(targetBucket?: string): Problem {
         visual: (done: number) => (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 20, fontWeight: 700 }}>
             <div>A = 6s², s = 1/2</div>
-            {done >= 1 && <div>6 × 1/4</div>}
+            {done >= 2 && <div>6 × 1/4</div>}
           </div>
         ),
         steps: [
-          { kind: "number", prompt: "First, what is s² when s = 1/2?", hint: "(1/2) × (1/2).", explain: "(1/2)² = 1/4.", answer: 0.25, frac: true, fracAnswer: [1, 4] },
+          choice(
+            { prompt: "After substituting s = 1/2, what's the next step?", hint: "Exponents always outrank multiplication.", explain: "(1/2)² is next — the exponent is evaluated before multiplying by 6." },
+            "(1/2)²",
+            ["6 × 1/2"]
+          ),
+          { kind: "number", prompt: "What is s² when s = 1/2?", hint: "(1/2) × (1/2).", explain: "(1/2)² = 1/4.", answer: 0.25, frac: true, fracAnswer: [1, 4] },
           { kind: "number", prompt: "Now what is A = 6s²?", hint: "Multiply 6 by the s² you just found.", explain: "6 × 1/4 = 3/2.", answer: 1.5, frac: true, fracAnswer: [3, 2] },
         ],
         wrapUp: "A = 6s² = 6 × 1/4 = 3/2.",
@@ -774,11 +867,16 @@ function evaluatingProblem(targetBucket?: string): Problem {
       visual: (done: number) => (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 20, fontWeight: 700 }}>
           <div>A = 6s², s = {s}</div>
-          {done >= 1 && <div>6 × {square}</div>}
+          {done >= 2 && <div>6 × {square}</div>}
         </div>
       ),
       steps: [
-        { kind: "number", prompt: `First, what is s² when s = ${s}?`, hint: `${s} × ${s}.`, explain: `${s}² = ${square}.`, answer: square },
+        choice(
+          { prompt: `After substituting s = ${s}, what's the next step?`, hint: "Exponents always outrank multiplication.", explain: `${s}² is next — the exponent is evaluated before multiplying by 6.` },
+          `${s}²`,
+          [`6 × ${s}`]
+        ),
+        { kind: "number", prompt: `What is s² when s = ${s}?`, hint: `${s} × ${s}.`, explain: `${s}² = ${square}.`, answer: square },
         { kind: "number", prompt: "Now what is A = 6s²?", hint: `Multiply 6 by the s² you just found.`, explain: `6 × ${square} = ${value}.`, answer: value },
       ],
       wrapUp: `A = 6s² = 6 × ${square} = ${value}.`,

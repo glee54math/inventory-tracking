@@ -18,23 +18,41 @@ const MODULE_ID = "MM1_ExponentsAndExpressionsLab";
 // convention as MM1 Ratio Lab's and Negative Numbers' own module tests).
 const MODULE_PROGRESS_KEY = "module";
 
-/** A unit is mastered at MASTERY_GOAL clean solves — AND, for a unit that
- *  declares `requiredBuckets`, a clean solve covering every one of those
- *  scenario-classes at least once, not just MASTERY_GOAL solves from
- *  wherever random generation happened to land. Units without
- *  requiredBuckets behave exactly as before. */
+/** A unit is mastered once every one of its `requiredBuckets` scenario-classes
+ *  has at least one clean solve — not a separate MASTERY_GOAL-clean-solves
+ *  floor on top, since covering every bucket already implies that many clean
+ *  solves (each new covered bucket costs one). A single bucket-coverage bar
+ *  is also simpler for a student to reason about than two overlapping ones.
+ *  Units without `requiredBuckets` fall back to the plain clean-count bar. */
 function isMastered(unit: Unit, p?: UnitProgress): boolean {
-  if ((p?.clean ?? 0) < MASTERY_GOAL) return false;
-  if (!unit.requiredBuckets) return true;
+  if (!unit.requiredBuckets) return (p?.clean ?? 0) >= MASTERY_GOAL;
   const covered = p?.coveredBuckets ?? [];
   return unit.requiredBuckets.every((b) => covered.includes(b));
 }
 
+/**
+ * Stars divide up evenly across bucket coverage instead of "4 stars from
+ * clean-solve count, then a separate pass/fail cliff for the 5th" — ceil()
+ * means the very first bucket already lights a star (not "do several
+ * problems before anything happens"), and each new bucket can either bump
+ * the star count or not depending on where the fraction lands, same as any
+ * ceil-based progress bar. The one exception: even though the ceil'd
+ * fraction can round all the way up to MASTERY_GOAL before every bucket is
+ * covered (e.g. 8/9 buckets → ceil(5×8/9) = 5), the last star is reserved
+ * for TRUE completion — otherwise "all stars lit" would overstate what's
+ * actually been proven. Units without `requiredBuckets` keep the old plain
+ * clean-count bar (nothing to divide evenly across).
+ */
+function starCount(unit: Unit, p?: UnitProgress): number {
+  if (isMastered(unit, p)) return MASTERY_GOAL;
+  if (!unit.requiredBuckets) return Math.min(MASTERY_GOAL - 1, p?.clean ?? 0);
+  const covered = p?.coveredBuckets ?? [];
+  const coveredCount = unit.requiredBuckets.filter((b) => covered.includes(b)).length;
+  return Math.min(MASTERY_GOAL - 1, Math.ceil((MASTERY_GOAL * coveredCount) / unit.requiredBuckets.length));
+}
+
 function Stars({ unit, p, size = "sm" }: { unit: Unit; p?: UnitProgress; size?: "sm" | "lg" }) {
-  // The last star only lights up at true mastery (bucket coverage included,
-  // where that applies) — clean count alone fills at most MASTERY_GOAL - 1,
-  // so "all stars lit" never overstates what's actually been proven.
-  const n = isMastered(unit, p) ? MASTERY_GOAL : Math.min(MASTERY_GOAL - 1, p?.clean ?? 0);
+  const n = starCount(unit, p);
   return (
     <span className={`stars ${size}`} aria-label={`${n} of ${MASTERY_GOAL} mastery stars`}>
       {Array.from({ length: MASTERY_GOAL }, (_, i) => (
@@ -103,7 +121,7 @@ function Home({
             </li>
           ))}
         </ol>
-        <p className="muted small">Earn a star for each Mixed-mode problem you solve with at most one hint. Five stars = mastered.</p>
+        <p className="muted small">Stars fill in as you cleanly solve (at most one hint) every different kind of problem in Mixed mode — the last star needs all of them.</p>
       </section>
       <section>
         <button className="path-card module-test-card" onClick={onModuleTest}>
