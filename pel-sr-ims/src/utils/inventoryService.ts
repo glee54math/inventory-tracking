@@ -243,7 +243,14 @@ export async function determinePacketsNeededToBeOrdered() {
   return insufficient;
 }
 
-export async function loadStudentsFromDB(place: string) {
+export function isActiveStudent(student: Student): boolean {
+  return student.status !== "inactive";
+}
+
+export async function loadStudentsFromDB(
+  place: string,
+  options?: { includeInactive?: boolean }
+) {
   const collectionRef = collection(db, "students", place, "students");  // place = san-ramon
   const q = query(
     collectionRef,
@@ -258,7 +265,31 @@ export async function loadStudentsFromDB(place: string) {
     students.push({ ...studentData, id: doc.id, location: place } as Student);
   });
 
-  return students;
+  if (options?.includeInactive) {
+    return students;
+  }
+  return students.filter(isActiveStudent);
+}
+
+export async function setStudentStatus(
+  location: string,
+  studentId: string,
+  status: "active" | "inactive"
+) {
+  const studentRef = doc(db, "students", location, "students", studentId);
+  await updateDoc(studentRef, {
+    status,
+    inactiveSince: status === "inactive" ? new Date().toISOString() : null,
+  });
+}
+
+export async function updateStudentInfo(
+  location: string,
+  studentId: string,
+  data: Partial<Student>
+) {
+  const studentRef = doc(db, "students", location, "students", studentId);
+  await updateDoc(studentRef, { ...data });
 }
 
 export async function addNewStudentToDatabase(place: string, student: Student) {

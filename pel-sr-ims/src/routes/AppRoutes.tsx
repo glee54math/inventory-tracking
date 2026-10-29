@@ -18,6 +18,7 @@ import PracticeSessionPage from "../pages/PracticeSessionPage";
 import ProtectedRoute from "../routes/ProtectedRoutes";
 import PlanningAndResearch from "../components/planning_research/PlanningAndResearch";
 import CardGenerator from "../components/inventory_app/CardGenerator";
+import ManageStudents from "../components/inventory_app/ManageStudents";
 import EarningRulesAdmin from "../components/inventory_app/EarningRulesAdmin";
 import PrizeListAdmin from "../components/inventory_app/PrizeListAdmin";
 import WishlistReviewAdmin from "../components/inventory_app/WishlistReviewAdmin";
@@ -82,6 +83,15 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <CardGenerator />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/manage-students"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <ManageStudents />
           </ProtectedRoute>
         }
       />

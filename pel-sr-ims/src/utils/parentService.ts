@@ -118,6 +118,8 @@ export async function searchStudentsByName(
         const student = doc.data() as Student;
         const studentId = doc.id;
 
+        if (student.status === "inactive") return;
+
         const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
         const firstName = student.firstName.toLowerCase();
         const lastName = student.lastName.toLowerCase();

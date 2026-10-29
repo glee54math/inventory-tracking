@@ -47,6 +47,8 @@ export interface Student {
   studentCode?: string; // Short code printed/QR-encoded on the student's PEL Dollars ID card
   pelBalance?: number; // Denormalized cached balance; pelTransactions ledger is the source of truth
   pelBalanceUpdatedAt?: Date;
+  status?: "active" | "inactive"; // Missing/undefined is treated as active
+  inactiveSince?: string | null; // ISO date; set when marked inactive, cleared on reactivation
   [key: string]: any;
 }
 

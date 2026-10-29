@@ -167,7 +167,7 @@ function App() {
           className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-auto"
         >
           {/* Sidebar */}
-          <div className="bg-gray-100 p-2 min-w-[60px] border w-fit">
+          <div className="bg-gray-100 p-2 min-w-[60px] border w-fit h-full overflow-y-auto">
             <Sidebar
               showInventory={showInventory}
               toggleInventory={() => setShowInventory((prev) => !prev)}

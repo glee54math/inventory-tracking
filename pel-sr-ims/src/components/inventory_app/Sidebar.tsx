@@ -284,6 +284,20 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                         </button>
                     </div>
 
+                    {/* Manage Students - Only for Mr. Lee */}
+                    <div id="manage-students-button" className="mb-3 w-full mx-1/2">
+                        <p className="text-xs text-center">
+                            Students
+                        </p>
+                        <button
+                            id="manage-students"
+                            onClick={() => navigate('/manage-students')}
+                            className={sideBarButtonCSS}
+                        >
+                            Manage Students
+                        </button>
+                    </div>
+
                     {/* PEL Dollars Earning Rules - Only for Mr. Lee */}
                     <div id="earning-rules-button" className="mb-3 w-full mx-1/2">
                         <p className="text-xs text-center">
