@@ -44,6 +44,9 @@ export interface Student {
   subjects_startDate_Map: Record<string, string>; // [subject]: Date as string
   hwkAssigned?: (string | HomeworkAssignment)[]; // Array of assignments (supports both old string[] and new format with dates)
   hwkHistory?: HomeworkHistoryEntry[]; // New field for detailed homework tracking
+  studentCode?: string; // Short code printed/QR-encoded on the student's PEL Dollars ID card
+  pelBalance?: number; // Denormalized cached balance; pelTransactions ledger is the source of truth
+  pelBalanceUpdatedAt?: Date;
   [key: string]: any;
 }
 
@@ -259,6 +262,137 @@ export const ENGLISH_GRADE_LEVELS: Record<string, string[]> = {
 // School year starts on August 15
 export const SCHOOL_YEAR_START_MONTH = 7; // August (0-indexed)
 export const SCHOOL_YEAR_START_DAY = 15;
+
+// Planning and Research checklist (admin-only "Mr. Lee" page)
+
+export type PlanningCategory = "Physical Center" | "Inventory" | "Math Website App Development";
+
+export const PLANNING_CATEGORIES: PlanningCategory[] = [
+  "Physical Center",
+  "Inventory",
+  "Math Website App Development",
+];
+
+export interface PlanningItem {
+  id: string; // Firestore doc id (planningItems/{id})
+  category: PlanningCategory;
+  text: string;
+  notes?: string;
+  completed: boolean;
+  createdAt: Date;
+  completedAt?: Date;
+}
+
+// PEL Dollars virtual debit card system
+
+export type PelTransactionType = "Earn" | "Purchase" | "AdjustmentCredit" | "AdjustmentDebit" | "Reversal";
+
+export const PEL_TRANSACTION_TYPES: PelTransactionType[] = [
+  "Earn",
+  "Purchase",
+  "AdjustmentCredit",
+  "AdjustmentDebit",
+  "Reversal",
+];
+
+export type PelEarningCategory = "Session" | "Task" | "Attendance" | "Challenge" | "Mastery" | "PeerTutoring" | "Other";
+
+export const PEL_EARNING_CATEGORIES: PelEarningCategory[] = [
+  "Session",
+  "Task",
+  "Attendance",
+  "Challenge",
+  "Mastery",
+  "PeerTutoring",
+  "Other",
+];
+
+// Firestore doc shape at pelTransactions/{autoId}. Append-only ledger — undoing a
+// transaction writes a compensating "Reversal" row (see reverseTransaction in
+// pelDollarsService.ts) rather than editing history in place, so balanceAfter on
+// every prior row stays a trustworthy snapshot.
+export interface PelTransaction {
+  id?: string;
+  studentId: string;
+  studentLocation: string;
+  studentName: string;
+  type: PelTransactionType;
+  amount: number; // signed whole PEL dollars; positive = credit, negative = debit
+  reasonCode: string;
+  reasonLabel: string; // denormalized label at time of transaction
+  balanceAfter: number;
+  workerInitials: string;
+  timeStamp: Date;
+  note?: string;
+  isReversed?: boolean;
+  reversedAt?: Date;
+  reversedBy?: string;
+  reversalTransactionId?: string;
+}
+
+// Firestore doc shape at pelEarningRules/{autoId}. Admin-configurable incentive
+// presets shown as buttons at the Scan Station, so new incentive types don't
+// require a code change.
+export interface PelEarningRule {
+  id?: string;
+  code: string;
+  label: string;
+  amount: number;
+  amountIsVariable?: boolean; // if true, staff enters an amount instead of using the flat `amount`
+  category?: PelEarningCategory;
+  active: boolean;
+  sortOrder?: number;
+  createdAt: Date;
+  createdBy: string;
+  updatedAt?: Date;
+  updatedBy?: string;
+}
+
+// Firestore doc shape at prizeItems/{autoId}. The purchase/price list shown at the
+// Scan Station's Spend panel.
+export interface PrizeItem {
+  id?: string;
+  code: string;
+  name: string;
+  price: number;
+  category?: string;
+  imageUrl?: string;
+  active: boolean;
+  sortOrder?: number;
+  createdAt: Date;
+  createdBy: string;
+  updatedAt?: Date;
+  updatedBy?: string;
+}
+
+export type WishlistStatus = "Requested" | "UnderReview" | "Approved" | "Stocked" | "Declined";
+
+export const WISHLIST_STATUSES: WishlistStatus[] = [
+  "Requested",
+  "UnderReview",
+  "Approved",
+  "Stocked",
+  "Declined",
+];
+
+// Firestore doc shape at wishlistItems/{autoId}.
+export interface WishlistItem {
+  id?: string;
+  studentId: string;
+  studentLocation: string;
+  studentName: string;
+  name: string;
+  approxCost?: number;
+  link?: string;
+  photoUrl?: string; // pasted URL, not an upload
+  status: WishlistStatus;
+  linkedPrizeItemId?: string; // once staff turns a request into a real prize list entry
+  staffNote?: string;
+  createdAt: Date;
+  updatedAt?: Date;
+  reviewedBy?: string;
+  reviewedAt?: Date;
+}
 
 // Voice-to-Action (VTA): master switch for the whole feature. Off as of
 // 2026-10-23 — too many parsing inconsistencies to leave on in production.

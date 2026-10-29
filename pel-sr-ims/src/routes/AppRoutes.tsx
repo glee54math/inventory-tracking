@@ -16,6 +16,11 @@ import StudentLogin from "../components/student_portal/StudentLogin";
 import StudentDashboard from "../components/student_portal/StudentDashboard";
 import PracticeSessionPage from "../pages/PracticeSessionPage";
 import ProtectedRoute from "../routes/ProtectedRoutes";
+import PlanningAndResearch from "../components/planning_research/PlanningAndResearch";
+import CardGenerator from "../components/inventory_app/CardGenerator";
+import EarningRulesAdmin from "../components/inventory_app/EarningRulesAdmin";
+import PrizeListAdmin from "../components/inventory_app/PrizeListAdmin";
+import WishlistReviewAdmin from "../components/inventory_app/WishlistReviewAdmin";
 
 export default function AppRoutes() {
   const { currentUser, userRole } = useAuth();
@@ -59,6 +64,51 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/planning-research"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <PlanningAndResearch />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/id-cards"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <CardGenerator />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/pel-admin/earning-rules"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <EarningRulesAdmin />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/pel-admin/prizes"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <PrizeListAdmin />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/pel-admin/wishlist-review"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <WishlistReviewAdmin />
           </ProtectedRoute>
         }
       />

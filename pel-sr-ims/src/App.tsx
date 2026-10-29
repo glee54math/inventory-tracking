@@ -19,6 +19,7 @@ import WorkerTimeSheet from "./components/inventory_app/WorkerTimeSheet";
 import { useIdleDetection } from "./components/inventory_app/useIdleDetection";
 import IdleWarningModal from "./components/inventory_app/idleWarningModal";
 import FlaggedInventorySummary from "./components/inventory_app/FlaggedInventorySummary";
+import ScanStation from "./components/inventory_app/ScanStation";
 
 type InventoryType =
   | "Back Math"
@@ -55,6 +56,7 @@ function App() {
   const [showInsufficient, setShowInsufficient] = useState<boolean>(false);
   const [showStudentDatabase, setShowStudentDatabase] = useState<boolean>(false);
   const [showTimesheet, setShowTimesheet] = useState<boolean>(false);
+  const [showScanStation, setShowScanStation] = useState<boolean>(false);
   const [showFlaggedSections, setShowFlaggedSections] = useState<boolean>(false);
   const [flagRefreshKey, setFlagRefreshKey] = useState<number>(0);
   // Incremented after each successful submission to reset Inventory cell edit state
@@ -172,10 +174,17 @@ function App() {
               toggleStudentDatabase={() => {
                 setShowStudentDatabase((prev) => !prev);
                 setShowTimesheet(false);
+                setShowScanStation(false);
               }}
               toggleTimesheet={() => {
                 setShowTimesheet((prev) => !prev);
                 setShowStudentDatabase(false);
+                setShowScanStation(false);
+              }}
+              toggleScanStation={() => {
+                setShowScanStation((prev) => !prev);
+                setShowStudentDatabase(false);
+                setShowTimesheet(false);
               }}
               showActions={showActionPanel}
               toggleActions={() => setShowActionPanel((prev) => !prev)}
@@ -185,13 +194,13 @@ function App() {
           {/* Inventory Panel || Student Database Panel */}
           <div
             className={`transition-all duration-500 overflow-auto bg-white ${
-              showInventory || showStudentDatabase || showTimesheet
+              showInventory || showStudentDatabase || showTimesheet || showScanStation
                 ? `${showActionPanel ? "w-[40%]" : "flex-1"} opacity-100 p-2 border pointer-events-auto`
                 : "w-0 opacity-0 !p-0 !border-none pointer-events-none"
             }`}
           >
             {/* Inventories */}
-            {showInventory && !showStudentDatabase && !showTimesheet && (
+            {showInventory && !showStudentDatabase && !showTimesheet && !showScanStation && (
               <div className="overflow-auto w-full max-w-full">
                 {Object.entries(inventories).map(([firestoreId, inventory]) => {
                   const displayName = toDisplayName(firestoreId);
@@ -283,13 +292,20 @@ function App() {
                 <WorkerTimeSheet />
               </div>
             )}
+
+            {/* PEL Dollars Scan Station */}
+            {showScanStation && (
+              <div className="w-[40%] opacity-100 p-2 border overflow-auto w-full max-w-full">
+                <ScanStation workerInitials={nameOfWorker} />
+              </div>
+            )}
           </div>
 
           {/* Right Panel */}
           <div
             className={`flex flex-col transition-all duration-500 gap-4 ${
               showActionPanel
-                ? `${showInventory || showStudentDatabase || showTimesheet ? "w-[60%]" : "w-full"} opacity-100 overflow-hidden pointer-events-auto`
+                ? `${showInventory || showStudentDatabase || showTimesheet || showScanStation ? "w-[60%]" : "w-full"} opacity-100 overflow-hidden pointer-events-auto`
                 : "w-0 opacity-0 overflow-hidden !p-0 pointer-events-none"
             }`}
           >

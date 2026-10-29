@@ -8,11 +8,12 @@ interface SideBarProps {
     toggleInventory: () => void;
     toggleStudentDatabase: () => void;
     toggleTimesheet: () => void;
+    toggleScanStation: () => void;
     showActions: boolean;
     toggleActions: () => void;
 }
 
-export default function Sidebar({showInventory, toggleInventory, toggleStudentDatabase, toggleTimesheet, showActions, toggleActions}: SideBarProps) {
+export default function Sidebar({showInventory, toggleInventory, toggleStudentDatabase, toggleTimesheet, toggleScanStation, showActions, toggleActions}: SideBarProps) {
     // const [showSidebar, setShowSidebar] = useState<boolean>(false);
     const sideBarButtonCSS = "py-2 w-full !bg-gray-200 hover:!bg-green-300 hover:!border-blue-300";
     const { nameOfWorker } = useNameContext();
@@ -146,6 +147,20 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                 </button>
             </div>
 
+            {/* PEL Dollars Scan Station */}
+            <div id="scan-station-button" className="mb-3 w-full mx-1/2">
+                <p className="text-xs text-center">
+                    PEL Dollars
+                </p>
+                <button
+                    id="scan-station"
+                    onClick={toggleScanStation}
+                    className={sideBarButtonCSS}
+                >
+                    Scan Station
+                </button>
+            </div>
+
             {/* Levels */}
             {nameOfWorker === "Mr. Lee" &&
                 <>
@@ -241,6 +256,75 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                         </button>
                     </div>
 
+                    {/* Planning and Research - Only for Mr. Lee */}
+                    <div id="planning-research-button" className="mb-3 w-full mx-1/2">
+                        <p className="text-xs text-center">
+                            Planning &amp; Research
+                        </p>
+                        <button
+                            id="planning-research"
+                            onClick={() => navigate('/planning-research')}
+                            className={sideBarButtonCSS}
+                        >
+                            Planning
+                        </button>
+                    </div>
+
+                    {/* PEL Dollars ID Cards - Only for Mr. Lee */}
+                    <div id="id-cards-button" className="mb-3 w-full mx-1/2">
+                        <p className="text-xs text-center">
+                            PEL Dollars
+                        </p>
+                        <button
+                            id="id-cards"
+                            onClick={() => navigate('/id-cards')}
+                            className={sideBarButtonCSS}
+                        >
+                            ID Cards
+                        </button>
+                    </div>
+
+                    {/* PEL Dollars Earning Rules - Only for Mr. Lee */}
+                    <div id="earning-rules-button" className="mb-3 w-full mx-1/2">
+                        <p className="text-xs text-center">
+                            PEL Dollars
+                        </p>
+                        <button
+                            id="earning-rules"
+                            onClick={() => navigate('/pel-admin/earning-rules')}
+                            className={sideBarButtonCSS}
+                        >
+                            Earning Rules
+                        </button>
+                    </div>
+
+                    {/* PEL Dollars Prize List - Only for Mr. Lee */}
+                    <div id="prize-list-button" className="mb-3 w-full mx-1/2">
+                        <p className="text-xs text-center">
+                            PEL Dollars
+                        </p>
+                        <button
+                            id="prize-list"
+                            onClick={() => navigate('/pel-admin/prizes')}
+                            className={sideBarButtonCSS}
+                        >
+                            Prize List
+                        </button>
+                    </div>
+
+                    {/* PEL Dollars Wishlist Review - Only for Mr. Lee */}
+                    <div id="wishlist-review-button" className="mb-3 w-full mx-1/2">
+                        <p className="text-xs text-center">
+                            PEL Dollars
+                        </p>
+                        <button
+                            id="wishlist-review"
+                            onClick={() => navigate('/pel-admin/wishlist-review')}
+                            className={sideBarButtonCSS}
+                        >
+                            Wishlist Review
+                        </button>
+                    </div>
 
                     {/* Student Portal */}
                 </>}

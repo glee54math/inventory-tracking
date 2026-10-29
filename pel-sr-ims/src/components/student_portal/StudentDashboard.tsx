@@ -8,6 +8,9 @@ import HomeworkQueue from "./HomeworkQueue";
 import SupplementalLevelBrowser from "./SupplementalLevelBrowser";
 import WhatsNextCard from "./WhatsNextCard";
 import PracticeEntryCard from "./PracticeEntryCard";
+import WalletCard from "./WalletCard";
+import TransactionHistoryList from "./TransactionHistoryList";
+import WishlistPanel from "./WishlistPanel";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -75,6 +78,21 @@ export default function StudentDashboard() {
           </div>
         ) : (
           <div className="space-y-8">
+            {/* PEL Dollars wallet */}
+            <section>
+              <SectionLabel>PEL Dollars</SectionLabel>
+              <div className="space-y-4">
+                <WalletCard student={currentStudent} />
+                <TransactionHistoryList student={currentStudent} />
+              </div>
+            </section>
+
+            {/* Wishlist */}
+            <section>
+              <SectionLabel>Wishlist</SectionLabel>
+              <WishlistPanel student={currentStudent} />
+            </section>
+
             {/* Level status */}
             {hasProgress && (
               <section>
