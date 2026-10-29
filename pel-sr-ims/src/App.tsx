@@ -16,6 +16,7 @@ import { db } from "./utils/firebase";
 import { useNameContext } from "./components/inventory_app/NameContext";
 import Database from "./components/inventory_app/Database";
 import WorkerTimeSheet from "./components/inventory_app/WorkerTimeSheet";
+import DataEntryPanel from "./components/inventory_app/DataEntryPanel";
 import { useIdleDetection } from "./components/inventory_app/useIdleDetection";
 import IdleWarningModal from "./components/inventory_app/idleWarningModal";
 import FlaggedInventorySummary from "./components/inventory_app/FlaggedInventorySummary";
@@ -57,6 +58,7 @@ function App() {
   const [showStudentDatabase, setShowStudentDatabase] = useState<boolean>(false);
   const [showTimesheet, setShowTimesheet] = useState<boolean>(false);
   const [showScanStation, setShowScanStation] = useState<boolean>(false);
+  const [showDataEntry, setShowDataEntry] = useState<boolean>(false);
   const [showFlaggedSections, setShowFlaggedSections] = useState<boolean>(false);
   const [flagRefreshKey, setFlagRefreshKey] = useState<number>(0);
   // Incremented after each successful submission to reset Inventory cell edit state
@@ -175,16 +177,25 @@ function App() {
                 setShowStudentDatabase((prev) => !prev);
                 setShowTimesheet(false);
                 setShowScanStation(false);
+                setShowDataEntry(false);
               }}
               toggleTimesheet={() => {
                 setShowTimesheet((prev) => !prev);
                 setShowStudentDatabase(false);
                 setShowScanStation(false);
+                setShowDataEntry(false);
               }}
               toggleScanStation={() => {
                 setShowScanStation((prev) => !prev);
                 setShowStudentDatabase(false);
                 setShowTimesheet(false);
+                setShowDataEntry(false);
+              }}
+              toggleDataEntry={() => {
+                setShowDataEntry((prev) => !prev);
+                setShowStudentDatabase(false);
+                setShowTimesheet(false);
+                setShowScanStation(false);
               }}
               showActions={showActionPanel}
               toggleActions={() => setShowActionPanel((prev) => !prev)}
@@ -194,13 +205,13 @@ function App() {
           {/* Inventory Panel || Student Database Panel */}
           <div
             className={`transition-all duration-500 overflow-auto bg-white ${
-              showInventory || showStudentDatabase || showTimesheet || showScanStation
+              showInventory || showStudentDatabase || showTimesheet || showScanStation || showDataEntry
                 ? `${showActionPanel ? "w-[40%]" : "flex-1"} opacity-100 p-2 border pointer-events-auto`
                 : "w-0 opacity-0 !p-0 !border-none pointer-events-none"
             }`}
           >
             {/* Inventories */}
-            {showInventory && !showStudentDatabase && !showTimesheet && !showScanStation && (
+            {showInventory && !showStudentDatabase && !showTimesheet && !showScanStation && !showDataEntry && (
               <div className="overflow-auto w-full max-w-full">
                 {Object.entries(inventories).map(([firestoreId, inventory]) => {
                   const displayName = toDisplayName(firestoreId);
@@ -297,6 +308,13 @@ function App() {
             {showScanStation && (
               <div className="w-[40%] opacity-100 p-2 border overflow-auto w-full max-w-full">
                 <ScanStation workerInitials={nameOfWorker} />
+              </div>
+            )}
+
+            {/* Data Entry */}
+            {showDataEntry && (
+              <div className="w-[40%] opacity-100 p-2 border overflow-auto w-full max-w-full">
+                <DataEntryPanel />
               </div>
             )}
           </div>

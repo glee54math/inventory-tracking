@@ -170,7 +170,11 @@ export async function updateLogFromActions(workerName: string, submittedActions:
   }
 }
 
-export async function loadWorkersFromDB() {
+export function isActiveWorker(worker: Worker): boolean {
+  return worker.status !== "inactive";
+}
+
+export async function loadWorkersFromDB(options?: { includeInactive?: boolean }) {
   const collectionRef = collection(db, "workers");
   const documentSnapshot = await getDocs(collectionRef);
 
@@ -180,11 +184,90 @@ export async function loadWorkersFromDB() {
     const data = doc.data();
     const siteWorkers = data.workers as Worker[];
     if (Array.isArray(siteWorkers)) {
-      workers.push(...siteWorkers);
+      workers.push(...siteWorkers.map((w) => ({ ...w, location: doc.id })));
     }
   });
-  // console.log(workers["san-ramon"])
+
+  if (options?.includeInactive === false) {
+    return workers.filter(isActiveWorker);
+  }
   return workers;
+}
+
+export async function loadWorkersForLocation(
+  location: string,
+  options?: { includeInactive?: boolean }
+) {
+  const workersDocRef = doc(db, "workers", location);
+  const workersSnap = await getDoc(workersDocRef);
+
+  if (!workersSnap.exists()) {
+    return [];
+  }
+
+  const data = workersSnap.data();
+  const siteWorkers = data.workers as Worker[];
+  const workers = Array.isArray(siteWorkers)
+    ? siteWorkers.map((w) => ({ ...w, location }))
+    : [];
+
+  if (options?.includeInactive) {
+    return workers;
+  }
+  return workers.filter(isActiveWorker);
+}
+
+export async function setWorkerStatus(
+  location: string,
+  initials: string,
+  status: "active" | "inactive"
+): Promise<boolean> {
+  const workersDocRef = doc(db, "workers", location);
+  const workersSnap = await getDoc(workersDocRef);
+
+  if (!workersSnap.exists()) return false;
+
+  const data = workersSnap.data();
+  const workers = data.workers as Worker[];
+  if (!Array.isArray(workers)) return false;
+
+  const workerIndex = workers.findIndex((w) => w.initials === initials);
+  if (workerIndex === -1) return false;
+
+  workers[workerIndex] = {
+    ...workers[workerIndex],
+    status,
+    inactiveSince: status === "inactive" ? new Date().toISOString() : null,
+  };
+
+  await updateDoc(workersDocRef, { workers });
+  return true;
+}
+
+export async function updateWorkerInfo(
+  location: string,
+  initials: string,
+  data: { firstName?: string; lastName?: string }
+): Promise<boolean> {
+  const workersDocRef = doc(db, "workers", location);
+  const workersSnap = await getDoc(workersDocRef);
+
+  if (!workersSnap.exists()) return false;
+
+  const docData = workersSnap.data();
+  const workers = docData.workers as Worker[];
+  if (!Array.isArray(workers)) return false;
+
+  const workerIndex = workers.findIndex((w) => w.initials === initials);
+  if (workerIndex === -1) return false;
+
+  workers[workerIndex] = {
+    ...workers[workerIndex],
+    ...data,
+  };
+
+  await updateDoc(workersDocRef, { workers });
+  return true;
 }
 
 export async function determinePacketsNeededToBeOrdered() {

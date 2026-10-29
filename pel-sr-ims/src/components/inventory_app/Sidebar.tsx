@@ -9,11 +9,12 @@ interface SideBarProps {
     toggleStudentDatabase: () => void;
     toggleTimesheet: () => void;
     toggleScanStation: () => void;
+    toggleDataEntry: () => void;
     showActions: boolean;
     toggleActions: () => void;
 }
 
-export default function Sidebar({showInventory, toggleInventory, toggleStudentDatabase, toggleTimesheet, toggleScanStation, showActions, toggleActions}: SideBarProps) {
+export default function Sidebar({showInventory, toggleInventory, toggleStudentDatabase, toggleTimesheet, toggleScanStation, toggleDataEntry, showActions, toggleActions}: SideBarProps) {
     // const [showSidebar, setShowSidebar] = useState<boolean>(false);
     const sideBarButtonCSS = "py-2 w-full !bg-gray-200 hover:!bg-green-300 hover:!border-blue-300";
     const { nameOfWorker } = useNameContext();
@@ -161,6 +162,20 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                 </button>
             </div>
 
+            {/* Daily Data Entry */}
+            <div id="data-entry-button" className="mb-3 w-full mx-1/2">
+                <p className="text-xs text-center">
+                    Data Entry
+                </p>
+                <button
+                    id="data-entry"
+                    onClick={toggleDataEntry}
+                    className={sideBarButtonCSS}
+                >
+                    Data Entry
+                </button>
+            </div>
+
             {/* Levels */}
             {nameOfWorker === "Mr. Lee" &&
                 <>
@@ -295,6 +310,20 @@ export default function Sidebar({showInventory, toggleInventory, toggleStudentDa
                             className={sideBarButtonCSS}
                         >
                             Manage Students
+                        </button>
+                    </div>
+
+                    {/* Manage Workers - Only for Mr. Lee */}
+                    <div id="manage-workers-button" className="mb-3 w-full mx-1/2">
+                        <p className="text-xs text-center">
+                            Workers
+                        </p>
+                        <button
+                            id="manage-workers"
+                            onClick={() => navigate('/manage-workers')}
+                            className={sideBarButtonCSS}
+                        >
+                            Manage Workers
                         </button>
                     </div>
 
