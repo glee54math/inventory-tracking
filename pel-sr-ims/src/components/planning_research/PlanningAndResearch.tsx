@@ -9,13 +9,14 @@ export default function PlanningAndResearch() {
   const navigate = useNavigate();
   const { items, addItem, toggleComplete, deleteItem } = usePlanningResearch();
   const [showCompleted, setShowCompleted] = useState<Record<PlanningCategory, boolean>>(
-    { "Physical Center": false, "Inventory": false, "Math Website App Development": false }
+    { "Physical Center": false, "Inventory": false, "Math Website App Development": false, "Math Lab": false }
   );
   const [drafts, setDrafts] = useState<Record<PlanningCategory, { text: string; notes: string }>>(
     {
       "Physical Center": { text: "", notes: "" },
       "Inventory": { text: "", notes: "" },
       "Math Website App Development": { text: "", notes: "" },
+      "Math Lab": { text: "", notes: "" },
     }
   );
 
@@ -52,7 +53,7 @@ export default function PlanningAndResearch() {
       </div>
 
       <div className="flex-1 overflow-auto p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
           {PLANNING_CATEGORIES.map((category) => {
           const categoryItems = items.filter((item) => item.category === category);
           const activeItems = categoryItems.filter((item) => !item.completed);

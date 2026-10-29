@@ -267,12 +267,13 @@ export const SCHOOL_YEAR_START_DAY = 15;
 
 // Planning and Research checklist (admin-only "Mr. Lee" page)
 
-export type PlanningCategory = "Physical Center" | "Inventory" | "Math Website App Development";
+export type PlanningCategory = "Physical Center" | "Inventory" | "Math Website App Development" | "Math Lab";
 
 export const PLANNING_CATEGORIES: PlanningCategory[] = [
   "Physical Center",
   "Inventory",
   "Math Website App Development",
+  "Math Lab",
 ];
 
 export interface PlanningItem {
