@@ -1,0 +1,255 @@
+/* Scoped under .mtd-lab (the wrapper div in MG3_MeasurementTimeAndDataLab.tsx)
+   instead of :root/html/body, since this file is imported into one page of a
+   much larger app, not a standalone site — same reasoning as every other
+   lab's own _styles.css. This lab reuses the SAME shared engine chrome those
+   do (shared/styles/lab-base.css), so this file only holds: this lab's own
+   color palette (light + dark), the gated Check-for-Understanding box chrome
+   (not in lab-base.css), select.answer (lab-base.css's .answer only targets
+   `input.answer`), and the handful of rules genuinely unique to this lab's
+   own diagrams (length bars, unit-tile ruler, clock-setting stage, data
+   sorting tally).
+   Import BOTH stylesheets, and add "lab-base" alongside "mtd-lab" on the
+   wrapper div. */
+
+.mtd-lab {
+  --bg: #f5f8ec;
+  --card: #ffffff;
+  --ink: #1f2e2a;
+  --muted: #5c7268;
+  --line: #cfe0c9;
+  --grid: #e8f1e1;
+  --qa: #2f8f7e;
+  --qa-soft: #dcf0ec;
+  --qa-text: #1f6a5c;
+  --qb: #e3972a;
+  --qb-soft: #fdecd0;
+  --qb-text: #a5690f;
+  --qc: #8a5fd6;
+  --qc-soft: #eadffb;
+  --qc-text: #6b40b3;
+  --good: #289a66;
+  --good-soft: #ddf3e6;
+  --bad: #d4495b;
+  --bad-soft: #fbe3e7;
+  --on-q: #ffffff;
+  --radius-lg: 20px;
+  --radius-sm: 12px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--grid) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* .align-drill/.align-stack-wrap/.intro-gate-title aren't in lab-base.css —
+   they're the box chrome AlignDecimalsDrill (MG11) introduced for a
+   mandatory gated exercise, reused by every lab's Check-for-Understanding
+   gate since. */
+.mtd-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.mtd-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.mtd-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.mtd-lab .feedback.good {
+  color: var(--good);
+}
+
+/* lab-base.css's .answer styling is scoped to `input.answer` only — this
+   lab's Check-for-Understanding dropdowns are <select>s. */
+.mtd-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.mtd-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+
+/* A first-grader seeing this for the first time benefits from a slightly
+   larger choice button and thicker border than the default lab-base.css
+   styling (tuned for older grades' denser multiple-choice text) — same
+   reasoning MK1_CountingAndCardinalityLab_styles.css gives for its own
+   Kindergarten audience. */
+.mtd-lab .choice {
+  font-size: 17px;
+  border-width: 3px;
+  border-radius: var(--radius-lg);
+}
+
+/* ---------- LengthBars (Unit 1: Comparing and Ordering Length) ---------- */
+.mtd-lab .length-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mtd-lab .length-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mtd-lab .length-row.draggable {
+  cursor: grab;
+}
+.mtd-lab .length-label {
+  min-width: 110px;
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+}
+.mtd-lab .length-track {
+  position: relative;
+  height: 34px;
+  background: var(--grid);
+  border-radius: 8px;
+}
+.mtd-lab .length-bar {
+  position: absolute;
+  top: 3px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 4px;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.1);
+}
+.mtd-lab .length-handle {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+}
+
+/* ---------- Clock (Unit 3: Telling and Writing Time) ---------- */
+.mtd-lab .clock-set-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+}
+.mtd-lab .digital-display {
+  font-family: "Courier New", monospace;
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--qa-text);
+  background: var(--qa-soft);
+  border-radius: var(--radius-sm);
+  padding: 18px 30px;
+  text-align: center;
+}
+
+/* ---------- Data sorting tally (Unit 4: Organizing and Interpreting Data) ---------- */
+.mtd-lab .data-tally {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--grid);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* Module test nav/card — same rules as every other lab's own module test
+   chrome, since this feature's markup is shared verbatim. */
+.mtd-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.mtd-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.mtd-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.mtd-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.mtd-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.mtd-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+.mtd-lab .module-test-back {
+  margin-bottom: 20px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .mtd-lab:not([data-theme="light"]) {
+    --bg: #131d19;
+    --card: #1d2b26;
+    --ink: #e9f3ee;
+    --muted: #a8c2b8;
+    --line: #35483f;
+    --grid: #233830;
+    --qa: #5fd6c1;
+    --qa-soft: #1f4a42;
+    --qa-text: #a6ebdd;
+    --qb: #f5b45c;
+    --qb-soft: #4a3a1c;
+    --qb-text: #f7cb8e;
+    --qc: #c0a3f5;
+    --qc-soft: #3c2e63;
+    --qc-text: #ddcdfb;
+    --good: #5fd49c;
+    --good-soft: #1b3f30;
+    --bad: #ff7b8a;
+    --bad-soft: #492230;
+    --on-q: #0f1815;
+  }
+}
+.mtd-lab[data-theme="dark"] {
+  --bg: #131d19;
+  --card: #1d2b26;
+  --ink: #e9f3ee;
+  --muted: #a8c2b8;
+  --line: #35483f;
+  --grid: #233830;
+  --qa: #5fd6c1;
+  --qa-soft: #1f4a42;
+  --qa-text: #a6ebdd;
+  --qb: #f5b45c;
+  --qb-soft: #4a3a1c;
+  --qb-text: #f7cb8e;
+  --qc: #c0a3f5;
+  --qc-soft: #3c2e63;
+  --qc-text: #ddcdfb;
+  --good: #5fd49c;
+  --good-soft: #1b3f30;
+  --bad: #ff7b8a;
+  --bad-soft: #492230;
+  --on-q: #0f1815;
+}

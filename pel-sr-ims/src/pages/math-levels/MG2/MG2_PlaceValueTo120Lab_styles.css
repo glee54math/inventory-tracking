@@ -1,0 +1,180 @@
+/* Scoped under .pv120-lab (the wrapper div in MG2_PlaceValueTo120Lab.tsx)
+   instead of :root/html/body, since this file is imported into one page of a
+   much larger app, not a standalone site — same reasoning as every other
+   lab's own _styles.css. This lab reuses the SAME shared engine chrome those
+   do (shared/styles/lab-base.css), so this file only holds: this lab's own
+   color palette (light + dark), and the handful of rules genuinely unique to
+   this lab's content (the gated Check-for-Understanding box, and
+   select.answer — lab-base.css's .answer styling only targets `input.answer`,
+   and this lab's CFU dropdowns are <select>s).
+   Import BOTH stylesheets, and add "lab-base" alongside "pv120-lab" on the
+   wrapper div. */
+
+.pv120-lab {
+  --bg: #eef6fb;
+  --card: #ffffff;
+  --ink: #16324a;
+  --muted: #5c7a90;
+  --line: #cfe3ee;
+  --grid: #e4f1f8;
+  --qa: #2f7fd1;
+  --qa-soft: #dceefb;
+  --qa-text: #1f5f9e;
+  --qb: #e8972d;
+  --qb-soft: #fdecd0;
+  --qb-text: #a56a12;
+  --qc: #7a52d6;
+  --qc-soft: #e9dcfb;
+  --qc-text: #5f34ab;
+  --good: #249a6a;
+  --good-soft: #ddf3e6;
+  --bad: #d4495b;
+  --bad-soft: #fbe3e7;
+  --on-q: #ffffff;
+  --radius-lg: 20px;
+  --radius-sm: 12px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--grid) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  -webkit-font-smoothing: antialiased;
+}
+/* .align-drill/.align-stack-wrap/.intro-gate-title aren't in lab-base.css —
+   they're the box chrome AlignDecimalsDrill (MG11) introduced for a mandatory
+   gated exercise, reused by every lab's Check-for-Understanding gate since
+   (RealWorldNegatives.tsx, MK1_CountingAndCardinalityLab, and every unit in
+   this lab). */
+.pv120-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.pv120-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.pv120-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.pv120-lab .feedback.good {
+  color: var(--good);
+}
+/* lab-base.css's .answer styling is scoped to `input.answer` only — this
+   lab's Check-for-Understanding dropdowns are <select>s, which that
+   selector doesn't match (same pattern as MK1_CountingAndCardinalityLab_styles.css
+   and MG9_IntroToFractionsLab_styles.css's own select.answer rule). */
+.pv120-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.pv120-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+/* A Grade-1 audience benefits from a slightly larger choice button and a
+   thicker, friendlier border than the default lab-base.css styling (which
+   was tuned for older grades' denser multiple-choice text) — same reasoning
+   as MK1's identical override, one grade below this lab. */
+.pv120-lab .choice {
+  font-size: 18px;
+  border-width: 3px;
+  border-radius: var(--radius-lg);
+}
+/* Module test nav/card — same rules as every other lab's own module test
+   chrome, since this feature's markup is shared verbatim. */
+.pv120-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.pv120-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.pv120-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.pv120-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.pv120-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.pv120-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+.pv120-lab .module-test-back {
+  margin-bottom: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  .pv120-lab:not([data-theme="light"]) {
+    --bg: #101c28;
+    --card: #182836;
+    --ink: #eaf3fa;
+    --muted: #9fb8c9;
+    --line: #2c475a;
+    --grid: #1c2f3e;
+    --qa: #6fb8ff;
+    --qa-soft: #223a52;
+    --qa-text: #a8d4ff;
+    --qb: #f5b45c;
+    --qb-soft: #4a3a1c;
+    --qb-text: #f7cb8e;
+    --qc: #b79af5;
+    --qc-soft: #362a5e;
+    --qc-text: #dcc2fa;
+    --good: #5fd49c;
+    --good-soft: #1b3f30;
+    --bad: #ff7b8a;
+    --bad-soft: #492230;
+    --on-q: #0e1822;
+  }
+}
+.pv120-lab[data-theme="dark"] {
+  --bg: #101c28;
+  --card: #182836;
+  --ink: #eaf3fa;
+  --muted: #9fb8c9;
+  --line: #2c475a;
+  --grid: #1c2f3e;
+  --qa: #6fb8ff;
+  --qa-soft: #223a52;
+  --qa-text: #a8d4ff;
+  --qb: #f5b45c;
+  --qb-soft: #4a3a1c;
+  --qb-text: #f7cb8e;
+  --qc: #b79af5;
+  --qc-soft: #362a5e;
+  --qc-text: #dcc2fa;
+  --good: #5fd49c;
+  --good-soft: #1b3f30;
+  --bad: #ff7b8a;
+  --bad-soft: #492230;
+  --on-q: #0e1822;
+}

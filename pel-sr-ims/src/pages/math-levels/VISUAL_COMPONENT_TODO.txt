@@ -25,18 +25,406 @@ When a level gets a new component:
 ------------------------------------------------------------------
 KINDERGARTEN
 ------------------------------------------------------------------
-[ ] MK1
-[ ] MK2
-[ ] MK3
-[ ] MK4
+[x] MK1  — CountingAndCardinalityLab    (MK1/MK1_CountingAndCardinalityLab.tsx) —
+          wired as a "standalone" skill, the first Kindergarten lab and the first
+          lab anywhere in the K-8 curriculum built on top of concrete, countable
+          objects rather than bare numerals from the start. Covers all of K.CC
+          (K.CC.1-7) in one module: Counting On and Counting Forward (K.CC.1-2),
+          Writing and Matching Numerals (K.CC.3), How Many? / Cardinality and
+          Counting Objects (K.CC.4a-c, K.CC.5 — folds K.CC.4c's "one more" check
+          into THIS unit's CFU rather than Unit 1's, since it's as much about
+          cardinality as sequencing), and Comparing Groups and Numerals (K.CC.6-7)
+          — four units, each with a required Explore/Check-for-Understanding/
+          Practice/Test tab, plus a cumulative 20-question Module Test (5 per
+          unit, passScore 16). Entry file + styles
+          (MK1_CountingAndCardinalityLab_styles.css, scoped under .cc-lab) are
+          flat in MK1/ (admin file browser glob, same reasoning as every other
+          multi-file Lab); supporting diagrams/ and units/ live one level
+          deeper, inside MK1/CountingAndCardinalityLab/.
+
+          Two new shared-shape (but lab-local, not promoted — this is their
+          first consumer) diagrams, since no existing diagram in shared/diagrams/
+          shows a literal countable group of objects: CounterGroup.tsx (dots or
+          an emoji glyph laid out as a line/grid/circle/random scatter, with an
+          optional click-to-count interactive mode for Explore — see the style
+          guide note added alongside this entry) and TenGroups.tsx (any count
+          0-100 shown as bundled 2x5 "ten frame" blocks plus loose ones, so
+          counting by tens and numbers above 20 still have something concrete
+          backing them). A third small local component, MatchingRows (duplicated
+          between ComparingGroupsAndNumerals.tsx and its Test file, same
+          intentional duplication convention as every *Test.tsx in this app),
+          renders two fixed-gap left-aligned rows so one-to-one matching pairs
+          visibly line up, with the unmatched "extra" counters past the shorter
+          row's length drawn dashed — the literal visual tell for "this row ran
+          out first."
+
+          No new shared/engine Step kinds were needed — every question uses the
+          existing "number" and "choice" kinds. The one new technique (not a new
+          Step kind) is embedding two renderings of the same glyph in a
+          ChoiceStep's prompt — one plain, one CSS-mirrored (`scaleX(-1)`) — with
+          the choices being positional labels ("Left"/"Right") rather than the
+          glyph text itself, for Writing and Matching Numerals' reversed-numeral
+          recognition bucket.
+
+          Every unit's Check-for-Understanding is 4 fixed (non-randomized)
+          questions, each targeting a specific, named misconception per the
+          plan: Unit 1 drills the decade-transition garble ("...29, twenty-
+          ten..."); Unit 2 drills visually-similar-numeral confusion (6/9, 2/5,
+          1/7) including a false-generalization trap (NOT every look-alike pair
+          is actually a mirror-flip — 6/9 are, 2/5 and 1/7 aren't); Unit 3
+          drills the core cardinality misconception (the LAST number counted is
+          the TOTAL, not a label on the last object touched) plus K.CC.4c's
+          "one more"; Unit 4 drills the "takes up more space = more objects"
+          misconception directly, per the plan's explicit requirement.
+
+          Autonomous decisions beyond the approved plan (all documented in the
+          build's final report): the plan's 3rd Unit-4 bucket ("close vs.
+          obvious difference") was built as ONE bucket with two randomized
+          difficulty regimes (both independently guaranteed reachable by the
+          verification script) rather than two separate buckets, matching how
+          the plan phrased it ("close comparisons are the harder bucket" within
+          one described skill, not two). "Spoken/heard" numbers (K.CC.3) are
+          simulated as the spelled-out number word, since this app has no audio
+          engine. countOut's (K.CC.5 reverse-direction) "take" range was widened
+          in the Test file's dedicated nearExhaustion variant to guarantee the
+          near-total-depletion edge (1-2 left) is actually tested, not just
+          reachable by chance in Practice.
+[x] MK2  — AdditionSubtractionAndTeenNumbersLab (MK2/MK2_AdditionSubtractionAndTeenNumbersLab.tsx) —
+          wired as a "standalone" skill, the second Kindergarten lab (MK2-4 were all
+          still empty before this build; confirmed at Step 0). Covers K.OA.1-5 plus
+          K.NBT.1 in one module: Putting Together and Taking Apart (K.OA.1, the gated
+          unit introducing add/subtract as concepts at all), Solving Word Problems
+          Within 10 (K.OA.2, no gate — varied practice on Unit 1's already-gated
+          concepts), Breaking Numbers Apart (K.OA.3, gated), Making 10 (K.OA.4, gated
+          AND periodically re-gated via reintroEverySolved, since the ten-complements
+          are a fixed fact set meant for memorization), Fast Facts Within 5 (K.OA.5, no
+          gate), and Teen Numbers as Ten Plus More (K.NBT.1, gated) — six units, each
+          with a required Practice/Test tab (four of six also have a required
+          Explore/Check-for-Understanding gate, per the plan), plus a cumulative
+          30-question Module Test (5 per unit, passScore 24/80%). Entry file + styles
+          (MK2_AdditionSubtractionAndTeenNumbersLab_styles.css, scoped under .atn-lab)
+          are flat in MK2/ (admin file browser glob, same reasoning as every other
+          multi-file Lab); supporting diagrams/ and units/ live one level deeper,
+          inside MK2/AdditionSubtractionAndTeenNumbersLab/.
+
+          K.NBT.1 (Teen Numbers) is technically a different CCSS domain (Number and
+          Operations in Base Ten) deliberately folded into this Operations-and-
+          Algebraic-Thinking lab, placed LAST and built on top of Making 10's own
+          TenFrame diagram — a teen number IS "10 and some more," the direct payoff of
+          Making 10, not a separate detour, per the approved plan.
+
+          Five new lab-local diagrams, since no existing diagram shows a two-toned
+          split group, a ten-frame capped at exactly 10, or fingers: ObjectGroup.tsx
+          (a near-verbatim duplicate of MK1's CounterGroup.tsx — line/array/circle/
+          scatter counters, click-to-count support), SplitGroup.tsx (one group of
+          objects shown with the first `partA` in one tone and the rest in a second,
+          with an optional dashed divider — the concrete stand-in for "put together"/
+          "take apart"/decomposing, which MK1's single-tone CounterGroup/TenGroups
+          never needed), Fingers.tsx (two 5-finger hands, filled in order — the
+          distinct no-picture-of-objects modality K.OA.1's plan calls for), TenFrame.tsx
+          (a single fixed 2x5 ten-frame, optionally two-toned to show a number plus its
+          complement — simpler than MK1's TenGroups since this lab never needs more
+          than one frame at a time), and TenAndOnes.tsx (one full TenFrame as "the ten"
+          plus loose, differently-toned "ones" — built on TenFrame, for K.NBT.1).
+
+          IMPORTANT — scope note for a future session: ObjectGroup.tsx and TenFrame's
+          general shape are close enough to MK1's CounterGroup.tsx/TenGroups.tsx that,
+          under this app's normal "promote on the second real consumer" convention
+          (see MATH_TSX_STYLE_GUIDE.txt section 10), they should arguably be promoted
+          to shared/diagrams/ now rather than duplicated a second time. That promotion
+          was deliberately NOT done in this build — the task that produced this lab was
+          scoped to touch only files under MK2/'s own folder (plus this file,
+          MATH_TSX_STYLE_GUIDE.txt, and levelSubsections.ts), specifically because an
+          earlier session had made an unauthorized edit to an unrelated file outside
+          its scope. Promoting would have required both creating shared/diagrams/
+          files AND editing MK1's own files to repoint their imports, which that scope
+          guardrail blocked. A future session with broader scope should do the actual
+          promotion (verify MK1's CounterGroup/TenGroups consumers are unchanged after
+          the move) instead of letting a third lab add a third silent copy.
+
+          Every gated unit's Check-for-Understanding is 4 fixed (non-randomized)
+          questions, each targeting a specific, named misconception per the plan: Unit
+          1 drills confusing which operation matches which action wording (the SAME
+          numbers, phrased as "given to" vs. "taken away"); Unit 3 drills the core
+          "a number has only one decomposition" misconception directly, plus the
+          equal-parts special case; Unit 4 drills counting-up-from-1 vs. instant recall
+          for ten-complements, plus a reverse-direction verify question with BOTH a
+          true and a false pair in the same question; Unit 6 drills treating a teen
+          numeral's tens digit as just another single digit, plus the classic
+          teen-number digit-reversal trap (writing "31" instead of "13").
+
+          Autonomous decision beyond the approved plan: Unit 5 (Fast Facts Within 5)
+          was specified with both requiresIntro: false AND reintroEverySolved: true.
+          Per shared/units/types.ts's own doc comment, reintroEverySolved is "only
+          meaningful alongside requiresIntro: true" — when requiresIntro is false,
+          UnitView's introSatisfied short-circuits to always-true regardless of
+          reintroEverySolved, so setting it would be silently inert dead code, not
+          actual periodic re-gating. Built as requiresIntro: false with
+          reintroEverySolved omitted (matching the plan's primary intent — pure
+          fluency practice on already-gated concepts, no new gate) rather than setting
+          a field that does nothing; enabling real periodic re-checking without an
+          initial gate would need an engine change to UnitView's gating logic itself,
+          out of scope for this lab's own folder.
+[x] MK3  — MeasurementAndClassifyingLab  (MK3/MK3_MeasurementAndClassifyingLab.tsx) —
+          wired as a "standalone" skill. First lab for the K.MD domain (K.MD.1-3),
+          deliberately non-numeric/comparative at its core (longer/shorter,
+          heavier/lighter) with no ruler or standard measurement unit anywhere —
+          that's explicitly out of scope for Kindergarten. Three units: Describing
+          How Objects Are Measured (K.MD.1 — single-object length/weight vocabulary,
+          including holding two attributes of one object at once), Comparing Two
+          Objects Directly (K.MD.2 — aligned vs. misaligned length comparison, a
+          balance-scale weight comparison, and describing the numeric block
+          difference, not just "which is more"), and Classifying and Counting by
+          Category (K.MD.3 — sort by an obvious 2-category or harder 3+-category
+          attribute, count each category up to 10, then compare counts) — each with
+          a required Explore/Check-for-Understanding/Practice/Test tab, plus a
+          cumulative 15-question Module Test (5 per unit, passScore 12). Entry file
+          + styles (MK3_MeasurementAndClassifyingLab_styles.css, scoped under
+          .mac-lab) are flat in MK3/; supporting diagrams/ and units/ live one level
+          deeper, inside MK3/MeasurementAndClassifyingLab/.
+
+          Three new lab-local (not promoted) diagrams, since nothing in shared/
+          or MK1/MK2's own diagrams shows length/weight/category-sorting: LengthBars
+          (rods built from equal non-standard unit blocks, with an actual pointer-
+          draggable end handle in Explore — the first diagram in this lab family to
+          use real drag-to-resize rather than a Stepper proxy), BalanceScale (a
+          two-pan beam that tilts toward whichever side has more weight units, no
+          numeric readout), and SortedBins (labeled category bins plus an optional
+          unsorted tray, click-item-then-click-bin interactive in Explore, static in
+          Practice/Test). Also a trivial ObjectGlyph/WordCard pair for Unit 1's
+          single-object display.
+
+          No new shared/engine Step kinds were needed — every question uses the
+          existing "number", "choice", and "sentence" kinds.
+
+          Autonomous decision: Unit 2's plan bullet "near-tie vs. obviously-different
+          comparisons are harder" was built as a randomized difficulty regime inside
+          each comparison bucket (lengthPair/weightPair take a nearTieChance param)
+          rather than a 5th disjoint bucket — same call MK1_CountingAndCardinalityLab's
+          build made for its own analogous plan bullet (see that entry above).
+[x] MK4  — ShapesLab                    (MK4/MK4_ShapesLab.tsx) — wired as a
+          "standalone" skill. Covers K.G.1-6 in one module: Naming Shapes and
+          Positions (K.G.1-2 — rotated/resized-shape invariance, the "a tilted
+          square is still a square, not a diamond" misconception, and
+          above/below/beside/in-front-of/behind), Flat or Solid? / 2D vs 3D
+          (K.G.3 — circle/sphere and square/cube discrimination via visible
+          shading as the depth "tell"), What Makes a Shape a Shape / Sides and
+          Corners (K.G.4 — counting, equal-vs-unequal sides, cross-shape
+          comparison including a genuine square-vs-rectangle tie case), and
+          Building and Combining Shapes (K.G.5-6 — stick/clay construction and
+          single-target vs. open-ended multi-solution composition) — four
+          units, each with a required Explore/Check-for-Understanding/
+          Practice/Test tab (Sides and Corners' CFU is skipped per the
+          approved plan — extended application, not a new foundational
+          concept), plus a cumulative 20-question Module Test (5 per unit,
+          passScore 16). Entry file + styles (MK4_ShapesLab_styles.css,
+          scoped under .shapes-lab) are flat in MK4/; supporting diagrams/ and
+          units/ live one level deeper, inside MK4/ShapesLab/.
+
+          Six new lab-local diagrams (first consumer of any of these, so none
+          promoted to shared/): Shape2D.tsx (5 flat shapes at any rotation/
+          scale, plus a geometrically-derived sidesLookEqual() helper and a
+          click-to-count ShapeCountable variant), Solid3D.tsx (4 solids, each
+          rendered with a visible shading/highlight cue so depth has a
+          consistent "tell" distinguishing it from its flat 2D counterpart),
+          PositionScene.tsx (5 positional relations, geometrically
+          distinguished — vertical offset, horizontal offset with a gap, or
+          overlap/occlusion), StickBuilder.tsx + CubeFrameBuilder.tsx
+          (click-to-place stick/edge sandboxes for 2D shapes and a 3D cube
+          wireframe — same click-to-toggle convention MK1's CounterGroup
+          established, deliberately not freeform pointer-drag), and
+          ComposeShapes.tsx (click-to-place single-target composition
+          recipes, plus an open-ended strip-filling sandbox with genuinely
+          multiple valid solutions).
+
+          Generalized MK1_CountingAndCardinalityLab's "embed two renderings
+          directly in a ChoiceStep's prompt, use positional labels as the
+          choices" technique from text (mirrored numerals) to full images
+          (StickArrangementPreview/CubeFramePreview candidate pictures) for
+          Unit 4's Test questions, with which position holds the correct
+          picture randomized.
+
+          No new shared/engine Step kinds were needed — recognition/counting/
+          comparison questions use existing "number" and "choice" kinds;
+          Unit 4's hands-on building/composing Practice steps use the existing
+          `customStep` escape hatch (self-contained widgets that call their
+          own onDone), same pattern as MG9's ManualDivisionLadder.
+
+          Autonomous decisions beyond the approved plan (documented in the
+          build's final report): Unit 1 kept as one unit (not split); "next
+          to" treated as a pure vocabulary synonym of "beside" with no
+          separate rendered scene; equal-sides-ness computed geometrically
+          from the same points the diagram draws rather than a hand-typed
+          table; crossShapeCompare biased so the square/rectangle "same
+          number of sides" tie case is reliably reachable, not incidental.
 
 ------------------------------------------------------------------
 ELEMENTARY
 ------------------------------------------------------------------
-[~] MG1  — TenFrame                    (MG1/MG1.tsx) — authored, not wired
-[~] MG2  — PartPartWhole                (MG2/MG2.tsx) — authored, not wired
-[~] MG3  — MakeTenStrategy              (MG3/MG3.tsx) — authored, not wired
-[ ] MG4
+[x] MG1  — AdditionAndSubtractionWithin20Lab    (MG1/MG1_AdditionAndSubtractionWithin20Lab.tsx) —
+          wired as a "standalone" skill, the first Grade-1 lab in the K-8 curriculum. Supersedes
+          MG1.tsx's unwired legacy TenFrame component (predates the Unit-engine pattern, never
+          wired into Practice) — that standard is now covered here. Covers 1.OA.1-8 across six
+          units (the plan's own Unit 5 was split into two per its flagged option — bundling a
+          long-term fluency target with equation-structure reasoning was too broad for one
+          Explore/CFU pass): Counting On and Counting Back (1.OA.5), Making Ten and Decomposing
+          Numbers (1.OA.6), Word Problems: Add To and Take From (1.OA.1), Word Problems: Put
+          Together/Take Apart and Compare (1.OA.1), Fluency Facts Within 20 (1.OA.2/3/6,
+          reintroEverySolved), and Equal Sign and Equations (1.OA.7/8) — each with a required
+          Explore/Check-for-Understanding/Practice/Test tab, plus a cumulative 30-question Module
+          Test (5 per unit, passScore 24/30). Entry file + styles
+          (MG1_AdditionAndSubtractionWithin20Lab_styles.css, scoped under .as20-lab) are flat in
+          MG1/ (admin file browser glob, same reasoning as every other multi-file Lab);
+          supporting diagrams/, logic.ts and units/ live one level deeper, inside
+          MG1/AdditionAndSubtractionWithin20Lab/.
+
+          One new lab-local (not promoted — this is its first consumer) diagram:
+          TenFrameGroup.tsx (a 0-20 count shown as one or two standard 2-row-of-5 ten-frames,
+          with an optional two-tone splitAt for make-ten/put-together part-shading) — visually
+          and conceptually close to MK1's TenGroups.tsx; a future round could reasonably unify
+          these into shared/diagrams/ once no other lab build is in flight. logic.ts holds
+          makeTenBreakdown/subtractThroughTenBreakdown, each shared verbatim between a unit's
+          diagram-render and its step-checking logic so the picture and the grading can't drift.
+
+          No new shared/engine Step kinds were needed — every question uses the existing
+          "number" and "choice" kinds.
+[x] MG2  — PlaceValueTo120Lab           (MG2/MG2_PlaceValueTo120Lab.tsx) — wired as a
+          "standalone" skill, superseding the old unwired PartPartWhole component
+          (MG2/MG2.tsx, left in place but still unreferenced) — treat 1.NBT as
+          previously uncovered. Grade 1, built for a first-time viewer: heavy use of
+          a 0-120 number grid and base-ten blocks (tens-sticks + ones-cubes) so the
+          tens/ones split is always shown before any symbolic notation. Covers all of
+          1.NBT (1.NBT.1 through 1.NBT.6) across five units: Counting to 120 (1.NBT.1),
+          Tens and Ones / Place Value (1.NBT.2a-c), Comparing Two-Digit Numbers
+          (1.NBT.3), Ten More/Ten Less and Multiples of Ten (1.NBT.5-6), and Adding a
+          2-Digit and a 1-Digit Number (1.NBT.4, split out as its own unit from the
+          plan's combined Unit 4 — its regrouping case is the single hardest idea in
+          the lab, so it got its own dedicated Explore/CFU pass) — each with a required
+          Explore/Check-for-Understanding/Practice/Test tab, plus a cumulative
+          25-question Module Test (5 per unit, passScore 20/80%). Entry file + styles
+          (MG2_PlaceValueTo120Lab_styles.css, scoped under .pv120-lab) are flat in MG2/
+          (admin file browser glob); supporting diagrams/ and units/ live one level
+          deeper, inside MG2/PlaceValueTo120Lab/.
+
+          Two new lab-local diagrams (not promoted to shared/ — several other labs were
+          mid-build in parallel when this one was authored): HundredChart.tsx (a 10-wide,
+          12-row 1-120 grid — every column holds one fixed ones-digit, every row one fixed
+          tens-digit, so decade-crossing is visually "wrap to the next row" and +/-10 is
+          visually "straight up/down one row, same column" with no extra geometry needed;
+          reused as the primary Explore diagram across Counting, Comparing, and Ten
+          More/Less) and BaseTenBlocks.tsx (fused tens-sticks + individual ones-cubes,
+          matching the literal base-ten manipulative named in 1.NBT's standards, unlike
+          MK1/MK2's dot-bundle or ten-frame conventions; ones deliberately allowed up to
+          19, not clamped to 9, so the same component can show an un-bundled "about to
+          regroup" state for Adding a 2-Digit and 1-Digit Number's regrouping case, with
+          an optional flagOverflow dashed-ring treatment on the first 10 of an
+          overflowing pile). HundredChart is a strong shared/diagrams/ promotion
+          candidate once a second lab needs a 100/120-chart — not acted on this round.
+
+          Adding a 2-Digit and 1-Digit Number's regroupBreakdown() is the one function
+          shared by both Explore's step-by-step bundling animation and Practice's
+          step-checking, so the pictured intermediate "loose ones before bundling" state
+          and the graded answer can never disagree. Its *Test.tsx does NOT import this
+          from the unit file (that produced a genuine circular import, caught via
+          ESLint/vite build during this build) — it carries its own duplicate copy
+          instead, same convention as every other *Test.tsx in this app.
+
+          No new shared/engine Step kinds were needed — every unit uses only the
+          existing "number", "choice", and "sentence" (two-blank) step kinds.
+[x] MG3  — MeasurementTimeAndDataLab    (MG3/MG3_MeasurementTimeAndDataLab.tsx) —
+          wired as a "standalone" skill. Supersedes the old unwired MG3/MG3.tsx
+          (this file previously labeled it "MakeTenStrategy" though its actual
+          content was a PartPartWhole demo — that legacy file is left in place
+          untouched, it's just no longer what covers this slot); 1.MD.1-4 was
+          treated as previously uncovered. Covers Comparing and Ordering Length
+          (1.MD.1), Measuring Length with Units (1.MD.2), Telling and Writing
+          Time (1.MD.3), and Organizing and Interpreting Data (1.MD.4) — four
+          units, each with a required Explore/Check-for-Understanding/
+          Practice/Test tab, plus a cumulative 20-question Module Test (5 per
+          unit, passScore 16/20).
+
+          New lab-local (not promoted — first consumer) diagrams, since no
+          existing diagram in shared/diagrams/ covers any of these: LengthBars
+          (draggable reorderable length bars), UnitRuler (unit-tile overlay
+          with clean/gapped/overlap laying modes, one function deriving both
+          the rendered tile geometry and the graded true-length answer),
+          Clock (a draggable analog clock face whose hand angles AND every
+          graded time answer come from the SAME clockAngles() function — its
+          doc comment flags a real off-by-one hour-angle bug this lab's own
+          brute-force verification script caught and a fix corrected before
+          this was wired in), and DataChart/MixedScatter (picture-graph chart
+          plus a click-to-sort scattered raw-items view, extending MK1's
+          CounterGroup click-to-count pattern). The draggable analog clock is
+          a strong promotion candidate to shared/diagrams/ in a future round
+          (flagged, not acted on, per that round's own scope rules).
+
+          No new shared/engine Step kinds were needed — every question uses
+          the existing "number", "choice", "ratio" (digital hour:minute
+          entry), and "custom" (hands-on "set the clock hands to match this
+          digital time" interaction) kinds.
+
+          Every unit's Check-for-Understanding is 4 fixed (non-randomized)
+          questions targeting a specific named misconception per the plan:
+          Unit 1 drills judging length by far-edge position instead of
+          start-to-end span, plus transitive reasoning without directly
+          comparing two objects; Unit 2 drills not understanding WHY
+          gaps/overlaps invalidate a tile count; Unit 3 drills reading a
+          half-hour's hour hand as the LATER hour it's approaching, plus
+          which hand is which; Unit 4 drills answering "how many more" with
+          one category's raw count instead of the difference, plus forgetting
+          a 3rd category in a combined total.
+[x] MG4  — ShapesAndFractionsIntroLab    (MG4/MG4_ShapesAndFractionsIntroLab.tsx) — wired
+          2026-10-29 as a "standalone" skill, MG4's first content (was a completely
+          empty stub). Covers all of 1.G (1.G.1-3) in one module: Defining Attributes
+          of Shapes (1.G.1, distinguishing what makes a shape that shape from how it
+          happens to look), Composing Shapes (1.G.2, 2D composites from same/different
+          basic pieces, decomposing, and a lighter-scoped 3D "stack 2 solids" bucket —
+          see below), and Partitioning Into Halves and Fourths (1.G.3, equal vs.
+          unequal shares, with explicit "more shares = smaller shares" reasoning) —
+          three units, each with a required Explore/Check-for-Understanding/Practice/
+          Test tab, plus a cumulative 15-question Module Test (5 per unit, passScore
+          12/80%). Entry file + styles (MG4_ShapesAndFractionsIntroLab_styles.css,
+          scoped under .safi-lab) are flat in MG4/ (admin file browser glob); supporting
+          diagrams/ and units/ live one level deeper, inside MG4/ShapesAndFractionsIntroLab/.
+
+          Four new shared-shape (but lab-local, not promoted — first consumer) diagrams,
+          since shared/diagrams/'s FractionBar only covers a 1-D numeric fraction strip,
+          not a literal shape-tile or 2D/3D shape composition: ShapeTile.tsx (a single
+          basic 2D shape — triangle/square/rectangle/trapezoid/circle/half-circle/
+          quarter-circle — with orthogonal kind/size/rotation/color props, used to teach
+          that size/color/orientation are non-defining attributes), ShapePartition.tsx
+          (circle/square cut into 2 or 4 equal-OR-deliberately-unequal pieces via one
+          shared center-wedge function for circles — equal sweep fractions collapse to a
+          true diameter/plus/X automatically — plus explicit polygon math per pattern for
+          squares), CompositeShape.tsx (6 fixed 2D composites: 2 squares->rectangle, 2
+          half-circles->circle, 2 quarter-circles->half-circle, 2 triangles->square, a
+          square+triangle "house", a rectangle+half-circle "door"), and SolidIcon.tsx
+          (flat, non-interactive cube/cone/cylinder/sphere icon glyphs + a vertical
+          SolidTower stacker — a deliberately lighter-weight sibling to MG11/GeometryLab's
+          full oblique-projection 3D engine; see that file's own doc comment for why).
+
+          SCOPE DECISION on 1.G.2's 3D-composition clause: scoped to flat static icon
+          recognition/stacking (pick 2 of 4 solids, see them stack; count/identify which
+          2 in Practice/Test) rather than full interactive 3D composition — matching
+          MG11/GeometryLab's fidelity would be substantially heavier than this bucket's
+          actual 1st-grade goal. The bucket itself was NOT dropped.
+
+          Every unit's Check-for-Understanding is 4 fixed (non-randomized) questions, each
+          targeting a specific, named misconception per the plan: Unit 1 drills orientation/
+          size/color-as-defining (including a same-category-two-very-different-renderings
+          question); Unit 2 drills "a composite's identity depends on how it was split" via
+          a required two-different-piece-combos-same-final-shape question; Unit 3 drills
+          "any 2 pieces = halves regardless of size" (a required non-example that states the
+          piece count and the equal-size question together, so it can't be answered by
+          counting alone) and "more pieces = bigger pieces" via a required direct halves-
+          vs-fourths size comparison.
+
+          No new shared/engine Step kinds were needed — every question uses the existing
+          "number", "choice", and (for 2 of Unit 1/3's CFU questions) "sentence"-style
+          native <select> dropdowns, same pattern as CoordinatePlaneUnit's
+          ReflectionFormulaQuestion. Explore's shape-composing sandbox uses native HTML5
+          drag-and-drop (not pixel-coordinate SVG dragging), deliberately, since no browser
+          was available this round to verify coordinate math visually.
 [~] MG5  — TapeDiagram                  (MG5/MG5.tsx) — authored, not wired
 [x] MG6  — TwoDigitVisualAddition       (MG6/MG6_TwoDigitVisualAddition.tsx) — wired 2026-09-02
          — VerticalMath                 (MG6/MG6_VerticalAddition.tsx) — wired 2026-09-02

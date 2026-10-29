@@ -198,6 +198,78 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       componentExport: "IntroToFractionsLab",
     },
   ],
+  MK1: [
+    {
+      type: "standalone",
+      skillId: "CountingAndCardinalityLab",
+      label: "Counting & Cardinality",
+      componentFile: "MK1_CountingAndCardinalityLab",
+      componentExport: "CountingAndCardinalityLab",
+    },
+  ],
+  MK2: [
+    {
+      type: "standalone",
+      skillId: "AdditionSubtractionAndTeenNumbersLab",
+      label: "Addition, Subtraction & Teen Numbers",
+      componentFile: "MK2_AdditionSubtractionAndTeenNumbersLab",
+      componentExport: "AdditionSubtractionAndTeenNumbersLab",
+    },
+  ],
+  MG2: [
+    {
+      type: "standalone",
+      skillId: "PlaceValueTo120Lab",
+      label: "Place Value to 120",
+      componentFile: "MG2_PlaceValueTo120Lab",
+      componentExport: "PlaceValueTo120Lab",
+    },
+  ],
+  MK3: [
+    {
+      type: "standalone",
+      skillId: "MeasurementAndClassifyingLab",
+      label: "Measurement & Classifying",
+      componentFile: "MK3_MeasurementAndClassifyingLab",
+      componentExport: "MeasurementAndClassifyingLab",
+    },
+  ],
+  MG3: [
+    {
+      type: "standalone",
+      skillId: "MeasurementTimeAndDataLab",
+      label: "Measurement, Time & Data",
+      componentFile: "MG3_MeasurementTimeAndDataLab",
+      componentExport: "MeasurementTimeAndDataLab",
+    },
+  ],
+  MK4: [
+    {
+      type: "standalone",
+      skillId: "ShapesLab",
+      label: "Shapes Lab",
+      componentFile: "MK4_ShapesLab",
+      componentExport: "ShapesLab",
+    },
+  ],
+  MG1: [
+    {
+      type: "standalone",
+      skillId: "additionSubtractionWithin20",
+      label: "Addition and Subtraction Within 20",
+      componentFile: "MG1_AdditionAndSubtractionWithin20Lab",
+      componentExport: "AdditionAndSubtractionWithin20Lab",
+    },
+  ],
+  MG4: [
+    {
+      type: "standalone",
+      skillId: "ShapesAndFractionsIntroLab",
+      label: "Shapes & Fractions",
+      componentFile: "MG4_ShapesAndFractionsIntroLab",
+      componentExport: "ShapesAndFractionsIntroLab",
+    },
+  ],
 };
 
 export function getSkillsForLevel(level: string): LevelSkill[] {

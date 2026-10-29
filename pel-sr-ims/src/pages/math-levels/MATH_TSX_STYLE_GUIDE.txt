@@ -289,6 +289,71 @@ skill belongs on which pages within a level's 110-page range (that's the
 "page subsection" documentation mentioned in the Student Portal plan —
 tracked separately in src/utils/levelSubsections.ts as it's authored).
 
+NOTE (added with MK1_CountingAndCardinalityLab, 2026-10): sections 1-11
+above describe the ORIGINAL Tailwind-props-based pipeline (TenFrame,
+VerticalMath, Nx1Multiplication, etc.) — generateParams()/showFeedback,
+one bare component per skill. Every "Lab" built since MM1_RatioLab (MM1,
+MG9, MG11, and now MK1) instead uses a completely different, newer
+architecture: shared/engine's Unit/Problem/Step/TestQuestion contracts,
+StepProblem.tsx/UnitTest.tsx for grading and test-taking chrome, and
+shared/diagrams for visuals — wired in as a "standalone" skill, not a
+"visual" one. This guide does not cover that architecture at all; the
+living reference for its conventions is VISUAL_COMPONENT_TODO.txt's
+per-lab entries below, not this file. Any new K-8 "Lab" should follow
+that newer pattern (read an existing Lab's own units/ folder first), not
+sections 1-11's template.
+
+Two reusable techniques introduced building MK1_CountingAndCardinalityLab,
+worth reaching for again in any future Kindergarten/early-grade lab that
+needs concrete, countable objects rather than bare numerals:
+  - Click-to-count interaction (MK1/CountingAndCardinalityLab/diagrams/
+    CounterGroup.tsx's `countedOrder`/`onToggle` props): each object can be
+    clicked exactly once, in any order, with a small running badge showing
+    its position in the student's own click order — deliberately NOT
+    order-sensitive for the total (clicking in a different order still
+    gives the same count), since that's itself the point being taught.
+    Only meaningful in an Explore sandbox; Practice/Test visuals stay
+    static.
+  - Orientation-based recognition questions (used by Writing and Matching
+    Numerals' "reversedPairs" bucket): when two choices differ only by a
+    CSS transform (e.g. a mirrored `scaleX(-1)` numeral) rather than by
+    different text, embed both renderings directly in the ChoiceStep's
+    `prompt` (a ReactNode, so this needs no engine changes) and make the
+    choices positional labels ("Left"/"Right") instead of the glyph itself
+    — randomize which side is correct so the position itself can't be
+    pattern-matched.
+
+Two more reusable techniques introduced building
+MK2_AdditionSubtractionAndTeenNumbersLab (the second Kindergarten lab),
+worth reaching for again in any future K-1 lab that teaches part-part-whole
+or place-value ideas:
+  - A two-toned "split" diagram (MK2/AdditionSubtractionAndTeenNumbersLab/
+    diagrams/SplitGroup.tsx): one group of objects where the first `partA`
+    render in one tone and the rest in a second, with an optional dashed
+    divider between them. This is the concrete stand-in for "put together"/
+    "take apart"/decomposing a single whole into two colored parts — distinct
+    from a single-tone counting diagram (MK1's CounterGroup, this lab's
+    ObjectGroup) and from TWO separate single-tone diagrams side by side
+    (used for comparing two SEPARATE quantities, not one whole split in two).
+  - A single fixed-size ten-frame (MK2/.../diagrams/TenFrame.tsx), capped at
+    exactly 10 cells and optionally two-toned (a `filled` count in one tone,
+    plus a `fillB` complement count in a second tone filling the remaining
+    cells) — the direct visual for "how many more to reach 10," distinct
+    from MK1's TenGroups, which bundles an unbounded count (0-100) into
+    REPEATING ten-blocks for counting-by-tens. Reach for TenFrame when the
+    lesson is specifically about ONE frame's complement (Making 10, teen
+    numbers as ten-plus-ones); reach for TenGroups-style repeating blocks
+    only when the count can exceed 10 and the repetition itself is the point.
+  NOTE: ObjectGroup.tsx above is a near-verbatim duplicate of MK1's
+  CounterGroup.tsx, not a promotion to shared/diagrams/, because the build
+  that introduced it was scoped to touch only its own lab's folder (plus
+  this file, VISUAL_COMPONENT_TODO.txt, and levelSubsections.ts) — see
+  VISUAL_COMPONENT_TODO.txt's MK2 entry for the full reasoning. This is the
+  SECOND lab needing this exact shape, which is normally this codebase's own
+  trigger to promote on the second real consumer rather than add a second
+  silent copy — a future session with broader scope should do that
+  promotion rather than letting a third lab duplicate it again.
+
 ------------------------------------------------------------------
 11. MULTI-FILE SKILLS (exception to section 1's "one file" rule)
 ------------------------------------------------------------------

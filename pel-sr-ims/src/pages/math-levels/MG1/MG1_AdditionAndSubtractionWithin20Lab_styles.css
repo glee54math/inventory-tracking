@@ -1,0 +1,182 @@
+/* Scoped under .as20-lab (the wrapper div in
+   MG1_AdditionAndSubtractionWithin20Lab.tsx) instead of :root/html/body,
+   since this file is imported into one page of a much larger app, not a
+   standalone site — same reasoning as every other lab's own _styles.css.
+   This lab reuses the SAME shared engine chrome those do
+   (shared/styles/lab-base.css), so this file only holds: this lab's own
+   color palette (light + dark), and the handful of rules genuinely unique
+   to this lab's content (the gated Check-for-Understanding box, and
+   select.answer — lab-base.css's .answer styling only targets
+   `input.answer`, and this lab's CFU dropdowns are <select>s).
+   Import BOTH stylesheets, and add "lab-base" alongside "as20-lab" on the
+   wrapper div. */
+
+.as20-lab {
+  --bg: #fff8ec;
+  --card: #ffffff;
+  --ink: #2a2316;
+  --muted: #837458;
+  --line: #e8d9b8;
+  --grid: #f6ecd6;
+  --qa: #2f8f6a;
+  --qa-soft: #dcf2e7;
+  --qa-text: #1f6b4e;
+  --qb: #cb6b1f;
+  --qb-soft: #fbe4cc;
+  --qb-text: #9c4f12;
+  --qc: #8a5cd6;
+  --qc-soft: #ece1fb;
+  --qc-text: #6b3fab;
+  --good: #289a66;
+  --good-soft: #ddf3e6;
+  --bad: #d4495b;
+  --bad-soft: #fbe3e7;
+  --on-q: #ffffff;
+  --radius-lg: 20px;
+  --radius-sm: 12px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--grid) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  -webkit-font-smoothing: antialiased;
+}
+/* .align-drill/.align-stack-wrap/.intro-gate-title aren't in lab-base.css —
+   they're the box chrome AlignDecimalsDrill (MG11) introduced for a
+   mandatory gated exercise, reused by every lab's Check-for-Understanding
+   gate since (RealWorldNegatives.tsx, ComparingOrdering.tsx, MK1's units,
+   and every unit in this lab). */
+.as20-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.as20-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.as20-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.as20-lab .feedback.good {
+  color: var(--good);
+}
+/* lab-base.css's .answer styling is scoped to `input.answer` only — this
+   lab's Check-for-Understanding dropdowns are <select>s, which that
+   selector doesn't match (same pattern as MG9_IntroToFractionsLab_styles.css,
+   MM1_NegativeNumbersLab_styles.css and MK1_CountingAndCardinalityLab_styles.css's
+   own select.answer rule). */
+.as20-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.as20-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+/* A first-grade audience benefits from a slightly larger choice button and
+   a thicker, friendlier border than the default lab-base.css styling
+   (tuned for older grades' denser multiple-choice text) — same reasoning
+   as MK1_CountingAndCardinalityLab_styles.css's identical rule. */
+.as20-lab .choice {
+  font-size: 18px;
+  border-width: 3px;
+  border-radius: var(--radius-lg);
+}
+/* Module test nav/card — same rules as every other lab's own module test
+   chrome, since this feature's markup is shared verbatim. */
+.as20-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.as20-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.as20-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.as20-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.as20-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.as20-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+.as20-lab .module-test-back {
+  margin-bottom: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  .as20-lab:not([data-theme="light"]) {
+    --bg: #201a10;
+    --card: #2b2316;
+    --ink: #f5ecd8;
+    --muted: #cbb98f;
+    --line: #4f4126;
+    --grid: #352b18;
+    --qa: #5fd1a8;
+    --qa-soft: #1f3c32;
+    --qa-text: #a3ecd1;
+    --qb: #f0a85c;
+    --qb-soft: #4a3214;
+    --qb-text: #f7c48e;
+    --qc: #c3a4f5;
+    --qc-soft: #3a2f5a;
+    --qc-text: #ddcbfa;
+    --good: #5fd49c;
+    --good-soft: #1b3f30;
+    --bad: #ff7b8a;
+    --bad-soft: #492230;
+    --on-q: #141026;
+  }
+}
+.as20-lab[data-theme="dark"] {
+  --bg: #201a10;
+  --card: #2b2316;
+  --ink: #f5ecd8;
+  --muted: #cbb98f;
+  --line: #4f4126;
+  --grid: #352b18;
+  --qa: #5fd1a8;
+  --qa-soft: #1f3c32;
+  --qa-text: #a3ecd1;
+  --qb: #f0a85c;
+  --qb-soft: #4a3214;
+  --qb-text: #f7c48e;
+  --qc: #c3a4f5;
+  --qc-soft: #3a2f5a;
+  --qc-text: #ddcbfa;
+  --good: #5fd49c;
+  --good-soft: #1b3f30;
+  --bad: #ff7b8a;
+  --bad-soft: #492230;
+  --on-q: #141026;
+}
