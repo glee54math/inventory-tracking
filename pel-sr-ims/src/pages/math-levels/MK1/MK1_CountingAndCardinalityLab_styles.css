@@ -1,0 +1,180 @@
+/* Scoped under .cc-lab (the wrapper div in MK1_CountingAndCardinalityLab.tsx)
+   instead of :root/html/body, since this file is imported into one page of a
+   much larger app, not a standalone site — same reasoning as every other
+   lab's own _styles.css. This lab reuses the SAME shared engine chrome those
+   do (shared/styles/lab-base.css), so this file only holds: this lab's own
+   color palette (light + dark), and the handful of rules genuinely unique to
+   this lab's content (the gated Check-for-Understanding box, and
+   select.answer — lab-base.css's .answer styling only targets `input.answer`,
+   and this lab's CFU dropdowns are <select>s).
+   Import BOTH stylesheets, and add "lab-base" alongside "cc-lab" on the
+   wrapper div. */
+
+.cc-lab {
+  --bg: #fdf6ec;
+  --card: #ffffff;
+  --ink: #2a2440;
+  --muted: #746a90;
+  --line: #ddd0ee;
+  --grid: #f3e9fb;
+  --qa: #2f8fd1;
+  --qa-soft: #dcf0fb;
+  --qa-text: #1f6a9e;
+  --qb: #e8972d;
+  --qb-soft: #fdecd0;
+  --qb-text: #a56a12;
+  --qc: #9452d6;
+  --qc-soft: #ecdcfb;
+  --qc-text: #7334ab;
+  --good: #289a66;
+  --good-soft: #ddf3e6;
+  --bad: #d4495b;
+  --bad-soft: #fbe3e7;
+  --on-q: #ffffff;
+  --radius-lg: 20px;
+  --radius-sm: 12px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--grid) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  -webkit-font-smoothing: antialiased;
+}
+/* .align-drill/.align-stack-wrap/.intro-gate-title aren't in lab-base.css —
+   they're the box chrome AlignDecimalsDrill (MG11) introduced for a mandatory
+   gated exercise, reused by every lab's Check-for-Understanding gate since
+   (RealWorldNegatives.tsx, ComparingOrdering.tsx, and every unit in this lab). */
+.cc-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.cc-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.cc-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.cc-lab .feedback.good {
+  color: var(--good);
+}
+/* lab-base.css's .answer styling is scoped to `input.answer` only — this
+   lab's Check-for-Understanding dropdowns are <select>s, which that
+   selector doesn't match (same pattern as MG9_IntroToFractionsLab_styles.css
+   and MM1_NegativeNumbersLab_styles.css's own select.answer rule). */
+.cc-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.cc-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+/* A Kindergarten audience benefits from a slightly larger choice button and
+   a thicker, friendlier border than the default lab-base.css styling (which
+   was tuned for older grades' denser multiple-choice text) — numerals and
+   short words here are the only choice text in this lab, so going larger
+   doesn't risk wrapping/clipping the way longer sentences would. */
+.cc-lab .choice {
+  font-size: 18px;
+  border-width: 3px;
+  border-radius: var(--radius-lg);
+}
+/* Module test nav/card — same rules as every other lab's own module test
+   chrome, since this feature's markup is shared verbatim. */
+.cc-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.cc-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.cc-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.cc-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.cc-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.cc-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+.cc-lab .module-test-back {
+  margin-bottom: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  .cc-lab:not([data-theme="light"]) {
+    --bg: #1c1730;
+    --card: #271f3f;
+    --ink: #f0ebfb;
+    --muted: #b6a9d6;
+    --line: #473a66;
+    --grid: #2f2650;
+    --qa: #6fc2ff;
+    --qa-soft: #243752;
+    --qa-text: #a8d9ff;
+    --qb: #f5b45c;
+    --qb-soft: #4a3a1c;
+    --qb-text: #f7cb8e;
+    --qc: #c69af5;
+    --qc-soft: #40306a;
+    --qc-text: #dcc2fa;
+    --good: #5fd49c;
+    --good-soft: #1b3f30;
+    --bad: #ff7b8a;
+    --bad-soft: #492230;
+    --on-q: #141026;
+  }
+}
+.cc-lab[data-theme="dark"] {
+  --bg: #1c1730;
+  --card: #271f3f;
+  --ink: #f0ebfb;
+  --muted: #b6a9d6;
+  --line: #473a66;
+  --grid: #2f2650;
+  --qa: #6fc2ff;
+  --qa-soft: #243752;
+  --qa-text: #a8d9ff;
+  --qb: #f5b45c;
+  --qb-soft: #4a3a1c;
+  --qb-text: #f7cb8e;
+  --qc: #c69af5;
+  --qc-soft: #40306a;
+  --qc-text: #dcc2fa;
+  --good: #5fd49c;
+  --good-soft: #1b3f30;
+  --bad: #ff7b8a;
+  --bad-soft: #492230;
+  --on-q: #141026;
+}

@@ -1,0 +1,184 @@
+/* Scoped under .mac-lab (the wrapper div in MK3_MeasurementAndClassifyingLab.tsx)
+   instead of :root/html/body, since this file is imported into one page of a
+   much larger app, not a standalone site — same reasoning as every other
+   lab's own _styles.css. This lab reuses the SAME shared engine chrome those
+   do (shared/styles/lab-base.css), so this file only holds: this lab's own
+   color palette (light + dark), the handful of rules genuinely unique to
+   this lab's content (the gated Check-for-Understanding box, and
+   select.answer — lab-base.css's .answer styling only targets `input.answer`,
+   and this lab's CFU dropdowns are <select>s), and a couple of Explore-only
+   object-picker rules.
+   Import BOTH stylesheets, and add "lab-base" alongside "mac-lab" on the
+   wrapper div. */
+
+.mac-lab {
+  --bg: #eef7f2;
+  --card: #ffffff;
+  --ink: #1f332a;
+  --muted: #5f7a6c;
+  --line: #cfe6da;
+  --grid: #e3f3e9;
+  --qa: #2f8f6f;
+  --qa-soft: #dcf2e9;
+  --qa-text: #1f6b52;
+  --qb: #e3972d;
+  --qb-soft: #fbecd0;
+  --qb-text: #a56a12;
+  --qc: #5a6fd6;
+  --qc-soft: #e1e6fb;
+  --qc-text: #3a4bab;
+  --good: #289a66;
+  --good-soft: #ddf3e6;
+  --bad: #d4495b;
+  --bad-soft: #fbe3e7;
+  --on-q: #ffffff;
+  --radius-lg: 20px;
+  --radius-sm: 12px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--grid) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* .align-drill/.align-stack-wrap/.intro-gate-title aren't in lab-base.css —
+   they're the box chrome AlignDecimalsDrill (MG11) introduced for a mandatory
+   gated exercise, reused by every lab's Check-for-Understanding gate since
+   (RealWorldNegatives.tsx, ComparingOrdering.tsx, MK1's four units, and now
+   every unit in this lab). */
+.mac-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.mac-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.mac-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.mac-lab .feedback.good {
+  color: var(--good);
+}
+
+/* lab-base.css's .answer styling is scoped to `input.answer` only — this
+   lab's Check-for-Understanding dropdowns are <select>s, which that
+   selector doesn't match (same pattern as MK1_CountingAndCardinalityLab_styles.css
+   and MG9_IntroToFractionsLab_styles.css's own select.answer rule). */
+.mac-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.mac-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+
+/* A Kindergarten audience benefits from a slightly larger choice button and
+   a thicker, friendlier border than the default lab-base.css styling. */
+.mac-lab .choice {
+  font-size: 18px;
+  border-width: 3px;
+  border-radius: var(--radius-lg);
+}
+
+/* Module test nav/card — same rules as every other lab's own module test
+   chrome, since this feature's markup is shared verbatim. */
+.mac-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.mac-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.mac-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.mac-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.mac-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.mac-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+.mac-lab .module-test-back {
+  margin-bottom: 20px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .mac-lab:not([data-theme="light"]) {
+    --bg: #101d17;
+    --card: #17271f;
+    --ink: #e8f3ec;
+    --muted: #9bbcac;
+    --line: #2d4a3b;
+    --grid: #1c3327;
+    --qa: #4fd9ac;
+    --qa-soft: #1d3a2e;
+    --qa-text: #8fe9c8;
+    --qb: #f5b45c;
+    --qb-soft: #4a3a1c;
+    --qb-text: #f7cb8e;
+    --qc: #93a3f2;
+    --qc-soft: #2a3160;
+    --qc-text: #c3cdfb;
+    --good: #5fd49c;
+    --good-soft: #1b3f30;
+    --bad: #ff7b8a;
+    --bad-soft: #492230;
+    --on-q: #0d1712;
+  }
+}
+.mac-lab[data-theme="dark"] {
+  --bg: #101d17;
+  --card: #17271f;
+  --ink: #e8f3ec;
+  --muted: #9bbcac;
+  --line: #2d4a3b;
+  --grid: #1c3327;
+  --qa: #4fd9ac;
+  --qa-soft: #1d3a2e;
+  --qa-text: #8fe9c8;
+  --qb: #f5b45c;
+  --qb-soft: #4a3a1c;
+  --qb-text: #f7cb8e;
+  --qc: #93a3f2;
+  --qc-soft: #2a3160;
+  --qc-text: #c3cdfb;
+  --good: #5fd49c;
+  --good-soft: #1b3f30;
+  --bad: #ff7b8a;
+  --bad-soft: #492230;
+  --on-q: #0d1712;
+}

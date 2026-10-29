@@ -1,0 +1,180 @@
+/* Scoped under .shapes-lab (the wrapper div in MK4_ShapesLab.tsx) instead of
+   :root/html/body, since this file is imported into one page of a much
+   larger app, not a standalone site — same reasoning as every other lab's
+   own _styles.css. This lab reuses the SAME shared engine chrome those do
+   (shared/styles/lab-base.css), so this file only holds: this lab's own
+   color palette (light + dark), and the handful of rules genuinely unique
+   to this lab's content (the gated Check-for-Understanding box, and
+   select.answer — lab-base.css's .answer styling only targets `input.answer`,
+   and this lab's CFU dropdowns are <select>s).
+   Import BOTH stylesheets, and add "lab-base" alongside "shapes-lab" on the
+   wrapper div. */
+
+.shapes-lab {
+  --bg: #f1faf5;
+  --card: #ffffff;
+  --ink: #1c3328;
+  --muted: #5f7d70;
+  --line: #cfe8da;
+  --grid: #e3f5eb;
+  --qa: #1f9e7a;
+  --qa-soft: #d9f3ea;
+  --qa-text: #157a5f;
+  --qb: #e3922f;
+  --qb-soft: #fbead2;
+  --qb-text: #a4620f;
+  --qc: #4f7fd6;
+  --qc-soft: #dde8fb;
+  --qc-text: #345ea9;
+  --good: #289a66;
+  --good-soft: #ddf3e6;
+  --bad: #d4495b;
+  --bad-soft: #fbe3e7;
+  --on-q: #ffffff;
+  --radius-lg: 20px;
+  --radius-sm: 12px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--grid) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  -webkit-font-smoothing: antialiased;
+}
+/* .align-drill/.align-stack-wrap/.intro-gate-title aren't in lab-base.css —
+   they're the box chrome AlignDecimalsDrill (MG11) introduced for a mandatory
+   gated exercise, reused by every lab's Check-for-Understanding gate since
+   (MK1_CountingAndCardinalityLab, and every unit in this lab). */
+.shapes-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.shapes-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.shapes-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.shapes-lab .feedback.good {
+  color: var(--good);
+}
+/* lab-base.css's .answer styling is scoped to `input.answer` only — this
+   lab's Check-for-Understanding dropdowns are <select>s, which that
+   selector doesn't match (same pattern as every other lab with a
+   dropdown-based CFU). */
+.shapes-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.shapes-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+/* A Kindergarten audience benefits from a slightly larger choice button and
+   a thicker, friendlier border than the default lab-base.css styling (which
+   was tuned for older grades' denser multiple-choice text) — shape names
+   and short words here are the only choice text in this lab, so going
+   larger doesn't risk wrapping/clipping the way longer sentences would. */
+.shapes-lab .choice {
+  font-size: 18px;
+  border-width: 3px;
+  border-radius: var(--radius-lg);
+}
+/* Module test nav/card — same rules as every other lab's own module test
+   chrome, since this feature's markup is shared verbatim. */
+.shapes-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.shapes-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.shapes-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.shapes-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.shapes-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.shapes-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+.shapes-lab .module-test-back {
+  margin-bottom: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  .shapes-lab:not([data-theme="light"]) {
+    --bg: #11201a;
+    --card: #182b23;
+    --ink: #e7f6ee;
+    --muted: #9fc3b3;
+    --line: #2d4a3d;
+    --grid: #1c3329;
+    --qa: #4fd9ad;
+    --qa-soft: #1f4538;
+    --qa-text: #9ff0d3;
+    --qb: #f0ad5c;
+    --qb-soft: #4a3618;
+    --qb-text: #f7cd96;
+    --qc: #8fb2f2;
+    --qc-soft: #28395c;
+    --qc-text: #c5d8fb;
+    --good: #5fd49c;
+    --good-soft: #1b3f30;
+    --bad: #ff7b8a;
+    --bad-soft: #492230;
+    --on-q: #0e1a15;
+  }
+}
+.shapes-lab[data-theme="dark"] {
+  --bg: #11201a;
+  --card: #182b23;
+  --ink: #e7f6ee;
+  --muted: #9fc3b3;
+  --line: #2d4a3d;
+  --grid: #1c3329;
+  --qa: #4fd9ad;
+  --qa-soft: #1f4538;
+  --qa-text: #9ff0d3;
+  --qb: #f0ad5c;
+  --qb-soft: #4a3618;
+  --qb-text: #f7cd96;
+  --qc: #8fb2f2;
+  --qc-soft: #28395c;
+  --qc-text: #c5d8fb;
+  --good: #5fd49c;
+  --good-soft: #1b3f30;
+  --bad: #ff7b8a;
+  --bad-soft: #492230;
+  --on-q: #0e1a15;
+}
