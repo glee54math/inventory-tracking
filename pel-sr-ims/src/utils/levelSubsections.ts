@@ -270,6 +270,43 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       componentExport: "ShapesAndFractionsIntroLab",
     },
   ],
+  MG5: [
+    {
+      type: "standalone",
+      skillId: "EvenOddAndArraysLab",
+      label: "Even/Odd & Arrays",
+      componentFile: "MG5_EvenOddAndArraysLab",
+      componentExport: "EvenOddAndArraysLab",
+    },
+    {
+      type: "standalone",
+      skillId: "ShapesAndEqualSharesLab",
+      label: "Shapes & Equal Shares",
+      componentFile: "MG5_ShapesAndEqualSharesLab",
+      componentExport: "ShapesAndEqualSharesLab",
+    },
+    {
+      type: "standalone",
+      skillId: "PlaceValueTo1000Lab",
+      label: "Place Value to 1000",
+      componentFile: "MG5_PlaceValueTo1000Lab",
+      componentExport: "PlaceValueTo1000Lab",
+    },
+    {
+      type: "standalone",
+      skillId: "ExtendingAdditionAndSubtractionLab",
+      label: "Extending Addition & Subtraction",
+      componentFile: "MG5_ExtendingAdditionAndSubtractionLab",
+      componentExport: "ExtendingAdditionAndSubtractionLab",
+    },
+    {
+      type: "standalone",
+      skillId: "MeasurementMoneyAndDataLab",
+      label: "Measurement, Money & Data",
+      componentFile: "MG5_MeasurementMoneyAndDataLab",
+      componentExport: "MeasurementMoneyAndDataLab",
+    },
+  ],
 };
 
 export function getSkillsForLevel(level: string): LevelSkill[] {

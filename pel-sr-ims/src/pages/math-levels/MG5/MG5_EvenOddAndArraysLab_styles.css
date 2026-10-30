@@ -1,0 +1,180 @@
+/* Scoped under .eoa-lab (the wrapper div in MG5_EvenOddAndArraysLab.tsx)
+   instead of :root/html/body, since this file is imported into one page of
+   a much larger app, not a standalone site — same reasoning as every other
+   lab's own _styles.css. This lab reuses the SAME shared engine chrome
+   those do (shared/styles/lab-base.css), so this file only holds: this
+   lab's own color palette (light + dark), and the handful of rules
+   genuinely unique to this lab's content (the gated Check-for-Understanding
+   box, and select.answer — lab-base.css's .answer styling only targets
+   `input.answer`, and this lab's CFU dropdowns are <select>s).
+   Import BOTH stylesheets, and add "lab-base" alongside "eoa-lab" on the
+   wrapper div. */
+
+.eoa-lab {
+  --bg: #f2f8fb;
+  --card: #ffffff;
+  --ink: #1c2b33;
+  --muted: #5c7480;
+  --line: #cfe3ea;
+  --grid: #e3eff4;
+  --qa: #2f7fbf;
+  --qa-soft: #dcebf7;
+  --qa-text: #205f8f;
+  --qb: #d98a2b;
+  --qb-soft: #fbe8cf;
+  --qb-text: #a6660f;
+  --qc: #7a5cd6;
+  --qc-soft: #e9e1fb;
+  --qc-text: #5c3fab;
+  --good: #289a66;
+  --good-soft: #ddf3e6;
+  --bad: #d4495b;
+  --bad-soft: #fbe3e7;
+  --on-q: #ffffff;
+  --radius-lg: 20px;
+  --radius-sm: 12px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--grid) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  -webkit-font-smoothing: antialiased;
+}
+/* .align-drill/.align-stack-wrap/.intro-gate-title aren't in lab-base.css —
+   they're the box chrome AlignDecimalsDrill (MG11) introduced for a
+   mandatory gated exercise, reused by every lab's Check-for-Understanding
+   gate since (RealWorldNegatives.tsx, MK1's units, MG1's units, and every
+   unit in this lab). */
+.eoa-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.eoa-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.eoa-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.eoa-lab .feedback.good {
+  color: var(--good);
+}
+/* lab-base.css's .answer styling is scoped to `input.answer` only — this
+   lab's Check-for-Understanding dropdowns are <select>s, which that
+   selector doesn't match (same pattern as every other lab's own
+   select.answer rule). */
+.eoa-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.eoa-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+/* A 2nd-grade audience benefits from a slightly larger choice button and a
+   thicker, friendlier border than the default lab-base.css styling (tuned
+   for older grades' denser multiple-choice text) — same reasoning as every
+   other early-grade lab's identical rule. */
+.eoa-lab .choice {
+  font-size: 18px;
+  border-width: 3px;
+  border-radius: var(--radius-lg);
+}
+/* Module test nav/card — same rules as every other lab's own module test
+   chrome, since this feature's markup is shared verbatim. */
+.eoa-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.eoa-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.eoa-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.eoa-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.eoa-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.eoa-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+.eoa-lab .module-test-back {
+  margin-bottom: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  .eoa-lab:not([data-theme="light"]) {
+    --bg: #121c22;
+    --card: #1b2a32;
+    --ink: #e7f1f5;
+    --muted: #9db6c2;
+    --line: #2f4752;
+    --grid: #203139;
+    --qa: #6ab7f0;
+    --qa-soft: #1d3a4d;
+    --qa-text: #a9dcfb;
+    --qb: #f0ab5c;
+    --qb-soft: #4a3214;
+    --qb-text: #f7c48e;
+    --qc: #b49bf0;
+    --qc-soft: #3a2f5a;
+    --qc-text: #ddcbfa;
+    --good: #5fd49c;
+    --good-soft: #1b3f30;
+    --bad: #ff7b8a;
+    --bad-soft: #492230;
+    --on-q: #0e1a22;
+  }
+}
+.eoa-lab[data-theme="dark"] {
+  --bg: #121c22;
+  --card: #1b2a32;
+  --ink: #e7f1f5;
+  --muted: #9db6c2;
+  --line: #2f4752;
+  --grid: #203139;
+  --qa: #6ab7f0;
+  --qa-soft: #1d3a4d;
+  --qa-text: #a9dcfb;
+  --qb: #f0ab5c;
+  --qb-soft: #4a3214;
+  --qb-text: #f7c48e;
+  --qc: #b49bf0;
+  --qc-soft: #3a2f5a;
+  --qc-text: #ddcbfa;
+  --good: #5fd49c;
+  --good-soft: #1b3f30;
+  --bad: #ff7b8a;
+  --bad-soft: #492230;
+  --on-q: #0e1a22;
+}

@@ -425,6 +425,147 @@ ELEMENTARY
           ReflectionFormulaQuestion. Explore's shape-composing sandbox uses native HTML5
           drag-and-drop (not pixel-coordinate SVG dragging), deliberately, since no browser
           was available this round to verify coordinate math visually.
+[x] MG5  — EvenOddAndArraysLab (MG5/MG5_EvenOddAndArraysLab.tsx) — wired as a
+          "standalone" skill, Grade 2, covering 2.OA.3-4 (Determining Odd and
+          Even, Even Numbers as Equal Addends, Rectangular Arrays — Finding
+          the Total, Arrays as Equal-Addend Equations) in one 4-unit module,
+          plus a cumulative 20-question Module Test (5 per unit, passScore
+          16/80%). Entry file + styles (MG5_EvenOddAndArraysLab_styles.css,
+          scoped under .eoa-lab) are flat in MG5/; supporting diagrams/ and
+          units/ live one level deeper, inside MG5/EvenOddAndArraysLab/.
+
+          Three new lab-local diagrams (not promoted — first consumer):
+          PairCounters.tsx (line/grid/scattered counters with an optional
+          index-order pairing overlay — pairing is drawn by INDEX, never
+          on-screen proximity, so the scattered bucket genuinely tests that
+          odd/even doesn't depend on arrangement), EqualGroups.tsx (two
+          counter clusters with a "+" between them, same-tone for valid
+          equal-addends splits and distinct-tone for the invalid/odd-number
+          trap buckets), and ArrayGrid.tsx (a zebra-tinted rows/columns grid
+          with group-size labels, reused by both the array-total unit and
+          the array-equation unit via a `groupBy` prop). ArrayGrid.tsx is a
+          shared/diagrams/ promotion candidate alongside the concurrently-
+          built ShapesAndEqualSharesLab's PartitionGrid.tsx (same MG5 slot)
+          once both labs are stable — not acted on this round per scope.
+
+          No new shared/engine Step kinds were needed — every question uses
+          the existing "number", "choice", and "ratio" (for writing N as two
+          equal addends in two boxes) step kinds.
+[x] MG5  — ShapesAndEqualSharesLab (MG5/MG5_ShapesAndEqualSharesLab.tsx) —
+          wired as a "standalone" skill, Grade 2, covering 2.G.1-3
+          (Classifying Shapes by Attributes, Partitioning Rectangles into
+          Rows and Columns, Equal Shares of Circles and Rectangles) in one
+          3-unit module, plus a 15-question Module Test (5/unit, passScore
+          12/80%). Entry file + styles (scoped under .seas-lab) are flat in
+          MG5/; diagrams/ and units/ live inside MG5/ShapesAndEqualSharesLab/.
+
+          Three new lab-local diagrams (not promoted — first consumer):
+          ShapeTile.tsx (regular + "jitter" irregular polygon variants,
+          always star-shaped from center so provably non-self-intersecting
+          — a reusable technique worth reaching for in any future geometry
+          lab needing "irregular but still counts" shape examples) +
+          CubeGlyph; PartitionGrid.tsx (rows×columns equal-square grid with
+          an uneven-trap mode); SharePartition.tsx (circle/rectangle
+          halves/thirds/fourths, with straight vs. diagonal cut styles so
+          the same whole can show differently-shaped-but-equal pieces).
+          PartitionGrid.tsx is a shared/diagrams/ promotion candidate
+          alongside the concurrently-built EvenOddAndArraysLab's
+          ArrayGrid.tsx (same MG5 slot); CubeGlyph is a near-duplicate of
+          MK4/ShapesLab/diagrams/Solid3D.tsx's cube-rendering branch. Neither
+          promoted this round — flagged for a future session with scope to
+          touch shared/.
+[x] MG5  — PlaceValueTo1000Lab (MG5/MG5_PlaceValueTo1000Lab.tsx) — wired as a
+          "standalone" skill, Grade 2, covering all of 2.NBT (2.NBT.1-4) in
+          one module: Hundreds, Tens, and Ones; Counting and Skip-Counting to
+          1000 (gated AND reintroEverySolved=20, since the skip-counting
+          sequences are meant for fluent recall); Reading and Writing Numbers
+          Three Ways; Comparing Three-Digit Numbers — plus a cumulative
+          20-question Module Test (5/unit, passScore 16/80%). Entry file +
+          styles (scoped under .pv1000-lab) are flat in MG5/; diagrams/,
+          logic.ts, and units/ live inside MG5/PlaceValueTo1000Lab/.
+
+          Three new lab-local diagrams (not promoted this round):
+          BaseTenBlocks.tsx (hundred-flats + tens-sticks + ones-cubes, a
+          near-verbatim one-place-up extension of MG2_PlaceValueTo120Lab's
+          own BaseTenBlocks.tsx — a promotion candidate once a third lab
+          needs this exact shape), PlaceValueChart.tsx (a 3-column
+          Hundreds|Tens|Ones digit chart with an optional highlighted
+          "deciding place," used solo and as a side-by-side pair for
+          comparisons), and CountingTrack.tsx (a progressively-revealed
+          counting/skip-counting sequence that flags a hundred-boundary
+          crossing). logic.ts holds digit/word/expanded-form/compare/
+          sequence helpers shared between each unit's Explore/Practice and
+          its own *Test.tsx only — never cross-unit, never Test-imports-from-
+          unit — same convention as MG1_AdditionAndSubtractionWithin20Lab.
+
+          No new shared/engine Step kinds were needed.
+[x] MG5  — ExtendingAdditionAndSubtractionLab (MG5/MG5_ExtendingAdditionAndSubtractionLab.tsx) —
+          wired as a "standalone" skill, Grade 2. Covers 2.OA.2 and all of
+          2.NBT.6-9 in one module: Within-20 Addition and Subtraction Fluency
+          (2.OA.2, reintroEverySolved since the standard names memorization),
+          Adding Up to Four Two-Digit Numbers (2.NBT.6), Adding and
+          Subtracting Within 1000 (2.NBT.7/7.1), Mental Math — Add or
+          Subtract 10 or 100 (2.NBT.8), and Explaining Why the Strategies
+          Work (2.NBT.9) — five units, plus a cumulative 25-question Module
+          Test (5/unit, passScore 20/80%). Deliberately does NOT re-cover
+          plain 2-digit + 2-digit addition/subtraction (MG6's
+          TwoDigitVisualAddition/VerticalAdditionSubtraction) or additive
+          word problems (MG6's BarModelPractice) — starts where those leave
+          off. Entry file + styles (scoped under .eas-lab) are flat in MG5/;
+          diagrams/ and units/ live inside MG5/ExtendingAdditionAndSubtractionLab/.
+
+          Four new lab-local diagrams (not promoted this round): TenFrame.tsx
+          (TenFrameGroup — the SECOND lab needing this exact shape after
+          MG1's own copy, a promotion candidate), PlaceValueColumns.tsx (the
+          stacked written-addition/subtraction layout, rendering straight
+          off a shared ColumnBreakdown object so picture and graded steps
+          can't drift), BaseTenBlocks.tsx (kept visible through Unit 3's
+          regrouping per the audience framing), and PlaceValueBoxes.tsx
+          (before/after digit boxes for ±10/±100, highlighting a ripple into
+          another digit — the direct visual for Unit 4's named
+          misconception). "Carry can be >1" (Unit 2) and "borrow through a
+          zero" (Unit 3) are both taught via RatioStep's existing two-box
+          format, no new Step kind needed.
+
+          Caught and fixed by this build's own brute-force verification
+          before shipping: Unit 3's estimate-reasonableness check could
+          false-negative a genuinely correct total; Unit 2's
+          carryDigitChoice/whichDigitBelowLine distractors could collide
+          with the correct choice; Unit 5's critiqueFlawedStrategy "flawed
+          answer" was accidentally identical to the correct total. All fixed
+          and re-verified over 20,000 trials.
+[x] MG5  — MeasurementMoneyAndDataLab (MG5/MG5_MeasurementMoneyAndDataLab.tsx) —
+          wired as a "standalone" skill. Covers 2.MD.1-10 in ONE 6-unit lab
+          (explicit user decision — NOT split into two labs despite the
+          approved plan's own recommendation to consider it): Measuring and
+          Estimating Length (2.MD.1/3), Comparing Measurement Units and
+          Length Differences (2.MD.2/4), Length Word Problems and the Number
+          Line (2.MD.5/6), Telling Time to 5 Minutes (2.MD.7), Money Word
+          Problems (2.MD.8), Line Plots and Picture/Bar Graphs (2.MD.9/10) —
+          plus a cumulative 30-question Module Test (5/unit, passScore
+          24/80%). Entry file + styles (scoped .mmd-lab) flat in MG5/;
+          diagrams/ and units/ one level deeper in MG5/MeasurementMoneyAndDataLab/.
+
+          Six new lab-local diagrams (not promoted): Ruler.tsx (one
+          rulerReading() function drives both drawing and every graded
+          answer — the "broken ruler" misconception is just a nonzero
+          objectStart), ClockG2.tsx (5-minute-resolution analog clock,
+          continuous hour hand — generalizes MG3/Clock.tsx's half-hour
+          version), Coins.tsx (coin/bill chips, click-to-add per this
+          codebase's click-to-select convention, not freeform drag),
+          NumberLineMD.tsx (position + sum/difference jump arcs — a
+          consolidation candidate: fold a `jumps` prop into
+          shared/diagrams/NumberLine.tsx in a future broader-scope session,
+          then retire this one), LinePlot.tsx, PictureBarGraph.tsx.
+
+          Two real bugs caught by brute-force verification and fixed before
+          shipping: Unit 3's number-line jump could walk off the 0-100 axis
+          when sign was chosen independently of magnitude; Unit 4's
+          elapsed-time-crossing-the-hour bucket had ~1/3 of combinations
+          that never actually crossed the hour. Both fixed by constraining
+          the randomization jointly instead of drawing values independently.
+
+          No new shared/engine Step kinds needed.
 [~] MG5  — TapeDiagram                  (MG5/MG5.tsx) — authored, not wired
 [x] MG6  — TwoDigitVisualAddition       (MG6/MG6_TwoDigitVisualAddition.tsx) — wired 2026-09-02
          — VerticalMath                 (MG6/MG6_VerticalAddition.tsx) — wired 2026-09-02

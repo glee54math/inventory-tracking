@@ -1,0 +1,200 @@
+/* Scoped under .seas-lab (the wrapper div in MG5_ShapesAndEqualSharesLab.tsx)
+   instead of :root/html/body, since this file is imported into one page of a much
+   larger app, not a standalone site — same reasoning as every other multi-file
+   Lab's own styles.css. This lab reuses the SAME shared engine chrome those do
+   (shared/styles/lab-base.css), so this file only holds: this lab's own color
+   palette (light + dark), and anything genuinely unique to this lab's own content.
+   Import BOTH stylesheets, and add "lab-base" alongside "seas-lab" on the wrapper div.
+   Class prefix "seas-" (Shapes & Equal Shares) is chosen to avoid colliding with any
+   sibling Grade-2 lab's own class prefix sharing this same MG5 slot folder. */
+
+.seas-lab {
+  --bg: #f6f8fc;
+  --card: #ffffff;
+  --ink: #1b2540;
+  --muted: #5d6782;
+  --line: #ccd4e8;
+  --grid: #e8edf8;
+  --qa: #2a6fbb;
+  --qa-soft: #d9e9fb;
+  --qa-text: #1f548a;
+  --qb: #c2410c;
+  --qb-soft: #fbe3d4;
+  --qb-text: #9a3408;
+  --qc: #7b4fd8;
+  --qc-soft: #e9e0fa;
+  --qc-text: #6334b8;
+  --good: #1f8f5f;
+  --good-soft: #d7f2e4;
+  --bad: #c93848;
+  --bad-soft: #fbe1e4;
+  --item-red: #c4432e;
+  --item-red-soft: #f6ddd6;
+  --item-red-text: #9a3420;
+  --item-green: #4c8c2b;
+  --item-green-soft: #e1edd4;
+  --item-green-text: #386b1f;
+  --item-yellow: #d4a72c;
+  --item-yellow-soft: #fbf1d1;
+  --item-yellow-text: #8c6b14;
+  --on-q: #ffffff;
+  --radius-lg: 18px;
+  --radius-sm: 10px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  -webkit-font-smoothing: antialiased;
+}
+/* .align-drill/.align-stack-wrap/.intro-gate-title aren't in lab-base.css —
+   they're the box chrome AlignDecimalsDrill (MG11) introduced for a mandatory
+   gated exercise, reused here (same convention as every other Lab's CFU). */
+.seas-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.seas-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.seas-lab .align-stack-wrap {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.seas-lab .feedback.good {
+  color: var(--good);
+}
+/* lab-base.css's .answer styling is scoped to `input.answer` only — this
+   lab's Check-for-Understanding dropdowns are <select>s, which that selector
+   doesn't match, so they need their own rule (same pattern as
+   MM1_NegativeNumbersLab_styles.css's / MG4_ShapesAndFractionsIntroLab_styles.css's
+   own select.answer rule). */
+.seas-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.seas-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+/* Module test nav/card — same rules as every other Lab's own module test chrome. */
+.seas-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.seas-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.seas-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.seas-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.seas-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.seas-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+.seas-lab .module-test-back {
+  margin-bottom: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  .seas-lab:not([data-theme="light"]) {
+    --bg: #121a26;
+    --card: #1b2636;
+    --ink: #e8eefa;
+    --muted: #9bacc4;
+    --line: #34435e;
+    --grid: #202c3e;
+    --qa: #7cb3ff;
+    --qa-soft: #243a58;
+    --qa-text: #a8d0ff;
+    --qb: #f2976a;
+    --qb-soft: #4a3018;
+    --qb-text: #f5b38f;
+    --qc: #b696f5;
+    --qc-soft: #382a5c;
+    --qc-text: #c7a8fa;
+    --good: #4cc98f;
+    --good-soft: #173d2e;
+    --bad: #ff6b7a;
+    --bad-soft: #45202a;
+    --item-red: #e8775e;
+    --item-red-soft: #4a2a22;
+    --item-red-text: #f2a68f;
+    --item-green: #7fc44b;
+    --item-green-soft: #243318;
+    --item-green-text: #a3db7a;
+    --item-yellow: #e8c455;
+    --item-yellow-soft: #4a3c14;
+    --item-yellow-text: #f2d98a;
+    --on-q: #0e1626;
+  }
+}
+.seas-lab[data-theme="dark"] {
+  --bg: #121a26;
+  --card: #1b2636;
+  --ink: #e8eefa;
+  --muted: #9bacc4;
+  --line: #34435e;
+  --grid: #202c3e;
+  --qa: #7cb3ff;
+  --qa-soft: #243a58;
+  --qa-text: #a8d0ff;
+  --qb: #f2976a;
+  --qb-soft: #4a3018;
+  --qb-text: #f5b38f;
+  --qc: #b696f5;
+  --qc-soft: #382a5c;
+  --qc-text: #c7a8fa;
+  --good: #4cc98f;
+  --good-soft: #173d2e;
+  --bad: #ff6b7a;
+  --bad-soft: #45202a;
+  --item-red: #e8775e;
+  --item-red-soft: #4a2a22;
+  --item-red-text: #f2a68f;
+  --item-green: #7fc44b;
+  --item-green-soft: #243318;
+  --item-green-text: #a3db7a;
+  --item-yellow: #e8c455;
+  --item-yellow-soft: #4a3c14;
+  --item-yellow-text: #f2d98a;
+  --on-q: #0e1626;
+}
