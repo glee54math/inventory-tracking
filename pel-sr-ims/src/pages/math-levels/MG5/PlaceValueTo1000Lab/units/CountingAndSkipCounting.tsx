@@ -228,7 +228,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div className="control-row">
-        <Segmented label="Count by" value={skipId} onChange={setSkipId} options={SKIP_OPTIONS} />
+        <Segmented label="Count by" value={skipId} onChange={setSkipId} options={[...SKIP_OPTIONS]} />
         <Stepper label="Start at" value={start} min={0} max={950} step={1} onChange={setStart} tone="a" />
         {!introActive && (
           <button

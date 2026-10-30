@@ -107,6 +107,13 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
     // checkable exercise), so it doesn't fit ProblemRenderer's "check answer" pattern.
     // Revisit once it either gains a gradable mode or ProblemRenderer supports a
     // non-gradable exploration mode.
+    {
+      type: "standalone",
+      skillId: "AreaAndPerimeterLab",
+      label: "Area & Perimeter",
+      componentFile: "MG6_AreaAndPerimeterLab",
+      componentExport: "AreaAndPerimeterLab",
+    },
   ],
   MG7: [
     {
@@ -120,6 +127,13 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       }),
     },
     // No wordProblem entry yet — MG7 isn't in WORD_PROBLEM_TOPICS.txt as "ready" yet.
+    {
+      type: "standalone",
+      skillId: "QuadrilateralsAndPartitioningLab",
+      label: "Quadrilaterals & Partitioning",
+      componentFile: "MG7_QuadrilateralsAndPartitioningLab",
+      componentExport: "QuadrilateralsAndPartitioningLab",
+    },
   ],
   MG11: [
     {

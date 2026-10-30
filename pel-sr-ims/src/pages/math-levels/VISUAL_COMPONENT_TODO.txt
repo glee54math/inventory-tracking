@@ -569,6 +569,23 @@ ELEMENTARY
 [~] MG5  — TapeDiagram                  (MG5/MG5.tsx) — authored, not wired
 [x] MG6  — TwoDigitVisualAddition       (MG6/MG6_TwoDigitVisualAddition.tsx) — wired 2026-09-02
          — VerticalMath                 (MG6/MG6_VerticalAddition.tsx) — wired 2026-09-02
+         — AreaAndPerimeterLab          (MG6/MG6_AreaAndPerimeterLab.tsx) — wired as a
+           "standalone" skill. Grade 3, 3.MD.5-8: Understanding Area as Tiling,
+           Area = Multiplying Side Lengths (reintroEverySolved 20), Area and the
+           Distributive Property, Composite and Rectilinear Areas, Perimeter
+           (reintroEverySolved 20) — every unit gated, plus a 25-question Module
+           Test (5/unit, passScore 20). Styles under .aap-lab; lib/, diagrams/,
+           units/ under MG6/AreaAndPerimeterLab/. lib/grid.ts is the single
+           source for drawing AND grading (cell matrix → countArea/
+           countPerimeter/boundaryEdges; splitRectangleAt/makeLShape).
+           Lab-local diagrams (not promoted): TilingGrid, RectanglePieces,
+           PolygonOutline. Unit 3 keeps rows whole and splits columns, matching
+           shared FactorRectangle's splitCols so the grade-6 symbolic unit's
+           picture is consistent. shared/ candidates: TilingGrid + lib/grid.ts
+           overlap MG7 QuadrilateralsAndPartitioningLab's GridPartition (unit
+           squares as cell sets); RectanglePieces' cut line overlaps its
+           CutLineRect. Brute-force caught area==perimeter (4×4, 3×6)
+           distractor collisions; fixed.
          — BarModelPractice             (MG6/MG6_BarModel.tsx) — wired 2026-09-30 as a
            "standalone" skill (not "visual" — see StandaloneLevelSkill in
            levelSubsections.ts). Multi-file skill: MG6_BarModel.tsx is the entry
@@ -593,6 +610,30 @@ ELEMENTARY
            (offered alongside Nx1Multiplication) before wiring it in.
          (MG7/MG7.tsx itself is still an empty shell — that's fine, the skill
          components are what's actually used, not the level shell file.)
+         — QuadrilateralsAndPartitioningLab (MG7/MG7_QuadrilateralsAndPartitioningLab.tsx) —
+           wired as a "standalone" skill, Grade 3, covering 3.G.1-2:
+           Attributes That Define Quadrilaterals, Drawing Quadrilaterals
+           Outside the Named Kinds, Partitioning into Equal Areas and Unit
+           Fractions — plus a 15-question Module Test (passScore 12). Styles
+           scoped under .qp-lab; diagrams/ and units/ under
+           MG7/QuadrilateralsAndPartitioningLab/. Unit 3 re-teaches "1/b =
+           one of b equal parts" itself, so it doesn't depend on
+           FractionsFoundationsLab being done first.
+
+           Three new lab-local diagrams (not promoted): QuadTile.tsx
+           (quadrilateral + distractor tiles; repeats MG4 ShapeTile's
+           outline pattern), QuadBuilder.tsx (grid-snapped 4-corner drag
+           builder — integer corners make every equal-side/right-angle/
+           parallel check exact, and one classifyQuad() drives both the live
+           checklist and the step's pass/fail), AreaPartition.tsx
+           (GridPartition: parts as unit-square cell sets so equal area =
+           equal count, including equal-area-different-shape templates; plus
+           CutLineRect, an Explore-only cut-line tool reusing MK3 LengthBars'
+           drag technique). GridPartition is a shared/ candidate if
+           AreaAndPerimeterLab ends up needing the same unit-square grid.
+           Drag-to-build steps appear only in Practice; Tests ask reasoning
+           questions about pictured shapes instead, so a no-feedback test can
+           never leave a student stuck on a drag step.
 [ ] MG8
 [x] MG9  — TwoDigitDivisionLab          (MG9/MG9_TwoDigitDivisionLab.tsx) — wired,
           standard 6.NS.2. Was already live in LEVEL_SKILLS but had never been

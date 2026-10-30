@@ -1,0 +1,167 @@
+/* Scoped under .aap-lab (the wrapper div in MG6_AreaAndPerimeterLab.tsx) instead of
+   :root/html/body, since this file is imported into one page of a much larger app —
+   same reasoning as every other lab stylesheet. Shared engine chrome comes from
+   shared/styles/lab-base.css; this file only holds this lab's own palette (light +
+   dark) and the small handful of classes lab-base.css doesn't have yet
+   (.align-drill/.intro-gate-title/.align-stack-wrap/.feedback.good for the gated
+   Check for Understanding drills, select.answer, and the module-test nav/card),
+   copied from MM1_ExponentsAndExpressionsLab_styles.css since the markup is identical.
+
+   Palette note: --qc (violet) is the PERIMETER color everywhere in this lab (the
+   border trace in TilingGrid, the outline in PolygonOutline), deliberately distinct
+   from --good (green), so "this is the perimeter" never reads as "this is correct".
+   --qa-soft (blue) is the AREA fill. Import BOTH stylesheets, and add "lab-base"
+   alongside "aap-lab" on the wrapper div. */
+
+.aap-lab {
+  --bg: #f3f7fc;
+  --card: #ffffff;
+  --ink: #18263d;
+  --muted: #5a6a84;
+  --line: #c8d4e6;
+  --grid: #e3eaf5;
+  --qa: #2563c9;
+  --qa-soft: #d8e5fb;
+  --qa-text: #1c4c9c;
+  --qb: #d97a14;
+  --qb-soft: #fbe6cc;
+  --qb-text: #a35a0b;
+  --qc: #8a3fd1;
+  --qc-soft: #ecdffa;
+  --qc-text: #6b2ca8;
+  --good: #1f8f5f;
+  --good-soft: #d7f2e4;
+  --bad: #c93848;
+  --bad-soft: #fbe1e4;
+  --on-q: #ffffff;
+  --radius-lg: 18px;
+  --radius-sm: 10px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  -webkit-font-smoothing: antialiased;
+}
+.aap-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.aap-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.aap-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.aap-lab .align-stack-wrap > p {
+  margin-bottom: 8px;
+}
+.aap-lab .feedback.good {
+  color: var(--good);
+}
+.aap-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+  max-width: 100%;
+}
+.aap-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+.aap-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.aap-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.aap-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.aap-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.aap-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.aap-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+.aap-lab .module-test-back {
+  margin-bottom: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  .aap-lab:not([data-theme="light"]) {
+    --bg: #111a29;
+    --card: #1a2638;
+    --ink: #e8eef8;
+    --muted: #a3b2ca;
+    --line: #34465f;
+    --grid: #213047;
+    --qa: #6fa3ff;
+    --qa-soft: #1f3557;
+    --qa-text: #a9c8ff;
+    --qb: #f3a24a;
+    --qb-soft: #47301a;
+    --qb-text: #f7c48b;
+    --qc: #c08cf5;
+    --qc-soft: #3a2753;
+    --qc-text: #dbbcfa;
+    --good: #4cc98f;
+    --good-soft: #173d2e;
+    --bad: #ff6b7a;
+    --bad-soft: #45202a;
+    --on-q: #0e1522;
+  }
+}
+.aap-lab[data-theme="dark"] {
+  --bg: #111a29;
+  --card: #1a2638;
+  --ink: #e8eef8;
+  --muted: #a3b2ca;
+  --line: #34465f;
+  --grid: #213047;
+  --qa: #6fa3ff;
+  --qa-soft: #1f3557;
+  --qa-text: #a9c8ff;
+  --qb: #f3a24a;
+  --qb-soft: #47301a;
+  --qb-text: #f7c48b;
+  --qc: #c08cf5;
+  --qc-soft: #3a2753;
+  --qc-text: #dbbcfa;
+  --good: #4cc98f;
+  --good-soft: #173d2e;
+  --bad: #ff6b7a;
+  --bad-soft: #45202a;
+  --on-q: #0e1522;
+}
