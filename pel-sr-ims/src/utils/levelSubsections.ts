@@ -116,6 +116,13 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
     },
     {
       type: "standalone",
+      skillId: "FractionsFoundationsLab",
+      label: "Fractions Foundations",
+      componentFile: "MG6_FractionsFoundationsLab",
+      componentExport: "FractionsFoundationsLab",
+    },
+    {
+      type: "standalone",
       skillId: "AreaAndPerimeterLab",
       label: "Area & Perimeter",
       componentFile: "MG6_AreaAndPerimeterLab",

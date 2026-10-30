@@ -586,6 +586,26 @@ ELEMENTARY
            Step kind. Tests use typed answers + wrong-method distractors
            instead, since a CustomStep can't be submitted wrong in a
            no-feedback test.
+         — FractionsFoundationsLab      (MG6/MG6_FractionsFoundationsLab.tsx) — wired as a
+           "standalone" skill. Grade 3, direct prerequisite to
+           MG9_IntroToFractionsLab. Covers 3.NF.1, 3.NF.2a-b, 3.NF.3a-d in five
+           units: What a Fraction Is, Fractions on a Number Line, Fractions
+           Equal to Whole Numbers, Equivalent Fractions, Comparing Fractions
+           (same numerator OR same denominator only) — plus a 25-question
+           Module Test (passScore 20). Styles scoped .ff-lab. Denominators
+           strictly {2,3,4,6,8} — the scope line against MG9 (no
+           cross-multiplying, no n×k/d×k rule, no mixed/improper
+           simplifying). Exception, deliberate: Unit 1's swapped-fraction
+           distractors (d/1, d/a) can fall outside the set, since they model
+           the named numerator/denominator mix-up. Equivalence uses 8 fixed
+           pairs (1/2=2/4, 1/2=3/6, 1/2=4/8, 1/3=2/6, 1/4=2/8, 2/3=4/6,
+           3/4=6/8, 2/4=4/8) plus 8 hand-checked near-miss pairs. Lab-local
+           diagrams: UnequalPartsBar, PartsCircle (near-verbatim copy of MG9's
+           FractionCircle — second consumer, shared/diagrams/ promotion
+           candidate), EquivalentBars (wrapper on shared TwoTierBars),
+           StackedNumberLines (two same-width shared NumberLines, so
+           equivalent points sit directly above each other without labels
+           overlapping). No shared/engine changes.
          — AreaAndPerimeterLab          (MG6/MG6_AreaAndPerimeterLab.tsx) — wired as a
            "standalone" skill. Grade 3, 3.MD.5-8: Understanding Area as Tiling,
            Area = Multiplying Side Lengths (reintroEverySolved 20), Area and the
