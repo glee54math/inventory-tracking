@@ -24,7 +24,7 @@ export default function WorkerSwitchModal({
 
   useEffect(() => {
     const loadWorkers = async () => {
-      const temp: Worker[] = await loadWorkersFromDB();
+      const temp: Worker[] = await loadWorkersFromDB({ includeInactive: false });
       setWorkersList(temp);
     };
     loadWorkers();

@@ -150,6 +150,9 @@ export interface Worker {
   lastName: string;
   initials: string;
   pin?: string;
+  location?: string; // Which workers/{location} doc this came from — tagged by loadWorkersFromDB/loadWorkersForLocation.
+  status?: "active" | "inactive"; // Missing/undefined is treated as active
+  inactiveSince?: string | null; // ISO date; set when marked inactive, cleared on reactivation
 }
 
 export interface TimesheetEntry {
@@ -176,6 +179,27 @@ export interface MonthlyTimesheetTotal {
   month: number; // 0-11
   totalMinutes: number;
   finalizedAt: Date;
+}
+
+export interface DataEntryCounts {
+  cleanWorksheets: number; // Worksheets graded fresh, no previous markings
+  correctionWorksheets: number; // Previously-graded worksheets, re-graded only on the questions marked wrong
+  foldersRecorded: number; // Student folders recorded that day
+  foldersPulled: number; // Student folders pulled that day
+  foldersRecordedAndPulled: number; // Student folders recorded and pulled on the same day
+}
+
+// One record per (worker, calendar day) — saving today's entry again overwrites that day's record.
+export interface DataEntryRecord extends DataEntryCounts {
+  date: string; // mm/dd/yy — unique key within a worker's entries array
+  updatedAt: Date; // last save time, for audit
+}
+
+// Firestore doc shape at dataEntries/{firstName}_{lastName}
+export interface WorkerDataEntries {
+  firstName: string;
+  lastName: string;
+  entries: DataEntryRecord[];
 }
 
 //Types for Parent Portal
