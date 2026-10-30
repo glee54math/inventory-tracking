@@ -651,6 +651,23 @@ ELEMENTARY
            Drag-to-build steps appear only in Practice; Tests ask reasoning
            questions about pictured shapes instead, so a no-feedback test can
            never leave a student stuck on a drag step.
+         — DivisionAndWordProblemsLab   (MG7/MG7_DivisionAndWordProblemsLab.tsx) — wired as a
+           "standalone" skill, listed FIRST in MG7 (concept before the Nx1
+           algorithm; MultiplicationFoundationsLab goes ahead of it once
+           built). Grade 3, 3.OA.2/4/6/7b/8, five units: What Division Means,
+           Division as an Unknown-Factor Problem, Division Fact Fluency (no
+           gate; reintroEverySolved omitted since it's inert without
+           requiresIntro — same resolution as MK2), Determining the Unknown,
+           Two-Step Word Problems (reasonableness kept as a bucket, not a
+           separate unit) — plus a 25-question Module Test (passScore 20).
+           Styles .dwp-lab. Self-contained one-digit facts table in Units 2-3,
+           since MultiplicationFoundationsLab isn't built yet. Easy-anchor
+           divisors are {1,2,5,10} (plan's "÷0" dropped as undefined).
+           Lab-local: EqualGroups (boxes/grid/pool + leftover tray) and
+           FactFamilyTriangle diagrams; units/cfu.tsx (FixedCFU, one gate
+           component reused by 4 units — shared/engine candidate).
+           EqualGroups overlaps MultiplicationFoundationsLab's and MK1/MK2's
+           CounterGroup/ObjectGroup — promotion candidate.
          — TimeMeasurementAndDataLab    (MG7/MG7_TimeMeasurementAndDataLab.tsx) — wired as a
            "standalone" skill. Grade 3, 3.MD.1-4, six units: Telling and
            Writing Time to the Minute, Elapsed Time and Time-Interval Word
