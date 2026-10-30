@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FractionBar } from "../diagrams";
 import { pick, randInt } from "../../../shared/lib/math";
+import { allFilled, answerBorder } from "../../../shared/lib/answerChecks";
 import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
@@ -65,6 +66,7 @@ function ComparingCheck({ onComplete }: { onComplete?: () => void }) {
   const [pieces, setPieces] = useState("");
   const [which, setWhich] = useState("");
   const [q1Checked, setQ1Checked] = useState(false);
+  const q1Filled = allFilled(pieces, which);
   const q1Done = q1Checked && pieces === "smaller" && which === "less";
 
   const [q2, setQ2] = useState<string | null>(null);
@@ -95,7 +97,7 @@ function ComparingCheck({ onComplete }: { onComplete?: () => void }) {
         </div>
         <p>
           A whole cut into 6 parts has{" "}
-          <select className="answer" value={pieces} onChange={(e) => setPieces(e.target.value)} aria-label="Bigger or smaller pieces" disabled={q1Done}>
+          <select className="answer" value={pieces} onChange={(e) => setPieces(e.target.value)} aria-label="Bigger or smaller pieces" disabled={q1Done} style={answerBorder(pieces === "smaller", q1Checked)}>
             <option value="" disabled>
               choose
             </option>
@@ -103,7 +105,7 @@ function ComparingCheck({ onComplete }: { onComplete?: () => void }) {
             <option value="smaller">smaller</option>
           </select>{" "}
           pieces than a whole cut into 3 parts, so 1/6 is{" "}
-          <select className="answer" value={which} onChange={(e) => setWhich(e.target.value)} aria-label="Greater or less" disabled={q1Done}>
+          <select className="answer" value={which} onChange={(e) => setWhich(e.target.value)} aria-label="Greater or less" disabled={q1Done} style={answerBorder(which === "less", q1Checked)}>
             <option value="" disabled>
               choose
             </option>
@@ -111,11 +113,11 @@ function ComparingCheck({ onComplete }: { onComplete?: () => void }) {
             <option value="less">less than</option>
           </select>{" "}
           1/3.
-          <button className="btn primary" type="button" style={{ marginLeft: 10 }} disabled={q1Done} onClick={() => setQ1Checked(true)}>
+          <button className="btn primary" type="button" style={{ marginLeft: 10 }} disabled={q1Done || !q1Filled} onClick={() => setQ1Checked(true)}>
             Check Answer
           </button>
         </p>
-        {q1Checked && (
+        {q1Checked && q1Filled && (
           <p className={`feedback ${q1Done ? "good" : "bad"}`} role="alert">
             {q1Done
               ? "Correct — more pieces means each piece is smaller, so 1/6 < 1/3, even though 6 is bigger than 3."

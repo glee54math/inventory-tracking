@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { allFilled, answerBorder } from "../../../shared/lib/answerChecks";
 
 // ============================================================================
 // FixedCFU — lab-local (NOT shared/engine) helper for a unit's required
@@ -84,6 +85,7 @@ function SentenceQBlock({ q, onDone }: { q: CfuSentenceQ; onDone: () => void }) 
   const [v1, setV1] = useState<number | "">("");
   const [v2, setV2] = useState<number | "">("");
   const [checked, setChecked] = useState(false);
+  const filled = allFilled(v1, v2);
   const done = checked && v1 === q.blank1.correct && v2 === q.blank2.correct;
   useEffect(() => {
     if (done) onDone();
@@ -96,6 +98,7 @@ function SentenceQBlock({ q, onDone }: { q: CfuSentenceQ; onDone: () => void }) 
         <select
           className="answer"
           disabled={done}
+          style={answerBorder(v1 === q.blank1.correct, checked)}
           value={v1}
           onChange={(e) => setV1(e.target.value === "" ? "" : Number(e.target.value))}
         >
@@ -112,6 +115,7 @@ function SentenceQBlock({ q, onDone }: { q: CfuSentenceQ; onDone: () => void }) 
         <select
           className="answer"
           disabled={done}
+          style={answerBorder(v2 === q.blank2.correct, checked)}
           value={v2}
           onChange={(e) => setV2(e.target.value === "" ? "" : Number(e.target.value))}
         >
@@ -125,11 +129,11 @@ function SentenceQBlock({ q, onDone }: { q: CfuSentenceQ; onDone: () => void }) 
           ))}
         </select>
         {q.after && <span>{q.after}</span>}
-        <button className="btn primary" type="button" disabled={done || v1 === "" || v2 === ""} onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={done || !filled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && filled && (
         <p className={`feedback ${done ? "good" : "bad"}`} role="alert">
           {done ? q.correctExplain : "Not quite — check both blanks again."}
         </p>

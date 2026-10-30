@@ -59,6 +59,7 @@ function BackwardsEquationsQuestion({ onComplete }: { onComplete?: () => void })
   const [a, setA] = useState("");
   const [b, setB] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [a, b].every((v) => String(v).trim() !== "");
   const aOk = a === "true";
   const bOk = b === "true";
   const ok = aOk && bOk;
@@ -92,11 +93,11 @@ function BackwardsEquationsQuestion({ onComplete }: { onComplete?: () => void })
             <option value="false">False</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — BOTH are true. 5 = 2 + 3 (5 both times), and 7 + 1 = 6 + 2 (8 both times). The sum doesn't have to sit alone on the right."

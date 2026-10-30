@@ -64,6 +64,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
   const [first, setFirst] = useState("");
   const [second, setSecond] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [first, second].every((v) => String(v).trim() !== "");
   const okFirst = first === BASE_ANS;
   const okSecond = second === EXP_ANS;
   const ok = okFirst && okSecond;
@@ -99,11 +100,11 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         .
       </p>
       <div className="control-row">
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — the base is the number being multiplied; the exponent says how many times." : "Not quite — the base is the number repeated; the exponent is the small number telling you how many times."}
         </p>
@@ -117,6 +118,7 @@ function RepeatedMultVsTimesQuestion({ onComplete }: { onComplete?: () => void }
   const [valuePick, setValuePick] = useState("");
   const [meaningPick, setMeaningPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [valuePick, meaningPick].every((v) => String(v).trim() !== "");
   const valueOk = valuePick === "9";
   const meaningOk = meaningPick === "multiply the base by itself that many times";
   const ok = valueOk && meaningOk;
@@ -147,11 +149,11 @@ function RepeatedMultVsTimesQuestion({ onComplete }: { onComplete?: () => void }
           <option value="multiply the base by itself that many times">multiply the base by itself that many times</option>
           <option value="multiply the base by the exponent">multiply the base by the exponent</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 3² means 3 × 3 = 9, not 3 × 2 = 6. An exponent multiplies the base by itself, it never multiplies the base by the exponent."

@@ -121,6 +121,7 @@ function CritiqueExampleQuestion({ onComplete }: { onComplete?: () => void }) {
   const [what, setWhat] = useState("");
   const [answer, setAnswer] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [what, answer].every((v) => String(v).trim() !== "");
   const ok = what === "carry" && answer === "85";
   useEffect(() => {
     if (checked && ok) onComplete?.();
@@ -146,11 +147,11 @@ function CritiqueExampleQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="75">75</option>
           <option value="85">85</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 8+7=15 means write 5, carry 1. Then 4+3+1=8. The real answer is 85, not 715." : "Not quite — the ones column (8+7=15) needed to carry its extra ten into the tens column. 4+3+1(carried)=8, so the real answer is 85."}
         </p>

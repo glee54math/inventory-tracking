@@ -4,6 +4,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { identifyingEquivalentExpressionsTest } from "./IdentifyingEquivalentExpressionsTest";
+import { answerBorder } from "../../../shared/lib/answerChecks";
 
 interface LinearExpr {
   coeffX: number;
@@ -100,6 +101,7 @@ function LookalikeTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   const [vBPick, setVBPick] = useState("");
   const [equivPick, setEquivPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [vAPick, vBPick, equivPick].every((v) => String(v).trim() !== "");
   const vAOk = Number(vAPick) === evaluateLinear(exprA, 5);
   const vBOk = Number(vBPick) === evaluateLinear(exprB, 5);
   const equivOk = equivPick === "No";
@@ -116,11 +118,11 @@ function LookalikeTrapQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           2(x+3) at x=5:{" "}
-          <input className="answer" style={{ width: 55 }} inputMode="numeric" value={vAPick} onChange={(e) => setVAPick(e.target.value)} />
+          <input className="answer" style={{ width: 55, ...answerBorder(vAOk, checked) }} inputMode="numeric" value={vAPick} onChange={(e) => setVAPick(e.target.value)} />
         </label>
         <label>
           2x+3 at x=5:{" "}
-          <input className="answer" style={{ width: 55 }} inputMode="numeric" value={vBPick} onChange={(e) => setVBPick(e.target.value)} />
+          <input className="answer" style={{ width: 55, ...answerBorder(vBOk, checked) }} inputMode="numeric" value={vBPick} onChange={(e) => setVBPick(e.target.value)} />
         </label>
       </div>
       <div className="control-row" style={{ alignItems: "center" }}>
@@ -134,11 +136,11 @@ function LookalikeTrapQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="No">No</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? `Correct — 2(x+3) at x=5 is ${evaluateLinear(exprA, 5)}, but 2x+3 at x=5 is only ${evaluateLinear(exprB, 5)}. Different values, so they're NOT equivalent — 2x+3 forgot to distribute the 2 to the 3.`

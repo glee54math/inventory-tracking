@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper, Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { understandingAreaAsTilingTest } from "./UnderstandingAreaAsTilingTest";
+import { answerBorder } from "../../../shared/lib/answerChecks";
 
 /** A notch that removes a corner or edge bite from a rows x cols rectangle,
  *  small enough that a real rectilinear shape (not the whole rectangle, not
@@ -91,6 +92,7 @@ function AreaVsPerimeterQuestion({ onComplete }: { onComplete?: () => void }) {
   const [areaGuess, setAreaGuess] = useState("");
   const [perimGuess, setPerimGuess] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [areaGuess, perimGuess].every((v) => String(v).trim() !== "");
   const okArea = Number(areaGuess) === area;
   const okPerim = Number(perimGuess) === perimeter;
   const ok = okArea && okPerim;
@@ -106,19 +108,19 @@ function AreaVsPerimeterQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           How many unit squares <b>cover</b> this shape (its area)?{" "}
-          <input className="answer" style={{ width: 55 }} inputMode="numeric" autoComplete="off" value={areaGuess} onChange={(e) => setAreaGuess(e.target.value)} />
+          <input className="answer" style={{ width: 55, ...answerBorder(okArea, checked) }} inputMode="numeric" autoComplete="off" value={areaGuess} onChange={(e) => setAreaGuess(e.target.value)} />
         </label>
       </div>
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           How many unit-square edges <b>trace around</b> its outside border (its perimeter)?{" "}
-          <input className="answer" style={{ width: 55 }} inputMode="numeric" autoComplete="off" value={perimGuess} onChange={(e) => setPerimGuess(e.target.value)} />
+          <input className="answer" style={{ width: 55, ...answerBorder(okPerim, checked) }} inputMode="numeric" autoComplete="off" value={perimGuess} onChange={(e) => setPerimGuess(e.target.value)} />
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? `Correct — ${area} unit squares cover the inside (area), but only ${perimeter} unit edges trace the border (perimeter). They're different questions about the same shape!`

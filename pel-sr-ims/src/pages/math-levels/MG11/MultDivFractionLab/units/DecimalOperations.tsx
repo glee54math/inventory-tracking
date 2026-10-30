@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { PlaceValueColumns } from "../diagrams";
 import { ManualDivisionLadder, computeLongDivision } from "../../../shared/diagrams";
 import { randInt } from "../../../shared/lib/math";
+import { allFilled } from "../../../shared/lib/answerChecks";
 import { choice, customStep, verticalMultiply, type Problem, type Step } from "../../../shared/engine/types";
 import { QA, QB, Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
@@ -105,6 +106,7 @@ function AlignDecimalsDrill({
   const ok2 = Number(a2) === bottomPlaces;
   const ok3 = a3.trim() === paddedTop;
   const allOk = ok1 && ok2 && ok3;
+  const filled1 = allFilled(a1, a2, a3);
 
   // Stage 2: once the concepts above check out, have the student rebuild the
   // aligned columns themselves, one digit box per place value — not one text
@@ -121,6 +123,9 @@ function AlignDecimalsDrill({
   const [checked2, setChecked2] = useState(!!prefilled);
   const slotOk = (str: string, vals: string[], i: number) => str[i] === " " || str[i] === "." || vals[i] === str[i];
   const allOk2 = topStr.split("").every((_, i) => slotOk(topStr, topVals, i)) && bottomStr.split("").every((_, i) => slotOk(bottomStr, bottomVals, i));
+  // Only real digit positions are input boxes — spaces and the decimal point are fixed.
+  const slotFilled = (str: string, vals: string[], i: number) => str[i] === " " || str[i] === "." || vals[i] !== "";
+  const filled2 = topStr.split("").every((_, i) => slotFilled(topStr, topVals, i)) && bottomStr.split("").every((_, i) => slotFilled(bottomStr, bottomVals, i));
 
   // Stage 3: once the columns are built correctly, combine them.
   const sumValue = operation === "add" ? ALIGN_TOP + ALIGN_BOTTOM : ALIGN_TOP - ALIGN_BOTTOM;
@@ -195,10 +200,10 @@ function AlignDecimalsDrill({
         </div>
         <PlaceholderZeroExample />
       </div>
-      <button className="btn primary" onClick={() => setChecked(true)}>
+      <button className="btn primary" disabled={!filled1} onClick={() => setChecked(true)}>
         Check my work
       </button>
-      {checked && (
+      {checked && filled1 && (
         <p className={`feedback ${allOk ? "good" : "bad"}`} role="alert">
           {allOk
             ? `Exactly — ${paddedTop} is equivalent to ${ALIGN_TOP}; placeholder zeros never change a number's value. Now build the lined-up columns yourself, one digit at a time:`
@@ -215,10 +220,10 @@ function AlignDecimalsDrill({
             </div>
             <div className="align-rule" style={{ width: `${width}em` }} />
           </div>
-          <button className="btn primary" onClick={() => setChecked2(true)}>
+          <button className="btn primary" disabled={!filled2} onClick={() => setChecked2(true)}>
             Check my setup
           </button>
-          {checked2 && (
+          {checked2 && filled2 && (
             <p className={`feedback ${allOk2 ? "good" : "bad"}`} role="alert">
               {allOk2 ? `Lined up perfectly — every digit is in the right place-value column. Now ${opWord} them:` : "Not quite — check that every digit sits in the same column as the matching place value above it."}
             </p>
@@ -420,6 +425,7 @@ function MultiplyDecimalsDrill({
   const okP2 = Number(p2) === partialTens;
   const ok1 = Number(s1) === wholeProduct;
   const allOk1 = okP1 && okP2 && ok1;
+  const filled1 = allFilled(p1, p2, s1);
 
   const [s2a, setS2a] = useState(prefilled ? String(placesA) : "");
   const [s2b, setS2b] = useState(prefilled ? String(placesB) : "");
@@ -429,6 +435,7 @@ function MultiplyDecimalsDrill({
   const ok2b = Number(s2b) === placesB;
   const ok2c = Number(s2c) === totalPlaces;
   const allOk2 = ok2a && ok2b && ok2c;
+  const filled2 = allFilled(s2a, s2b, s2c);
 
   const [s3, setS3] = useState(prefilled ? finalProduct : "");
   const [checked3, setChecked3] = useState(!!prefilled);
@@ -444,6 +451,7 @@ function MultiplyDecimalsDrill({
   const okV2 = Number(v2) === partialTens;
   const okV3 = v3.trim() === finalProduct;
   const allOk4 = okV1 && okV2 && okV3;
+  const filled4 = allFilled(v1, v2, v3);
 
   useEffect(() => {
     if (checked4 && allOk4) onComplete?.();
@@ -479,10 +487,10 @@ function MultiplyDecimalsDrill({
               </label>
             </div>
           </div>
-          <button className="btn primary" onClick={() => setChecked1(true)}>
+          <button className="btn primary" disabled={!filled1} onClick={() => setChecked1(true)}>
             Check my work
           </button>
-          {checked1 && (
+          {checked1 && filled1 && (
             <p className={`feedback ${allOk1 ? "good" : "bad"}`} role="alert">
               {allOk1
                 ? `Exactly — ${wholeA} × ${bOnes} = ${partialOnes}, ${wholeA} × ${bTens} = ${partialTens}, and ${partialOnes} + ${partialTens} = ${wholeProduct}.`
@@ -517,10 +525,10 @@ function MultiplyDecimalsDrill({
               </label>
             </div>
           </div>
-          <button className="btn primary" onClick={() => setChecked2(true)}>
+          <button className="btn primary" disabled={!filled2} onClick={() => setChecked2(true)}>
             Check my work
           </button>
-          {checked2 && (
+          {checked2 && filled2 && (
             <p className={`feedback ${allOk2 ? "good" : "bad"}`} role="alert">
               {allOk2
                 ? `Right — ${placesA} + ${placesB} = ${totalPlaces} decimal places total. Now place the decimal point in your product:`
@@ -596,10 +604,10 @@ function MultiplyDecimalsDrill({
               />
             </div>
           </div>
-          <button className="btn primary" onClick={() => setChecked4(true)}>
+          <button className="btn primary" disabled={!filled4} onClick={() => setChecked4(true)}>
             Check my work
           </button>
-          {checked4 && (
+          {checked4 && filled4 && (
             <p className={`feedback ${allOk4 ? "good" : "bad"}`} role="alert">
               {allOk4
                 ? `Exactly — the same two partial products and final answer as before, just written the standard way.`
@@ -758,6 +766,7 @@ function DivideDecimalsDrill({ onComplete, prefilled }: { onComplete?: () => voi
   const ok2a = Number(s2a) === shiftedDividend;
   const ok2b = Number(s2b) === shiftedDivisor;
   const allOk2 = ok2a && ok2b;
+  const filled2 = allFilled(s2a, s2b);
 
   // Step 3 manages its own fill-in-every-digit state internally (see
   // ManualDivisionLadder) and — unlike steps 1/2 — always starts blank, even
@@ -824,10 +833,10 @@ function DivideDecimalsDrill({ onComplete, prefilled }: { onComplete?: () => voi
               </label>
             </div>
           </div>
-          <button className="btn primary" onClick={() => setChecked2(true)}>
+          <button className="btn primary" disabled={!filled2} onClick={() => setChecked2(true)}>
             Check my work
           </button>
-          {checked2 && (
+          {checked2 && filled2 && (
             <p className={`feedback ${allOk2 ? "good" : "bad"}`} role="alert">
               {allOk2 ? `Right — ${shiftedDividend} ÷ ${shiftedDivisor} now, same value as ${DIV_DIVIDEND} ÷ ${DIV_DIVISOR}. Now divide:` : `Multiply each number by 10 — move the decimal point one place to the right.`}
             </p>

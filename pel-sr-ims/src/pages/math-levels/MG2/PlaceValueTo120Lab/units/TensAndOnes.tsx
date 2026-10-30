@@ -18,6 +18,7 @@ function StandardDecompQuestion({ onComplete }: { onComplete?: () => void }) {
   const [tens, setTens] = useState("");
   const [ones, setOnes] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [tens, ones].every((v) => String(v).trim() !== "");
   const tensOk = tens === "3";
   const onesOk = ones === "6";
   const ok = tensOk && onesOk;
@@ -57,11 +58,11 @@ function StandardDecompQuestion({ onComplete }: { onComplete?: () => void }) {
             ))}
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 36 is 3 tens and 6 ones. That's 30 + 6." : "Not quite — the first digit (3) is the tens, the second digit (6) is the ones."}
         </p>
@@ -76,6 +77,7 @@ function TeenDecompQuestion({ onComplete }: { onComplete?: () => void }) {
   const [hidesTen, setHidesTen] = useState("");
   const [onesCount, setOnesCount] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [hidesTen, onesCount].every((v) => String(v).trim() !== "");
   const hidesOk = hidesTen === "yes";
   const onesOk = onesCount === "4";
   const ok = hidesOk && onesOk;
@@ -112,11 +114,11 @@ function TeenDecompQuestion({ onComplete }: { onComplete?: () => void }) {
             ))}
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? 'Correct — even though "fourteen" doesn\'t sound like it has "ten" in it, 14 is still exactly 1 ten and 4 ones, same as every other two-digit number.'

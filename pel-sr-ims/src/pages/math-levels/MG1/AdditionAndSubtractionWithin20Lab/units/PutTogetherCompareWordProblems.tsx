@@ -21,6 +21,7 @@ function TotalOrAddendQuestion({ onComplete }: { onComplete?: () => void }) {
   const [role, setRole] = useState("");
   const [answer, setAnswer] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [role, answer].every((v) => String(v).trim() !== "");
   const roleOk = role === "total";
   const answerOk = answer === "9";
   const ok = roleOk && answerOk;
@@ -55,11 +56,11 @@ function TotalOrAddendQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="9">9</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — \"in all\" means the TOTAL. 4 + 5 = 9." : "Not quite — \"in all\" is asking for the TOTAL (both parts combined): 4 + 5 = 9."}
         </p>
@@ -73,6 +74,7 @@ function ManyWaysQuestion({ onComplete }: { onComplete?: () => void }) {
   const [waysPicked, setWaysPicked] = useState("");
   const [answer, setAnswer] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [waysPicked, answer].every((v) => String(v).trim() !== "");
   const waysOk = waysPicked === "more";
   const answerOk = answer === "4";
   const ok = waysOk && answerOk;
@@ -107,11 +109,11 @@ function ManyWaysQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="6">6</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — there's MORE than one way: 2 sports + 4 animal works, but so would 1 + 5, 3 + 3, and others. This story doesn't have one single right split."
@@ -128,6 +130,7 @@ function MoreAndFewerSameQuestion({ onComplete }: { onComplete?: () => void }) {
   const [moreAns, setMoreAns] = useState("");
   const [fewerAns, setFewerAns] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [moreAns, fewerAns].every((v) => String(v).trim() !== "");
   const moreOk = moreAns === "4";
   const fewerOk = fewerAns === "4";
   const ok = moreOk && fewerOk;
@@ -163,11 +166,11 @@ function MoreAndFewerSameQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="9">9</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — BOTH are 4! \"4 more\" and \"4 fewer\" describe the exact same gap between 9 and 5, just in different words: 9 − 5 = 4."
@@ -183,6 +186,7 @@ function FewerDirectionQuestion({ onComplete }: { onComplete?: () => void }) {
   const [calc, setCalc] = useState("");
   const [answer, setAnswer] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [calc, answer].every((v) => String(v).trim() !== "");
   const calcOk = calc === "9-5";
   const answerOk = answer === "4";
   const ok = calcOk && answerOk;
@@ -217,11 +221,11 @@ function FewerDirectionQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="9">9</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — always subtract the SMALLER from the BIGGER (9 − 5 = 4), no matter whose name is mentioned first in the sentence."

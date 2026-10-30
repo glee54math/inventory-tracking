@@ -54,6 +54,7 @@ function TensFirstReasoningQuestion({ onComplete }: { onComplete?: () => void })
   const [symbol, setSymbol] = useState("");
   const [why, setWhy] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [symbol, why].every((v) => String(v).trim() !== "");
   const symbolOk = symbol === "<";
   const whyOk = why === "tensFirst";
   const ok = symbolOk && whyOk;
@@ -88,11 +89,11 @@ function TensFirstReasoningQuestion({ onComplete }: { onComplete?: () => void })
             <option value="onesFirst">I always compare the ones digit first, no matter what</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 42 < 45. You always check the TENS digit first; only when the tens are TIED do you move on to compare the ones."

@@ -79,6 +79,7 @@ function RegroupHardCaseQuestion({ onComplete }: { onComplete?: () => void }) {
   const [val, setVal] = useState("");
   const [why, setWhy] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [val, why].every((v) => String(v).trim() !== "");
   const valOk = val === "43";
   const whyOk = why === "bundle";
   const ok = valOk && whyOk;
@@ -113,11 +114,11 @@ function RegroupHardCaseQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="ignore">8 + 5 = 13, but just write the 3 and ignore the extra ten</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 38 + 5 = 43. 8 + 5 = 13 ones, which is 1 new ten and 3 leftover ones. That new ten gets ADDED to the tens digit: 3 + 1 = 4 tens."

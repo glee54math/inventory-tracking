@@ -18,6 +18,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
   const [coefPick, setCoefPick] = useState("");
   const [termPick, setTermPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [coefPick, termPick].every((v) => String(v).trim() !== "");
   const coefOk = coefPick === "3";
   const termOk = termPick === "7";
   const ok = coefOk && termOk;
@@ -52,11 +53,11 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="7">7</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the coefficient (3) is the number multiplying the variable, and 7 is a term on its own (a constant term, with no variable attached)."
@@ -72,6 +73,7 @@ function SubtractFromTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   const [exprPick, setExprPick] = useState("");
   const [rulePick, setRulePick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [exprPick, rulePick].every((v) => String(v).trim() !== "");
   const exprOk = exprPick === "5-y";
   const ruleOk = rulePick === "B - A";
   const ok = exprOk && ruleOk;
@@ -104,11 +106,11 @@ function SubtractFromTrapQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="A - B">A − B</option>
           <option value="B - A">B − A</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — \"subtract A from B\" always means B − A. The number you start FROM comes first, even though \"A\" is named first in the sentence."
@@ -161,6 +163,7 @@ function ParenDualQuestion({ onComplete }: { onComplete?: () => void }) {
   const [sumPick, setSumPick] = useState("");
   const [wholePick, setWholePick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [sumPick, wholePick].every((v) => String(v).trim() !== "");
   const sumOk = sumPick === "a sum";
   const wholeOk = wholePick === "a product";
   const ok = sumOk && wholeOk;
@@ -194,11 +197,11 @@ function ParenDualQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="a product">a product of two factors</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — (8+7) is a sum of two terms (8 and 7), but once you multiply it by 2, the WHOLE expression 2(8+7) is a product of two factors: 2 and (8+7). A parenthesized group can be both at once, depending on what you're looking at."

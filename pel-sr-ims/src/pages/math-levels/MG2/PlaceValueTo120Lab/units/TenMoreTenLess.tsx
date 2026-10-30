@@ -56,6 +56,7 @@ function TenLessCrossingQuestion({ onComplete }: { onComplete?: () => void }) {
   const [val, setVal] = useState("");
   const [why, setWhy] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [val, why].every((v) => String(v).trim() !== "");
   const valOk = val === "2";
   const whyOk = why === "digit";
   const ok = valOk && whyOk;
@@ -90,11 +91,11 @@ function TenLessCrossingQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="recount">Counted backward one at a time from 12: 11, 10, 9...</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 10 less than 12 is 2. The tens digit dropped from 1 to 0 (so it disappears), and the ones digit (2) never changed. No recounting needed!"

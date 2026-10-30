@@ -20,6 +20,7 @@ function DecomposeVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   const [verbPick, setVerbPick] = useState("");
   const [namePick, setNamePick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [verbPick, namePick].every((v) => String(v).trim() !== "");
   const verbOk = verbPick === "decomposing";
   const nameOk = namePick === "parts";
   const ok = verbOk && nameOk;
@@ -56,11 +57,11 @@ function DecomposeVocabQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="numerals">numerals</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — breaking 7 into 4 and 3 is called decomposing it, and 4 and 3 are the two parts." : "Not quite — breaking a number into pieces is called decomposing it, and the pieces are called parts, not digits or numerals."}
         </p>
@@ -150,6 +151,7 @@ function EqualPartsQuestion({ onComplete }: { onComplete?: () => void }) {
   const [canPick, setCanPick] = useState("");
   const [partsPick, setPartsPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [canPick, partsPick].every((v) => String(v).trim() !== "");
   const canOk = canPick === "true";
   const partsOk = partsPick === "4";
   const ok = canOk && partsOk;
@@ -184,11 +186,11 @@ function EqualPartsQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="5">5</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 8 = 4 + 4, two EQUAL parts. Equal parts are still a valid decomposition, just like any other pair."

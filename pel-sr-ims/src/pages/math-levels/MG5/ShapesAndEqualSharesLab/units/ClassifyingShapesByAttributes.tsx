@@ -64,6 +64,7 @@ function SameCategoryQuestion({ onComplete }: { onComplete?: () => void }) {
   const [same, setSame] = useState("");
   const [different, setDifferent] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [same, different].every((v) => String(v).trim() !== "");
   const okSame = same === "sides";
   const okDifferent = different === "look";
   const ok = okSame && okDifferent;
@@ -102,10 +103,10 @@ function SameCategoryQuestion({ onComplete }: { onComplete?: () => void }) {
         </select>
         .
       </p>
-      <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+      <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
         Check Answer
       </button>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Right — 5 sides and 5 angles is what matters; size, lopsidedness, and which way it's turned don't."

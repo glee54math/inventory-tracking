@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { compositeRectilinearAreasTest } from "./CompositeRectilinearAreasTest";
+import { answerBorder } from "../../../shared/lib/answerChecks";
 
 /** A random L-shape with every piece and the notch at least 2 squares on a
  *  side (keeps both notch-edge labels from colliding — see lShapeNotes). */
@@ -80,6 +81,7 @@ function MissingDimensionQuestion({ onComplete }: { onComplete?: () => void }) {
   const [h, setH] = useState("");
   const [total, setTotal] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [w, h, total].every((v) => String(v).trim() !== "");
   const okW = Number(w) === s.edges.notchWidth;
   const okH = Number(h) === s.edges.right;
   const okT = Number(total) === s.area;
@@ -94,12 +96,12 @@ function MissingDimensionQuestion({ onComplete }: { onComplete?: () => void }) {
       </p>
       <RectanglePieces pieces={[s.pieces[0], { ...s.pieces[1], label: "?" }]} notes={lShapeNotes(s, ["notchWidth", "right"])} cellPx={26} />
       <div className="control-row" style={{ alignItems: "center" }}>
-        <label>Orange width <input className="answer" style={{ width: 50 }} inputMode="numeric" value={w} onChange={(e) => setW(e.target.value)} /></label>
-        <label>Orange height <input className="answer" style={{ width: 50 }} inputMode="numeric" value={h} onChange={(e) => setH(e.target.value)} /></label>
-        <label>Total area <input className="answer" style={{ width: 60 }} inputMode="numeric" value={total} onChange={(e) => setTotal(e.target.value)} /></label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>Check Answer</button>
+        <label>Orange width <input className="answer" style={{ width: 50, ...answerBorder(okW, checked) }} inputMode="numeric" value={w} onChange={(e) => setW(e.target.value)} /></label>
+        <label>Orange height <input className="answer" style={{ width: 50, ...answerBorder(okH, checked) }} inputMode="numeric" value={h} onChange={(e) => setH(e.target.value)} /></label>
+        <label>Total area <input className="answer" style={{ width: 60, ...answerBorder(okT, checked) }} inputMode="numeric" value={total} onChange={(e) => setTotal(e.target.value)} /></label>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>Check Answer</button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? `Correct — width = 8 − 5 = 3 and height = 6 − 2 = 4, so the orange piece is 4 × 3 = 12. Total: 30 + 12 = ${s.area}.`

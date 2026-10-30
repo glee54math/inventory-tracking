@@ -22,6 +22,7 @@ function RowsAndColumnsDirectionQuestion({ onComplete }: { onComplete?: () => vo
   const [rowDir, setRowDir] = useState("");
   const [colDir, setColDir] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [rowDir, colDir].every((v) => String(v).trim() !== "");
   const ok1 = rowDir === "across";
   const ok2 = colDir === "updown";
   const ok = ok1 && ok2;
@@ -55,11 +56,11 @@ function RowsAndColumnsDirectionQuestion({ onComplete }: { onComplete?: () => vo
             <option value="updown">Up and down</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — rows run across, columns run up and down." : "Not quite — ROWS run across (left to right); COLUMNS run up and down."}
         </p>
@@ -152,6 +153,7 @@ function RunningRowTotalsQuestion({ onComplete }: { onComplete?: () => void }) {
   const [second, setSecond] = useState("");
   const [third, setThird] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [second, third].every((v) => String(v).trim() !== "");
   const ok1 = second === "8";
   const ok2 = third === "12";
   const ok = ok1 && ok2;
@@ -189,11 +191,11 @@ function RunningRowTotalsQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="13">13</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 4, 8, 12. Each new row adds exactly 4 more — skipping or double-counting a row would throw off every total after it."

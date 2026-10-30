@@ -21,6 +21,7 @@ function LastNumberVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   const [meaningPick, setMeaningPick] = useState("");
   const [totalPick, setTotalPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [meaningPick, totalPick].every((v) => String(v).trim() !== "");
   const meaningOk = meaningPick === "total";
   const totalOk = totalPick === "5";
   const ok = meaningOk && totalOk;
@@ -56,11 +57,11 @@ function LastNumberVocabQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="6">6</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? 'Correct — the last number you say ("5") isn\'t just a label for the last block — it tells you the TOTAL count of every block in the group.'
@@ -76,6 +77,7 @@ function RecountQuestion({ onComplete }: { onComplete?: () => void }) {
   const [recountPick, setRecountPick] = useState("");
   const [everDifferentPick, setEverDifferentPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [recountPick, everDifferentPick].every((v) => String(v).trim() !== "");
   const recountOk = recountPick === "6";
   const everDifferentOk = everDifferentPick === "false";
   const ok = recountOk && everDifferentOk;
@@ -110,11 +112,11 @@ function RecountQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="false">False</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — counting again doesn't start the amount over at 0; the group still has 6 toys, so counting it correctly always gives 6 again."
@@ -171,6 +173,7 @@ function OneMoreQuestion({ onComplete }: { onComplete?: () => void }) {
   const [totalPick, setTotalPick] = useState("");
   const [oneMorePick, setOneMorePick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [totalPick, oneMorePick].every((v) => String(v).trim() !== "");
   const totalOk = totalPick === "7";
   const oneMoreOk = oneMorePick === "8";
   const ok = totalOk && oneMoreOk;
@@ -207,11 +210,11 @@ function OneMoreQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="9">9</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — there are 7, and one more counter would make 8. Every time you add exactly one more object, the new total is always exactly one bigger — never two, never the same."

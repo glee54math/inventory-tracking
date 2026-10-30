@@ -163,6 +163,7 @@ function NearHourQuestion({ onComplete }: { onComplete?: () => void }) {
   const [whichHour, setWhichHour] = useState("");
   const [whyPicked, setWhyPicked] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [whichHour, whyPicked].every((v) => String(v).trim() !== "");
   const hourOk = whichHour === "2";
   const whyOk = whyPicked === "notYet";
   const ok = hourOk && whyOk;
@@ -197,11 +198,11 @@ function NearHourQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="closer">Whichever number the hour hand looks closest to is the hour</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the hour only changes once the minute hand completes its full trip around to 12. At 2:58 the minute hand still has 2 minutes left, so it's still the 2 o'clock hour."

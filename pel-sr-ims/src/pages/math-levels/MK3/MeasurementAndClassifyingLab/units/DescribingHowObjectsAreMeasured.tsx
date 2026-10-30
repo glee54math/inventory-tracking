@@ -56,6 +56,7 @@ function VocabWordsQuestion({ onComplete }: { onComplete?: () => void }) {
   const [weightPick, setWeightPick] = useState("");
   const [lengthPick, setLengthPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [weightPick, lengthPick].every((v) => String(v).trim() !== "");
   const weightOk = weightPick === "heavy";
   const lengthOk = lengthPick === "long";
   const ok = weightOk && lengthOk;
@@ -89,11 +90,11 @@ function VocabWordsQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="long">long</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? '"Heavy" is about weight, and "long" is about length — even though "tall" and "light" sound like they could also fit, "tall" is really about length and "light" is really about weight.'
@@ -110,6 +111,7 @@ function SizeVsWeightQuestion({ onComplete }: { onComplete?: () => void }) {
   const [biggerPick, setBiggerPick] = useState("");
   const [heavierPick, setHeavierPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [biggerPick, heavierPick].every((v) => String(v).trim() !== "");
   const biggerOk = biggerPick === "balloon";
   const heavierOk = heavierPick === "rock";
   const ok = biggerOk && heavierOk;
@@ -147,11 +149,11 @@ function SizeVsWeightQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="rock">rock</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the balloon looks bigger, but the rock is heavier. Looking bigger and being heavier are two different things."
@@ -204,6 +206,7 @@ function TwoAttributesQuestion({ onComplete }: { onComplete?: () => void }) {
   const [lengthPick, setLengthPick] = useState("");
   const [weightPick, setWeightPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [lengthPick, weightPick].every((v) => String(v).trim() !== "");
   const lengthOk = lengthPick === "long";
   const weightOk = weightPick === "heavy";
   const ok = lengthOk && weightOk;
@@ -238,11 +241,11 @@ function TwoAttributesQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="light">light</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the train is BOTH long AND heavy. One object can have more than one measurable attribute at the same time."

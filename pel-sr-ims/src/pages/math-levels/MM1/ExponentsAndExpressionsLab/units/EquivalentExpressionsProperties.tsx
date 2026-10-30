@@ -56,6 +56,7 @@ function ExpandVsFactorQuestion({ onComplete }: { onComplete?: () => void }) {
   const [samePick, setSamePick] = useState("");
   const [formPick, setFormPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [samePick, formPick].every((v) => String(v).trim() !== "");
   const sameOk = samePick === "4x+12";
   const formOk = formPick === "factored form";
   const ok = sameOk && formOk;
@@ -89,11 +90,11 @@ function ExpandVsFactorQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="expanded form">expanded form</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — distributing the 4 to BOTH terms gives 4x + 12, not 4x + 3 (that forgets to multiply the 3 by 4). And 4(x+3) is already factored form — a product of two factors."
@@ -146,6 +147,7 @@ function FactorGCFQuestion({ onComplete }: { onComplete?: () => void }) {
   const [gcfPick, setGcfPick] = useState("");
   const [formPick, setFormPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [gcfPick, formPick].every((v) => String(v).trim() !== "");
   const gcfOk = gcfPick === "4";
   const formOk = formPick === "4(3x+2)";
   const ok = gcfOk && formOk;
@@ -180,11 +182,11 @@ function FactorGCFQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="2(6x+4)">2(6x+4)</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the GCF of 12 and 8 is 4: 12x + 8 = 4(3x + 2). (2(6x+4) is also technically true, but 2 isn't the GREATEST common factor, so it's not fully factored.)"

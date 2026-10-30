@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { areaMultiplyingSideLengthsTest } from "./AreaMultiplyingSideLengthsTest";
+import { answerBorder } from "../../../shared/lib/answerChecks";
 
 const RUG_ITEMS = ["rug", "tile floor", "garden bed", "bulletin board", "poster"] as const;
 
@@ -93,6 +94,7 @@ function InverseOperationQuestion({ onComplete }: { onComplete?: () => void }) {
   const [opPicked, setOpPicked] = useState("");
   const [valueGuess, setValueGuess] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [opPicked, valueGuess].every((v) => String(v).trim() !== "");
   const okOp = opPicked === "divide";
   const okValue = Number(valueGuess) === 4;
   const ok = okOp && okValue;
@@ -105,7 +107,7 @@ function InverseOperationQuestion({ onComplete }: { onComplete?: () => void }) {
         <b>3.</b> A rectangle has an area of 24 square units and one side is 6 units long. What operation undoes multiplication to find the other side — and what is it?
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={opPicked} onChange={(e) => setOpPicked(e.target.value)}>
+        <select className="answer" style={answerBorder(okOp, checked)} value={opPicked} onChange={(e) => setOpPicked(e.target.value)}>
           <option value="" disabled>
             choose
           </option>
@@ -114,13 +116,13 @@ function InverseOperationQuestion({ onComplete }: { onComplete?: () => void }) {
         </select>
         <label>
           Other side ={" "}
-          <input className="answer" style={{ width: 55 }} inputMode="numeric" autoComplete="off" value={valueGuess} onChange={(e) => setValueGuess(e.target.value)} />
+          <input className="answer" style={{ width: 55, ...answerBorder(okValue, checked) }} inputMode="numeric" autoComplete="off" value={valueGuess} onChange={(e) => setValueGuess(e.target.value)} />
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — division undoes multiplication: 24 ÷ 6 = 4, the other side."

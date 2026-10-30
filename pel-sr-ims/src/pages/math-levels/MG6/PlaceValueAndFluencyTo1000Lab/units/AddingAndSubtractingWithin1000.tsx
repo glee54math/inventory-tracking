@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { randInt, pick } from "../../../shared/lib/math";
+import { allFilled } from "../../../shared/lib/answerChecks";
 import { customStep, type Problem } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 import { PlaceValueBlocks } from "../diagrams/PlaceValueBlocks";
@@ -82,6 +83,7 @@ function VerticalOpWidget({ a, b, op, onDone }: { a: number; b: number; op: "add
   const mark1Ok = mark1 === String(breakdown.marks[0]);
   const mark2Ok = mark2 === String(breakdown.marks[1]);
   const allOk = digitsOk && mark1Ok && mark2Ok;
+  const filled = allFilled(mark1, mark2, ...digitVals);
 
   useEffect(() => {
     if (checked && allOk) onDone();
@@ -160,10 +162,10 @@ function VerticalOpWidget({ a, b, op, onDone }: { a: number; b: number; op: "add
           ))}
         </div>
       </div>
-      <button type="button" className="btn primary" style={{ marginTop: 10 }} onClick={() => setChecked(true)}>
+      <button type="button" className="btn primary" style={{ marginTop: 10 }} disabled={!filled} onClick={() => setChecked(true)}>
         Check
       </button>
-      {checked && !allOk && (
+      {checked && filled && !allOk && (
         <p className="feedback bad" role="alert">
           Not yet — check the small {op === "add" ? "carry" : "borrow"} boxes first (0 if that column didn't need to regroup, 1 if it did), then each result digit.
         </p>

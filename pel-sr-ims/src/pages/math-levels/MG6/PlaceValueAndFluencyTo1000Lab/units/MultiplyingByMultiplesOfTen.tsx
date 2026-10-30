@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { randInt, pick } from "../../../shared/lib/math";
+import { allFilled, answerBorder } from "../../../shared/lib/answerChecks";
 import { type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
@@ -79,7 +80,9 @@ function FactsRefresher() {
 function Mult10Gate({ onComplete }: { onComplete?: () => void }) {
   const [q1a, setQ1a] = useState("");
   const [q1b, setQ1b] = useState("");
-  const q1Done = q1a === "tens" && q1b === "tens";
+  const [q1Checked, setQ1Checked] = useState(false);
+  const q1Filled = allFilled(q1a, q1b);
+  const q1Done = q1Checked && q1a === "tens" && q1b === "tens";
   const [q2, setQ2] = useState("");
   const q2Done = q2 === "place";
   const [q3, setQ3] = useState("");
@@ -92,8 +95,9 @@ function Mult10Gate({ onComplete }: { onComplete?: () => void }) {
     if (allDone) onComplete?.();
   }, [allDone, onComplete]);
 
-  const sel = (value: string, set: (v: string) => void, label: string, options: [string, string][]) => (
-    <select className="answer" aria-label={label} value={value} onChange={(e) => set(e.target.value)}>
+  // `border` (optional) gives this one box its own green/red outline after a Check.
+  const sel = (value: string, set: (v: string) => void, label: string, options: [string, string][], border?: CSSProperties, disabled?: boolean) => (
+    <select className="answer" aria-label={label} value={value} onChange={(e) => set(e.target.value)} style={border} disabled={disabled}>
       <option value="" disabled>
         choose
       </option>
@@ -111,10 +115,16 @@ function Mult10Gate({ onComplete }: { onComplete?: () => void }) {
 
       <div className="align-stack-wrap">
         <p>
-          <b>1.</b> 7 × 80 is the same as 7 × 8 {sel(q1a, setQ1a, "first unit", [["ones", "ones"], ["tens", "tens"]])}, which is 56{" "}
-          {sel(q1b, setQ1b, "second unit", [["ones", "ones"], ["tens", "tens"]])} — so 7 × 80 = 560.
+          <b>1.</b> 7 × 80 is the same as 7 × 8{" "}
+          {sel(q1a, setQ1a, "first unit", [["ones", "ones"], ["tens", "tens"]], answerBorder(q1a === "tens", q1Checked), q1Done)}, which is 56{" "}
+          {sel(q1b, setQ1b, "second unit", [["ones", "ones"], ["tens", "tens"]], answerBorder(q1b === "tens", q1Checked), q1Done)} — so 7 × 80 = 560.
         </p>
-        {(q1a || q1b) && (
+        <div className="control-row">
+          <button className="btn primary" type="button" disabled={q1Done || !q1Filled} onClick={() => setQ1Checked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {q1Checked && q1Filled && (
           <p className={`feedback ${q1Done ? "good" : "bad"}`} role="alert">
             {q1Done ? "Right — 80 is 8 tens, so 7 × 80 is 56 tens, and 56 tens is 560." : "Not quite — how many tens are in 80?"}
           </p>

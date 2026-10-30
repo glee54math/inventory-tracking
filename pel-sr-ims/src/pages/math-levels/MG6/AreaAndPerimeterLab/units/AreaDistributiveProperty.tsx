@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { areaDistributivePropertyTest } from "./AreaDistributivePropertyTest";
+import { answerBorder } from "../../../shared/lib/answerChecks";
 
 // Note on the grade-6 thread: MM1/ExponentsAndExpressionsLab's "Equivalent
 // Expressions via Properties" unit later writes this same idea symbolically
@@ -61,6 +62,7 @@ function CarryFullHeightQuestion({ onComplete }: { onComplete?: () => void }) {
   const [a, setA] = useState("");
   const [b, setB] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [a, b].every((v) => String(v).trim() !== "");
   const ok = a === "4" && b === "4";
   useEffect(() => {
     if (checked && ok) onComplete?.();
@@ -72,21 +74,21 @@ function CarryFullHeightQuestion({ onComplete }: { onComplete?: () => void }) {
       </p>
       <RectanglePieces pieces={splitRectangleAt(4, 9, 6).map((p) => ({ ...p, label: "?" }))} cellPx={24} showGrid />
       <p>
-        Left piece: <select className="answer" value={a} onChange={(e) => setA(e.target.value)}>
+        Left piece: <select className="answer" style={answerBorder(a === "4", checked)} value={a} onChange={(e) => setA(e.target.value)}>
           <option value="" disabled>?</option>
           {["2", "3", "4", "6"].map((v) => <option key={v} value={v}>{v} rows tall</option>)}
         </select>{" "}
-        Right piece: <select className="answer" value={b} onChange={(e) => setB(e.target.value)}>
+        Right piece: <select className="answer" style={answerBorder(b === "4", checked)} value={b} onChange={(e) => setB(e.target.value)}>
           <option value="" disabled>?</option>
           {["1", "2", "3", "4"].map((v) => <option key={v} value={v}>{v} rows tall</option>)}
         </select>
       </p>
       <div className="control-row">
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the cut only splits the WIDTH. Both pieces are still the full 4 rows tall: 4 × 6 + 4 × 3 = 24 + 12 = 36 = 4 × 9."
@@ -133,6 +135,7 @@ function ExplainWhyQuestion({ onComplete }: { onComplete?: () => void }) {
   const [a, setA] = useState("");
   const [b, setB] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [a, b].every((v) => String(v).trim() !== "");
   const ok = a === "counted once" && b === "add";
   useEffect(() => {
     if (checked && ok) onComplete?.();
@@ -141,14 +144,14 @@ function ExplainWhyQuestion({ onComplete }: { onComplete?: () => void }) {
     <div className="align-stack-wrap">
       <p>
         <b>4.</b> Finish the explanation: splitting and adding gives the same answer as multiplying the whole rectangle, because every unit square is{" "}
-        <select className="answer" value={a} onChange={(e) => setA(e.target.value)}>
+        <select className="answer" style={answerBorder(a === "counted once", checked)} value={a} onChange={(e) => setA(e.target.value)}>
           <option value="" disabled>choose</option>
           <option value="counted once">still counted exactly once</option>
           <option value="counted twice">counted twice, once in each piece</option>
           <option value="thrown away">thrown away along the cut</option>
         </select>
         , so we{" "}
-        <select className="answer" value={b} onChange={(e) => setB(e.target.value)}>
+        <select className="answer" style={answerBorder(b === "add", checked)} value={b} onChange={(e) => setB(e.target.value)}>
           <option value="" disabled>choose</option>
           <option value="add">add the two pieces' areas</option>
           <option value="multiply">multiply the two pieces' areas</option>
@@ -156,9 +159,9 @@ function ExplainWhyQuestion({ onComplete }: { onComplete?: () => void }) {
         .
       </p>
       <div className="control-row">
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>Check Answer</button>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>Check Answer</button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Exactly — each square lands in exactly one piece, so adding the pieces gives back the whole." : "Not quite — think about one unit square. After the cut, how many pieces is it in? And to combine two pieces' areas, do we add or multiply?"}
         </p>

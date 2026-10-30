@@ -7,6 +7,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { perimeterTest } from "./PerimeterTest";
+import { answerBorder } from "../../../shared/lib/answerChecks";
 
 const UNITS = ["cm", "in", "ft", "m"] as const;
 
@@ -87,6 +88,7 @@ function SameNumbersQuestion({ onComplete }: { onComplete?: () => void }) {
   const [areaGuess, setAreaGuess] = useState("");
   const [perimGuess, setPerimGuess] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [areaGuess, perimGuess].every((v) => String(v).trim() !== "");
   const okA = Number(areaGuess) === l * w;
   const okP = Number(perimGuess) === 2 * l + 2 * w;
   const ok = okA && okP;
@@ -107,13 +109,13 @@ function SameNumbersQuestion({ onComplete }: { onComplete?: () => void }) {
       </p>
       <PolygonOutline sides={[l, w, l, w]} rectangle hideLabels={[2, 3]} unit="m" size={170} />
       <div className="control-row" style={{ alignItems: "center" }}>
-        <label>How much ground does it cover (area)? <input className="answer" style={{ width: 55 }} inputMode="numeric" value={areaGuess} onChange={(e) => setAreaGuess(e.target.value)} /> sq m</label>
+        <label>How much ground does it cover (area)? <input className="answer" style={{ width: 55, ...answerBorder(okA, checked) }} inputMode="numeric" value={areaGuess} onChange={(e) => setAreaGuess(e.target.value)} /> sq m</label>
       </div>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <label>How much fence goes around it (perimeter)? <input className="answer" style={{ width: 55 }} inputMode="numeric" value={perimGuess} onChange={(e) => setPerimGuess(e.target.value)} /> m</label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>Check Answer</button>
+        <label>How much fence goes around it (perimeter)? <input className="answer" style={{ width: 55, ...answerBorder(okP, checked) }} inputMode="numeric" value={perimGuess} onChange={(e) => setPerimGuess(e.target.value)} /> m</label>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>Check Answer</button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — same two numbers, two different questions: area 7 × 3 = 21 square meters, perimeter 7 + 3 + 7 + 3 = 20 meters." : msg}
         </p>
@@ -128,6 +130,7 @@ function ShortcutQuestion({ onComplete }: { onComplete?: () => void }) {
   const [formula, setFormula] = useState("");
   const [why, setWhy] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [formula, why].every((v) => String(v).trim() !== "");
   const ok = formula === "2l+2w" && why === "opposite";
   useEffect(() => {
     if (checked && ok) onComplete?.();
@@ -136,14 +139,14 @@ function ShortcutQuestion({ onComplete }: { onComplete?: () => void }) {
     <div className="align-stack-wrap">
       <p>
         <b>3.</b> The perimeter of a rectangle is{" "}
-        <select className="answer" value={formula} onChange={(e) => setFormula(e.target.value)}>
+        <select className="answer" style={answerBorder(formula === "2l+2w", checked)} value={formula} onChange={(e) => setFormula(e.target.value)}>
           <option value="" disabled>choose</option>
           <option value="2l+2w">2 × length + 2 × width</option>
           <option value="lw">length × width</option>
           <option value="l+w">length + width</option>
         </select>
         , because{" "}
-        <select className="answer" value={why} onChange={(e) => setWhy(e.target.value)}>
+        <select className="answer" style={answerBorder(why === "opposite", checked)} value={why} onChange={(e) => setWhy(e.target.value)}>
           <option value="" disabled>choose</option>
           <option value="opposite">opposite sides of a rectangle are the same length</option>
           <option value="rows">it has rows of unit squares</option>
@@ -152,9 +155,9 @@ function ShortcutQuestion({ onComplete }: { onComplete?: () => void }) {
         .
       </p>
       <div className="control-row">
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>Check Answer</button>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>Check Answer</button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — two lengths and two widths go around a rectangle, so P = 2 × length + 2 × width." : "Not quite — walk around a rectangle: length, width, length, width. Opposite sides match, so there are two of each."}
         </p>

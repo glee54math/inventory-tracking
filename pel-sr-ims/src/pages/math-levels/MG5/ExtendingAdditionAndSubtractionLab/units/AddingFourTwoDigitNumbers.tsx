@@ -21,6 +21,7 @@ function DigitVsCarryQuestion({ onComplete }: { onComplete?: () => void }) {
   const [digit, setDigit] = useState("");
   const [carry, setCarry] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [digit, carry].every((v) => String(v).trim() !== "");
   const ok = digit === "7" && carry === "2";
   useEffect(() => {
     if (checked && ok) onComplete?.();
@@ -49,11 +50,11 @@ function DigitVsCarryQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="2">2</option>
           <option value="7">7</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 27 means you write the 7 and carry the 2 (two whole tens) into the tens column."

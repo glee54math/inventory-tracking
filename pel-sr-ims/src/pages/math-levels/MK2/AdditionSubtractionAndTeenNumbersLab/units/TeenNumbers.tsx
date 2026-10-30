@@ -24,6 +24,7 @@ function DigitMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
   const [tensPick, setTensPick] = useState("");
   const [onesPick, setOnesPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [tensPick, onesPick].every((v) => String(v).trim() !== "");
   const tensOk = tensPick === "ten";
   const onesOk = onesPick === "four";
   const ok = tensOk && onesOk;
@@ -58,11 +59,11 @@ function DigitMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="fourTens">four tens</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — in 14, the '1' stands for a whole group of TEN, not a single object, and the '4' stands for 4 extra ones."
@@ -154,6 +155,7 @@ function BuildAndRecordQuestion({ onComplete }: { onComplete?: () => void }) {
   const [numberPick, setNumberPick] = useState("");
   const [eqPick, setEqPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [numberPick, eqPick].every((v) => String(v).trim() !== "");
   const numberOk = numberPick === "13";
   const eqOk = eqPick === "10+3=13";
   const ok = numberOk && eqOk;
@@ -189,11 +191,11 @@ function BuildAndRecordQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="13-10=3">13 − 10 = 3</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — one ten-group plus 3 more ones is 13, recorded as 10 + 3 = 13. Watch out for 31 — that's the digits written backwards!"

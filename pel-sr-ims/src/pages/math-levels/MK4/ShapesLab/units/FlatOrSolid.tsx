@@ -22,6 +22,7 @@ function FlatSolidVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   const [flatPick, setFlatPick] = useState("");
   const [solidPick, setSolidPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [flatPick, solidPick].every((v) => String(v).trim() !== "");
   const flatOk = flatPick === "2d";
   const solidOk = solidPick === "3d";
   const ok = flatOk && solidOk;
@@ -54,11 +55,11 @@ function FlatSolidVocabQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="3d">3D (solid)</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — flat is 2D, solid (something with real depth you could hold) is 3D." : "Not quite — 2D means flat, like a drawing. 3D means solid, with real depth you could actually pick up."}
         </p>
@@ -72,6 +73,7 @@ function CircleSphereConflationQuestion({ onComplete }: { onComplete?: () => voi
   const [holdPick, setHoldPick] = useState("");
   const [flatPick, setFlatPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [holdPick, flatPick].every((v) => String(v).trim() !== "");
   const holdOk = holdPick === "sphere";
   const flatOk = flatPick === "circle";
   const ok = holdOk && flatOk;
@@ -108,11 +110,11 @@ function CircleSphereConflationQuestion({ onComplete }: { onComplete?: () => voi
             <option value="sphere">The sphere</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — a sphere (like a ball) is solid and takes up real space; a circle is just a flat, round drawing."
@@ -164,6 +166,7 @@ function NameAndClassifyQuestion({ onComplete }: { onComplete?: () => void }) {
   const [namePick, setNamePick] = useState("");
   const [classPick, setClassPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [namePick, classPick].every((v) => String(v).trim() !== "");
   const nameOk = namePick === "cylinder";
   const classOk = classPick === "3d";
   const ok = nameOk && classOk;
@@ -198,11 +201,11 @@ function NameAndClassifyQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="3d">Solid (3D)</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — that's a cylinder, and it's solid (3D) — it has real depth, like a can." : "Not quite — look at the two round ends and the curved side: that's the shape of a cylinder, like a soup can, and it's solid (3D)."}
         </p>

@@ -17,6 +17,7 @@ function SideCornerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   const [sidePick, setSidePick] = useState("");
   const [cornerPick, setCornerPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [sidePick, cornerPick].every((v) => String(v).trim() !== "");
   const sideOk = sidePick === "side";
   const cornerOk = cornerPick === "corner";
   const ok = sideOk && cornerOk;
@@ -50,11 +51,11 @@ function SideCornerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="corner">A corner</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — a side is a straight edge, a corner is where two sides meet." : "Not quite — a SIDE is one straight line of the shape's edge; a CORNER is the point where two sides meet."}
         </p>
@@ -69,6 +70,7 @@ function CircleZeroConflationQuestion({ onComplete }: { onComplete?: () => void 
   const [sidesPick, setSidesPick] = useState("");
   const [cornersPick, setCornersPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [sidesPick, cornersPick].every((v) => String(v).trim() !== "");
   const sidesOk = sidesPick === "no";
   const cornersOk = cornersPick === "no";
   const ok = sidesOk && cornersOk;
@@ -102,11 +104,11 @@ function CircleZeroConflationQuestion({ onComplete }: { onComplete?: () => void 
             <option value="no">No</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — a circle's edge is one curved line with no straight parts and no corners, so it has 0 sides and 0 corners."
@@ -163,6 +165,7 @@ function EqualLengthVsEqualCountQuestion({ onComplete }: { onComplete?: () => vo
   const [equalPick, setEqualPick] = useState("");
   const [countPick, setCountPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [equalPick, countPick].every((v) => String(v).trim() !== "");
   const equalOk = equalPick === "square";
   const countOk = countPick === "yes";
   const ok = equalOk && countOk;
@@ -199,11 +202,11 @@ function EqualLengthVsEqualCountQuestion({ onComplete }: { onComplete?: () => vo
             <option value="no">No</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the square's sides are all equal in LENGTH, but both shapes still have the same NUMBER of sides (4). Length and count are two different things to check."

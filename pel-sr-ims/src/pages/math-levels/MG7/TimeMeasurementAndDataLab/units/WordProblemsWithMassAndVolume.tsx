@@ -116,6 +116,7 @@ function OperationChoiceQuestion({ onComplete }: { onComplete?: () => void }) {
   const [pickedA, setPickedA] = useState("");
   const [pickedB, setPickedB] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [pickedA, pickedB].every((v) => String(v).trim() !== "");
   const okA = pickedA === "divide";
   const okB = pickedB === "multiply";
   const ok = okA && okB;
@@ -149,11 +150,11 @@ function OperationChoiceQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="divide">Divide</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — \"shared equally among\" means DIVIDE; \"EACH holds the same amount, how many in all\" means MULTIPLY. Neither story used the word \"divide\" or \"multiply\" itself — you have to reason from the structure."

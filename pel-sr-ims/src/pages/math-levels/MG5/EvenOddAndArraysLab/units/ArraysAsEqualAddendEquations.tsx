@@ -22,6 +22,7 @@ function WhatEachNumberMeansQuestion({ onComplete }: { onComplete?: () => void }
   const [repeated, setRepeated] = useState("");
   const [times, setTimes] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [repeated, times].every((v) => String(v).trim() !== "");
   const ok1 = repeated === "size";
   const ok2 = times === "count";
   const ok = ok1 && ok2;
@@ -56,11 +57,11 @@ function WhatEachNumberMeansQuestion({ onComplete }: { onComplete?: () => void }
             <option value="count">How many rows or columns there are</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the repeated number is the SIZE of each group; how many times it repeats is the NUMBER of groups. It's easy to flip these."
@@ -77,6 +78,7 @@ function RowEquationVsColumnEquationQuestion({ onComplete }: { onComplete?: () =
   const [rowEq, setRowEq] = useState("");
   const [colEq, setColEq] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [rowEq, colEq].every((v) => String(v).trim() !== "");
   const ok1 = rowEq === "3333";
   const ok2 = colEq === "444";
   const ok = ok1 && ok2;
@@ -110,11 +112,11 @@ function RowEquationVsColumnEquationQuestion({ onComplete }: { onComplete?: () =
             <option value="444">4 + 4 + 4</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — adding by rows means 4 groups of size 3 (3+3+3+3); adding by columns means 3 groups of size 4 (4+4+4)."
@@ -170,6 +172,7 @@ function ReverseFromEquationQuestion({ onComplete }: { onComplete?: () => void }
   const [rowsAns, setRowsAns] = useState("");
   const [totalAns, setTotalAns] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [rowsAns, totalAns].every((v) => String(v).trim() !== "");
   const ok1 = rowsAns === "3";
   const ok2 = totalAns === "12";
   const ok = ok1 && ok2;
@@ -203,11 +206,11 @@ function ReverseFromEquationQuestion({ onComplete }: { onComplete?: () => void }
             <option value="12">12</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the number is repeated 3 times, so there are 3 groups of 4, totaling 12. The number of TERMS tells you the group count, not the group size."

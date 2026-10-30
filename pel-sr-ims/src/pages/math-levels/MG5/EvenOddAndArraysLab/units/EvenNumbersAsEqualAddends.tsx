@@ -61,6 +61,7 @@ function RightAndWrongExampleQuestion({ onComplete }: { onComplete?: () => void 
   const [wrongOk, setWrongOk] = useState("");
   const [rightOk, setRightOk] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [wrongOk, rightOk].every((v) => String(v).trim() !== "");
   const ok1 = wrongOk === "no";
   const ok2 = rightOk === "yes";
   const ok = ok1 && ok2;
@@ -94,11 +95,11 @@ function RightAndWrongExampleQuestion({ onComplete }: { onComplete?: () => void 
             <option value="no">No, not equal addends</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 6 + 8 sums to 14 but the addends aren't the same, so it's NOT equal addends. 7 + 7 sums to 14 AND both addends match, so it IS."
@@ -153,6 +154,7 @@ function OddNumberAttemptQuestion({ onComplete }: { onComplete?: () => void }) {
   const [attempt, setAttempt] = useState("");
   const [canEvery, setCanEvery] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [attempt, canEvery].every((v) => String(v).trim() !== "");
   const ok1 = attempt === "unequal";
   const ok2 = canEvery === "no";
   const ok = ok1 && ok2;
@@ -187,11 +189,11 @@ function OddNumberAttemptQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="no">No, never possible</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 9 can only split into 4 + 5, which aren't equal whole numbers. No odd number can ever be written as two equal whole-number addends."

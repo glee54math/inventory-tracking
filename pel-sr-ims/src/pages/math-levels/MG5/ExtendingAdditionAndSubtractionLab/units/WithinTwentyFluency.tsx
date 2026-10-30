@@ -125,6 +125,7 @@ function FactFamilyQuestion({ onComplete }: { onComplete?: () => void }) {
   const [a, setA] = useState("");
   const [b, setB] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [a, b].every((v) => String(v).trim() !== "");
   const ok = a === "6" && b === "9";
   useEffect(() => {
     if (checked && ok) onComplete?.();
@@ -153,11 +154,11 @@ function FactFamilyQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="9">9</option>
           <option value="15">15</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 15 − 9 = 6 and 15 − 6 = 9. All four facts (9+6=15, 6+9=15, 15−9=6, 15−6=9) come from the same three numbers." : "Not quite — both subtraction facts use the SAME three numbers as 9 + 6 = 15: 15 − 9 = 6, and 15 − 6 = 9."}
         </p>

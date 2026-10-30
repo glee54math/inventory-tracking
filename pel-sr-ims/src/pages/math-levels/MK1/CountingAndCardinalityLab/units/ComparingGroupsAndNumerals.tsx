@@ -68,6 +68,7 @@ function SpaceVsCountQuestion({ onComplete }: { onComplete?: () => void }) {
   const [morePick, setMorePick] = useState("");
   const [changesPick, setChangesPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [morePick, changesPick].every((v) => String(v).trim() !== "");
   const moreOk = morePick === "equal";
   const changesOk = changesPick === "false";
   const ok = moreOk && changesOk;
@@ -106,11 +107,11 @@ function SpaceVsCountQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="false">False</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — both groups have exactly 6. Spreading counters out (or squeezing them together) changes how much SPACE they take up, but never changes how MANY there are."
@@ -127,6 +128,7 @@ function MoreFewerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   const [morePick, setMorePick] = useState("");
   const [fewerPick, setFewerPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [morePick, fewerPick].every((v) => String(v).trim() !== "");
   const moreOk = morePick === "A";
   const fewerOk = fewerPick === "B";
   const ok = moreOk && fewerOk;
@@ -160,11 +162,11 @@ function MoreFewerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="B">Group B</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? '"More than" means a bigger amount — Group A (7) has more. "Fewer than" means a smaller amount — Group B (4) has fewer.'
@@ -220,6 +222,7 @@ function CloseVsObviousQuestion({ onComplete }: { onComplete?: () => void }) {
   const [morePick, setMorePick] = useState("");
   const [typePick, setTypePick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [morePick, typePick].every((v) => String(v).trim() !== "");
   const moreOk = morePick === "7";
   const typeOk = typePick === "close";
   const ok = moreOk && typeOk;
@@ -253,11 +256,11 @@ function CloseVsObviousQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="close">Close — needs careful counting</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 7 is more than 6, but just by 1, so this is a CLOSE comparison. A difference like 3 vs. 9 would be obvious at a glance; 6 vs. 7 needs an actual careful count."

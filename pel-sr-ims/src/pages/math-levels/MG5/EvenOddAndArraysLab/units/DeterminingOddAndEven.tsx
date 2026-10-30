@@ -62,6 +62,7 @@ function OddVsEvenContrastQuestion({ onComplete }: { onComplete?: () => void }) 
   const [parity14, setParity14] = useState("");
   const [leftover15, setLeftover15] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [parity14, leftover15].every((v) => String(v).trim() !== "");
   const ok1 = parity14 === "even";
   const ok2 = leftover15 === "1";
   const ok = ok1 && ok2;
@@ -97,11 +98,11 @@ function OddVsEvenContrastQuestion({ onComplete }: { onComplete?: () => void }) 
             <option value="2">2</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 14 pairs up evenly (even), but one more object (15) always leaves exactly 1 unpaired (odd)."
@@ -157,6 +158,7 @@ function PairThenClassifyQuestion({ onComplete }: { onComplete?: () => void }) {
   const [canPair, setCanPair] = useState("");
   const [parity, setParity] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [canPair, parity].every((v) => String(v).trim() !== "");
   const ok1 = canPair === "no";
   const ok2 = parity === "odd";
   const ok = ok1 && ok2;
@@ -190,11 +192,11 @@ function PairThenClassifyQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="even">Even</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 9 objects make 4 pairs with 1 left over, so they can't all be paired up. That leftover is exactly what makes 9 odd."

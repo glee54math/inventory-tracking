@@ -140,6 +140,7 @@ function RegroupFillInQuestion({ onComplete }: { onComplete?: () => void }) {
   const [hundreds, setHundreds] = useState("");
   const [tens, setTens] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [hundreds, tens].every((v) => String(v).trim() !== "");
   const okH = hundreds === "1";
   const okT = tens === "5";
   const ok = okH && okT;
@@ -175,11 +176,11 @@ function RegroupFillInQuestion({ onComplete }: { onComplete?: () => void }) {
         ten(s).
       </p>
       <div className="control-row">
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 10 of those 15 tens bundle into 1 hundred, leaving 5 tens over: 1 hundred, 5 tens." : "Not quite — 10 tens always bundles into exactly 1 hundred. How many tens are left over after bundling 10 of the 15?"}
         </p>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NumberLine } from "../../../shared/diagrams";
 import { randInt, pick } from "../../../shared/lib/math";
+import { allFilled, answerBorder } from "../../../shared/lib/answerChecks";
 import { type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
@@ -55,11 +56,15 @@ function RoundingHundredGate({ onComplete }: { onComplete?: () => void }) {
 
   const [q3a, setQ3a] = useState<string>("");
   const [q3b, setQ3b] = useState<string>("");
-  const q3Done = q3a === "1000" && q3b === "closer1000";
+  const [q3Checked, setQ3Checked] = useState(false);
+  const q3Filled = allFilled(q3a, q3b);
+  const q3Done = q3Checked && q3a === "1000" && q3b === "closer1000";
 
   const [q4a, setQ4a] = useState<string>("");
   const [q4b, setQ4b] = useState<string>("");
-  const q4Done = q4a === "650" && q4b === "600";
+  const [q4Checked, setQ4Checked] = useState(false);
+  const q4Filled = allFilled(q4a, q4b);
+  const q4Done = q4Checked && q4a === "650" && q4b === "600";
 
   const allDone = q1Done && q2Done && q3Done && q4Done;
   useEffect(() => {
@@ -120,7 +125,7 @@ function RoundingHundredGate({ onComplete }: { onComplete?: () => void }) {
       <div className="align-stack-wrap">
         <p>
           <b>3.</b> Round 960 to the nearest hundred:{" "}
-          <select className="answer" aria-label="rounded result" value={q3a} onChange={(e) => setQ3a(e.target.value)}>
+          <select className="answer" aria-label="rounded result" value={q3a} onChange={(e) => setQ3a(e.target.value)} disabled={q3Done} style={answerBorder(q3a === "1000", q3Checked)}>
             <option value="" disabled>
               choose
             </option>
@@ -128,7 +133,7 @@ function RoundingHundredGate({ onComplete }: { onComplete?: () => void }) {
             <option value="1000">1000</option>
           </select>
           , because 960 is{" "}
-          <select className="answer" aria-label="reasoning" value={q3b} onChange={(e) => setQ3b(e.target.value)}>
+          <select className="answer" aria-label="reasoning" value={q3b} onChange={(e) => setQ3b(e.target.value)} disabled={q3Done} style={answerBorder(q3b === "closer1000", q3Checked)}>
             <option value="" disabled>
               choose
             </option>
@@ -137,7 +142,12 @@ function RoundingHundredGate({ onComplete }: { onComplete?: () => void }) {
           </select>
           .
         </p>
-        {(q3a || q3b) && (
+        <div className="control-row">
+          <button className="btn primary" type="button" disabled={q3Done || !q3Filled} onClick={() => setQ3Checked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {q3Checked && q3Filled && (
           <p className={`feedback ${q3Done ? "good" : "bad"}`} role="alert">
             {q3Done
               ? "Right — 960 rounds up to 1000. Rounding to the nearest hundred can cross into the next thousand, same as rounding to the nearest ten could cross a hundred."
@@ -149,7 +159,7 @@ function RoundingHundredGate({ onComplete }: { onComplete?: () => void }) {
       <div className="align-stack-wrap">
         <p>
           <b>4.</b> Round 647: to the nearest ten it's{" "}
-          <select className="answer" aria-label="nearest ten" value={q4a} onChange={(e) => setQ4a(e.target.value)}>
+          <select className="answer" aria-label="nearest ten" value={q4a} onChange={(e) => setQ4a(e.target.value)} disabled={q4Done} style={answerBorder(q4a === "650", q4Checked)}>
             <option value="" disabled>
               choose
             </option>
@@ -157,7 +167,7 @@ function RoundingHundredGate({ onComplete }: { onComplete?: () => void }) {
             <option value="650">650</option>
           </select>
           , and to the nearest hundred it's{" "}
-          <select className="answer" aria-label="nearest hundred" value={q4b} onChange={(e) => setQ4b(e.target.value)}>
+          <select className="answer" aria-label="nearest hundred" value={q4b} onChange={(e) => setQ4b(e.target.value)} disabled={q4Done} style={answerBorder(q4b === "600", q4Checked)}>
             <option value="" disabled>
               choose
             </option>
@@ -166,7 +176,12 @@ function RoundingHundredGate({ onComplete }: { onComplete?: () => void }) {
           </select>
           .
         </p>
-        {(q4a || q4b) && (
+        <div className="control-row">
+          <button className="btn primary" type="button" disabled={q4Done || !q4Filled} onClick={() => setQ4Checked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {q4Checked && q4Filled && (
           <p className={`feedback ${q4Done ? "good" : "bad"}`} role="alert">
             {q4Done
               ? "Right — the same number, 647, rounds differently depending on which landmark the question is actually asking about. Always check which one it is."

@@ -39,6 +39,7 @@ function MultiplyFirstQuestion({ onComplete }: { onComplete?: () => void }) {
   const [interPick, setInterPick] = useState("");
   const [valuePick, setValuePick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [orderPick, interPick, valuePick].every((v) => String(v).trim() !== "");
   const orderOk = orderPick === "multiply first";
   const interOk = interPick === "12";
   const valueOk = valuePick === "14";
@@ -80,11 +81,11 @@ function MultiplyFirstQuestion({ onComplete }: { onComplete?: () => void }) {
             />
           </label>
         )}
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — multiplication is done before addition: 3 × 4 = 12, then 2 + 12 = 14."

@@ -21,6 +21,7 @@ function NextNumberVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   const [word, setWord] = useState("");
   const [special, setSpecial] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [word, special].every((v) => String(v).trim() !== "");
   const wordOk = word === "thirty";
   const specialOk = special === "new-ten";
   const ok = wordOk && specialOk;
@@ -56,11 +57,11 @@ function NextNumberVocabQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="before">It comes before 29</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — after 29 comes thirty, and thirty is the first number of a brand new ten (the 30s)."

@@ -62,6 +62,7 @@ function UnfamiliarFactQuestion({ onComplete }: { onComplete?: () => void }) {
   const [addToA, setAddToA] = useState("");
   const [remainder, setRemainder] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [addToA, remainder].every((v) => String(v).trim() !== "");
   const addToAOk = addToA === "3";
   const remainderOk = remainder === "3";
   const ok = addToAOk && remainderOk;
@@ -97,11 +98,11 @@ function UnfamiliarFactQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="6">6</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 7 needs 3 more to make 10, so 6 splits into 3 + 3: 7 + 3 = 10, then 10 + 3 = 13."
@@ -155,6 +156,7 @@ function SubtractionBridgeQuestion({ onComplete }: { onComplete?: () => void }) 
   const [toTen, setToTen] = useState("");
   const [remainder, setRemainder] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [toTen, remainder].every((v) => String(v).trim() !== "");
   const toTenOk = toTen === "3";
   const remainderOk = remainder === "2";
   const ok = toTenOk && remainderOk;
@@ -190,11 +192,11 @@ function SubtractionBridgeQuestion({ onComplete }: { onComplete?: () => void }) 
             <option value="5">5</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 13 is 3 away from 10, so subtract 3 first (13 − 3 = 10), then subtract the remaining 2 (10 − 2 = 8)."

@@ -24,6 +24,7 @@ function WhereAndHowManyQuestion({ onComplete }: { onComplete?: () => void }) {
   const [start, setStart] = useState("");
   const [many, setMany] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [start, many].every((v) => String(v).trim() !== "");
   const startOk = start === "8";
   const manyOk = many === "3";
   const ok = startOk && manyOk;
@@ -60,11 +61,11 @@ function WhereAndHowManyQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="11">11</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — start at 8 (the number you already know) and count on just 3 more: 9, 10, 11. No need to start over from 1."

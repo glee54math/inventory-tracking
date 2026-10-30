@@ -41,6 +41,7 @@ function RolePlusNumberQuestion({
   const [role, setRole] = useState("");
   const [answer, setAnswer] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [role, answer].every((v) => String(v).trim() !== "");
   const roleOk = role === String(correctRole);
   const answerOk = Number(answer) === correctAnswer;
   const ok = roleOk && answerOk;
@@ -80,11 +81,11 @@ function RolePlusNumberQuestion({
             ))}
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? `Correct — ${explain}` : `Not quite — ${explain}`}
         </p>

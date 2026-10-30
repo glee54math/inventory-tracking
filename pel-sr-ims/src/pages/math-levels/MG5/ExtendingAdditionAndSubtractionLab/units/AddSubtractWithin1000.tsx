@@ -121,6 +121,7 @@ function WorkedExampleQuestion({ onComplete }: { onComplete?: () => void }) {
   const [hundreds, setHundreds] = useState("");
   const [tens, setTens] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [hundreds, tens].every((v) => String(v).trim() !== "");
   const ok = hundreds === "2" && tens === "9";
   useEffect(() => {
     if (checked && ok) onComplete?.();
@@ -147,11 +148,11 @@ function WorkedExampleQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="10">10</option>
           <option value="9">9</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — the hundreds digit drops from 4 to 2 (one hundred given to the tens place). The tens place then lends one of its 10 tens to the ones place, leaving 9." : "Not quite — borrowing a hundred from the 4 leaves 2 in the hundreds place (it passed through a temporary 3-becomes-10-tens state), and after the tens place lends one ten to the ones place, it's left with 9."}
         </p>

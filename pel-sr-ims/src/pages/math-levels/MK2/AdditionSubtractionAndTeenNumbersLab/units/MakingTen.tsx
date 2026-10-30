@@ -20,6 +20,7 @@ function PartnerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   const [namePick, setNamePick] = useState("");
   const [valuePick, setValuePick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [namePick, valuePick].every((v) => String(v).trim() !== "");
   const nameOk = namePick === "partner";
   const valueOk = valuePick === "4";
   const ok = nameOk && valueOk;
@@ -56,11 +57,11 @@ function PartnerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="5">5</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 4 is called 6's partner for 10, since 6 + 4 = 10." : "Not quite — the number that joins another to make exactly 10 is its partner for 10. For 6, that's 4, since 6 + 4 = 10."}
         </p>
@@ -153,6 +154,7 @@ function VerifyPairQuestion({ onComplete }: { onComplete?: () => void }) {
   const [truePick, setTruePick] = useState("");
   const [falsePick, setFalsePick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [truePick, falsePick].every((v) => String(v).trim() !== "");
   const trueOk = truePick === "true";
   const falseOk = falsePick === "false";
   const ok = trueOk && falseOk;
@@ -186,11 +188,11 @@ function VerifyPairQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="false">False</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 6 + 4 = 10 is true, but 5 + 4 = 9, not 10, so that one is false. Always check the actual sum, not just whether the numbers 'look close.'"

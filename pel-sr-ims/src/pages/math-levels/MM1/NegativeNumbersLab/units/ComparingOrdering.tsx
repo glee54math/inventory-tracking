@@ -56,6 +56,7 @@ function DebtBalanceQuestion({ onComplete }: { onComplete?: () => void }) {
   const [debtPick, setDebtPick] = useState("");
   const [balancePick, setBalancePick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [debtPick, balancePick].every((v) => String(v).trim() !== "");
   const debtOk = debtPick === "Account A";
   const balanceOk = balancePick === "Account B";
   const ok = debtOk && balanceOk;
@@ -95,11 +96,11 @@ function DebtBalanceQuestion({ onComplete }: { onComplete?: () => void }) {
             ))}
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? `Correct — Account A owes more (${Math.abs(BALANCE_A)} > ${Math.abs(BALANCE_B)}), but Account B has the greater balance (${BALANCE_B} > ${BALANCE_A}). "Greater debt" and "greater balance" point in opposite directions here.`

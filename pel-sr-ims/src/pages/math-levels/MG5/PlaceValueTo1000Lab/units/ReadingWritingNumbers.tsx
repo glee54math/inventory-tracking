@@ -142,6 +142,7 @@ function ZeroWordFillInQuestion({ onComplete }: { onComplete?: () => void }) {
   const [first, setFirst] = useState("");
   const [second, setSecond] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [first, second].every((v) => String(v).trim() !== "");
   const okFirst = first === "forty";
   const okSecond = second === "three";
   const ok = okFirst && okSecond;
@@ -177,11 +178,11 @@ function ZeroWordFillInQuestion({ onComplete }: { onComplete?: () => void }) {
         .
       </p>
       <div className="control-row">
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — the empty place is always silently skipped, whether it's the tens or the ones." : "Not quite — in both numbers, the empty place is simply skipped over, not spoken as 'zero'."}
         </p>

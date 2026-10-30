@@ -31,6 +31,7 @@ function NumeralVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   const [countPick, setCountPick] = useState("");
   const [wordPick, setWordPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [countPick, wordPick].every((v) => String(v).trim() !== "");
   const countOk = countPick === "5";
   const wordOk = wordPick === "numeral";
   const ok = countOk && wordOk;
@@ -67,11 +68,11 @@ function NumeralVocabQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="label">a label</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? 'Correct — there are 5 counters, and "5" is the numeral: the written symbol for that count.' : "Not quite — count the dots again, and remember a numeral is the written symbol for a number, not a letter."}
         </p>
@@ -172,6 +173,7 @@ function PictureToNumeralQuestion({ onComplete }: { onComplete?: () => void }) {
   const [numeralPick, setNumeralPick] = useState("");
   const [onelessPick, setOnelessPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [numeralPick, onelessPick].every((v) => String(v).trim() !== "");
   const numeralOk = numeralPick === "9";
   const onelessOk = onelessPick === "8";
   const ok = numeralOk && onelessOk;
@@ -206,11 +208,11 @@ function PictureToNumeralQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="10">10</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 9 counters match the numeral 9, and one fewer than 9 is 8." : "Not quite — count the scattered counters carefully one at a time, then count one backward from your answer."}
         </p>

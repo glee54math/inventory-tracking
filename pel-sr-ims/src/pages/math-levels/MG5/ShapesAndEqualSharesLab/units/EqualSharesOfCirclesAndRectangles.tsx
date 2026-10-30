@@ -52,6 +52,7 @@ function UnequalNonExampleQuestion({ onComplete }: { onComplete?: () => void }) 
   const [countVal, setCountVal] = useState("");
   const [sizeVal, setSizeVal] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [countVal, sizeVal].every((v) => String(v).trim() !== "");
   const okCount = countVal === "3";
   const okSize = sizeVal === "not-thirds";
   const ok = okCount && okSize;
@@ -83,10 +84,10 @@ function UnequalNonExampleQuestion({ onComplete }: { onComplete?: () => void }) 
         </select>
         .
       </p>
-      <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+      <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
         Check Answer
       </button>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Right — having 3 pieces isn't enough to call them thirds. The 3 pieces also have to be the same size."
@@ -104,6 +105,7 @@ function SameWholeDifferentShapeQuestion({ onComplete }: { onComplete?: () => vo
   const [same, setSame] = useState("");
   const [different, setDifferent] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [same, different].every((v) => String(v).trim() !== "");
   const okSame = same === "area";
   const okDifferent = different === "look";
   const ok = okSame && okDifferent;
@@ -144,10 +146,10 @@ function SameWholeDifferentShapeQuestion({ onComplete }: { onComplete?: () => vo
         </select>
         .
       </p>
-      <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+      <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
         Check Answer
       </button>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Right — equal shares of the same whole can be cut in different ways and come out looking like different shapes, as long as each piece is the same AMOUNT."

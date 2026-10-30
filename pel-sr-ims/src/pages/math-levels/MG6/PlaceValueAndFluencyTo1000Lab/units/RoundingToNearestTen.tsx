@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NumberLine } from "../../../shared/diagrams";
 import { randInt, pick } from "../../../shared/lib/math";
+import { allFilled, answerBorder } from "../../../shared/lib/answerChecks";
 import { type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
@@ -73,7 +74,9 @@ function RoundingTenGate({ onComplete }: { onComplete?: () => void }) {
 
   const [q3a, setQ3a] = useState("");
   const [q3b, setQ3b] = useState("");
-  const q3Done = q3a === "0" && q3b === "cross";
+  const [q3Checked, setQ3Checked] = useState(false);
+  const q3Filled = allFilled(q3a, q3b);
+  const q3Done = q3Checked && q3a === "0" && q3b === "cross";
 
   const [q4, setQ4] = useState("");
   const q4Done = q4 === "false";
@@ -139,7 +142,7 @@ function RoundingTenGate({ onComplete }: { onComplete?: () => void }) {
       <div className="align-stack-wrap">
         <p>
           <b>3.</b> Round 96 to the nearest ten: the ones digit becomes{" "}
-          <select className="answer" aria-label="ones digit" value={q3a} onChange={(e) => setQ3a(e.target.value)}>
+          <select className="answer" aria-label="ones digit" value={q3a} onChange={(e) => setQ3a(e.target.value)} disabled={q3Done} style={answerBorder(q3a === "0", q3Checked)}>
             <option value="" disabled>
               choose
             </option>
@@ -147,7 +150,7 @@ function RoundingTenGate({ onComplete }: { onComplete?: () => void }) {
             <option value="6">6</option>
           </select>
           , and the tens digit{" "}
-          <select className="answer" aria-label="what happens to the tens and hundreds digits" value={q3b} onChange={(e) => setQ3b(e.target.value)}>
+          <select className="answer" aria-label="what happens to the tens and hundreds digits" value={q3b} onChange={(e) => setQ3b(e.target.value)} disabled={q3Done} style={answerBorder(q3b === "cross", q3Checked)}>
             <option value="" disabled>
               choose
             </option>
@@ -156,7 +159,12 @@ function RoundingTenGate({ onComplete }: { onComplete?: () => void }) {
           </select>
           .
         </p>
-        {(q3a || q3b) && (
+        <div className="control-row">
+          <button className="btn primary" type="button" disabled={q3Done || !q3Filled} onClick={() => setQ3Checked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {q3Checked && q3Filled && (
           <p className={`feedback ${q3Done ? "good" : "bad"}`} role="alert">
             {q3Done
               ? "Right — 96 rounds up to 100. Crossing a ten can also change the hundreds digit, not just the ones digit."

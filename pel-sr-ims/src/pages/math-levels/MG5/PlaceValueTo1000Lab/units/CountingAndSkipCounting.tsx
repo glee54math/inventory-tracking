@@ -138,6 +138,7 @@ function SkipTenFillInQuestion({ onComplete }: { onComplete?: () => void }) {
   const [first, setFirst] = useState("");
   const [second, setSecond] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [first, second].every((v) => String(v).trim() !== "");
   const okFirst = first === "300";
   const okSecond = second === "310";
   const ok = okFirst && okSecond;
@@ -173,11 +174,11 @@ function SkipTenFillInQuestion({ onComplete }: { onComplete?: () => void }) {
         .
       </p>
       <div className="control-row">
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 290 + 10 = 300, and 300 + 10 = 310. Crossing the hundred doesn't change the +10 pattern." : "Not quite — keep adding 10 each time, even across the hundred."}
         </p>

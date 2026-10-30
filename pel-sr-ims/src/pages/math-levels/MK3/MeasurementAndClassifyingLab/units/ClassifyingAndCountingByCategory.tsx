@@ -37,6 +37,7 @@ function SortingVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   const [groupPick, setGroupPick] = useState("");
   const [attrPick, setAttrPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [groupPick, attrPick].every((v) => String(v).trim() !== "");
   const groupOk = groupPick === "category";
   const attrOk = attrPick === "attribute";
   const ok = groupOk && attrOk;
@@ -70,11 +71,11 @@ function SortingVocabQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="answer">answer</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — a category is one of the groups, and the attribute is the feature you're sorting by." : "Not quite — a category is a GROUP; the attribute is the FEATURE you sorted by to make the groups."}
         </p>
@@ -88,6 +89,7 @@ function SwitchedAttributeQuestion({ onComplete }: { onComplete?: () => void }) 
   const [correctPick, setCorrectPick] = useState("");
   const [shouldMatterPick, setShouldMatterPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [correctPick, shouldMatterPick].every((v) => String(v).trim() !== "");
   const correctOk = correctPick === "no";
   const shouldMatterOk = shouldMatterPick === "color";
   const ok = correctOk && shouldMatterOk;
@@ -121,11 +123,11 @@ function SwitchedAttributeQuestion({ onComplete }: { onComplete?: () => void }) 
             <option value="shape">Its shape</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — no, that was sorted wrong. A blue square doesn't belong with red objects just because it's a square. Once you pick color as the attribute, every object must be sorted by COLOR, not shape."
@@ -178,6 +180,7 @@ function CountAndCompareQuestion({ onComplete }: { onComplete?: () => void }) {
   const [fewerPick, setFewerPick] = useState("");
   const [byPick, setByPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [fewerPick, byPick].every((v) => String(v).trim() !== "");
   const fewerOk = fewerPick === "Green";
   const byOk = byPick === "2";
   const ok = fewerOk && byOk;
@@ -216,11 +219,11 @@ function CountAndCompareQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="6">6</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — Green has fewer (4 vs 6), and 6 - 4 = 2 fewer." : "Not quite — count each group (Red has 6, Green has 4), then subtract to find how many fewer."}
         </p>

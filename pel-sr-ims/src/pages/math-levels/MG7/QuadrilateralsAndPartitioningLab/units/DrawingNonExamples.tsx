@@ -72,6 +72,7 @@ function WorkedNonExampleQuestion({ onComplete }: { onComplete?: () => void }) {
   const [sides, setSides] = useState("");
   const [verdict, setVerdict] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [sides, verdict].every((v) => String(v).trim() !== "");
   const okSides = sides === "5";
   const okVerdict = verdict === "not-quad";
   const ok = okSides && okVerdict;
@@ -106,10 +107,10 @@ function WorkedNonExampleQuestion({ onComplete }: { onComplete?: () => void }) {
         </select>
         .
       </p>
-      <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+      <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
         Check Answer
       </button>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Right — it avoids the three special kinds, but with 5 sides it isn't a quadrilateral, so it doesn't answer the question."

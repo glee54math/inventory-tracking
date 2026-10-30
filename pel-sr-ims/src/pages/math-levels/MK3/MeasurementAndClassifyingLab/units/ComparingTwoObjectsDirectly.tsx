@@ -60,6 +60,7 @@ function DifferenceLanguageQuestion({ onComplete }: { onComplete?: () => void })
   const [longerPick, setLongerPick] = useState("");
   const [byPick, setByPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [longerPick, byPick].every((v) => String(v).trim() !== "");
   const longerOk = longerPick === "A";
   const byOk = byPick === "3";
   const ok = longerOk && byOk;
@@ -95,11 +96,11 @@ function DifferenceLanguageQuestion({ onComplete }: { onComplete?: () => void })
             <option value="7">7</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — Rod A is longer, and it's longer BY 3 blocks (7 take away 4), not by its whole 7-block length."
@@ -115,6 +116,7 @@ function MisalignedTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   const [endPick, setEndPick] = useState("");
   const [longerPick, setLongerPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [endPick, longerPick].every((v) => String(v).trim() !== "");
   const endOk = endPick === "B";
   const longerOk = longerPick === "A";
   const ok = endOk && longerOk;
@@ -149,11 +151,11 @@ function MisalignedTrapQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="B">Rod B</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — Rod B's end reaches farther right, but Rod A (7 blocks) is actually longer than Rod B (4 blocks). Where a rod STARTS matters."
@@ -206,6 +208,7 @@ function BalanceVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   const [heavierPick, setHeavierPick] = useState("");
   const [tipPick, setTipPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [heavierPick, tipPick].every((v) => String(v).trim() !== "");
   const heavierOk = heavierPick === "Left";
   const tipOk = tipPick === "down";
   const ok = heavierOk && tipOk;
@@ -240,11 +243,11 @@ function BalanceVocabQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="down">down</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the Left side is heavier, and the heavier side always tips DOWN (the lighter side tips up)."

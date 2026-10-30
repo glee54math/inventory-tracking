@@ -25,6 +25,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
   const [rowsVal, setRowsVal] = useState("");
   const [totalVal, setTotalVal] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [rowsVal, totalVal].every((v) => String(v).trim() !== "");
   const okRows = rowsVal === "3";
   const okTotal = totalVal === "12";
   const ok = okRows && okTotal;
@@ -56,10 +57,10 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </select>
         .
       </p>
-      <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+      <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
         Check Answer
       </button>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Right — 3 rows of 4: 4 + 4 + 4 = 12 squares total." : "Not quite — count the rows, then add each row's 4 squares together."}
         </p>

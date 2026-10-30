@@ -139,6 +139,7 @@ function BesideVsInFrontQuestion({ onComplete }: { onComplete?: () => void }) {
   const [hiddenPick, setHiddenPick] = useState("");
   const [wordPick, setWordPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [hiddenPick, wordPick].every((v) => String(v).trim() !== "");
   const hiddenOk = hiddenPick === "yes";
   const wordOk = wordPick === "inFrontOf";
   const ok = hiddenOk && wordOk;
@@ -172,11 +173,11 @@ function BesideVsInFrontQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="inFrontOf">In front of</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? '"Beside" means next to, with nothing hidden — nothing overlaps. Here the box is partly hidden, so the cat is IN FRONT OF it, not beside it.'

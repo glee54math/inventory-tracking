@@ -111,6 +111,7 @@ function ReflectionFormulaQuestion({ number, axis, onComplete }: { number: strin
   const [first, setFirst] = useState("");
   const [second, setSecond] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [first, second].every((v) => String(v).trim() !== "");
   const okFirst = first === config.correctFirst;
   const okSecond = second === config.correctSecond;
   const ok = okFirst && okSecond;
@@ -140,11 +141,11 @@ function ReflectionFormulaQuestion({ number, axis, onComplete }: { number: strin
         ).
       </p>
       <div className="control-row">
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? config.explainCorrect : config.explainWrong}
         </p>
@@ -162,6 +163,7 @@ function AxisDistanceQuestion({ onComplete }: { onComplete?: () => void }) {
   const [distY, setDistY] = useState("");
   const [distX, setDistX] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [distY, distX].every((v) => String(v).trim() !== "");
   const okY = Number(distY) === Math.abs(px);
   const okX = Number(distX) === Math.abs(py);
   const ok = okY && okX;
@@ -197,11 +199,11 @@ function AxisDistanceQuestion({ onComplete }: { onComplete?: () => void }) {
             onChange={(e) => setDistX(e.target.value)}
           />
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? `Correct — distance from the y-axis is |x| = ${Math.abs(px)}, and distance from the x-axis is |y| = ${Math.abs(py)}.`

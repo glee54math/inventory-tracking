@@ -122,6 +122,7 @@ function TransitiveReasoningQuestion({ onComplete }: { onComplete?: () => void }
   const [picked, setPicked] = useState("");
   const [whyPicked, setWhyPicked] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [picked, whyPicked].every((v) => String(v).trim() !== "");
   const pickedOk = picked === "longer";
   const whyOk = whyPicked === "transitive";
   const ok = pickedOk && whyOk;
@@ -156,11 +157,11 @@ function TransitiveReasoningQuestion({ onComplete }: { onComplete?: () => void }
             <option value="guess">A good guess, since markers are usually long</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — you never need to see two objects side by side if you already know how each one compares to a third object in between. Marker > key and key > feather chain together: marker > feather."

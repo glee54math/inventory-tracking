@@ -23,6 +23,7 @@ function StickVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   const [wordPick, setWordPick] = useState("");
   const [countPick, setCountPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [wordPick, countPick].every((v) => String(v).trim() !== "");
   const wordOk = wordPick === "sides";
   const countOk = countPick === "3";
   const ok = wordOk && countOk;
@@ -55,11 +56,11 @@ function StickVocabQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="4">4</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — joined end-to-end, sticks show a shape's SIDES, and a triangle needs exactly 3 of them." : "Not quite — sticks joined end-to-end with no gaps show a shape's SIDES. A triangle has 3 sides, so it needs 3 sticks."}
         </p>
@@ -73,6 +74,7 @@ function TwoTrianglesConflationQuestion({ onComplete }: { onComplete?: () => voi
   const [resultPick, setResultPick] = useState("");
   const [otherWayPick, setOtherWayPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [resultPick, otherWayPick].every((v) => String(v).trim() !== "");
   const resultOk = resultPick === "square";
   const otherWayOk = otherWayPick === "yes";
   const ok = resultOk && otherWayOk;
@@ -105,11 +107,11 @@ function TwoTrianglesConflationQuestion({ onComplete }: { onComplete?: () => voi
             <option value="no">No</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — joined along their longest edge, two matching triangles make a square. Joined a different way, they could make a bigger triangle or a different shape entirely."
@@ -161,6 +163,7 @@ function DotsAndSticksQuestion({ onComplete }: { onComplete?: () => void }) {
   const [dotsPick, setDotsPick] = useState("");
   const [sticksPick, setSticksPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [dotsPick, sticksPick].every((v) => String(v).trim() !== "");
   const dotsOk = dotsPick === "corners";
   const sticksOk = sticksPick === "sides";
   const ok = dotsOk && sticksOk;
@@ -194,11 +197,11 @@ function DotsAndSticksQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="sides">Sides</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — the dots (clay) are the cube's corners, and the sticks are its sides (edges)." : "Not quite — the dots of clay are where corners go, and the sticks are the straight sides (edges) connecting them."}
         </p>

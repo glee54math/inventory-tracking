@@ -60,6 +60,7 @@ function GappedExampleQuestion({ onComplete }: { onComplete?: () => void }) {
   const [correctPick, setCorrectPick] = useState("");
   const [whyPick, setWhyPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [correctPick, whyPick].every((v) => String(v).trim() !== "");
   const correctOk = correctPick === "wrong";
   const whyOk = whyPick === "gaps";
   const ok = correctOk && whyOk;
@@ -94,11 +95,11 @@ function GappedExampleQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="overlap">The tiles overlap each other</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? `Correct — the gaps between Priya's tiles took up room that real tiles would have filled. Laid correctly with no gaps, it actually takes ${length} tiles.`
@@ -117,6 +118,7 @@ function OverlapExampleQuestion({ onComplete }: { onComplete?: () => void }) {
   const [correctPick, setCorrectPick] = useState("");
   const [whyPick, setWhyPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [correctPick, whyPick].every((v) => String(v).trim() !== "");
   const correctOk = correctPick === "wrong";
   const whyOk = whyPick === "overlap";
   const ok = correctOk && whyOk;
@@ -151,11 +153,11 @@ function OverlapExampleQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="overlap">The tiles overlap each other, so it actually takes only {length} tiles laid correctly</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? `Correct — Deshawn's tiles overlap, so some tiles cover ground another tile already covered. Laid correctly with no overlaps, it actually takes ${length} tiles.`

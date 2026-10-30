@@ -59,6 +59,7 @@ function UnequalNonExampleQuestion({ onComplete }: { onComplete?: () => void }) 
   const [countVal, setCountVal] = useState("");
   const [sizeVal, setSizeVal] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [countVal, sizeVal].every((v) => String(v).trim() !== "");
   const okCount = countVal === "2";
   const okSize = sizeVal === "not-halves";
   const ok = okCount && okSize;
@@ -90,10 +91,10 @@ function UnequalNonExampleQuestion({ onComplete }: { onComplete?: () => void }) 
         </select>
         .
       </p>
-      <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+      <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
         Check Answer
       </button>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Right — having 2 pieces isn't enough to call them halves. The 2 pieces also have to be the same size."

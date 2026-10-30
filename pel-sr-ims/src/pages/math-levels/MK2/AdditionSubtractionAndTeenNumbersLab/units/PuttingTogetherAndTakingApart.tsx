@@ -22,6 +22,7 @@ function SymbolMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
   const [plusPick, setPlusPick] = useState("");
   const [equalPick, setEqualPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [plusPick, equalPick].every((v) => String(v).trim() !== "");
   const plusOk = plusPick === "together";
   const equalOk = equalPick === "same";
   const ok = plusOk && equalOk;
@@ -57,11 +58,11 @@ function SymbolMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="question">A question mark</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the + symbol means putting groups together, and the = symbol means both sides have the same amount."
@@ -79,6 +80,7 @@ function ActionWordingQuestion({ onComplete }: { onComplete?: () => void }) {
   const [givenPick, setGivenPick] = useState("");
   const [takenPick, setTakenPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [givenPick, takenPick].every((v) => String(v).trim() !== "");
   const givenOk = givenPick === "add";
   const takenOk = takenPick === "sub";
   const ok = givenOk && takenOk;
@@ -112,11 +114,11 @@ function ActionWordingQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="sub">Subtracting</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? 'Correct — the number "2" was the same in both stories, but "given to" means a group joins (adding), and "taken away" means a group leaves (subtracting). The ACTION word tells you the operation, not the number.'
@@ -171,6 +173,7 @@ function FingersEquationQuestion({ onComplete }: { onComplete?: () => void }) {
   const [totalPick, setTotalPick] = useState("");
   const [eqPick, setEqPick] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [totalPick, eqPick].every((v) => String(v).trim() !== "");
   const totalOk = totalPick === "4";
   const eqOk = eqPick === "3+1=4";
   const ok = totalOk && eqOk;
@@ -207,11 +210,11 @@ function FingersEquationQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="3-1=4">3 − 1 = 4</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 3 fingers and 1 finger join to make 4 in all, written as 3 + 1 = 4."

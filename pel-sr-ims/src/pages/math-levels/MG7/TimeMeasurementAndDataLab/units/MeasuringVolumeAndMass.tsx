@@ -82,6 +82,7 @@ function MassVsVolumeQuestion({ onComplete }: { onComplete?: () => void }) {
   const [pickedA, setPickedA] = useState("");
   const [pickedB, setPickedB] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [pickedA, pickedB].every((v) => String(v).trim() !== "");
   const okA = pickedA === "holds";
   const okB = pickedB === "weighs";
   const ok = okA && okB;
@@ -116,11 +117,11 @@ function MassVsVolumeQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="weighs">weighs (mass)</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — liters always describe how much something HOLDS (volume); grams/kilograms always describe how much something WEIGHS (mass). The same object can have both, but they're never interchangeable."
@@ -136,6 +137,7 @@ function UnitSizeQuestion({ onComplete }: { onComplete?: () => void }) {
   const [pickedA, setPickedA] = useState("");
   const [pickedB, setPickedB] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [pickedA, pickedB].every((v) => String(v).trim() !== "");
   const okA = pickedA === "g";
   const okB = pickedB === "kg";
   const ok = okA && okB;
@@ -169,11 +171,11 @@ function UnitSizeQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="kg">kilograms</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — a paperclip is light enough to measure in grams; a bicycle is heavy enough that kilograms make more sense."

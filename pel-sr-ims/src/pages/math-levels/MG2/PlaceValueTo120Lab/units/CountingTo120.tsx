@@ -59,6 +59,7 @@ function TenVsHundredQuestion({ onComplete }: { onComplete?: () => void }) {
   const [nextNum, setNextNum] = useState("");
   const [which, setWhich] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [nextNum, which].every((v) => String(v).trim() !== "");
   const nextOk = nextNum === "110";
   const whichOk = which === "ten";
   const ok = nextOk && whichOk;
@@ -93,11 +94,11 @@ function TenVsHundredQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="hundred">A new hundred</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 110 starts a new ten (the 110s), but you're still inside the SAME hundred (the 100s). A new hundred only starts at 200."

@@ -145,6 +145,7 @@ function HalfHourHourHandQuestion({ onComplete }: { onComplete?: () => void }) {
   const [picked, setPicked] = useState("");
   const [whyPicked, setWhyPicked] = useState("");
   const [checked, setChecked] = useState(false);
+  const allFilled = [picked, whyPicked].every((v) => String(v).trim() !== "");
   const pickedOk = picked === "4";
   const whyOk = whyPicked === "stillWithin";
   const ok = pickedOk && whyOk;
@@ -179,11 +180,11 @@ function HalfHourHourHandQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="closer">Whichever number it's closest to is the hour</option>
           </select>
         </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && allFilled && (
         <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — at half past any hour, the hour hand always sits exactly halfway between that hour and the next one. It hasn't reached the next number yet, so the time is still 4:30, not 5:30."

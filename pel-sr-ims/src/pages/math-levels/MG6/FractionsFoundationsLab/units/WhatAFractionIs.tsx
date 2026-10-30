@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FractionBar, PartsCircle, UnequalPartsBar } from "../diagrams";
 import { pick, randInt } from "../../../shared/lib/math";
+import { allFilled, answerBorder } from "../../../shared/lib/answerChecks";
 import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
@@ -33,6 +34,7 @@ function WhatIsAFractionCheck({ onComplete }: { onComplete?: () => void }) {
   const [bottomGuess, setBottomGuess] = useState("");
   const [topGuess, setTopGuess] = useState("");
   const [q1Checked, setQ1Checked] = useState(false);
+  const q1Filled = allFilled(bottomGuess, topGuess);
   const q1Done = q1Checked && bottomGuess === "parts" && topGuess === "shaded";
 
   const [q2, setQ2] = useState<string | null>(null);
@@ -56,7 +58,7 @@ function WhatIsAFractionCheck({ onComplete }: { onComplete?: () => void }) {
         </p>
         <p>
           In the fraction 3/4, the bottom number (4) tells you{" "}
-          <select className="answer" value={bottomGuess} onChange={(e) => setBottomGuess(e.target.value)} aria-label="What the bottom number means" disabled={q1Done}>
+          <select className="answer" value={bottomGuess} onChange={(e) => setBottomGuess(e.target.value)} aria-label="What the bottom number means" disabled={q1Done} style={answerBorder(bottomGuess === "parts", q1Checked)}>
             <option value="" disabled>
               choose
             </option>
@@ -65,7 +67,7 @@ function WhatIsAFractionCheck({ onComplete }: { onComplete?: () => void }) {
             <option value="biggest">the biggest number you're allowed to shade</option>
           </select>
           , and the top number (3) tells you{" "}
-          <select className="answer" value={topGuess} onChange={(e) => setTopGuess(e.target.value)} aria-label="What the top number means" disabled={q1Done}>
+          <select className="answer" value={topGuess} onChange={(e) => setTopGuess(e.target.value)} aria-label="What the top number means" disabled={q1Done} style={answerBorder(topGuess === "shaded", q1Checked)}>
             <option value="" disabled>
               choose
             </option>
@@ -74,11 +76,11 @@ function WhatIsAFractionCheck({ onComplete }: { onComplete?: () => void }) {
             <option value="wholes">how many whole pizzas there are</option>
           </select>
           .
-          <button className="btn primary" type="button" style={{ marginLeft: 10 }} disabled={q1Done} onClick={() => setQ1Checked(true)}>
+          <button className="btn primary" type="button" style={{ marginLeft: 10 }} disabled={q1Done || !q1Filled} onClick={() => setQ1Checked(true)}>
             Check Answer
           </button>
         </p>
-        {q1Checked && (
+        {q1Checked && q1Filled && (
           <p className={`feedback ${q1Done ? "good" : "bad"}`} role="alert">
             {q1Done
               ? "Correct — the bottom number (denominator) is how many equal parts the whole is split into; the top number (numerator) is how many of those parts are shaded."
