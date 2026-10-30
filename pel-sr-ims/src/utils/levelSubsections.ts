@@ -132,6 +132,13 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
   MG7: [
     {
       type: "standalone",
+      skillId: "MultiplicationFoundationsLab",
+      label: "Multiplication Foundations",
+      componentFile: "MG7_MultiplicationFoundationsLab",
+      componentExport: "MultiplicationFoundationsLab",
+    },
+    {
+      type: "standalone",
       skillId: "DivisionAndWordProblemsLab",
       label: "Division & Word Problems",
       componentFile: "MG7_DivisionAndWordProblemsLab",

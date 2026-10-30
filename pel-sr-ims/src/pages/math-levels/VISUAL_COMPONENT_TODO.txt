@@ -671,10 +671,24 @@ ELEMENTARY
            Drag-to-build steps appear only in Practice; Tests ask reasoning
            questions about pictured shapes instead, so a no-feedback test can
            never leave a student stuck on a drag step.
+         — MultiplicationFoundationsLab (MG7/MG7_MultiplicationFoundationsLab.tsx) — wired as a
+           "standalone" skill, listed FIRST in MG7 (concept/fluency before
+           Division and before the Nx1 algorithm). Grade 3, 3.OA.1/3/5/7a/9,
+           five units: What Multiplication Means, Properties of
+           Multiplication, Multiplication Word Problems, One-Digit Facts
+           (requiresIntro + reintroEverySolved 20), Patterns in the
+           Multiplication Table — plus a 25-question Module Test (passScore
+           20). Styles scoped .mf-lab. Lab-local diagrams: EqualGroups.tsx
+           ("3 groups of 4" vs "4 groups of 3" as visibly different pictures —
+           overlaps DivisionAndWordProblemsLab's EqualGroups, promotion
+           candidate) and MultTable.tsx (1-9 table with row/column/parity/
+           mirror-pair highlighting). Arrays and the distributive split reuse
+           shared FactorRectangle. The .align-drill / quick-check /
+           module-test CSS is now copied in ~10 labs — candidate to move into
+           lab-base.css.
          — DivisionAndWordProblemsLab   (MG7/MG7_DivisionAndWordProblemsLab.tsx) — wired as a
-           "standalone" skill, listed FIRST in MG7 (concept before the Nx1
-           algorithm; MultiplicationFoundationsLab goes ahead of it once
-           built). Grade 3, 3.OA.2/4/6/7b/8, five units: What Division Means,
+           "standalone" skill, listed second in MG7 (after
+           MultiplicationFoundationsLab, before the Nx1 algorithm). Grade 3, 3.OA.2/4/6/7b/8, five units: What Division Means,
            Division as an Unknown-Factor Problem, Division Fact Fluency (no
            gate; reintroEverySolved omitted since it's inert without
            requiresIntro — same resolution as MK2), Determining the Unknown,
