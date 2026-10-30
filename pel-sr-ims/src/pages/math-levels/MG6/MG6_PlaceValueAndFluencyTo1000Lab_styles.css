@@ -1,0 +1,268 @@
+/* Scoped under .pvf-lab (wrapper div in MG6_PlaceValueAndFluencyTo1000Lab.tsx). Palette + gate/select/module-test
+   chrome copied from MM1_NegativeNumbersLab_styles.css (same shared lab-base.css engine chrome); lab-specific
+   classes for the vertical add/subtract widget and the one-digit facts refresher are at the bottom. */
+
+.pvf-lab {
+  --bg: #f2f6fb;
+  --card: #ffffff;
+  --ink: #1b2540;
+  --muted: #5d6782;
+  --line: #c9d0e2;
+  --grid: #e6edf6;
+  --qa: #2a6fbb;
+  --qa-soft: #d9e9fb;
+  --qa-text: #1f548a;
+  --qb: #c2410c;
+  --qb-soft: #fbe3d4;
+  --qb-text: #9a3408;
+  --qc: #7b4fd8;
+  --qc-soft: #e9e0fa;
+  --qc-text: #6334b8;
+  --good: #1f8f5f;
+  --good-soft: #d7f2e4;
+  --bad: #c93848;
+  --bad-soft: #fbe1e4;
+  --item-red: #c4432e;
+  --item-red-soft: #f6ddd6;
+  --item-red-text: #9a3420;
+  --item-green: #4c8c2b;
+  --item-green-soft: #e1edd4;
+  --item-green-text: #386b1f;
+  --item-yellow: #d4a72c;
+  --item-yellow-soft: #fbf1d1;
+  --item-yellow-text: #8c6b14;
+  --on-q: #ffffff;
+  --radius-lg: 18px;
+  --radius-sm: 10px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  -webkit-font-smoothing: antialiased;
+}
+/* .align-drill/.align-stack-wrap/.intro-gate-title aren't in lab-base.css —
+   they're the box chrome AlignDecimalsDrill (MG11) introduced for a mandatory
+   gated exercise, reused here for PositiveNegativePreCheck's same role. */
+.pvf-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.pvf-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.pvf-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.pvf-lab .feedback.good {
+  color: var(--good);
+}
+/* lab-base.css's .answer styling is scoped to `input.answer` only — the
+   Coordinate Plane Check for Understanding's dropdowns are <select>s, which
+   that selector doesn't match, so they need their own rule (same pattern as
+   MG9_IntroToFractionsLab_styles.css's .itf-lab select.answer). */
+.pvf-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.pvf-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+/* Module test nav/card — same rules as MM1_RatioLab_styles.css's own module
+   test chrome, since the two labs share this feature's markup verbatim. */
+.pvf-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.pvf-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.pvf-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.pvf-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.pvf-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.pvf-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+.pvf-lab .module-test-back {
+  margin-bottom: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  .pvf-lab:not([data-theme="light"]) {
+    --bg: #121a26;
+    --card: #1b2636;
+    --ink: #e8eefa;
+    --muted: #9bacc4;
+    --line: #34435e;
+    --grid: #202c3e;
+    --qa: #7cb3ff;
+    --qa-soft: #243a58;
+    --qa-text: #a8d0ff;
+    --qb: #f2976a;
+    --qb-soft: #4a3018;
+    --qb-text: #f5b38f;
+    --qc: #b696f5;
+    --qc-soft: #382a5c;
+    --qc-text: #c7a8fa;
+    --good: #4cc98f;
+    --good-soft: #173d2e;
+    --bad: #ff6b7a;
+    --bad-soft: #45202a;
+    --item-red: #e8775e;
+    --item-red-soft: #4a2a22;
+    --item-red-text: #f2a68f;
+    --item-green: #7fc44b;
+    --item-green-soft: #243318;
+    --item-green-text: #a3db7a;
+    --item-yellow: #e8c455;
+    --item-yellow-soft: #4a3c14;
+    --item-yellow-text: #f2d98a;
+    --on-q: #0e1626;
+  }
+}
+.pvf-lab[data-theme="dark"] {
+  --bg: #121a26;
+  --card: #1b2636;
+  --ink: #e8eefa;
+  --muted: #9bacc4;
+  --line: #34435e;
+  --grid: #202c3e;
+  --qa: #7cb3ff;
+  --qa-soft: #243a58;
+  --qa-text: #a8d0ff;
+  --qb: #f2976a;
+  --qb-soft: #4a3018;
+  --qb-text: #f5b38f;
+  --qc: #b696f5;
+  --qc-soft: #382a5c;
+  --qc-text: #c7a8fa;
+  --good: #4cc98f;
+  --good-soft: #173d2e;
+  --bad: #ff6b7a;
+  --bad-soft: #45202a;
+  --item-red: #e8775e;
+  --item-red-soft: #4a2a22;
+  --item-red-text: #f2a68f;
+  --item-green: #7fc44b;
+  --item-green-soft: #243318;
+  --item-green-text: #a3db7a;
+  --item-yellow: #e8c455;
+  --item-yellow-soft: #4a3c14;
+  --item-yellow-text: #f2d98a;
+  --on-q: #0e1626;
+}
+/* ---- Vertical add/subtract CustomStep widget (AddingAndSubtractingWithin1000.tsx) ----
+   Reuses lab-base.css's .align-row/.align-slot/.align-slot-input/.align-rule digit grid;
+   adds an operator gutter column and the small carry/borrow mark row above it. */
+.pvf-lab .vreg-widget {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 6px 0;
+}
+.pvf-lab .vreg-row {
+  display: flex;
+  align-items: center;
+}
+.pvf-lab .vreg-opcell {
+  display: inline-block;
+  width: 1.4em;
+  font-family: "Courier New", monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+}
+.pvf-lab .vreg-widget .align-slot {
+  width: 1.4em;
+  height: 1.6em;
+}
+.pvf-lab .vreg-widget .align-row {
+  gap: 6px;
+}
+.pvf-lab input.vreg-mark-input {
+  padding: 0;
+  width: 1.4em;
+  height: 1.3em;
+  font-size: 15px;
+  border: 2px dashed var(--qb);
+  border-radius: 4px;
+  background: var(--qb-soft);
+  color: var(--ink);
+  text-align: center;
+}
+.pvf-lab input.align-slot-input.ok,
+.pvf-lab input.vreg-mark-input.ok {
+  border-color: var(--good);
+  border-style: solid;
+  background: var(--good-soft);
+}
+.pvf-lab input.align-slot-input.bad,
+.pvf-lab input.vreg-mark-input.bad {
+  border-color: var(--bad);
+  border-style: solid;
+  background: var(--bad-soft);
+}
+/* ---- One-digit facts refresher (MultiplyingByMultiplesOfTen.tsx) ---- */
+.pvf-lab .pvf-facts {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--grid);
+  overflow-x: auto;
+}
+.pvf-lab .pvf-facts-table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.pvf-lab .pvf-facts-table th,
+.pvf-lab .pvf-facts-table td {
+  min-width: 2.2em;
+  padding: 3px 6px;
+  text-align: center;
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+.pvf-lab .pvf-facts-table th {
+  color: var(--muted);
+}
+.pvf-lab .pvf-facts-table td.hard {
+  background: var(--qb-soft);
+  color: var(--qb-text);
+  font-weight: 700;
+}

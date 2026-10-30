@@ -569,6 +569,23 @@ ELEMENTARY
 [~] MG5  — TapeDiagram                  (MG5/MG5.tsx) — authored, not wired
 [x] MG6  — TwoDigitVisualAddition       (MG6/MG6_TwoDigitVisualAddition.tsx) — wired 2026-09-02
          — VerticalMath                 (MG6/MG6_VerticalAddition.tsx) — wired 2026-09-02
+         — PlaceValueAndFluencyTo1000Lab (MG6/MG6_PlaceValueAndFluencyTo1000Lab.tsx) — wired as a
+           "standalone" skill, Grade 3 (3.NBT.1-3), deliberately sharing MG6
+           with the grade-2 2-digit components. Four units: Rounding to the
+           Nearest Ten, Rounding to the Nearest Hundred (960->1000 included as
+           an in-range endpoint), Adding and Subtracting Within 1000 (sums
+           capped at 999; forced borrow-through-zero), Multiplying by
+           Multiples of Ten (with a self-contained one-digit facts
+           refresher). 20-question Module Test, passScore 16. Styles under
+           .pvf-lab. Rounding reuses shared NumberLine as-is. Lab-local
+           diagrams PlaceValueBlocks (extends MG2's BaseTenBlocks to 3
+           digits) and TensGroupArray — promotion candidates. Unit 3 Practice
+           uses a CustomStep vertical add/subtract widget (one checked box per
+           digit and per carry/borrow mark, graded by the same breakdown
+           function that renders it) — candidate for a shared "verticalAddSub"
+           Step kind. Tests use typed answers + wrong-method distractors
+           instead, since a CustomStep can't be submitted wrong in a
+           no-feedback test.
          — AreaAndPerimeterLab          (MG6/MG6_AreaAndPerimeterLab.tsx) — wired as a
            "standalone" skill. Grade 3, 3.MD.5-8: Understanding Area as Tiling,
            Area = Multiplying Side Lengths (reintroEverySolved 20), Area and the
@@ -634,6 +651,23 @@ ELEMENTARY
            Drag-to-build steps appear only in Practice; Tests ask reasoning
            questions about pictured shapes instead, so a no-feedback test can
            never leave a student stuck on a drag step.
+         — TimeMeasurementAndDataLab    (MG7/MG7_TimeMeasurementAndDataLab.tsx) — wired as a
+           "standalone" skill. Grade 3, 3.MD.1-4, six units: Telling and
+           Writing Time to the Minute, Elapsed Time and Time-Interval Word
+           Problems (reintroEverySolved 20 for 60 min = 1 hr), Measuring and
+           Estimating Liquid Volume and Mass, One-Step Word Problems with
+           Masses and Volumes, Scaled Picture Graphs and Bar Graphs, Line
+           Plots with Fractional Measurement Data — plus a 30-question Module
+           Test (passScore 24). Styles scoped .tmd3-lab. Lab-local diagrams:
+           Clock (minute-precision rewrite of MG3's; clockAngles/
+           addMinutesToTime/elapsedMinutes shared by render + grading),
+           GraduatedContainer, ScaleGauge, ScaledBarChart (labeled major +
+           unlabeled minor gridlines), ScaledPictureGraph (half icon ALWAYS =
+           half the key's value, real SVG clipPath), LinePlot, InchRuler.
+           Promotion candidates: the analog Clock (now in MG3, MG5
+           MeasurementMoneyAndDataLab's ClockG2, and here — three variants,
+           unify into shared/diagrams/ with a precision option), plus
+           LinePlot/ScaledBarChart (MG5 has its own LinePlot/PictureBarGraph).
 [ ] MG8
 [x] MG9  — TwoDigitDivisionLab          (MG9/MG9_TwoDigitDivisionLab.tsx) — wired,
           standard 6.NS.2. Was already live in LEVEL_SKILLS but had never been

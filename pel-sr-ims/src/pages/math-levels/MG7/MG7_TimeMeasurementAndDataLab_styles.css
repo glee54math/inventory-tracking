@@ -1,0 +1,218 @@
+/* Scoped under .tmd3-lab (the wrapper div in MG7_TimeMeasurementAndDataLab.tsx)
+   instead of :root/html/body, since this file is imported into one page of a
+   much larger app, not a standalone site — same reasoning as every other
+   lab's own _styles.css. This lab reuses the SAME shared engine chrome those
+   do (shared/styles/lab-base.css), so this file only holds: this lab's own
+   color palette (light + dark), the gated Check-for-Understanding box chrome
+   (not in lab-base.css), select.answer (lab-base.css's .answer only targets
+   `input.answer`), and the handful of rules genuinely unique to this lab's
+   own diagrams (clock-setting stage, digital readout, icon rows).
+   Import BOTH stylesheets, and add "lab-base" alongside "tmd3-lab" on the
+   wrapper div. */
+
+.tmd3-lab {
+  --bg: #f5f8ec;
+  --card: #ffffff;
+  --ink: #1f2e2a;
+  --muted: #5c7268;
+  --line: #cfe0c9;
+  --grid: #e8f1e1;
+  --qa: #2f8f7e;
+  --qa-soft: #dcf0ec;
+  --qa-text: #1f6a5c;
+  --qb: #e3972a;
+  --qb-soft: #fdecd0;
+  --qb-text: #a5690f;
+  --qc: #8a5fd6;
+  --qc-soft: #eadffb;
+  --qc-text: #6b40b3;
+  --good: #289a66;
+  --good-soft: #ddf3e6;
+  --bad: #d4495b;
+  --bad-soft: #fbe3e7;
+  --on-q: #ffffff;
+  --radius-lg: 20px;
+  --radius-sm: 12px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--grid) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* .align-drill/.align-stack-wrap/.intro-gate-title aren't in lab-base.css —
+   they're the box chrome AlignDecimalsDrill (MG11) introduced for a
+   mandatory gated exercise, reused by every lab's Check-for-Understanding
+   gate since. */
+.tmd3-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.tmd3-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.tmd3-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.tmd3-lab .feedback.good {
+  color: var(--good);
+}
+
+/* lab-base.css's .answer styling is scoped to `input.answer` only — this
+   lab's Check-for-Understanding dropdowns are <select>s. */
+.tmd3-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.tmd3-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+
+/* A first-grader seeing this for the first time benefits from a slightly
+   larger choice button and thicker border than the default lab-base.css
+   styling (tuned for older grades' denser multiple-choice text) — same
+   reasoning MK1_CountingAndCardinalityLab_styles.css gives for its own
+   Kindergarten audience. */
+.tmd3-lab .choice {
+  font-size: 17px;
+  border-width: 3px;
+  border-radius: var(--radius-lg);
+}
+
+/* ---------- Clock (Units 1-2: clock-setting stage, digital readout) ---------- */
+.tmd3-lab .clock-set-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+}
+.tmd3-lab .digital-display {
+  font-family: "Courier New", monospace;
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--qa-text);
+  background: var(--qa-soft);
+  border-radius: var(--radius-sm);
+  padding: 18px 30px;
+  text-align: center;
+}
+
+/* ---------- Unit 4: icon rows (N containers of X each) ---------- */
+.tmd3-lab .icon-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+}
+
+/* Side-by-side diagrams (two clocks, two containers, two scales, graph pairs)
+   wrap instead of overflowing on narrow screens. */
+.tmd3-lab .control-row > svg {
+  flex: 0 1 auto;
+}
+
+/* Module test nav/card — same rules as every other lab's own module test
+   chrome, since this feature's markup is shared verbatim. */
+.tmd3-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.tmd3-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.tmd3-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.tmd3-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.tmd3-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.tmd3-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+.tmd3-lab .module-test-back {
+  margin-bottom: 20px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .tmd3-lab:not([data-theme="light"]) {
+    --bg: #131d19;
+    --card: #1d2b26;
+    --ink: #e9f3ee;
+    --muted: #a8c2b8;
+    --line: #35483f;
+    --grid: #233830;
+    --qa: #5fd6c1;
+    --qa-soft: #1f4a42;
+    --qa-text: #a6ebdd;
+    --qb: #f5b45c;
+    --qb-soft: #4a3a1c;
+    --qb-text: #f7cb8e;
+    --qc: #c0a3f5;
+    --qc-soft: #3c2e63;
+    --qc-text: #ddcdfb;
+    --good: #5fd49c;
+    --good-soft: #1b3f30;
+    --bad: #ff7b8a;
+    --bad-soft: #492230;
+    --on-q: #0f1815;
+  }
+}
+.tmd3-lab[data-theme="dark"] {
+  --bg: #131d19;
+  --card: #1d2b26;
+  --ink: #e9f3ee;
+  --muted: #a8c2b8;
+  --line: #35483f;
+  --grid: #233830;
+  --qa: #5fd6c1;
+  --qa-soft: #1f4a42;
+  --qa-text: #a6ebdd;
+  --qb: #f5b45c;
+  --qb-soft: #4a3a1c;
+  --qb-text: #f7cb8e;
+  --qc: #c0a3f5;
+  --qc-soft: #3c2e63;
+  --qc-text: #ddcdfb;
+  --good: #5fd49c;
+  --good-soft: #1b3f30;
+  --bad: #ff7b8a;
+  --bad-soft: #492230;
+  --on-q: #0f1815;
+}

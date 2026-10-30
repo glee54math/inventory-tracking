@@ -109,6 +109,13 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
     // non-gradable exploration mode.
     {
       type: "standalone",
+      skillId: "PlaceValueAndFluencyTo1000Lab",
+      label: "Place Value & Fluency to 1000",
+      componentFile: "MG6_PlaceValueAndFluencyTo1000Lab",
+      componentExport: "PlaceValueAndFluencyTo1000Lab",
+    },
+    {
+      type: "standalone",
       skillId: "AreaAndPerimeterLab",
       label: "Area & Perimeter",
       componentFile: "MG6_AreaAndPerimeterLab",
@@ -133,6 +140,13 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       label: "Quadrilaterals & Partitioning",
       componentFile: "MG7_QuadrilateralsAndPartitioningLab",
       componentExport: "QuadrilateralsAndPartitioningLab",
+    },
+    {
+      type: "standalone",
+      skillId: "TimeMeasurementAndDataLab",
+      label: "Time, Measurement & Data",
+      componentFile: "MG7_TimeMeasurementAndDataLab",
+      componentExport: "TimeMeasurementAndDataLab",
     },
   ],
   MG11: [
