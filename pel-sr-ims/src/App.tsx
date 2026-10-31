@@ -169,28 +169,32 @@ function App() {
           className="flex h-screen w-screen bg-gray-100 p-4 gap-4 overflow-auto"
         >
           {/* Sidebar */}
-          <div className="bg-gray-100 p-2 min-w-[60px] border w-fit h-full overflow-y-auto">
+          <div className="h-full overflow-y-auto rounded-lg border bg-white p-2">
             <Sidebar
               showInventory={showInventory}
               toggleInventory={() => setShowInventory((prev) => !prev)}
+              showStudentDatabase={showStudentDatabase}
               toggleStudentDatabase={() => {
                 setShowStudentDatabase((prev) => !prev);
                 setShowTimesheet(false);
                 setShowScanStation(false);
                 setShowDataEntry(false);
               }}
+              showTimesheet={showTimesheet}
               toggleTimesheet={() => {
                 setShowTimesheet((prev) => !prev);
                 setShowStudentDatabase(false);
                 setShowScanStation(false);
                 setShowDataEntry(false);
               }}
+              showScanStation={showScanStation}
               toggleScanStation={() => {
                 setShowScanStation((prev) => !prev);
                 setShowStudentDatabase(false);
                 setShowTimesheet(false);
                 setShowDataEntry(false);
               }}
+              showDataEntry={showDataEntry}
               toggleDataEntry={() => {
                 setShowDataEntry((prev) => !prev);
                 setShowStudentDatabase(false);

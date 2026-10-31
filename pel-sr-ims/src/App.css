@@ -1,2 +1,25 @@
 @import "tailwindcss";
 
+/* Sidebar nav labels: slide left on hover to reveal text clipped by the
+   sidebar's width, hold, snap back, and loop while the pointer stays over
+   it. --marquee-shift is set inline per-label once its overflow is measured
+   (see MarqueeLabel in Sidebar.tsx). */
+@keyframes sidebar-marquee {
+  0%,
+  15% {
+    transform: translateX(0);
+  }
+  55%,
+  75% {
+    transform: translateX(var(--marquee-shift, 0px));
+  }
+  76%,
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.marquee-hover:hover {
+  animation: sidebar-marquee 3.2s ease-in-out infinite;
+}
+
