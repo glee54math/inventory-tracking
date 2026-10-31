@@ -260,7 +260,7 @@ export default function WorkerLogin() {
     : selectedWorker;
 
   return (
-    <div className="relative min-h-screen w-full bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 flex flex-col justify-center items-center p-4">
+    <div className="relative min-h-screen w-full bg-gradient-to-br from-primary-500 via-primary-600 to-primary-800 flex flex-col justify-center items-center p-4">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
 
       <div className="absolute top-4 right-4 z-20 flex gap-2">
@@ -283,7 +283,7 @@ export default function WorkerLogin() {
           <h1 className="text-white text-5xl font-bold mb-3 tracking-tight drop-shadow-xl">
             PEL
           </h1>
-          <p className="text-blue-100 text-lg font-medium">
+          <p className="text-primary-100 text-lg font-medium">
             Worker Login Portal
           </p>
         </div>
@@ -301,7 +301,7 @@ export default function WorkerLogin() {
                   onChange={(e) => handleWorkerSelect(e.target.value)}
                   disabled={isLoading}
                   className="w-full px-4 py-4 rounded-xl border-2 border-gray-200 text-gray-800 text-base
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                    focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
                     transition-all duration-200 shadow-sm
                     disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -315,14 +315,14 @@ export default function WorkerLogin() {
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg text-sm">
                   {error}
                 </div>
               )}
 
               {isLoading && (
                 <div className="text-center text-gray-600">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
                 </div>
               )}
 
@@ -349,7 +349,7 @@ export default function WorkerLogin() {
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    className="text-sm text-primary-600 hover:text-primary-700 font-medium"
                   >
                     ← Back
                   </button>
@@ -363,7 +363,7 @@ export default function WorkerLogin() {
                     placeholder="First Name"
                     disabled={isLoading}
                     className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-800
-                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
                       transition-all duration-200 shadow-sm
                       disabled:opacity-50 disabled:cursor-not-allowed"
                   />
@@ -375,7 +375,7 @@ export default function WorkerLogin() {
                     placeholder="Last Name"
                     disabled={isLoading}
                     className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-800
-                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
                       transition-all duration-200 shadow-sm
                       disabled:opacity-50 disabled:cursor-not-allowed"
                   />
@@ -385,7 +385,7 @@ export default function WorkerLogin() {
                     onChange={(e) => setNewWorkerLocation(e.target.value)}
                     disabled={isLoading}
                     className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-800
-                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
                       transition-all duration-200 shadow-sm
                       disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -396,7 +396,7 @@ export default function WorkerLogin() {
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg text-sm">
                   {error}
                 </div>
               )}
@@ -404,12 +404,12 @@ export default function WorkerLogin() {
               <button
                 type="submit"
                 disabled={isLoading || !newWorkerFirstName.trim() || !newWorkerLastName.trim()}
-                className="w-full !bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl
+                className="w-full !bg-gradient-to-r from-primary-500 to-primary-700 text-white py-4 rounded-xl
                   font-semibold text-lg shadow-lg hover:shadow-xl
                   transform hover:scale-[1.02] active:scale-[0.98]
                   transition-all duration-200
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               >
                 {isLoading ? "Adding Worker..." : "Add Worker"}
               </button>
@@ -430,7 +430,7 @@ export default function WorkerLogin() {
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    className="text-sm text-primary-600 hover:text-primary-700 font-medium"
                   >
                     ← Back
                   </button>
@@ -451,7 +451,7 @@ export default function WorkerLogin() {
                   disabled={isLoading}
                   className="w-full px-4 py-4 rounded-xl border-2 border-gray-200 text-gray-800 text-2xl
                     text-center tracking-[0.5em] font-bold
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                    focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
                     transition-all duration-200 shadow-sm
                     disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -461,7 +461,7 @@ export default function WorkerLogin() {
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg text-sm">
                   {error}
                 </div>
               )}
@@ -469,12 +469,12 @@ export default function WorkerLogin() {
               <button
                 type="submit"
                 disabled={pin.length !== 4 || isLoading}
-                className="w-full !bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl
+                className="w-full !bg-gradient-to-r from-primary-500 to-primary-700 text-white py-4 rounded-xl
                   font-semibold text-lg shadow-lg hover:shadow-xl
                   transform hover:scale-[1.02] active:scale-[0.98]
                   transition-all duration-200
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               >
                 {isLoading ? "Verifying..." : "Login"}
               </button>
@@ -495,7 +495,7 @@ export default function WorkerLogin() {
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    className="text-sm text-primary-600 hover:text-primary-700 font-medium"
                   >
                     ← Back
                   </button>
@@ -503,8 +503,8 @@ export default function WorkerLogin() {
                 <p className="text-sm text-gray-500 mb-3">
                   Logging in as: <span className="font-semibold text-gray-700">{selectedWorkerName}</span>
                 </p>
-                <div className="!bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-blue-800">
+                <div className="!bg-primary-50 border border-primary-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-primary-800">
                     🔒 First time login detected. Please create a 4-digit PIN for future logins.
                   </p>
                 </div>
@@ -521,7 +521,7 @@ export default function WorkerLogin() {
                   disabled={isLoading}
                   className="w-full px-4 py-4 rounded-xl border-2 border-gray-200 text-gray-800 text-2xl
                     text-center tracking-[0.5em] font-bold
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                    focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
                     transition-all duration-200 shadow-sm
                     disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -531,7 +531,7 @@ export default function WorkerLogin() {
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg text-sm">
                   {error}
                 </div>
               )}
@@ -539,12 +539,12 @@ export default function WorkerLogin() {
               <button
                 type="submit"
                 disabled={pin.length !== 4 || isLoading}
-                className="w-full !bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl
+                className="w-full !bg-gradient-to-r from-primary-500 to-primary-700 text-white py-4 rounded-xl
                   font-semibold text-lg shadow-lg hover:shadow-xl
                   transform hover:scale-[1.02] active:scale-[0.98]
                   transition-all duration-200
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               >
                 Continue
               </button>
@@ -565,7 +565,7 @@ export default function WorkerLogin() {
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    className="text-sm text-primary-600 hover:text-primary-700 font-medium"
                   >
                     ← Back
                   </button>
@@ -586,7 +586,7 @@ export default function WorkerLogin() {
                   disabled={isLoading}
                   className="w-full px-4 py-4 rounded-xl border-2 border-gray-200 text-gray-800 text-2xl
                     text-center tracking-[0.5em] font-bold
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                    focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
                     transition-all duration-200 shadow-sm
                     disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -596,7 +596,7 @@ export default function WorkerLogin() {
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg text-sm">
                   {error}
                 </div>
               )}
@@ -604,12 +604,12 @@ export default function WorkerLogin() {
               <button
                 type="submit"
                 disabled={confirmPinValue.length !== 4 || isLoading}
-                className="w-full !bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl
+                className="w-full !bg-gradient-to-r from-primary-500 to-primary-700 text-white py-4 rounded-xl
                   font-semibold text-lg shadow-lg hover:shadow-xl
                   transform hover:scale-[1.02] active:scale-[0.98]
                   transition-all duration-200
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               >
                 {isLoading ? "Creating PIN..." : "Create PIN & Login"}
               </button>
@@ -617,7 +617,7 @@ export default function WorkerLogin() {
           )}
         </div>
 
-        <p className="text-center text-blue-100 text-sm mt-6">
+        <p className="text-center text-primary-100 text-sm mt-6">
           Secure login for authorized personnel only
         </p>
       </div>

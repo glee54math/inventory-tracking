@@ -34,8 +34,8 @@ export default function PracticeEntryCard({ hwkHistory }: PracticeEntryCardProps
             <button
               key={level}
               onClick={() => navigate(`/student-practice/${level}`)}
-              className="px-3 py-2 rounded-xl text-sm font-semibold border-2 border-blue-200 text-blue-700
-                hover:border-blue-400 hover:bg-blue-50 transition-all hover:scale-105 active:scale-95"
+              className="px-3 py-2 rounded-xl text-sm font-semibold border-2 border-primary-200 text-primary-700
+                hover:border-primary-400 hover:bg-primary-50 transition-all hover:scale-105 active:scale-95"
             >
               {level}
             </button>

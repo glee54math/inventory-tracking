@@ -78,7 +78,7 @@ export default function ParentDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your dashboard...</p>
         </div>
       </div>
@@ -89,12 +89,12 @@ export default function ParentDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-          <div className="text-red-600 mb-4 text-center text-xl">⚠️</div>
+          <div className="text-danger-600 mb-4 text-center text-xl">⚠️</div>
           <h2 className="text-xl font-bold text-gray-800 mb-2 text-center">Error</h2>
           <p className="text-gray-600 mb-4 text-center">{error}</p>
           <button
             onClick={() => navigate("/parent-login")}
-            className="w-full !bg-blue-600 text-white py-2 rounded-lg font-semibold hover:!bg-blue-700"
+            className="w-full !bg-primary-600 text-white py-2 rounded-lg font-semibold hover:!bg-primary-700"
           >
             Back to Login
           </button>
@@ -163,7 +163,7 @@ export default function ParentDashboard() {
                   onClick={() => setActiveChildIndex(index)}
                   className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition ${
                     activeChildIndex === index
-                      ? '!bg-blue-600 text-white'
+                      ? '!bg-primary-600 text-white'
                       : '!bg-gray-100 text-gray-700 hover:!bg-gray-200'
                   }`}
                 >
@@ -176,7 +176,7 @@ export default function ParentDashboard() {
           {/* Add Child Button */}
           <button
             onClick={() => setShowAddChildModal(true)}
-            className="bg-white rounded-lg shadow-sm px-4 py-3 !bg-green-600 text-white hover:!bg-green-700 transition font-semibold whitespace-nowrap flex items-center gap-2"
+            className="bg-white rounded-lg shadow-sm px-4 py-3 !bg-success-600 text-white hover:!bg-success-700 transition font-semibold whitespace-nowrap flex items-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -196,7 +196,7 @@ export default function ParentDashboard() {
       {/* Footer */}
       <footer className="bg-white border-t w-full flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-gray-600">
-          <p>Questions? Contact Mr. Lee @ <a href="mailto:pelsanramon@gmail.com" className="text-blue-600 hover:underline">pelsanramon@gmail.com</a></p>
+          <p>Questions? Contact Mr. Lee @ <a href="mailto:pelsanramon@gmail.com" className="text-primary-600 hover:underline">pelsanramon@gmail.com</a></p>
         </div>
       </footer>
 

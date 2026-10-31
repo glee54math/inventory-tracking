@@ -43,11 +43,11 @@ function getGradeComparison(
   const diff = currentIdx - expectedIdx;
   const gradeLabel = currentGrade === "K" ? "Kindergarten" : `Grade ${currentGrade}`;
 
-  if (diff >= 2) return { label: `${diff} levels ahead of ${gradeLabel}`, colorClass: "text-emerald-700 bg-emerald-50 border-emerald-200" };
-  if (diff === 1) return { label: `1 level ahead of ${gradeLabel}`, colorClass: "text-emerald-700 bg-emerald-50 border-emerald-200" };
-  if (diff === 0) return { label: `On track for ${gradeLabel}`, colorClass: "text-blue-700 bg-blue-50 border-blue-200" };
-  if (diff === -1) return { label: `1 level behind ${gradeLabel}`, colorClass: "text-amber-700 bg-amber-50 border-amber-200" };
-  return { label: `${Math.abs(diff)} levels behind ${gradeLabel}`, colorClass: "text-red-700 bg-red-50 border-red-200" };
+  if (diff >= 2) return { label: `${diff} levels ahead of ${gradeLabel}`, colorClass: "text-success-700 bg-success-50 border-success-200" };
+  if (diff === 1) return { label: `1 level ahead of ${gradeLabel}`, colorClass: "text-success-700 bg-success-50 border-success-200" };
+  if (diff === 0) return { label: `On track for ${gradeLabel}`, colorClass: "text-primary-700 bg-primary-50 border-primary-200" };
+  if (diff === -1) return { label: `1 level behind ${gradeLabel}`, colorClass: "text-warning-700 bg-warning-50 border-warning-200" };
+  return { label: `${Math.abs(diff)} levels behind ${gradeLabel}`, colorClass: "text-danger-700 bg-danger-50 border-danger-200" };
 }
 
 export default function LevelStatusCard({ subjectProgress, startingGrade }: LevelStatusCardProps) {
@@ -78,7 +78,7 @@ export default function LevelStatusCard({ subjectProgress, startingGrade }: Leve
   return (
     <div
       className={`bg-white rounded-2xl shadow-sm border-2 p-6 ${
-        isMath ? "border-blue-100" : "border-green-100"
+        isMath ? "border-primary-100" : "border-success-100"
       }`}
     >
       {/* Header */}
@@ -86,7 +86,7 @@ export default function LevelStatusCard({ subjectProgress, startingGrade }: Leve
         <h3 className="text-base font-bold text-gray-700">{subject}</h3>
         <span
           className={`text-3xl font-extrabold tracking-tight ${
-            isMath ? "text-blue-600" : "text-green-600"
+            isMath ? "text-primary-600" : "text-success-600"
           }`}
         >
           {currentLevel}
@@ -104,7 +104,7 @@ export default function LevelStatusCard({ subjectProgress, startingGrade }: Leve
         <div className="h-3 rounded-full bg-gray-100 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
-              isMath ? "bg-blue-500" : "bg-green-500"
+              isMath ? "bg-primary-500" : "bg-success-500"
             }`}
             style={{ width: `${progressPct}%` }}
           />

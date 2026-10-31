@@ -7,9 +7,9 @@ const MODE_LABELS: Record<PracticeMode, string> = {
 };
 
 const MODE_STYLES: Record<PracticeMode, string> = {
-  visual: "border-blue-200 text-blue-700 hover:border-blue-400 hover:bg-blue-50",
-  wordProblem: "border-emerald-200 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50",
-  standalone: "border-purple-200 text-purple-700 hover:border-purple-400 hover:bg-purple-50",
+  visual: "border-primary-200 text-primary-700 hover:border-primary-400 hover:bg-primary-50",
+  wordProblem: "border-success-200 text-success-700 hover:border-success-400 hover:bg-success-50",
+  standalone: "border-tertiary-200 text-tertiary-700 hover:border-tertiary-400 hover:bg-tertiary-50",
 };
 
 interface PracticeModeSelectorProps {

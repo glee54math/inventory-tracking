@@ -138,13 +138,13 @@ function VisualProblem({
       <div className="flex justify-center gap-3 mb-4">
         <button
           onClick={() => setShowFeedback(!showFeedback)}
-          className="px-5 py-2 !bg-green-500 text-white rounded-lg font-medium hover:!bg-green-600 transition-colors"
+          className="px-5 py-2 !bg-success-500 text-white rounded-lg font-medium hover:!bg-success-600 transition-colors"
         >
           {showFeedback ? "Hide" : "Check"} Answer
         </button>
         <button
           onClick={newProblem}
-          className="px-5 py-2 !bg-blue-500 text-white rounded-lg font-medium hover:!bg-blue-600 transition-colors"
+          className="px-5 py-2 !bg-primary-500 text-white rounded-lg font-medium hover:!bg-primary-600 transition-colors"
         >
           New Problem
         </button>
@@ -218,7 +218,7 @@ function WordProblemPractice({
       <div className="flex justify-end mb-2">
         <button
           onClick={newProblem}
-          className="px-5 py-2 !bg-blue-500 text-white rounded-lg font-medium hover:!bg-blue-600 transition-colors"
+          className="px-5 py-2 !bg-primary-500 text-white rounded-lg font-medium hover:!bg-primary-600 transition-colors"
         >
           New Problem
         </button>

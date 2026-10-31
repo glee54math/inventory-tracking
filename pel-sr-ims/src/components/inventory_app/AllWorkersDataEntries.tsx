@@ -4,9 +4,9 @@
 import { useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../utils/firebase";
-import { toDataEntryRecord, upsertDataEntry } from "../../utils/dataEntryService";
+import { toDataEntryRecord } from "../../utils/dataEntryService";
 import type { DataEntryRecord } from "../../utils/types";
-import DataEntryTable from "./DataEntryTable";
+import WorkerDataEntryBlock from "./WorkerDataEntryBlock";
 
 interface WorkerDataEntryRecordSet {
   firstName: string;
@@ -69,17 +69,7 @@ export default function AllWorkersDataEntries() {
               {collapsed ? "▶" : "▼"} {record.firstName} {record.lastName}
             </button>
 
-            {!collapsed && (
-              <div className="p-2">
-                <DataEntryTable
-                  entries={record.entries}
-                  editable
-                  onSaveEdit={(original, updates) =>
-                    upsertDataEntry(record.firstName, record.lastName, original.date, updates)
-                  }
-                />
-              </div>
-            )}
+            {!collapsed && <WorkerDataEntryBlock record={record} />}
           </div>
         );
       })}

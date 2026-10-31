@@ -28,6 +28,10 @@ type InventoryType =
   | "Back English"
   | "Front English";
 
+// The sidebar's left-hand panels are mutually exclusive tabs, not independent
+// toggles — only one (or none) can be showing at a time.
+type LeftPanel = "inventory" | "studentDatabase" | "timesheet" | "scanStation" | "dataEntry" | null;
+
 function restructure(lowStock: InsufficientSubsection[]): InventoryData {
   const result: InventoryData = {};
 
@@ -45,8 +49,17 @@ function App() {
   const [inventories, setInventories] = useState<
     Record<InventoryType, InventoryData>
   >({} as Record<InventoryType, InventoryData>);
-  const [showInventory, setShowInventory] = useState(true);
+  const [activeLeftPanel, setActiveLeftPanel] = useState<LeftPanel>("inventory");
   const [showActionPanel, setShowActionPanel] = useState(true);
+  // Time Card and Data Entry have long scrollable history tables, so they get
+  // the full window width (Actions auto-collapses); every other panel keeps
+  // today's split layout.
+  const toggleLeftPanel = (panel: LeftPanel) =>
+    setActiveLeftPanel((prev) => {
+      const next = prev === panel ? null : panel;
+      setShowActionPanel(next !== "timesheet" && next !== "dataEntry");
+      return next;
+    });
   const [inventoriesVisibility, setInventoriesVisibility] = useState<
     Record<string, boolean>
   >({});
@@ -55,10 +68,6 @@ function App() {
     InsufficientSubsection[]
   >([]);
   const [showInsufficient, setShowInsufficient] = useState<boolean>(false);
-  const [showStudentDatabase, setShowStudentDatabase] = useState<boolean>(false);
-  const [showTimesheet, setShowTimesheet] = useState<boolean>(false);
-  const [showScanStation, setShowScanStation] = useState<boolean>(false);
-  const [showDataEntry, setShowDataEntry] = useState<boolean>(false);
   const [showFlaggedSections, setShowFlaggedSections] = useState<boolean>(false);
   const [flagRefreshKey, setFlagRefreshKey] = useState<number>(0);
   // Incremented after each successful submission to reset Inventory cell edit state
@@ -171,36 +180,16 @@ function App() {
           {/* Sidebar */}
           <div className="h-full overflow-y-auto rounded-lg border bg-white p-2">
             <Sidebar
-              showInventory={showInventory}
-              toggleInventory={() => setShowInventory((prev) => !prev)}
-              showStudentDatabase={showStudentDatabase}
-              toggleStudentDatabase={() => {
-                setShowStudentDatabase((prev) => !prev);
-                setShowTimesheet(false);
-                setShowScanStation(false);
-                setShowDataEntry(false);
-              }}
-              showTimesheet={showTimesheet}
-              toggleTimesheet={() => {
-                setShowTimesheet((prev) => !prev);
-                setShowStudentDatabase(false);
-                setShowScanStation(false);
-                setShowDataEntry(false);
-              }}
-              showScanStation={showScanStation}
-              toggleScanStation={() => {
-                setShowScanStation((prev) => !prev);
-                setShowStudentDatabase(false);
-                setShowTimesheet(false);
-                setShowDataEntry(false);
-              }}
-              showDataEntry={showDataEntry}
-              toggleDataEntry={() => {
-                setShowDataEntry((prev) => !prev);
-                setShowStudentDatabase(false);
-                setShowTimesheet(false);
-                setShowScanStation(false);
-              }}
+              showInventory={activeLeftPanel === "inventory"}
+              toggleInventory={() => toggleLeftPanel("inventory")}
+              showStudentDatabase={activeLeftPanel === "studentDatabase"}
+              toggleStudentDatabase={() => toggleLeftPanel("studentDatabase")}
+              showTimesheet={activeLeftPanel === "timesheet"}
+              toggleTimesheet={() => toggleLeftPanel("timesheet")}
+              showScanStation={activeLeftPanel === "scanStation"}
+              toggleScanStation={() => toggleLeftPanel("scanStation")}
+              showDataEntry={activeLeftPanel === "dataEntry"}
+              toggleDataEntry={() => toggleLeftPanel("dataEntry")}
               showActions={showActionPanel}
               toggleActions={() => setShowActionPanel((prev) => !prev)}
             />
@@ -209,13 +198,13 @@ function App() {
           {/* Inventory Panel || Student Database Panel */}
           <div
             className={`transition-all duration-500 overflow-auto bg-white ${
-              showInventory || showStudentDatabase || showTimesheet || showScanStation || showDataEntry
+              activeLeftPanel !== null
                 ? `${showActionPanel ? "w-[40%]" : "flex-1"} opacity-100 p-2 border pointer-events-auto`
                 : "w-0 opacity-0 !p-0 !border-none pointer-events-none"
             }`}
           >
             {/* Inventories */}
-            {showInventory && !showStudentDatabase && !showTimesheet && !showScanStation && !showDataEntry && (
+            {activeLeftPanel === "inventory" && (
               <div className="overflow-auto w-full max-w-full">
                 {Object.entries(inventories).map(([firestoreId, inventory]) => {
                   const displayName = toDisplayName(firestoreId);
@@ -295,28 +284,28 @@ function App() {
             )}
 
             {/* Student Database */}
-            {showStudentDatabase && !showTimesheet && (
+            {activeLeftPanel === "studentDatabase" && (
               <div className="w-[40%] opacity-100 p-2 border overflow-auto w-full max-w-full">
                 <Database />
               </div>
             )}
 
             {/* Time Card */}
-            {showTimesheet && (
+            {activeLeftPanel === "timesheet" && (
               <div className="w-[40%] opacity-100 p-2 border overflow-auto w-full max-w-full">
                 <WorkerTimeSheet />
               </div>
             )}
 
             {/* PEL Dollars Scan Station */}
-            {showScanStation && (
+            {activeLeftPanel === "scanStation" && (
               <div className="w-[40%] opacity-100 p-2 border overflow-auto w-full max-w-full">
                 <ScanStation workerInitials={nameOfWorker} />
               </div>
             )}
 
             {/* Data Entry */}
-            {showDataEntry && (
+            {activeLeftPanel === "dataEntry" && (
               <div className="w-[40%] opacity-100 p-2 border overflow-auto w-full max-w-full">
                 <DataEntryPanel />
               </div>
@@ -327,7 +316,7 @@ function App() {
           <div
             className={`flex flex-col transition-all duration-500 gap-4 ${
               showActionPanel
-                ? `${showInventory || showStudentDatabase || showTimesheet || showScanStation ? "w-[60%]" : "w-full"} opacity-100 overflow-hidden pointer-events-auto`
+                ? `${activeLeftPanel !== null ? "w-[60%]" : "w-full"} opacity-100 overflow-hidden pointer-events-auto`
                 : "w-0 opacity-0 overflow-hidden !p-0 pointer-events-none"
             }`}
           >

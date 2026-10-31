@@ -120,7 +120,7 @@ export default function ParentRegistration() {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 p-4">
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-2xl overflow-auto max-h-[90vh]">
         {/* Progress Indicator */}
         <div className="flex items-center justify-center mb-8">
@@ -134,7 +134,7 @@ export default function ParentRegistration() {
             <p className="text-gray-600 mb-6">Step 1: Enter your information</p>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+              <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded mb-4">
                 {error}
               </div>
             )}
@@ -150,7 +150,7 @@ export default function ParentRegistration() {
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
 
@@ -163,7 +163,7 @@ export default function ParentRegistration() {
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
               </div>
@@ -175,7 +175,7 @@ export default function ParentRegistration() {
                 <select
                   value={parentType}
                   onChange={(e) => setParentType(e.target.value as "father" | "mother" | "guardian")}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="father">Father</option>
                   <option value="mother">Mother</option>
@@ -192,7 +192,7 @@ export default function ParentRegistration() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
@@ -207,7 +207,7 @@ export default function ParentRegistration() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={6}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 pr-10"
                   />
                   <button
                     type="button"
@@ -238,7 +238,7 @@ export default function ParentRegistration() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 pr-10"
                   />
                   <button
                     type="button"
@@ -269,7 +269,7 @@ export default function ParentRegistration() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 !bg-blue-600 text-white py-2 rounded-lg font-semibold hover:!bg-blue-700 transition"
+                  className="flex-1 !bg-primary-600 text-white py-2 rounded-lg font-semibold hover:!bg-primary-700 transition"
                 >
                   Next
                 </button>
@@ -285,7 +285,7 @@ export default function ParentRegistration() {
             <p className="text-gray-600 mb-6">Step 2: Search for and select your child(ren)</p>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+              <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded mb-4">
                 {error}
               </div>
             )}
@@ -299,12 +299,12 @@ export default function ParentRegistration() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearchChildren()}
                   placeholder="Enter child's name..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
                 <button
                   onClick={handleSearchChildren}
                   disabled={searching}
-                  className="px-6 py-2 !bg-blue-600 text-white rounded-lg font-semibold hover:!bg-blue-700 transition disabled:opacity-50"
+                  className="px-6 py-2 !bg-primary-600 text-white rounded-lg font-semibold hover:!bg-primary-700 transition disabled:opacity-50"
                 >
                   {searching ? "Searching..." : "Search"}
                 </button>
@@ -317,7 +317,7 @@ export default function ParentRegistration() {
                     <div
                       key={child.studentId}
                       className={`p-4 hover:bg-gray-50 cursor-pointer transition ${
-                        selectedChildren.includes(child.studentId) ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                        selectedChildren.includes(child.studentId) ? 'bg-primary-50 border-l-4 border-primary-500' : ''
                       }`}
                       onClick={() => toggleChildSelection(child.studentId)}
                     >
@@ -336,7 +336,7 @@ export default function ParentRegistration() {
                           type="checkbox"
                           checked={selectedChildren.includes(child.studentId)}
                           onChange={() => {}}
-                          className="w-5 h-5 text-blue-600"
+                          className="w-5 h-5 text-primary-600"
                         />
                       </div>
                     </div>
@@ -346,8 +346,8 @@ export default function ParentRegistration() {
 
               {/* Selected Children Summary */}
               {selectedChildren.length > 0 && (
-                <div className="!bg-green-50 border border-green-200 rounded-lg p-4">
-                  <p className="font-semibold text-green-800">
+                <div className="!bg-success-50 border border-success-200 rounded-lg p-4">
+                  <p className="font-semibold text-success-800">
                     Selected {selectedChildren.length} child{selectedChildren.length > 1 ? 'ren' : ''}
                   </p>
                 </div>
@@ -363,7 +363,7 @@ export default function ParentRegistration() {
                 <button
                   onClick={handleStep2Submit}
                   disabled={selectedChildren.length === 0}
-                  className="flex-1 !bg-blue-600 text-white py-2 rounded-lg font-semibold hover:!bg-blue-700 transition disabled:opacity-50"
+                  className="flex-1 !bg-primary-600 text-white py-2 rounded-lg font-semibold hover:!bg-primary-700 transition disabled:opacity-50"
                 >
                   Next
                 </button>
@@ -379,7 +379,7 @@ export default function ParentRegistration() {
             <p className="text-gray-600 mb-6">Step 3: Review and create your account</p>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+              <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded mb-4">
                 {error}
               </div>
             )}
@@ -418,7 +418,7 @@ export default function ParentRegistration() {
               <button
                 onClick={handleFinalSubmit}
                 disabled={loading}
-                className="flex-1 !bg-green-600 text-white py-2 rounded-lg font-semibold hover:!bg-green-700 transition disabled:opacity-50"
+                className="flex-1 !bg-success-600 text-white py-2 rounded-lg font-semibold hover:!bg-success-700 transition disabled:opacity-50"
               >
                 {loading ? "Creating Account..." : "Create Account"}
               </button>
@@ -439,9 +439,9 @@ function StepIndicator({ currentStep, totalSteps }: { currentStep: number; total
           <div
             className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
               step === currentStep
-                ? '!bg-blue-600 text-white'
+                ? '!bg-primary-600 text-white'
                 : step < currentStep
-                ? '!bg-green-600 text-white'
+                ? '!bg-success-600 text-white'
                 : '!bg-gray-300 text-gray-600'
             }`}
           >
@@ -450,7 +450,7 @@ function StepIndicator({ currentStep, totalSteps }: { currentStep: number; total
           {step < totalSteps && (
             <div
               className={`w-12 h-1 ${
-                step < currentStep ? '!bg-green-600' : '!bg-gray-300'
+                step < currentStep ? '!bg-success-600' : '!bg-gray-300'
               }`}
             />
           )}

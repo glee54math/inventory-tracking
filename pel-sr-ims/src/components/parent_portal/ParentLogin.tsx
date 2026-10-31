@@ -52,7 +52,7 @@ export default function ParentLogin() {
   }
 
   return (
-    <div className="relative min-h-screen w-full bg-gradient-to-br from-orange-400 via-amber-500 to-orange-600 flex flex-col justify-center items-center p-4">
+    <div className="relative min-h-screen w-full bg-gradient-to-br from-secondary-400 via-secondary-500 to-secondary-600 flex flex-col justify-center items-center p-4">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(251,146,60,0.3),rgba(255,255,255,0))]" />
 
       <button
@@ -67,7 +67,7 @@ export default function ParentLogin() {
           <h1 className="text-white text-5xl font-bold mb-3 tracking-tight drop-shadow-xl">
             PEL
           </h1>
-          <p className="text-orange-100 text-lg font-medium">Parent Portal</p>
+          <p className="text-secondary-100 text-lg font-medium">Parent Portal</p>
         </div>
 
         <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8">
@@ -77,7 +77,7 @@ export default function ParentLogin() {
 
           {/* Error Message */}
           {error && (
-            <div className="!bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+            <div className="!bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg mb-4 text-sm">
               {error}
             </div>
           )}
@@ -95,7 +95,7 @@ export default function ParentLogin() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-800
-                    focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500
+                    focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500
                     transition-all duration-200 shadow-sm"
                   placeholder="your.email@example.com"
                 />
@@ -112,7 +112,7 @@ export default function ParentLogin() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-800
-                      focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500
+                      focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500
                       transition-all duration-200 shadow-sm pr-10"
                     placeholder="••••••••"
                   />
@@ -138,12 +138,12 @@ export default function ParentLogin() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full !bg-gradient-to-r from-orange-500 to-amber-600 text-white py-4 rounded-xl
+                className="w-full !bg-gradient-to-r from-secondary-500 to-secondary-600 text-white py-4 rounded-xl
                   font-semibold text-lg shadow-lg hover:shadow-xl
                   transform hover:scale-[1.02] active:scale-[0.98]
                   transition-all duration-200
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-                  focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+                  focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2"
               >
                 {loading ? "Signing in..." : "Sign In"}
               </button>
@@ -152,11 +152,11 @@ export default function ParentLogin() {
             <div className="text-center">
               <button
                 onClick={() => navigate("/parent-registration")}
-                className="w-full !bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl
+                className="w-full !bg-gradient-to-r from-success-500 to-success-600 text-white py-4 rounded-xl
                   font-semibold text-lg shadow-lg hover:shadow-xl
                   transform hover:scale-[1.02] active:scale-[0.98]
                   transition-all duration-200
-                  focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  focus:outline-none focus:ring-2 focus:ring-success-500 focus:ring-offset-2"
               >
                 Create New Account
               </button>
@@ -194,14 +194,14 @@ export default function ParentLogin() {
               <>
                 <button
                   onClick={() => setShowPasswordReset(true)}
-                  className="text-orange-600 hover:underline mr-4"
+                  className="text-secondary-600 hover:underline mr-4"
                 >
                   Forgot password?
                 </button>
                 <span className="text-gray-600">Don't have an account? </span>
                 <button
                   onClick={() => setIsLogin(false)}
-                  className="text-orange-600 hover:underline font-semibold"
+                  className="text-secondary-600 hover:underline font-semibold"
                 >
                   Sign up
                 </button>
@@ -211,7 +211,7 @@ export default function ParentLogin() {
                 <span className="text-gray-600">Already have an account? </span>
                 <button
                   onClick={() => setIsLogin(true)}
-                  className="text-orange-600 hover:underline font-semibold"
+                  className="text-secondary-600 hover:underline font-semibold"
                 >
                   Sign in
                 </button>
@@ -220,7 +220,7 @@ export default function ParentLogin() {
           </div>
         </div>
 
-        <p className="text-center text-orange-100 text-sm mt-6">
+        <p className="text-center text-secondary-100 text-sm mt-6">
           PEL Parent Learning Portal
         </p>
       </div>
@@ -252,7 +252,7 @@ function PasswordResetForm({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-gradient-to-br from-orange-400 via-amber-500 to-orange-600 flex flex-col justify-center items-center p-4">
+    <div className="relative min-h-screen w-full bg-gradient-to-br from-secondary-400 via-secondary-500 to-secondary-600 flex flex-col justify-center items-center p-4">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(251,146,60,0.3),rgba(255,255,255,0))]" />
 
       <div className="relative z-10 w-full max-w-md">
@@ -260,7 +260,7 @@ function PasswordResetForm({ onBack }: { onBack: () => void }) {
           <h1 className="text-white text-5xl font-bold mb-3 tracking-tight drop-shadow-xl">
             PEL
           </h1>
-          <p className="text-orange-100 text-lg font-medium">Parent Portal</p>
+          <p className="text-secondary-100 text-lg font-medium">Parent Portal</p>
         </div>
 
         <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8">
@@ -270,13 +270,13 @@ function PasswordResetForm({ onBack }: { onBack: () => void }) {
           </p>
 
           {message && (
-            <div className="!bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 text-sm">
+            <div className="!bg-success-50 border border-success-200 text-success-700 px-4 py-3 rounded-lg mb-4 text-sm">
               {message}
             </div>
           )}
 
           {error && (
-            <div className="!bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+            <div className="!bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg mb-4 text-sm">
               {error}
             </div>
           )}
@@ -292,7 +292,7 @@ function PasswordResetForm({ onBack }: { onBack: () => void }) {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-800
-                  focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500
+                  focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500
                   transition-all duration-200 shadow-sm"
                 placeholder="your.email@example.com"
               />
@@ -301,12 +301,12 @@ function PasswordResetForm({ onBack }: { onBack: () => void }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full !bg-gradient-to-r from-orange-500 to-amber-600 text-white py-4 rounded-xl
+              className="w-full !bg-gradient-to-r from-secondary-500 to-secondary-600 text-white py-4 rounded-xl
                 font-semibold text-lg shadow-lg hover:shadow-xl
                 transform hover:scale-[1.02] active:scale-[0.98]
                 transition-all duration-200
                 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-                focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+                focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2"
             >
               {loading ? "Sending..." : "Send Reset Link"}
             </button>
@@ -314,7 +314,7 @@ function PasswordResetForm({ onBack }: { onBack: () => void }) {
 
           <button
             onClick={onBack}
-            className="mt-4 text-sm text-orange-600 hover:text-orange-700"
+            className="mt-4 text-sm text-secondary-600 hover:text-secondary-700"
           >
             ← Back to login
           </button>

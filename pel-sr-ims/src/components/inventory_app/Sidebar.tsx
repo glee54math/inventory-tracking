@@ -83,6 +83,27 @@ function MarqueeLabel({ text, className = "min-w-0 flex-1" }: MarqueeLabelProps)
   );
 }
 
+// Two accent tracks: "primary" (blue) for everyday Workspace/Operations items,
+// "tertiary" (purple) for the Admin section — mirrors how the lab pages use
+// --qc (purple) for gated/special content, so Admin visually reads as a
+// distinct, elevated area rather than just more blue rows.
+type Accent = "primary" | "tertiary";
+
+// Full literal class strings (not template-interpolated) so Tailwind's
+// content scanner can statically find them.
+const ACCENT_ACTIVE: Record<Accent, string> = {
+  primary: "bg-primary-100 text-primary-700",
+  tertiary: "bg-tertiary-100 text-tertiary-700",
+};
+const ACCENT_HOVER: Record<Accent, string> = {
+  primary: "hover:bg-primary-50",
+  tertiary: "hover:bg-tertiary-50",
+};
+const ACCENT_ICON: Record<Accent, string> = {
+  primary: "text-primary-400",
+  tertiary: "text-tertiary-400",
+};
+
 interface NavItemProps {
   icon: LucideIcon;
   label: string;
@@ -90,9 +111,10 @@ interface NavItemProps {
   active?: boolean;
   onClick: () => void;
   id?: string;
+  accent?: Accent;
 }
 
-function NavItem({ icon: Icon, label, collapsed, active, onClick, id }: NavItemProps) {
+function NavItem({ icon: Icon, label, collapsed, active, onClick, id, accent = "primary" }: NavItemProps) {
   return (
     <button
       id={id}
@@ -102,11 +124,11 @@ function NavItem({ icon: Icon, label, collapsed, active, onClick, id }: NavItemP
         collapsed ? "justify-center" : ""
       } ${
         active
-          ? "bg-blue-100 text-blue-700 font-medium"
-          : "text-gray-700 hover:bg-gray-100"
+          ? `${ACCENT_ACTIVE[accent]} font-medium`
+          : `text-gray-700 ${ACCENT_HOVER[accent]}`
       }`}
     >
-      <Icon size={18} className="shrink-0" />
+      <Icon size={18} className={`shrink-0 ${active ? "" : ACCENT_ICON[accent]}`} />
       {!collapsed && <MarqueeLabel text={label} />}
     </button>
   );
@@ -173,34 +195,34 @@ export default function Sidebar({
     };
   }, []);
 
-  // Only Inventory shows when none of the other main panels are active (see App.tsx render order).
-  const inventoryActive =
-    showInventory && !showStudentDatabase && !showTimesheet && !showScanStation && !showDataEntry;
-
   return (
     <div
       id="sidebar"
-      className={`flex h-full flex-col transition-all duration-300 ${collapsed ? "w-14" : "w-64"}`}
+      className={`relative flex h-full flex-col transition-all duration-300 ${collapsed ? "w-14" : "w-64"}`}
     >
-      {/* Collapse toggle */}
+      {/* Collapse toggle — floats in the corner so it doesn't claim its own row */}
       <button
         onClick={() => setCollapsed((prev) => !prev)}
         title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        className="mb-1 flex items-center justify-center self-end rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+        className="absolute right-0.5 top-0.5 z-10 flex items-center justify-center rounded-md p-1 text-primary-300 hover:bg-primary-50 hover:text-primary-600"
       >
         {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
       </button>
 
       {/* Profile */}
-      <div id="profile-button" ref={profileDropdownRef} className="relative mb-1">
+      <div
+        id="profile-button"
+        ref={profileDropdownRef}
+        className={`relative mb-1 ${collapsed ? "" : "pr-7"}`}
+      >
         <button
           onClick={() => setIsProfileButtonPressed((prev) => !prev)}
           title={collapsed ? `Logged in as ${nameOfWorker}` : undefined}
-          className={`flex w-full min-w-0 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-gray-700 hover:bg-gray-100 ${
+          className={`flex w-full min-w-0 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-gray-700 hover:bg-primary-50 ${
             collapsed ? "justify-center" : ""
           }`}
         >
-          <UserRound size={18} className="shrink-0" />
+          <UserRound size={18} className="shrink-0 text-primary-400" />
           {!collapsed && (
             <span className="min-w-0 flex-1 text-left">
               <span className="block text-[10px] uppercase tracking-wide text-gray-400">
@@ -234,7 +256,7 @@ export default function Sidebar({
             icon={Boxes}
             label="Inventory"
             collapsed={collapsed}
-            active={inventoryActive}
+            active={showInventory}
             onClick={toggleInventory}
           />
           <NavItem
@@ -299,11 +321,11 @@ export default function Sidebar({
                     collapsed ? "justify-center" : ""
                   } ${
                     isLevelsButtonPressed
-                      ? "bg-blue-100 text-blue-700 font-medium"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-tertiary-100 text-tertiary-700 font-medium"
+                      : "text-gray-700 hover:bg-tertiary-50"
                   }`}
                 >
-                  <Layers size={18} className="shrink-0" />
+                  <Layers size={18} className={`shrink-0 ${isLevelsButtonPressed ? "" : "text-tertiary-400"}`} />
                   {!collapsed && (
                     <>
                       <span className="min-w-0 flex-1 truncate text-left">Levels</span>
@@ -355,6 +377,7 @@ export default function Sidebar({
                 icon={Presentation}
                 label="Presentation"
                 collapsed={collapsed}
+                accent="tertiary"
                 onClick={() => {}}
               />
               <NavItem
@@ -362,6 +385,7 @@ export default function Sidebar({
                 icon={LayoutDashboard}
                 label="Progress Dashboard"
                 collapsed={collapsed}
+                accent="tertiary"
                 onClick={() => navigate("/dashboard")}
               />
               <NavItem
@@ -369,6 +393,7 @@ export default function Sidebar({
                 icon={UsersRound}
                 label="Parent Portal"
                 collapsed={collapsed}
+                accent="tertiary"
                 onClick={() => navigate("/parent-login")}
               />
               <NavItem
@@ -376,6 +401,7 @@ export default function Sidebar({
                 icon={FlaskConical}
                 label="Planning & Research"
                 collapsed={collapsed}
+                accent="tertiary"
                 onClick={() => navigate("/planning-research")}
               />
               <NavItem
@@ -383,6 +409,7 @@ export default function Sidebar({
                 icon={IdCard}
                 label="PEL Dollars ID Cards"
                 collapsed={collapsed}
+                accent="tertiary"
                 onClick={() => navigate("/id-cards")}
               />
               <NavItem
@@ -390,6 +417,7 @@ export default function Sidebar({
                 icon={GraduationCap}
                 label="Manage Students"
                 collapsed={collapsed}
+                accent="tertiary"
                 onClick={() => navigate("/manage-students")}
               />
               <NavItem
@@ -397,6 +425,7 @@ export default function Sidebar({
                 icon={Users}
                 label="Manage Workers"
                 collapsed={collapsed}
+                accent="tertiary"
                 onClick={() => navigate("/manage-workers")}
               />
               <NavItem
@@ -404,6 +433,7 @@ export default function Sidebar({
                 icon={Coins}
                 label="PEL Dollars Earning Rules"
                 collapsed={collapsed}
+                accent="tertiary"
                 onClick={() => navigate("/pel-admin/earning-rules")}
               />
               <NavItem
@@ -411,6 +441,7 @@ export default function Sidebar({
                 icon={Gift}
                 label="PEL Dollars Prize List"
                 collapsed={collapsed}
+                accent="tertiary"
                 onClick={() => navigate("/pel-admin/prizes")}
               />
               <NavItem
@@ -418,6 +449,7 @@ export default function Sidebar({
                 icon={ListChecks}
                 label="PEL Dollars Wishlist Review"
                 collapsed={collapsed}
+                accent="tertiary"
                 onClick={() => navigate("/pel-admin/wishlist-review")}
               />
             </div>

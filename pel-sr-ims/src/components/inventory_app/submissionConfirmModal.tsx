@@ -60,9 +60,9 @@ export default function SubmissionConfirmModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-up">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
-              className="w-8 h-8 text-blue-600"
+              className="w-8 h-8 text-primary-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -81,13 +81,13 @@ export default function SubmissionConfirmModal({
           <p className="text-gray-600 mb-1">
             Submitting actions as:
           </p>
-          <p className="text-2xl font-bold text-blue-600 mb-4">
+          <p className="text-2xl font-bold text-primary-600 mb-4">
             {currentWorker}
           </p>
-          
+
           {isAutoConfirming && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-              <p className="text-green-800 text-sm">
+            <div className="bg-success-50 border border-success-200 rounded-lg p-3 mb-4">
+              <p className="text-success-800 text-sm">
                 Auto-confirming in <strong>{countdown}</strong> second{countdown !== 1 ? 's' : ''}...
               </p>
             </div>
@@ -97,22 +97,22 @@ export default function SubmissionConfirmModal({
         <div className="space-y-3">
           <button
             onClick={handleManualConfirm}
-            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl
+            className="w-full bg-gradient-to-r from-success-500 to-success-700 text-white py-3 rounded-xl
               font-semibold text-lg shadow-lg hover:shadow-xl
               transform hover:scale-[1.02] active:scale-[0.98]
               transition-all duration-200
-              focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              focus:outline-none focus:ring-2 focus:ring-success-500 focus:ring-offset-2"
           >
             ✓ Yes, Submit as {currentWorker}
           </button>
           
           <button
             onClick={handleSwitchWorker}
-            className="w-full bg-white border-2 border-blue-500 text-blue-600 py-3 rounded-xl
-              font-semibold text-lg shadow-sm hover:bg-blue-50
+            className="w-full bg-white border-2 border-primary-500 text-primary-600 py-3 rounded-xl
+              font-semibold text-lg shadow-sm hover:bg-primary-50
               transform hover:scale-[1.02] active:scale-[0.98]
               transition-all duration-200
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
           >
             🔄 Switch to Different Worker
           </button>

@@ -50,7 +50,7 @@ export default function StudentDashboard() {
   const hasProgress = !!(progress?.mathProgress || progress?.englishProgress);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-success-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -73,7 +73,7 @@ export default function StudentDashboard() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600" />
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-success-600" />
             <p className="text-gray-400">Loading your progress...</p>
           </div>
         ) : (

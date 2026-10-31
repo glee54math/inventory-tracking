@@ -49,7 +49,7 @@ export default function StudentLogin() {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 flex flex-col justify-center items-center p-4">
+    <div className="relative min-h-screen w-full bg-gradient-to-br from-success-500 via-teal-600 to-cyan-700 flex flex-col justify-center items-center p-4">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,198,180,0.3),rgba(255,255,255,0))]" />
 
       <button
@@ -64,7 +64,7 @@ export default function StudentLogin() {
           <h1 className="text-white text-5xl font-bold mb-3 tracking-tight drop-shadow-xl">
             PEL
           </h1>
-          <p className="text-emerald-100 text-lg font-medium">Student Portal</p>
+          <p className="text-success-100 text-lg font-medium">Student Portal</p>
         </div>
 
         <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8">
@@ -93,7 +93,7 @@ export default function StudentLogin() {
                   disabled={loading}
                   className="w-full px-4 py-4 rounded-xl border-2 border-gray-200 text-gray-800 text-2xl
                     text-center tracking-[0.5em] font-bold
-                    focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500
+                    focus:outline-none focus:ring-2 focus:ring-success-500 focus:border-success-500
                     transition-all duration-200 shadow-sm
                     disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -101,7 +101,7 @@ export default function StudentLogin() {
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg text-sm">
                   {error}
                 </div>
               )}
@@ -109,12 +109,12 @@ export default function StudentLogin() {
               <button
                 type="submit"
                 disabled={pin.length !== 4 || loading}
-                className="w-full !bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-4 rounded-xl
+                className="w-full !bg-gradient-to-r from-success-500 to-teal-600 text-white py-4 rounded-xl
                   font-semibold text-lg shadow-lg hover:shadow-xl
                   transform hover:scale-[1.02] active:scale-[0.98]
                   transition-all duration-200
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-                  focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                  focus:outline-none focus:ring-2 focus:ring-success-500 focus:ring-offset-2"
               >
                 {loading ? "Loading..." : "Continue"}
               </button>
@@ -131,7 +131,7 @@ export default function StudentLogin() {
                   onChange={handleStudentSelect}
                   defaultValue=""
                   className="w-full px-4 py-4 rounded-xl border-2 border-gray-200 text-gray-800 text-base
-                    focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500
+                    focus:outline-none focus:ring-2 focus:ring-success-500 focus:border-success-500
                     transition-all duration-200 shadow-sm"
                 >
                   <option value="" disabled>
@@ -159,7 +159,7 @@ export default function StudentLogin() {
           )}
         </div>
 
-        <p className="text-center text-emerald-100 text-sm mt-6">
+        <p className="text-center text-success-100 text-sm mt-6">
           PEL Student Learning Portal
         </p>
       </div>

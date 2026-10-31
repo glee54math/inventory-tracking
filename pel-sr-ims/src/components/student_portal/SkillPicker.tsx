@@ -27,7 +27,7 @@ export default function SkillPicker({ skills, onSelect }: SkillPickerProps) {
           <button
             key={skill.skillId}
             onClick={() => onSelect(skill)}
-            className="flex-1 sm:max-w-xs px-6 py-5 rounded-xl border-2 font-semibold transition-all duration-200 border-purple-200 text-purple-700 hover:border-purple-400 hover:bg-purple-50"
+            className="flex-1 sm:max-w-xs px-6 py-5 rounded-xl border-2 font-semibold transition-all duration-200 border-tertiary-200 text-tertiary-700 hover:border-tertiary-400 hover:bg-tertiary-50"
           >
             {skill.label ?? humanize(skill.skillId)}
           </button>

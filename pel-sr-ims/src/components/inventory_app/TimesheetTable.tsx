@@ -4,7 +4,7 @@
 // - Admin view: pass editable + onSaveEdit, every row gets an "Edit" button that lets
 //   Mr. Lee correct times / Check Sent for that entry.
 
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   MONTH_NAMES,
   formatDateMMDDYY,
@@ -40,6 +40,31 @@ export default function TimesheetTable({ entries, editable = false, onClockOut, 
 
   const groupedByYear = useMemo(() => groupEntriesByYearMonth(entries), [entries]);
   const columnCount = editable ? 6 : 5;
+
+  // Collapse everything except the most recent year/month that has data, once,
+  // the first time there's data to compute it from. Runs only once so it never
+  // undoes a manual expand/collapse after a later live update.
+  const didInitCollapseRef = useRef(false);
+  useEffect(() => {
+    if (didInitCollapseRef.current || groupedByYear.size === 0) return;
+    didInitCollapseRef.current = true;
+
+    const years = Array.from(groupedByYear.keys());
+    const latestYear = Math.max(...years);
+    const monthsInLatestYear = Array.from(groupedByYear.get(latestYear)!.keys());
+    const latestMonth = Math.max(...monthsInLatestYear);
+
+    const initialCollapsed = new Set<string>();
+    for (const year of years) {
+      if (year !== latestYear) initialCollapsed.add(`y-${year}`);
+      for (const month of groupedByYear.get(year)!.keys()) {
+        if (!(year === latestYear && month === latestMonth)) {
+          initialCollapsed.add(`m-${year}-${month}`);
+        }
+      }
+    }
+    setCollapsedKeys(initialCollapsed);
+  }, [groupedByYear]);
 
   const toggleCollapsed = (key: string) => {
     setCollapsedKeys((prev) => {

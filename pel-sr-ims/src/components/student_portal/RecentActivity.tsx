@@ -24,7 +24,7 @@ export default function RecentActivity({ hwkHistory }: RecentActivityProps) {
               <div className="flex items-center gap-3">
                 <span
                   className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                    entry.subject === "Math" ? "bg-blue-500" : "bg-green-500"
+                    entry.subject === "Math" ? "bg-primary-500" : "bg-success-500"
                   }`}
                 />
                 <span className="font-semibold text-gray-800">{entry.level}</span>

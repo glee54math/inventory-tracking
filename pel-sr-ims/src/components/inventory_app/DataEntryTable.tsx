@@ -4,15 +4,23 @@
 // - Admin view: pass editable + onSaveEdit, every row gets an "Edit" button that lets
 //   Mr. Lee correct a worker's counts for that day.
 
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { groupDataEntriesByYearMonth, sumDataEntryCounts } from "../../utils/dataEntryService";
-import { MONTH_NAMES } from "../../utils/timesheetService";
+import { MONTH_NAMES, formatMinutes } from "../../utils/timesheetService";
 import type { DataEntryCounts, DataEntryRecord } from "../../utils/types";
+
+type MinutesByDate = Map<string, { minutes: number; isLive: boolean }>;
 
 interface DataEntryTableProps {
   entries: DataEntryRecord[];
   editable?: boolean;
   onSaveEdit?: (original: DataEntryRecord, updates: DataEntryCounts) => Promise<void> | void;
+  minutesByDate?: MinutesByDate;
+}
+
+function perHour(count: number, minutes: number): string | null {
+  if (minutes <= 0) return null;
+  return (count / (minutes / 60)).toFixed(1);
 }
 
 const COLUMNS: { key: keyof DataEntryCounts; label: string }[] = [
@@ -23,14 +31,40 @@ const COLUMNS: { key: keyof DataEntryCounts; label: string }[] = [
   { key: "foldersRecordedAndPulled", label: "Recorded & Pulled" },
 ];
 
-export default function DataEntryTable({ entries, editable = false, onSaveEdit }: DataEntryTableProps) {
+export default function DataEntryTable({ entries, editable = false, onSaveEdit, minutesByDate }: DataEntryTableProps) {
   const [collapsedKeys, setCollapsedKeys] = useState<Set<string>>(new Set());
   const [editingDate, setEditingDate] = useState<string | null>(null);
   const [draftCounts, setDraftCounts] = useState<DataEntryCounts | null>(null);
   const [isBusy, setIsBusy] = useState<boolean>(false);
 
   const groupedByYear = groupDataEntriesByYearMonth(entries);
-  const columnCount = 1 + COLUMNS.length + (editable ? 1 : 0);
+  const columnCount = 1 + COLUMNS.length + (minutesByDate ? 1 : 0) + (editable ? 1 : 0);
+
+  // Collapse everything except the most recent year/month that has data, once,
+  // the first time there's data to compute it from. Runs only once so it never
+  // undoes a manual expand/collapse after a later live update.
+  const didInitCollapseRef = useRef(false);
+  useEffect(() => {
+    if (didInitCollapseRef.current || entries.length === 0) return;
+    didInitCollapseRef.current = true;
+
+    const grouped = groupDataEntriesByYearMonth(entries);
+    const years = Array.from(grouped.keys());
+    const latestYear = Math.max(...years);
+    const monthsInLatestYear = Array.from(grouped.get(latestYear)!.keys());
+    const latestMonth = Math.max(...monthsInLatestYear);
+
+    const initialCollapsed = new Set<string>();
+    for (const year of years) {
+      if (year !== latestYear) initialCollapsed.add(`y-${year}`);
+      for (const month of grouped.get(year)!.keys()) {
+        if (!(year === latestYear && month === latestMonth)) {
+          initialCollapsed.add(`m-${year}-${month}`);
+        }
+      }
+    }
+    setCollapsedKeys(initialCollapsed);
+  }, [entries]);
 
   const toggleCollapsed = (key: string) => {
     setCollapsedKeys((prev) => {
@@ -79,6 +113,7 @@ export default function DataEntryTable({ entries, editable = false, onSaveEdit }
               {col.label}
             </th>
           ))}
+          {minutesByDate && <th className="text-left p-2">Hours</th>}
           {editable && <th className="text-left p-2">Actions</th>}
         </tr>
       </thead>
@@ -115,6 +150,9 @@ export default function DataEntryTable({ entries, editable = false, onSaveEdit }
                       const monthCollapsed = collapsedKeys.has(monthKey);
                       const monthTotals = sumDataEntryCounts(monthEntries);
                       const sortedMonthEntries = [...monthEntries].sort((a, b) => b.date.localeCompare(a.date));
+                      const monthMinutes = minutesByDate
+                        ? monthEntries.reduce((sum, e) => sum + (minutesByDate.get(e.date)?.minutes ?? 0), 0)
+                        : 0;
 
                       return (
                         <Fragment key={monthKey}>
@@ -130,6 +168,7 @@ export default function DataEntryTable({ entries, editable = false, onSaveEdit }
                             <>
                               {sortedMonthEntries.map((entry) => {
                                 const isEditingRow = editable && editingDate === entry.date;
+                                const dayMinutes = minutesByDate?.get(entry.date);
 
                                 return (
                                   <tr key={entry.date} className="border-b">
@@ -142,17 +181,21 @@ export default function DataEntryTable({ entries, editable = false, onSaveEdit }
                                             <input
                                               type="number"
                                               min={0}
+                                              step={1}
                                               value={draftCounts[col.key]}
                                               onChange={(e) =>
                                                 setDraftCounts({
                                                   ...draftCounts,
-                                                  [col.key]: Math.max(0, Number(e.target.value) || 0),
+                                                  [col.key]: Math.max(0, Math.round(Number(e.target.value) || 0)),
                                                 })
                                               }
                                               className="border rounded px-1 py-0.5 text-xs w-16"
                                             />
                                           </td>
                                         ))}
+                                        {minutesByDate && (
+                                          <td className="p-2">{dayMinutes ? formatMinutes(dayMinutes.minutes) : "—"}</td>
+                                        )}
                                         <td className="p-2">
                                           <div className="flex gap-1">
                                             <button
@@ -174,11 +217,29 @@ export default function DataEntryTable({ entries, editable = false, onSaveEdit }
                                       </>
                                     ) : (
                                       <>
-                                        {COLUMNS.map((col) => (
-                                          <td key={col.key} className="p-2">
-                                            {entry[col.key]}
+                                        {COLUMNS.map((col) => {
+                                          const rate = dayMinutes ? perHour(entry[col.key], dayMinutes.minutes) : null;
+                                          return (
+                                            <td key={col.key} className="p-2">
+                                              {entry[col.key]}
+                                              {rate && <span className="text-xs text-gray-400 ml-1">({rate}/hr)</span>}
+                                            </td>
+                                          );
+                                        })}
+                                        {minutesByDate && (
+                                          <td className="p-2">
+                                            {dayMinutes
+                                              ? (
+                                                <>
+                                                  {formatMinutes(dayMinutes.minutes)}
+                                                  {dayMinutes.isLive && (
+                                                    <span className="text-xs text-green-700 ml-1">(live)</span>
+                                                  )}
+                                                </>
+                                              )
+                                              : "—"}
                                           </td>
-                                        ))}
+                                        )}
                                         {editable && (
                                           <td className="p-2">
                                             <button
@@ -197,11 +258,16 @@ export default function DataEntryTable({ entries, editable = false, onSaveEdit }
                               })}
                               <tr className="border-b font-semibold !bg-gray-50">
                                 <td className="p-2 pl-10">Total for {MONTH_NAMES[month]} {year}</td>
-                                {COLUMNS.map((col) => (
-                                  <td key={col.key} className="p-2">
-                                    {monthTotals[col.key]}
-                                  </td>
-                                ))}
+                                {COLUMNS.map((col) => {
+                                  const rate = monthMinutes > 0 ? perHour(monthTotals[col.key], monthMinutes) : null;
+                                  return (
+                                    <td key={col.key} className="p-2">
+                                      {monthTotals[col.key]}
+                                      {rate && <span className="text-xs text-gray-400 ml-1">({rate}/hr)</span>}
+                                    </td>
+                                  );
+                                })}
+                                {minutesByDate && <td className="p-2">{monthMinutes > 0 ? formatMinutes(monthMinutes) : "—"}</td>}
                                 {editable && <td className="p-2"></td>}
                               </tr>
                             </>

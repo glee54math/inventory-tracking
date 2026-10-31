@@ -17,6 +17,30 @@ interface LogEntryWithId extends LogEntry {
   undoneBy?: string;
 }
 
+// Color-codes a log row by its state: undone (danger) outranks reassigned
+// (secondary), which outranks a normal entry (primary) — full literal class
+// strings (not template-interpolated) so Tailwind's content scanner can
+// statically find them.
+type RowAccent = "primary" | "secondary" | "danger";
+
+function rowAccentFor(entry: LogEntryWithId): RowAccent {
+  if (entry.isUndone) return "danger";
+  if (entry.reassignedFrom) return "secondary";
+  return "primary";
+}
+
+const ROW_STYLE: Record<RowAccent, string> = {
+  primary: "outline-primary-500 hover:!bg-primary-100",
+  secondary: "bg-secondary-50 outline-secondary-500 hover:!bg-secondary-100",
+  danger: "bg-danger-50 outline-danger-500 hover:!bg-danger-100",
+};
+
+const BADGE_STYLE: Record<RowAccent, string> = {
+  primary: "text-primary-600 bg-primary-100",
+  secondary: "text-secondary-700 bg-secondary-100",
+  danger: "text-danger-700 bg-danger-100",
+};
+
 function Log() {
   const [actionLog, setActionLog] = useState<LogEntryWithId[]>([]);
   const [visibleCount, setVisibleCount] = useState(20);
@@ -179,7 +203,7 @@ function Log() {
       <div className="flex items-center gap-2 mb-2">
         <button
           onClick={handleToggleSelectMode}
-          className="px-3 py-1 text-sm border rounded border-blue-400 text-blue-600 hover:!bg-blue-50 transition-colors"
+          className="px-3 py-1 text-sm border rounded border-primary-400 text-primary-600 hover:!bg-primary-50 transition-colors"
         >
           {selectMode ? "Cancel" : "Select to Undo"}
         </button>
@@ -187,7 +211,7 @@ function Log() {
           <button
             onClick={handleBulkUndo}
             disabled={selectedLogIds.size === 0 || bulkUndoInProgress}
-            className="px-3 py-1 text-sm border rounded border-red-400 text-red-600 hover:!bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-3 py-1 text-sm border rounded border-danger-400 text-danger-600 hover:!bg-danger-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {bulkUndoInProgress ? "Undoing..." : `Undo Selected (${selectedLogIds.size})`}
           </button>
@@ -197,6 +221,7 @@ function Log() {
       {actionLog.map((entry, index) => {
         const isExpanded = expandedLogId === entry.id;
         const canEdit = checkIfCanEdit(entry.timeStamp);
+        const accent = rowAccentFor(entry);
 
         return (
           <div key={entry.id} className="mb-2">
@@ -213,26 +238,26 @@ function Log() {
               )}
             <button
               onClick={() => handleLogClick(entry.id)}
-              className="flex-1 m-1 p-2 text-left text-black hover:!bg-blue-100 border outline-1 outline-blue-500 rounded transition-colors"
+              className={`flex-1 m-1 p-2 text-left text-black border outline-1 rounded transition-colors ${ROW_STYLE[accent]}`}
             >
               <div className="flex items-center justify-between">
                 <span className={`flex-1 ${entry.isUndone ? "line-through text-gray-400" : ""}`}>
                   {index + 1}) {entry.timeStamp.toLocaleDateString()}{" "}
                   {entry.timeStamp.toLocaleTimeString()} | {entry.message}
                 </span>
-                <span className="ml-2 text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                <span className={`ml-2 text-xs font-semibold px-2 py-1 rounded ${BADGE_STYLE[accent]}`}>
                   {entry.userID}
                 </span>
               </div>
 
               {entry.isUndone && (
-                <div className="mt-1 text-xs text-red-500">
+                <div className="mt-1 text-xs text-danger-500">
                   Undone by {entry.undoneBy} at {entry.undoneAt?.toLocaleString()}
                 </div>
               )}
 
               {entry.reassignedFrom && (
-                <div className="mt-1 text-xs text-orange-600">
+                <div className="mt-1 text-xs text-secondary-600">
                   ⚠️ Reassigned from {entry.reassignedFrom} by {entry.reassignedBy}
                 </div>
               )}
@@ -260,7 +285,7 @@ function Log() {
                   
                   {entry.reassignedFrom && (
                     <div className="pt-2 border-t border-gray-300">
-                      <strong className="text-orange-700">Reassignment History:</strong>
+                      <strong className="text-secondary-700">Reassignment History:</strong>
                       <div className="ml-2 text-xs text-gray-600">
                         Originally: {entry.reassignedFrom}
                         <br />
@@ -283,7 +308,7 @@ function Log() {
                           }
                         });
                       }}
-                      className="text-sm bg-orange-100 hover:bg-orange-200 text-orange-700 px-3 py-1.5 rounded border border-orange-300 transition-colors"
+                      className="text-sm bg-secondary-100 hover:bg-secondary-200 text-secondary-700 px-3 py-1.5 rounded border border-secondary-300 transition-colors"
                     >
                       🔄 Reassign to Different Worker
                     </button>
@@ -295,7 +320,7 @@ function Log() {
                   {/* Undo Button */}
                   <div className="pt-2 border-t border-gray-300">
                     {entry.isUndone ? (
-                      <p className="text-xs text-red-500">
+                      <p className="text-xs text-danger-500">
                         Undone by {entry.undoneBy} at {entry.undoneAt?.toLocaleString()}
                       </p>
                     ) : (
@@ -303,7 +328,7 @@ function Log() {
                         <button
                           onClick={(e) => handleUndoClick(entry, e)}
                           disabled={!entry.undoData || undoInProgress === entry.id}
-                          className="text-sm bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded border border-red-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="text-sm bg-danger-100 hover:bg-danger-200 text-danger-700 px-3 py-1.5 rounded border border-danger-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           {undoInProgress === entry.id ? "Undoing..." : "↩ Undo This Action"}
                         </button>
@@ -324,7 +349,7 @@ function Log() {
 
       <button
         onClick={() => setVisibleCount((prev) => prev + 20)}
-        className="m-2 px-4 py-1 text-black hover:!bg-blue-300 border outline-1 outline-blue-500 rounded"
+        className="m-2 px-4 py-1 text-black hover:!bg-primary-300 border outline-1 outline-primary-500 rounded"
       >
         Show More
       </button>

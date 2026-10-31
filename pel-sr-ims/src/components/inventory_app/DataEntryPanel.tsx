@@ -16,8 +16,9 @@ import { formatDateMMDDYY } from "../../utils/timesheetService";
 import { loadWorkersFromDB } from "../../utils/inventoryService";
 import type { DataEntryCounts, DataEntryRecord } from "../../utils/types";
 import { useNameContext } from "./NameContext";
-import DataEntryTable from "./DataEntryTable";
 import AllWorkersDataEntries from "./AllWorkersDataEntries";
+import DataEntryCard from "./DataEntryCard";
+import { useWorkerMinutesByDate } from "./useWorkerMinutesByDate";
 
 const FIELDS: { key: keyof DataEntryCounts; label: string }[] = [
   { key: "cleanWorksheets", label: "Clean Worksheets Graded" },
@@ -34,6 +35,7 @@ export default function DataEntryPanel() {
   const [todayCounts, setTodayCounts] = useState<DataEntryCounts>(EMPTY_DATA_ENTRY_COUNTS);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [showPanel, setShowPanel] = useState<boolean>(true);
+  const minutesByDate = useWorkerMinutesByDate(workerName?.firstName ?? "", workerName?.lastName ?? "");
 
   const today = formatDateMMDDYY(new Date());
 
@@ -71,7 +73,7 @@ export default function DataEntryPanel() {
   }, [entries, today]);
 
   const handleFieldChange = (key: keyof DataEntryCounts, value: string) => {
-    setTodayCounts((prev) => ({ ...prev, [key]: Math.max(0, Number(value) || 0) }));
+    setTodayCounts((prev) => ({ ...prev, [key]: Math.max(0, Math.round(Number(value) || 0)) }));
   };
 
   const handleSaveToday = async () => {
@@ -101,6 +103,7 @@ export default function DataEntryPanel() {
                   <input
                     type="number"
                     min={0}
+                    step={1}
                     value={todayCounts[field.key]}
                     onChange={(e) => handleFieldChange(field.key, e.target.value)}
                     className="w-full border rounded px-2 py-1 mt-1"
@@ -119,8 +122,9 @@ export default function DataEntryPanel() {
             </div>
           </div>
 
-          <DataEntryTable
+          <DataEntryCard
             entries={entries}
+            minutesByDate={minutesByDate}
             editable
             onSaveEdit={(original, updates) => {
               if (!workerName) return;

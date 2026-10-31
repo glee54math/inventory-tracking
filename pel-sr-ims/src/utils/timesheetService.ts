@@ -14,6 +14,13 @@ export function formatDateMMDDYY(d: Date): string {
   return `${mm}/${dd}/${yy}`;
 }
 
+// Inverse of formatDateMMDDYY — a real Date, so dates can be ranked by recency
+// (plain mm/dd/yy string comparison breaks across year/month boundaries).
+export function parseDateMMDDYY(date: string): Date {
+  const [mm, dd, yy] = date.split("/").map(Number);
+  return new Date(2000 + yy, mm - 1, dd);
+}
+
 export function formatElapsed(timeEntered: Date, timeExited: Date | null): string {
   if (!timeExited) return "";
   return formatMinutes(elapsedMinutes(timeEntered, timeExited));
@@ -25,7 +32,7 @@ export function formatMinutes(totalMinutes: number): string {
   return `${hours}h ${minutes}m`;
 }
 
-function elapsedMinutes(timeEntered: Date, timeExited: Date): number {
+export function elapsedMinutes(timeEntered: Date, timeExited: Date): number {
   return Math.max(0, Math.round((timeExited.getTime() - timeEntered.getTime()) / 60000));
 }
 
@@ -34,6 +41,38 @@ export function sumElapsedMinutes(entries: TimesheetEntry[]): number {
     if (!entry.timeExited) return total;
     return total + elapsedMinutes(entry.timeEntered, entry.timeExited);
   }, 0);
+}
+
+// Minutes worked on each calendar day (mm/dd/yy) an entry touches. An entry still
+// clocked in (timeExited === null) counts elapsed time up to `now` and marks that
+// day as live/provisional — the same total becomes final the moment the worker
+// clocks out. A past day is never live, since its shifts are always closed.
+export function sumMinutesByDate(
+  entries: TimesheetEntry[],
+  now: Date = new Date()
+): Map<string, { minutes: number; isLive: boolean }> {
+  const byDate = new Map<string, { minutes: number; isLive: boolean }>();
+
+  for (const entry of entries) {
+    const current = byDate.get(entry.date) ?? { minutes: 0, isLive: false };
+    if (entry.timeExited) {
+      current.minutes += elapsedMinutes(entry.timeEntered, entry.timeExited);
+    } else {
+      current.minutes += elapsedMinutes(entry.timeEntered, now);
+      current.isLive = true;
+    }
+    byDate.set(entry.date, current);
+  }
+
+  return byDate;
+}
+
+export function minutesWorkedOnDate(
+  entries: TimesheetEntry[],
+  date: string,
+  now: Date = new Date()
+): { minutes: number; isLive: boolean } {
+  return sumMinutesByDate(entries, now).get(date) ?? { minutes: 0, isLive: false };
 }
 
 // Groups entries by calendar year, then month (0-11). Assumes entries are
@@ -65,10 +104,10 @@ export async function loadTimesheetEntries(firstName: string, lastName: string):
   const docSnap = await getDoc(docRef);
   if (!docSnap.exists()) return [];
   const rawEntries = (docSnap.data().entries ?? []) as any[];
-  return rawEntries.map(toEntry);
+  return rawEntries.map(toTimesheetEntry);
 }
 
-function toEntry(raw: any): TimesheetEntry {
+export function toTimesheetEntry(raw: any): TimesheetEntry {
   return {
     date: raw.date,
     timeEntered: raw.timeEntered.toDate ? raw.timeEntered.toDate() : new Date(raw.timeEntered),

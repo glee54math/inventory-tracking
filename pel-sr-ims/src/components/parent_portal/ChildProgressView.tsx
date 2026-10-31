@@ -40,7 +40,7 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
         <p className="text-gray-600">Loading progress data...</p>
       </div>
     );
@@ -77,7 +77,7 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
                 {progressData.mathProgress && (
                   <div className="text-sm text-gray-600">
                     <span className="font-medium">Math:</span>{" "}
-                    <span className="text-blue-600 font-semibold">
+                    <span className="text-primary-600 font-semibold">
                       {progressData.mathProgress.currentLevel}
                     </span>
                   </div>
@@ -85,7 +85,7 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
                 {progressData.englishProgress && (
                   <div className="text-sm text-gray-600">
                     <span className="font-medium">English:</span>{" "}
-                    <span className="text-green-600 font-semibold">
+                    <span className="text-success-600 font-semibold">
                       {progressData.englishProgress.currentLevel}
                     </span>
                   </div>
@@ -106,7 +106,7 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
                 onClick={() => setShowMathTimeline(true)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                   showMathTimeline
-                    ? '!bg-blue-600 text-white'
+                    ? '!bg-primary-600 text-white'
                     : '!bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
@@ -116,7 +116,7 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
                 onClick={() => setShowMathTimeline(false)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                   !showMathTimeline
-                    ? '!bg-blue-600 text-white'
+                    ? '!bg-primary-600 text-white'
                     : '!bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
@@ -126,17 +126,17 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
           </div>
 
           {/* Current Level Info */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-blue-50 rounded-lg">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-primary-50 rounded-lg">
             <div>
               <p className="text-sm text-gray-600">Current Level</p>
-              <p className="text-lg font-bold text-blue-800">
+              <p className="text-lg font-bold text-primary-800">
                 {progressData.mathProgress.currentLevel}
               </p>
             </div>
             {progressData.mathProgress.estimatedMM1Date && (
               <div>
                 <p className="text-sm text-gray-600">Est. MM1 Date</p>
-                <p className="text-lg font-bold text-blue-800">
+                <p className="text-lg font-bold text-primary-800">
                   {progressData.mathProgress.estimatedMM1Date.toLocaleDateString()}
                 </p>
               </div>
@@ -144,7 +144,7 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
             {progressData.mathProgress.estimatedCompletionDate && (
               <div>
                 <p className="text-sm text-gray-600">Est. Completion</p>
-                <p className="text-lg font-bold text-blue-800">
+                <p className="text-lg font-bold text-primary-800">
                   {progressData.mathProgress.estimatedCompletionDate.toLocaleDateString()}
                 </p>
               </div>
@@ -174,16 +174,16 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
                 {progressData.mathProgress.levelHistory.map((level) => {
                   // Determine status
                   let status = 'In Progress';
-                  let statusColor = 'bg-yellow-100 text-yellow-800';
-                  
+                  let statusColor = 'bg-warning-100 text-warning-800';
+
                   if (level.isComplete) {
                     status = 'Completed';
-                    statusColor = 'bg-green-100 text-green-800';
+                    statusColor = 'bg-success-100 text-success-800';
                   } else if (level.pagesCompleted === 0) {
                     status = 'Not Started';
-                    statusColor = 'bg-red-50 text-red-700';
+                    statusColor = 'bg-danger-50 text-danger-700';
                   }
-                  
+
                   return (
                     <tr key={level.level} className="hover:bg-gray-50">
                       <td className="px-4 py-2 font-medium">{level.level}</td>
@@ -217,7 +217,7 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
                 onClick={() => setShowEnglishTimeline(true)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                   showEnglishTimeline
-                    ? '!bg-green-600 text-white'
+                    ? '!bg-success-600 text-white'
                     : '!bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
@@ -227,7 +227,7 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
                 onClick={() => setShowEnglishTimeline(false)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                   !showEnglishTimeline
-                    ? '!bg-green-600 text-white'
+                    ? '!bg-success-600 text-white'
                     : '!bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
@@ -237,17 +237,17 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
           </div>
 
           {/* Current Level Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-green-50 rounded-lg">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-success-50 rounded-lg">
             <div>
               <p className="text-sm text-gray-600">Current Level</p>
-              <p className="text-lg font-bold text-green-800">
+              <p className="text-lg font-bold text-success-800">
                 {progressData.englishProgress.currentLevel}
               </p>
             </div>
             {progressData.englishProgress.estimatedCompletionDate && (
               <div>
                 <p className="text-sm text-gray-600">Est. Completion</p>
-                <p className="text-lg font-bold text-green-800">
+                <p className="text-lg font-bold text-success-800">
                   {progressData.englishProgress.estimatedCompletionDate.toLocaleDateString()}
                 </p>
               </div>
@@ -276,14 +276,14 @@ export default function ChildProgressView({ student }: ChildProgressViewProps) {
                 {progressData.englishProgress.levelHistory.map((level) => {
                   // Determine status
                   let status = 'In Progress';
-                  let statusColor = 'bg-yellow-100 text-yellow-800';
-                  
+                  let statusColor = 'bg-warning-100 text-warning-800';
+
                   if (level.isComplete) {
                     status = 'Completed';
-                    statusColor = 'bg-green-100 text-green-800';
+                    statusColor = 'bg-success-100 text-success-800';
                   } else if (level.pagesCompleted === 0) {
                     status = 'Not Started';
-                    statusColor = 'bg-red-50 text-red-700';
+                    statusColor = 'bg-danger-50 text-danger-700';
                   }
                   
                   return (

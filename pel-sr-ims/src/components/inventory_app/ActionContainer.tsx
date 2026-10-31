@@ -381,7 +381,7 @@ function ActionContainer({
         <div key={index} className="flex items-start gap-2">
           <button
             onClick={() => removeAction(index)}
-            className="ml-2 mr-1 text-black-500 border outline-1 outline-red-500 rounded hover:!bg-red-100"
+            className="ml-2 mr-1 text-black-500 border outline-1 outline-danger-500 rounded hover:!bg-danger-100"
           >
             X
           </button>
@@ -396,7 +396,7 @@ function ActionContainer({
       <div className="flex gap-4 p-4 border-t">
         <button
           onClick={createNewAction}
-          className="border outline-1 outline-blue-500 rounded bg-blue-200 px-4 py-2 hover:!bg-blue-300"
+          className="border outline-1 outline-primary-500 rounded bg-primary-200 px-4 py-2 hover:!bg-primary-300"
         >
           Create New Action
         </button>
@@ -405,7 +405,7 @@ function ActionContainer({
           <button
             onClick={initiateSubmission}
             disabled={pendingSubmission || (checkForCompletedActions().length !== actionList.length)}
-            className="border outline-1 outline-green-500 rounded bg-green-200 px-4 py-2 hover:!bg-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="border outline-1 outline-success-500 rounded bg-success-200 px-4 py-2 hover:!bg-success-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {pendingSubmission ? "Submitting..." : "Submit All Actions"}
           </button>
@@ -415,7 +415,7 @@ function ActionContainer({
           <button
             onClick={() => setActionList([])}
             disabled={pendingSubmission}
-            className="border outline-1 outline-red-500 rounded bg-red-200 px-4 py-2 hover:!bg-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="border outline-1 outline-danger-500 rounded bg-danger-200 px-4 py-2 hover:!bg-danger-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Clear All
           </button>
@@ -423,7 +423,7 @@ function ActionContainer({
 
         <button
           onClick={() => setNewStudentFormPopUp(true)}
-          className="border outline-1 outline-purple-500 rounded bg-purple-200 px-4 py-2 hover:!bg-purple-300"
+          className="border outline-1 outline-tertiary-500 rounded bg-tertiary-200 px-4 py-2 hover:!bg-tertiary-300"
         >
           Add New Student
         </button>

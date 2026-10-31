@@ -341,7 +341,7 @@ function Action({ index, data, onChange }: ActionProps) {
                         key={prediction.subject}
                         type="button"
                         onClick={() => handleApplyChip(prediction.subject, chip)}
-                        className="text-xs border rounded-full px-2 py-1 bg-blue-50 hover:bg-blue-100 text-left"
+                        className="text-xs border rounded-full px-2 py-1 bg-primary-50 hover:bg-primary-100 text-left"
                       >
                         {prediction.subject} — {chip.label}
                       </button>
@@ -480,8 +480,8 @@ function Action({ index, data, onChange }: ActionProps) {
                       onClick={() => handleApplyChip(data.subject as Subject, chip)}
                       className={`text-xs border rounded-full px-2 py-1 text-left ${
                         isApplied
-                          ? "bg-blue-100 border-blue-400"
-                          : "bg-white hover:bg-blue-50"
+                          ? "bg-primary-100 border-primary-400"
+                          : "bg-white hover:bg-primary-50"
                       }`}
                     >
                       {chip.label}

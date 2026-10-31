@@ -44,7 +44,7 @@ export default function TransactionHistoryList({ student }: TransactionHistoryLi
             </div>
             <span
               className={`text-sm font-bold ${
-                t.isReversed ? "text-gray-400" : t.amount >= 0 ? "text-emerald-600" : "text-red-500"
+                t.isReversed ? "text-gray-400" : t.amount >= 0 ? "text-success-600" : "text-danger-500"
               }`}
             >
               {t.amount > 0 ? "+" : ""}

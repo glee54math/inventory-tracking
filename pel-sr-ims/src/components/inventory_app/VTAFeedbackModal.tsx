@@ -35,7 +35,7 @@ function VTAFeedbackModal({ onAnswer }: VTAFeedbackModalProps) {
             <div className="flex gap-3">
               <button
                 onClick={() => handleVTAAnswer(true)}
-                className="flex-1 bg-green-200 outline-1 outline-green-500 rounded py-2 hover:!bg-green-300"
+                className="flex-1 bg-success-200 outline-1 outline-success-500 rounded py-2 hover:!bg-success-300"
               >
                 Yes
               </button>
@@ -56,13 +56,13 @@ function VTAFeedbackModal({ onAnswer }: VTAFeedbackModalProps) {
             <div className="flex gap-3">
               <button
                 onClick={() => handleSWMCAnswer(true)}
-                className="flex-1 bg-green-200 outline-1 outline-green-500 rounded py-2 hover:!bg-green-300"
+                className="flex-1 bg-success-200 outline-1 outline-success-500 rounded py-2 hover:!bg-success-300"
               >
                 Yes
               </button>
               <button
                 onClick={() => handleSWMCAnswer(false)}
-                className="flex-1 bg-red-200 outline-1 outline-red-500 rounded py-2 hover:!bg-red-300"
+                className="flex-1 bg-danger-200 outline-1 outline-danger-500 rounded py-2 hover:!bg-danger-300"
               >
                 No
               </button>

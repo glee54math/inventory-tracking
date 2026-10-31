@@ -134,9 +134,9 @@ export default function WorkerSwitchModal({
                 onChange={(e) => handleWorkerSelect(e.target.value)}
                 disabled={isLoading}
                 className="w-full px-4 py-4 rounded-xl border-2 border-gray-200 text-gray-800 text-base
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                  focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
                   appearance-none bg-white cursor-pointer transition-all duration-200
-                  hover:border-blue-300 disabled:opacity-50 disabled:cursor-not-allowed
+                  hover:border-primary-300 disabled:opacity-50 disabled:cursor-not-allowed
                   shadow-sm"
               >
                 <option value="">Choose worker...</option>
@@ -151,7 +151,7 @@ export default function WorkerSwitchModal({
 
             {isLoading && (
               <div className="text-center">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-500 border-r-transparent"></div>
               </div>
             )}
 
@@ -183,7 +183,7 @@ export default function WorkerSwitchModal({
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-sm text-primary-600 hover:text-primary-700 font-medium"
                 >
                   ← Back
                 </button>
@@ -201,7 +201,7 @@ export default function WorkerSwitchModal({
                 disabled={isLoading}
                 className="w-full px-4 py-4 rounded-xl border-2 border-gray-200 text-gray-800 text-2xl
                   text-center tracking-[0.5em] font-bold
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                  focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
                   transition-all duration-200 shadow-sm
                   disabled:opacity-50 disabled:cursor-not-allowed"
               />
@@ -211,7 +211,7 @@ export default function WorkerSwitchModal({
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg text-sm">
                 {error}
               </div>
             )}
@@ -220,12 +220,12 @@ export default function WorkerSwitchModal({
               <button
                 type="submit"
                 disabled={pin.length !== 4 || isLoading}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl
+                className="w-full bg-gradient-to-r from-primary-500 to-primary-700 text-white py-4 rounded-xl
                   font-semibold text-lg shadow-lg hover:shadow-xl
                   transform hover:scale-[1.02] active:scale-[0.98]
                   transition-all duration-200
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               >
                 {isLoading ? "Verifying..." : "Switch Worker"}
               </button>

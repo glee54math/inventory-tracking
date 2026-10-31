@@ -25,9 +25,9 @@ export default function IdleWarningModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 animate-scale-in">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-warning-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
-              className="w-8 h-8 text-yellow-600"
+              className="w-8 h-8 text-warning-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -44,10 +44,10 @@ export default function IdleWarningModal({
             Are you still here?
           </h2>
           <p className="text-gray-600 mb-4">
-            Logged in as: <strong className="text-blue-600">{workerName}</strong>
+            Logged in as: <strong className="text-primary-600">{workerName}</strong>
           </p>
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-800 font-semibold">
+          <div className="bg-danger-50 border border-danger-200 rounded-lg p-4 mb-6">
+            <p className="text-danger-800 font-semibold">
               Auto-logout in {remainingSeconds} second{remainingSeconds !== 1 ? 's' : ''}
             </p>
           </div>
@@ -56,11 +56,11 @@ export default function IdleWarningModal({
         <div className="flex gap-3">
           <button
             onClick={onConfirm}
-            className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 rounded-xl
+            className="flex-1 bg-gradient-to-r from-primary-500 to-primary-700 text-white py-3 rounded-xl
               font-semibold text-lg shadow-lg hover:shadow-xl
               transform hover:scale-[1.02] active:scale-[0.98]
               transition-all duration-200
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
           >
             Yes, it's {workerName}
           </button>

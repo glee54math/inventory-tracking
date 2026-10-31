@@ -121,14 +121,14 @@ export default function AddChildModal({
 
         {/* Error Message */}
         {error && (
-          <div className="!bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="!bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )}
 
         {/* Success Message */}
         {success && (
-          <div className="!bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4">
+          <div className="!bg-success-50 border border-success-200 text-success-700 px-4 py-3 rounded mb-4">
             {success}
           </div>
         )}
@@ -146,12 +146,12 @@ export default function AddChildModal({
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="Enter child's name..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <button
               onClick={handleSearch}
               disabled={searching}
-              className="px-6 py-2 !bg-blue-600 text-white rounded-lg font-semibold hover:!bg-blue-700 transition disabled:opacity-50"
+              className="px-6 py-2 !bg-primary-600 text-white rounded-lg font-semibold hover:!bg-primary-700 transition disabled:opacity-50"
             >
               {searching ? "Searching..." : "Search"}
             </button>
@@ -167,7 +167,7 @@ export default function AddChildModal({
                 <div
                   key={child.studentId}
                   className={`p-4 hover:!bg-gray-50 cursor-pointer transition ${
-                    selectedChild === child.studentId ? '!bg-blue-50 border-l-4 border-blue-500' : ''
+                    selectedChild === child.studentId ? '!bg-primary-50 border-l-4 border-primary-500' : ''
                   }`}
                   onClick={() => setSelectedChild(child.studentId)}
                 >
@@ -186,7 +186,7 @@ export default function AddChildModal({
                       type="radio"
                       checked={selectedChild === child.studentId}
                       onChange={() => {}}
-                      className="w-5 h-5 text-blue-600"
+                      className="w-5 h-5 text-primary-600"
                     />
                   </div>
                 </div>
@@ -207,15 +207,15 @@ export default function AddChildModal({
           <button
             onClick={handleAddChild}
             disabled={!selectedChild || adding}
-            className="flex-1 !bg-green-600 text-white py-2 rounded-lg font-semibold hover:!bg-green-700 transition disabled:opacity-50"
+            className="flex-1 !bg-success-600 text-white py-2 rounded-lg font-semibold hover:!bg-success-700 transition disabled:opacity-50"
           >
             {adding ? "Adding..." : "Add Child"}
           </button>
         </div>
 
         {/* Help Text */}
-        <div className="mt-6 p-4 !bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-800">
+        <div className="mt-6 p-4 !bg-primary-50 rounded-lg">
+          <p className="text-sm text-primary-800">
             <strong>Can't find your child?</strong> Contact Mr. Lee at{" "}
             <a href="mailto:pelsanramon@gmail.com" className="underline">
               pelsanramon@gmail.com

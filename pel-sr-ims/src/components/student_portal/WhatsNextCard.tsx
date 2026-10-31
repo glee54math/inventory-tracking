@@ -43,26 +43,26 @@ function NextSubjectRow({ progress, subject }: NextSubjectRowProps) {
   return (
     <div
       className={`flex items-center justify-between p-4 rounded-xl ${
-        isMath ? "bg-blue-50" : "bg-green-50"
+        isMath ? "bg-primary-50" : "bg-success-50"
       }`}
     >
       <div>
         <p
           className={`text-xs font-semibold uppercase tracking-wide ${
-            isMath ? "text-blue-500" : "text-green-500"
+            isMath ? "text-primary-500" : "text-success-500"
           }`}
         >
           {subject} — Up Next
         </p>
         <p
           className={`text-2xl font-extrabold mt-1 ${
-            isMath ? "text-blue-700" : "text-green-700"
+            isMath ? "text-primary-700" : "text-success-700"
           }`}
         >
           {nextLevel}
         </p>
         {gradeLabel && (
-          <p className={`text-xs mt-1 ${isMath ? "text-blue-400" : "text-green-400"}`}>
+          <p className={`text-xs mt-1 ${isMath ? "text-primary-400" : "text-success-400"}`}>
             {gradeLabel} level
           </p>
         )}
@@ -70,11 +70,11 @@ function NextSubjectRow({ progress, subject }: NextSubjectRowProps) {
       {pagesLeft !== null && (
         <div className="text-right">
           <p
-            className={`text-lg font-bold ${isMath ? "text-blue-600" : "text-green-600"}`}
+            className={`text-lg font-bold ${isMath ? "text-primary-600" : "text-success-600"}`}
           >
             {pagesLeft}
           </p>
-          <p className={`text-xs ${isMath ? "text-blue-400" : "text-green-400"}`}>
+          <p className={`text-xs ${isMath ? "text-primary-400" : "text-success-400"}`}>
             pages left
           </p>
         </div>
@@ -130,7 +130,7 @@ export default function WhatsNextCard({ mathProgress, englishProgress }: WhatsNe
               focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400
               transition-all duration-200"
           />
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && <p className="text-danger-500 text-sm">{error}</p>}
           <button
             type="submit"
             disabled={pin.length !== 4}

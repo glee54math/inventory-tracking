@@ -89,8 +89,8 @@ export default function SupplementalLevelBrowser({
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               tab === t
                 ? t === "Math"
-                  ? "!bg-blue-600 text-white"
-                  : "!bg-green-600 text-white"
+                  ? "!bg-primary-600 text-white"
+                  : "!bg-success-600 text-white"
                 : "!bg-gray-100 text-gray-600 hover:!bg-gray-200"
             }`}
           >
@@ -119,11 +119,11 @@ export default function SupplementalLevelBrowser({
                         hover:scale-105 active:scale-95 ${
                           isCurrent
                             ? isMathTab
-                              ? "!bg-blue-600 text-white border-blue-600"
-                              : "!bg-green-600 text-white border-green-600"
+                              ? "!bg-primary-600 text-white border-primary-600"
+                              : "!bg-success-600 text-white border-success-600"
                             : isMathTab
-                            ? "!bg-white text-blue-700 border-blue-200 hover:border-blue-400"
-                            : "!bg-white text-green-700 border-green-200 hover:border-green-400"
+                            ? "!bg-white text-primary-700 border-primary-200 hover:border-primary-400"
+                            : "!bg-white text-success-700 border-success-200 hover:border-success-400"
                         }`}
                     >
                       {levelId}

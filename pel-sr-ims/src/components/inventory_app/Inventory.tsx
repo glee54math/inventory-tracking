@@ -97,6 +97,26 @@ function Inventory({ data, inventoryName, onCellEdit, resetKey }: InventoryProps
   return (
     <div>
       <div className="mb-4">
+        <div className="mb-2 flex flex-wrap items-center gap-3 text-xs text-gray-600">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-sm border border-danger-300 bg-danger-200" />
+            No stock
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-sm border border-warning-300 bg-warning-200" />
+            Low stock
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-sm border border-success-300 bg-success-200" />
+            In stock
+          </span>
+          {isEditable && (
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-3 rounded-sm border border-primary-300 bg-primary-200" />
+              Edited (pending)
+            </span>
+          )}
+        </div>
         <table className="p-2">
           <thead>
             <tr>
@@ -129,7 +149,7 @@ function Inventory({ data, inventoryName, onCellEdit, resetKey }: InventoryProps
                 <tr
                   key={level}
                   className={`border border-gray-400 px-2 py-1 text-center ${
-                    rowIsEdited ? "bg-blue-50" : ""
+                    rowIsEdited ? "bg-primary-50" : ""
                   }`}
                 >
                   <td>{level}</td>
@@ -143,12 +163,12 @@ function Inventory({ data, inventoryName, onCellEdit, resetKey }: InventoryProps
                     const displayCount = count + accDelta;
 
                     const baseCellColor = cellIsEdited
-                      ? "bg-blue-200"
+                      ? "bg-primary-200"
                       : count === 0
-                      ? "bg-red-200"
+                      ? "bg-danger-200"
                       : count < 4
-                      ? "bg-yellow-200"
-                      : "bg-green-200";
+                      ? "bg-warning-200"
+                      : "bg-success-200";
 
                     return (
                       <td
@@ -176,7 +196,7 @@ function Inventory({ data, inventoryName, onCellEdit, resetKey }: InventoryProps
                             onKeyDown={(e) =>
                               handleKeyDown(e, level, range, count)
                             }
-                            className="w-12 text-center border border-blue-400 rounded bg-white focus:outline-none"
+                            className="w-12 text-center border border-primary-400 rounded bg-white focus:outline-none"
                             onClick={(e) => e.stopPropagation()}
                           />
                         ) : (

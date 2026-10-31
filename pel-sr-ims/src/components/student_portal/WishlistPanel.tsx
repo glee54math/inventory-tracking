@@ -13,10 +13,10 @@ interface WishlistPanelProps {
 
 const STATUS_BADGE_CLASSES: Record<WishlistItem["status"], string> = {
   Requested: "bg-gray-100 text-gray-600",
-  UnderReview: "bg-amber-100 text-amber-700",
-  Approved: "bg-blue-100 text-blue-700",
-  Stocked: "bg-emerald-100 text-emerald-700",
-  Declined: "bg-red-100 text-red-600",
+  UnderReview: "bg-secondary-100 text-secondary-700",
+  Approved: "bg-primary-100 text-primary-700",
+  Stocked: "bg-success-100 text-success-700",
+  Declined: "bg-danger-100 text-danger-600",
 };
 
 export default function WishlistPanel({ student }: WishlistPanelProps) {
@@ -92,7 +92,7 @@ export default function WishlistPanel({ student }: WishlistPanelProps) {
         <button
           type="submit"
           disabled={isSubmitting || !name.trim()}
-          className="px-4 py-2 !bg-emerald-500 text-white rounded-xl text-sm font-medium hover:!bg-emerald-600 disabled:opacity-50"
+          className="px-4 py-2 !bg-success-500 text-white rounded-xl text-sm font-medium hover:!bg-success-600 disabled:opacity-50"
         >
           Add
         </button>
@@ -113,7 +113,7 @@ export default function WishlistPanel({ student }: WishlistPanelProps) {
                 <div className="flex justify-between items-start mb-1">
                   <div>
                     {item.link ? (
-                      <a href={item.link} target="_blank" rel="noreferrer" className="font-medium text-sm text-blue-600 hover:underline">
+                      <a href={item.link} target="_blank" rel="noreferrer" className="font-medium text-sm text-primary-600 hover:underline">
                         {item.name}
                       </a>
                     ) : (
@@ -126,7 +126,7 @@ export default function WishlistPanel({ student }: WishlistPanelProps) {
                   {item.status === "Requested" && (
                     <button
                       onClick={() => handleDelete(item.id!)}
-                      className="text-xs text-gray-400 hover:text-red-500"
+                      className="text-xs text-gray-400 hover:text-danger-500"
                     >
                       Remove
                     </button>
@@ -136,7 +136,7 @@ export default function WishlistPanel({ student }: WishlistPanelProps) {
                   <div className="mt-2">
                     <div className="w-full bg-gray-100 rounded-full h-2">
                       <div
-                        className="bg-emerald-500 h-2 rounded-full transition-all"
+                        className="bg-success-500 h-2 rounded-full transition-all"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
