@@ -274,6 +274,27 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       componentFile: "MG9_IntroToFractionsLab",
       componentExport: "IntroToFractionsLab",
     },
+    {
+      type: "standalone",
+      skillId: "FractionOperationsLab",
+      label: "Fraction Operations",
+      componentFile: "MG9_FractionOperationsLab",
+      componentExport: "FractionOperationsLab",
+    },
+    {
+      type: "standalone",
+      skillId: "DecimalsLab",
+      label: "Decimals",
+      componentFile: "MG9_DecimalsLab",
+      componentExport: "DecimalsLab",
+    },
+    {
+      type: "standalone",
+      skillId: "MeasurementConversionAndWordProblemsLab",
+      label: "Measurement Conversion & Word Problems",
+      componentFile: "MG9_MeasurementConversionAndWordProblemsLab",
+      componentExport: "MeasurementConversionAndWordProblemsLab",
+    },
   ],
   MK1: [
     {

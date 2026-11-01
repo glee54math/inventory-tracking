@@ -864,6 +864,58 @@ ELEMENTARY
           SimplifyingFractions.tsx from MG11/MultDivFractionLab/diagrams/
           rather than promoted) — only a second consumer exists today, below
           the threshold applied to the three promotions above.
+         — FractionOperationsLab        (MG9/MG9_FractionOperationsLab.tsx) — wired as a
+           "standalone" skill, listed right after IntroToFractionsLab (its
+           direct sequel; soft Home-card note, no lock). Grade 4, 4.NF.3a-d,
+           4.NF.4a-c, 4.MD.4 in five units: Decomposing Fractions, Adding/
+           Subtracting Fractions and Mixed Numbers (borrow = "unbundle a
+           whole"), Fraction Word Problems (incl. a same-whole trap), Multiplying
+           a Fraction by a Whole Number, Fraction Line Plots — plus a 25-question
+           Module Test (passScore 20). Styles .fop-lab. Units 1-4 use
+           IntroToFractions' 2-10 denominators; Unit 5 uses ONLY {2,4,8}
+           (4.MD.4), verified by brute force. Like-denominator answers are never
+           simplified (matches IntroToFractions). lib/fractions.ts drives both
+           the MixedNumberBars picture and the graded steps. Mixed-number
+           answers use a 2-blank SentenceStep (reads "2 3/8" on review) —
+           candidate for a real engine Step kind. Lab-local diagrams:
+           PieceBars, MixedNumberBars, FracLinePlot (promotion candidate with
+           MG7/MG5 LinePlots). Brute force caught k + v == k × v (e.g. "3 + 1
+           1/2" equals 1 1/2 × 3) making a distractor equal the answer;
+           guarded. Lesson: check distractor collisions by VALUE, not string.
+         — DecimalsLab                  (MG9/MG9_DecimalsLab.tsx) — wired as a
+           "standalone" skill. Grade 4, 4.NF.5-7, three units (one per
+           standard): Tenths and Hundredths, Decimal Notation, Comparing
+           Decimals — every unit gated, plus a 15-question Module Test
+           (passScore 12). Styles scoped .dec-lab. Denominators strictly 10 and
+           100 everywhere, distractors included (brute-force verified).
+           lib/decimals.ts stores every amount as whole hundredths (no float
+           error). Lab-local diagrams: HundredthsGrid (column-major 10x10, one
+           gridCells() for every picture), DecimalNumberLine (own component:
+           shared NumberLine renders a 0-1 range only 24px wide and never labels
+           sub-unit ticks), PlaceValueChart, DiffWholeBars (on shared
+           FractionBar). Engine gaps worked around: typed decimals use
+           NumberStep.padTo (no "must be a decimal" flag; parseAnswer accepts
+           "3/10" for 0.3), so every prompt states the digit count; typed
+           fractions use SentenceStep blanks ("__ / __") so the chip reads
+           "7/100", not "7 : 100". Candidates: a decimal-only NumberStep
+           option and a real stacked-fraction entry step.
+         — MeasurementConversionAndWordProblemsLab (MG9/MG9_MeasurementConversionAndWordProblemsLab.tsx) —
+           wired as a "standalone" skill. Grade 4, 4.MD.1-3, four units:
+           Comparing & Converting Measurement Units (requiresIntro +
+           reintroEverySolved 20 — memorized factors, same call as MM1
+           Conversion), Word Problems with Distance, Time, Volume & Mass, Money
+           Word Problems (ungated per plan; optional CFU behind the toggle),
+           Area & Perimeter Formulas in Context (assumes MG6
+           AreaAndPerimeterLab's concepts) — plus a 20-question Module Test
+           (passScore 16). Styles scoped .mcv-lab — the agent first used
+           .mcwp-lab, which collided with MG8 MultiplicativeComparisonAndWord-
+           ProblemsLab's class (both stylesheets would apply once both labs were
+           opened); renamed by the orchestrator. Parallel-built labs can pick
+           the same abbreviation, so check root classes are unique when wiring.
+           Leaf lib/ modules (measures, wordProblems, money) shared by units and
+           Tests. Lab-local diagrams: UnitBar, ConversionTable, ScaleLine
+           (consolidation candidate with shared NumberLine / MG5 NumberLineMD),
+           TapeBar, RectPlot (overlaps MG6 PolygonOutline), Receipt.
 [ ] MG10
 [x] MG11 — PowersOf10Practice          (MG11/MG11_PowersOfTen.tsx) — wired 2026-10-01
           as a "standalone" skill (multi-file, same pattern as MG6_BarModel).
