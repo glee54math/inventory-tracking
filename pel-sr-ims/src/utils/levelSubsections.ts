@@ -223,6 +223,34 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       componentFile: "MG8_OneDigitDivisionLab",
       componentExport: "OneDigitDivisionLab",
     },
+    {
+      type: "standalone",
+      skillId: "MultiplicativeComparisonAndWordProblemsLab",
+      label: "Multiplicative Comparison & Word Problems",
+      componentFile: "MG8_MultiplicativeComparisonAndWordProblemsLab",
+      componentExport: "MultiplicativeComparisonAndWordProblemsLab",
+    },
+    {
+      type: "standalone",
+      skillId: "FactorsMultiplesAndPatternsLab",
+      label: "Factors, Multiples & Patterns",
+      componentFile: "MG8_FactorsMultiplesAndPatternsLab",
+      componentExport: "FactorsMultiplesAndPatternsLab",
+    },
+    {
+      type: "standalone",
+      skillId: "AnglesAndProtractorLab",
+      label: "Angles & Protractor",
+      componentFile: "MG8_AnglesAndProtractorLab",
+      componentExport: "AnglesAndProtractorLab",
+    },
+    {
+      type: "standalone",
+      skillId: "LinesAnglesAndShapeClassificationLab",
+      label: "Lines, Angles & Shape Classification",
+      componentFile: "MG8_LinesAnglesAndShapeClassificationLab",
+      componentExport: "LinesAnglesAndShapeClassificationLab",
+    },
   ],
   MG9: [
     {
