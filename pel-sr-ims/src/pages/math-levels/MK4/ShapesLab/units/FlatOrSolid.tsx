@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { flatOrSolidTest } from "./FlatOrSolidTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -30,7 +31,7 @@ function FlatSolidVocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Think about a drawing on paper, versus a block you can pick up.
       </p>
@@ -60,11 +61,11 @@ function FlatSolidVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — flat is 2D, solid (something with real depth you could hold) is 3D." : "Not quite — 2D means flat, like a drawing. 3D means solid, with real depth you could actually pick up."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -81,7 +82,7 @@ function CircleSphereConflationQuestion({ onComplete }: { onComplete?: () => voi
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Here are a circle and a sphere. They can look alike in a picture!
       </p>
@@ -115,13 +116,13 @@ function CircleSphereConflationQuestion({ onComplete }: { onComplete?: () => voi
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — a sphere (like a ball) is solid and takes up real space; a circle is just a flat, round drawing."
             : "Not quite — a sphere is solid (you can hold it, like a ball). A circle is flat, like a round drawing with no depth."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -134,7 +135,7 @@ function LooksCanTrickYouTrapQuestion({ onComplete }: { onComplete?: () => void 
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: any round shape you see in a picture must be solid (3D), since round things like balls are solid.
       </p>
@@ -151,13 +152,13 @@ function LooksCanTrickYouTrapQuestion({ onComplete }: { onComplete?: () => void 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — a round shape can still be flat (a circle). What matters is whether it has real depth you could hold, not just whether it looks round."
             : "Not quite — a circle is round AND flat. Being round doesn't automatically mean something is solid."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -174,7 +175,7 @@ function NameAndClassifyQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Look at this solid shape.
       </p>
@@ -206,11 +207,11 @@ function NameAndClassifyQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — that's a cylinder, and it's solid (3D) — it has real depth, like a can." : "Not quite — look at the two round ends and the curved side: that's the shape of a cylinder, like a soup can, and it's solid (3D)."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -224,7 +225,7 @@ function FlatOrSolidCheckForUnderstanding({ onComplete }: { onComplete?: () => v
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure flat vs. solid isn't just about how round or square something looks, before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure flat vs. solid isn't just about how round or square something looks, before you try practice problems.</ReadAloud>
       <FlatSolidVocabQuestion onComplete={mark("vocab")} />
       <CircleSphereConflationQuestion onComplete={mark("circleSphere")} />
       <LooksCanTrickYouTrapQuestion onComplete={mark("trap")} />
@@ -245,8 +246,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <p className="muted small">Pick a flat shape and a solid shape, side by side. Notice how the solid one has shading that makes it look round and deep — the flat one doesn't.</p>
-      <div className="control-row">
+      <ReadAloud as="p" className="muted small">Pick a flat shape and a solid shape, side by side. Notice how the solid one has shading that makes it look round and deep — the flat one doesn't.</ReadAloud>
+      <div className="control-row" data-readaloud-part>
         <Segmented label="Flat (2D) shape" value={flatKind} onChange={setFlatKind} options={SHAPE_KINDS.map((k) => ({ id: k, label: SHAPE_LABELS[k] }))} />
         <Segmented label="Solid (3D) shape" value={solidKind} onChange={setSolidKind} options={SOLID_KINDS.map((k) => ({ id: k, label: SOLID_LABELS[k] }))} />
         {!introActive && (
@@ -260,22 +261,22 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <div style={{ maxWidth: 180 }}>
           <ShapeGlyph kind={flatKind} tone="a" label="a flat shape" />
-          <p className="feedback good" style={{ textAlign: "center" }}>
+          <ReadAloud as="p" className="feedback good" style={{ textAlign: "center" }}>
             {SHAPE_LABELS[flatKind]} — Flat (2D)
-          </p>
+          </ReadAloud>
         </div>
         <div style={{ maxWidth: 180 }}>
           <SolidGlyph kind={solidKind} tone="b" label="a solid shape" />
-          <p className="feedback good" style={{ textAlign: "center" }}>
+          <ReadAloud as="p" className="feedback good" style={{ textAlign: "center" }}>
             {SOLID_LABELS[solidKind]} — Solid (3D)
-          </p>
+          </ReadAloud>
         </div>
       </div>
       {(introActive || showCheck) && <FlatOrSolidCheckForUnderstanding onComplete={onIntroDone} />}
-      <p className="muted small">A circle and a sphere can look almost the same size on a screen — the real difference is whether you could actually pick it up and hold real space in your hands.</p>
+      <ReadAloud as="p" className="muted small">A circle and a sphere can look almost the same size on a screen — the real difference is whether you could actually pick it up and hold real space in your hands.</ReadAloud>
     </div>
   );
 }

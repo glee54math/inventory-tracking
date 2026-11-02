@@ -8,6 +8,7 @@ import { choice, customStep, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { buildingAndCombiningShapesTest } from "./BuildingAndCombiningShapesTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -31,7 +32,7 @@ function StickVocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Sticks are joined end-to-end, with no gaps and no crossing.
       </p>
@@ -61,11 +62,11 @@ function StickVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — joined end-to-end, sticks show a shape's SIDES, and a triangle needs exactly 3 of them." : "Not quite — sticks joined end-to-end with no gaps show a shape's SIDES. A triangle has 3 sides, so it needs 3 sticks."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -82,7 +83,7 @@ function TwoTrianglesConflationQuestion({ onComplete }: { onComplete?: () => voi
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Two triangles are joined together, edge-to-edge.
       </p>
@@ -112,13 +113,13 @@ function TwoTrianglesConflationQuestion({ onComplete }: { onComplete?: () => voi
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — joined along their longest edge, two matching triangles make a square. Joined a different way, they could make a bigger triangle or a different shape entirely."
             : "Not quite — two matching right triangles joined along their longest edge make a SQUARE. The same two pieces could ALSO make a different shape if joined another way."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -131,7 +132,7 @@ function OneWayTrapQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: there is only ONE correct way to put smaller pieces together to build a bigger shape.
       </p>
@@ -148,13 +149,13 @@ function OneWayTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — often there are MANY different ways to fill the same space with pieces, not just one 'obvious' way."
             : "Not quite — try filling the same strip with different combinations of pieces below. More than one combination can fill it exactly."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -171,7 +172,7 @@ function DotsAndSticksQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Here is a cube frame made of clay balls and sticks.
       </p>
@@ -202,11 +203,11 @@ function DotsAndSticksQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — the dots (clay) are the cube's corners, and the sticks are its sides (edges)." : "Not quite — the dots of clay are where corners go, and the sticks are the straight sides (edges) connecting them."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -220,7 +221,7 @@ function BuildingCheckForUnderstanding({ onComplete }: { onComplete?: () => void
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: building and combining shapes before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: building and combining shapes before you try practice problems.</ReadAloud>
       <StickVocabQuestion onComplete={mark("vocab")} />
       <TwoTrianglesConflationQuestion onComplete={mark("twoTriangles")} />
       <OneWayTrapQuestion onComplete={mark("oneWayTrap")} />
@@ -265,8 +266,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <p className="muted small">Pick a shape, then click each dashed gap to drop a stick in it.</p>
-        <div className="control-row">
+        <ReadAloud as="p" className="muted small">Pick a shape, then click each dashed gap to drop a stick in it.</ReadAloud>
+        <div className="control-row" data-readaloud-part>
           <Segmented label="Shape to build" value={stickKind} onChange={pickStickKind} options={BUILDABLE_KINDS.map((k) => ({ id: k, label: SHAPE_LABELS[k] }))} />
           <button className="btn ghost" onClick={() => setStickPlaced([])}>
             Start over
@@ -285,16 +286,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <div style={{ maxWidth: 220 }}>
           <StickBuilder kind={stickKind} placed={stickPlaced} onToggle={toggleStick} tone="a" />
         </div>
-        <p className="feedback good">
+        <ReadAloud as="p" className="feedback good">
           {stickPlaced.length} of {stickN} sticks placed{stickPlaced.length === stickN ? ` — you built a ${SHAPE_LABELS[stickKind]}!` : "..."}
-        </p>
+        </ReadAloud>
       </div>
 
       {(introActive || showCheck) && <BuildingCheckForUnderstanding onComplete={onIntroDone} />}
 
       <div>
-        <p className="muted small">Now build a cube out of clay (corners, already placed) and sticks (edges) — click each dashed gap.</p>
-        <div className="control-row">
+        <ReadAloud as="p" className="muted small">Now build a cube out of clay (corners, already placed) and sticks (edges) — click each dashed gap.</ReadAloud>
+        <div className="control-row" data-readaloud-part>
           <button className="btn ghost" onClick={() => setCubePlaced([])}>
             Start over
           </button>
@@ -302,19 +303,19 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <div style={{ maxWidth: 220 }}>
           <CubeFrameBuilder placed={cubePlaced} onToggle={toggleCubeEdge} tone="b" />
         </div>
-        <p className="feedback good">
+        <ReadAloud as="p" className="feedback good">
           {cubePlaced.length} of {CUBE_EDGES.length} sticks placed{cubePlaced.length === CUBE_EDGES.length ? " — you built a cube!" : "..."}
-        </p>
+        </ReadAloud>
       </div>
 
       <div>
-        <p className="muted small">Put two shapes together to make a bigger one — or try the open-ended strip, which has MORE than one right answer.</p>
-        <div className="control-row">
+        <ReadAloud as="p" className="muted small">Put two shapes together to make a bigger one — or try the open-ended strip, which has MORE than one right answer.</ReadAloud>
+        <div className="control-row" data-readaloud-part>
           <Segmented label="Activity" value={composeMode} onChange={setComposeMode} options={[{ id: "single", label: "One target shape" }, { id: "open", label: "Many ways (strip)" }]} />
         </div>
         {composeMode === "single" ? (
           <>
-            <div className="control-row">
+            <div className="control-row" data-readaloud-part>
               <Segmented label="Pieces" value={recipeId} onChange={pickRecipe} options={COMPOSE_RECIPES.map((r) => ({ id: r.id, label: `${r.pieceLabel}s → ${r.resultLabel}` }))} />
               <button className="btn ghost" onClick={() => setComposedCount(0)}>
                 Start over
@@ -323,13 +324,13 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             <div style={{ maxWidth: 280 }}>
               <ComposeSingle recipe={recipe} placed={composedCount} onPlace={() => setComposedCount((c) => Math.min(recipe.slots.length, c + 1))} tone="c" />
             </div>
-            <p className="feedback good">
+            <ReadAloud as="p" className="feedback good">
               {composedCount} of {recipe.slots.length} {recipe.pieceLabel.toLowerCase()}s placed{composedCount === recipe.slots.length ? ` — together they make a ${recipe.resultLabel}!` : "..."}
-            </p>
+            </ReadAloud>
           </>
         ) : (
           <>
-            <div className="control-row">
+            <div className="control-row" data-readaloud-part>
               <Stepper label="Strip length" value={targetLength} min={3} max={8} onChange={(n) => { setTargetLength(n); setOpenPieces([]); }} tone="a" />
               <button className="btn ghost" type="button" disabled={openTotal + 1 > targetLength} onClick={() => setOpenPieces((p) => [...p, 1])}>
                 Add square (1)
@@ -347,9 +348,9 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             <div style={{ maxWidth: 280 }}>
               <ComposeOpenStrip targetLength={targetLength} placedLengths={openPieces} tone="b" />
             </div>
-            <p className="feedback good">
+            <ReadAloud as="p" className="feedback good">
               {openTotal === targetLength ? "Filled exactly! Try starting over and using a different mix of pieces — more than one way works." : `${openTotal} of ${targetLength} units filled.`}
-            </p>
+            </ReadAloud>
           </>
         )}
       </div>
@@ -374,9 +375,9 @@ function StickBuilderWidget({ kind, onDone }: { kind: BuildableKind; onDone: () 
   return (
     <div>
       <StickBuilder kind={kind} placed={placed} onToggle={toggle} tone="a" />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         {placed.length} of {n} sticks placed.
-      </p>
+      </ReadAloud>
     </div>
   );
 }
@@ -390,9 +391,9 @@ function CubeFrameWidget({ onDone }: { onDone: () => void }) {
   return (
     <div>
       <CubeFrameBuilder placed={placed} onToggle={toggle} tone="b" />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         {placed.length} of {CUBE_EDGES.length} sticks placed.
-      </p>
+      </ReadAloud>
     </div>
   );
 }
@@ -405,7 +406,7 @@ function ComposeSingleWidget({ recipe, onDone }: { recipe: ComposeRecipe; onDone
   return (
     <div>
       <ComposeSingle recipe={recipe} placed={placed} onPlace={() => setPlaced((c) => Math.min(recipe.slots.length, c + 1))} tone="c" />
-      <p className="muted small">Click a {recipe.pieceLabel.toLowerCase()} piece to drop it into the next open space.</p>
+      <ReadAloud as="p" className="muted small">Click a {recipe.pieceLabel.toLowerCase()} piece to drop it into the next open space.</ReadAloud>
     </div>
   );
 }
@@ -419,7 +420,7 @@ function ComposeOpenWidget({ targetLength, onDone }: { targetLength: number; onD
   return (
     <div>
       <ComposeOpenStrip targetLength={targetLength} placedLengths={pieces} tone="b" />
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <button className="btn ghost" type="button" disabled={total + 1 > targetLength} onClick={() => setPieces((p) => [...p, 1])}>
           Add square (1)
         </button>

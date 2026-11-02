@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { namingShapesAndPositionsTest } from "./NamingShapesAndPositionsTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -25,7 +26,7 @@ function DiamondVocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Look at this shape.
       </p>
@@ -46,13 +47,13 @@ function DiamondVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? 'Correct — "diamond" is just a nickname some people use, but this is still a SQUARE. Turning a shape never changes what shape it is.'
             : "Not quite — count the sides: 4 equal sides and 4 corners, same as any other square. Turning it only changes which way it's facing."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -65,7 +66,7 @@ function ResizeConflationQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Here is a big triangle and a tiny triangle.
       </p>
@@ -87,13 +88,13 @@ function ResizeConflationQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — size never changes what shape something is. A tiny triangle and a giant triangle are both still triangles."
             : "Not quite — look at the corners and sides on each one. Both have exactly 3 sides and 3 corners, so both are triangles, no matter the size."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -106,7 +107,7 @@ function TurningTrapQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: if you turn (rotate) a shape around, it becomes a different shape than it was before.
       </p>
@@ -123,13 +124,13 @@ function TurningTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — turning a shape only changes which way it's facing. It's still the exact same shape."
             : "Not quite — turning a shape (even all the way to look tilted or upside down) never changes how many sides or corners it has, so it's never a different shape."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -147,7 +148,7 @@ function BesideVsInFrontQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> The cat is sitting so that part of the box is hidden behind it.
       </p>
@@ -178,13 +179,13 @@ function BesideVsInFrontQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? '"Beside" means next to, with nothing hidden — nothing overlaps. Here the box is partly hidden, so the cat is IN FRONT OF it, not beside it.'
             : 'When one object blocks part of another, that\'s "in front of" (or "behind" for the hidden one) — "beside" is for objects side-by-side with nothing hidden.'}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -198,7 +199,7 @@ function NamingCheckForUnderstanding({ onComplete }: { onComplete?: () => void }
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure turning or resizing a shape never changes what it is, before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure turning or resizing a shape never changes what it is, before you try practice problems.</ReadAloud>
       <DiamondVocabQuestion onComplete={mark("diamond")} />
       <ResizeConflationQuestion onComplete={mark("resize")} />
       <TurningTrapQuestion onComplete={mark("turning")} />
@@ -232,8 +233,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <p className="muted small">Pick a shape, then turn it or resize it. No matter what you do, it's still the same shape!</p>
-        <div className="control-row">
+        <ReadAloud as="p" className="muted small">Pick a shape, then turn it or resize it. No matter what you do, it's still the same shape!</ReadAloud>
+        <div className="control-row" data-readaloud-part>
           <Segmented label="Shape" value={kind} onChange={setKind} options={SHAPE_KINDS.map((k) => ({ id: k, label: SHAPE_LABELS[k] }))} />
           <Segmented label="Size" value={scaleId} onChange={setScaleId} options={SCALES.map((s) => ({ id: s.id, label: s.label }))} />
           <button className="btn ghost" onClick={() => setRotation((r) => (r + 45) % 360)}>
@@ -253,22 +254,22 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <div style={{ maxWidth: 220 }}>
           <ShapeGlyph kind={kind} rotation={rotation} scale={scale} tone="a" label="the chosen shape" />
         </div>
-        <p className="feedback good">This is still a {SHAPE_LABELS[kind]} — turning or resizing it never makes it a different shape!</p>
+        <ReadAloud as="p" className="feedback good">This is still a {SHAPE_LABELS[kind]} — turning or resizing it never makes it a different shape!</ReadAloud>
       </div>
 
       {(introActive || showCheck) && <NamingCheckForUnderstanding onComplete={onIntroDone} />}
 
       <div>
-        <p className="muted small">Now place the ball somewhere around the box, and see which position word fits.</p>
-        <div className="control-row">
+        <ReadAloud as="p" className="muted small">Now place the ball somewhere around the box, and see which position word fits.</ReadAloud>
+        <div className="control-row" data-readaloud-part>
           <Segmented label="Where's the ball?" value={relation} onChange={setRelation} options={RELATIONS.map((r) => ({ id: r, label: RELATION_LABELS[r] }))} />
           {relation === "beside" && <Segmented label="Which side" value={side} onChange={setSide} options={[{ id: "left", label: "Left" }, { id: "right", label: "Right" }]} />}
         </div>
         <div style={{ maxWidth: 220 }}>
           <PositionScene relation={relation} side={side} />
         </div>
-        <p className="feedback good">The ball is {RELATION_LABELS[relation].toLowerCase()} the box.</p>
-        <p className="muted small">"Beside" and "next to" mean the same thing — both describe objects side-by-side, with nothing hidden.</p>
+        <ReadAloud as="p" className="feedback good">The ball is {RELATION_LABELS[relation].toLowerCase()} the box.</ReadAloud>
+        <ReadAloud as="p" className="muted small">"Beside" and "next to" mean the same thing — both describe objects side-by-side, with nothing hidden.</ReadAloud>
       </div>
     </div>
   );

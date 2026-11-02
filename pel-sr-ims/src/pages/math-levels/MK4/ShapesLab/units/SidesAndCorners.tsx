@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { sidesAndCornersTest } from "./SidesAndCornersTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -25,7 +26,7 @@ function SideCornerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Look at this square.
       </p>
@@ -56,11 +57,11 @@ function SideCornerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — a side is a straight edge, a corner is where two sides meet." : "Not quite — a SIDE is one straight line of the shape's edge; a CORNER is the point where two sides meet."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -78,7 +79,7 @@ function CircleZeroConflationQuestion({ onComplete }: { onComplete?: () => void 
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Look at this circle.
       </p>
@@ -109,13 +110,13 @@ function CircleZeroConflationQuestion({ onComplete }: { onComplete?: () => void 
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — a circle's edge is one curved line with no straight parts and no corners, so it has 0 sides and 0 corners."
             : "Not quite — a circle's outline is curved, not straight, and it never meets itself at a sharp point — so it has 0 sides AND 0 corners."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -128,7 +129,7 @@ function SameCountTrapQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> Here is a square and a rectangle that is NOT a square.
       </p>
@@ -150,13 +151,13 @@ function SameCountTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — how LONG the sides are is different from how MANY sides there are. Both shapes have exactly 4 sides, even though they look different."
             : "Not quite — count the sides on each one: a square has 4, and this rectangle also has 4. Looking different doesn't change the COUNT, just the lengths."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -173,7 +174,7 @@ function EqualLengthVsEqualCountQuestion({ onComplete }: { onComplete?: () => vo
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Here is a square and a rectangle that is NOT a square.
       </p>
@@ -207,13 +208,13 @@ function EqualLengthVsEqualCountQuestion({ onComplete }: { onComplete?: () => vo
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the square's sides are all equal in LENGTH, but both shapes still have the same NUMBER of sides (4). Length and count are two different things to check."
             : "Not quite — only the square has 4 equal-length sides. But both shapes still have 4 sides total, no matter their lengths."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -227,7 +228,7 @@ function SidesAndCornersCheckForUnderstanding({ onComplete }: { onComplete?: () 
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: sides and corners before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: sides and corners before you try practice problems.</ReadAloud>
       <SideCornerVocabQuestion onComplete={mark("vocab")} />
       <CircleZeroConflationQuestion onComplete={mark("circleZero")} />
       <SameCountTrapQuestion onComplete={mark("sameCountTrap")} />
@@ -263,8 +264,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <p className="muted small">Pick a shape, then click every side (then every corner) to count them one at a time.</p>
-        <div className="control-row">
+        <ReadAloud as="p" className="muted small">Pick a shape, then click every side (then every corner) to count them one at a time.</ReadAloud>
+        <div className="control-row" data-readaloud-part>
           <Segmented label="Shape" value={kind} onChange={pickKind} options={BUILDABLE_KINDS.map((k) => ({ id: k, label: SHAPE_LABELS[k] }))} />
           <button className="btn ghost" onClick={() => { setCountedSides([]); setCountedCorners([]); }}>
             Start over
@@ -283,40 +284,40 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <div style={{ maxWidth: 220 }}>
           <ShapeCountable kind={kind} tone="a" countedSides={countedSides} countedCorners={countedCorners} onToggleSide={toggleSide} onToggleCorner={toggleCorner} />
         </div>
-        <p className="feedback good">
+        <ReadAloud as="p" className="feedback good">
           Sides clicked: {countedSides.length} of {shapeAttributes(kind).sides} — Corners clicked: {countedCorners.length} of {shapeAttributes(kind).corners}
-        </p>
+        </ReadAloud>
       </div>
 
       {(introActive || showCheck) && <SidesAndCornersCheckForUnderstanding onComplete={onIntroDone} />}
 
       <div>
-        <p className="muted small">Now compare two different shapes side by side.</p>
-        <div className="control-row">
+        <ReadAloud as="p" className="muted small">Now compare two different shapes side by side.</ReadAloud>
+        <div className="control-row" data-readaloud-part>
           <Segmented label="Shape A" value={kindA} onChange={setKindA} options={SHAPE_KINDS.map((k) => ({ id: k, label: SHAPE_LABELS[k] }))} />
           <Segmented label="Shape B" value={kindB} onChange={setKindB} options={SHAPE_KINDS.map((k) => ({ id: k, label: SHAPE_LABELS[k] }))} />
         </div>
-        <div className="control-row">
+        <div className="control-row" data-readaloud-part>
           <div style={{ maxWidth: 160 }}>
             <ShapeGlyph kind={kindA} tone="a" label="shape A" />
-            <p className="small" style={{ textAlign: "center" }}>
+            <ReadAloud as="p" className="small" style={{ textAlign: "center" }}>
               {SHAPE_LABELS[kindA]}: {attrA.sides} sides, {attrA.corners} corners
-            </p>
+            </ReadAloud>
           </div>
           <div style={{ maxWidth: 160 }}>
             <ShapeGlyph kind={kindB} tone="c" label="shape B" />
-            <p className="small" style={{ textAlign: "center" }}>
+            <ReadAloud as="p" className="small" style={{ textAlign: "center" }}>
               {SHAPE_LABELS[kindB]}: {attrB.sides} sides, {attrB.corners} corners
-            </p>
+            </ReadAloud>
           </div>
         </div>
-        <p className="feedback good">
+        <ReadAloud as="p" className="feedback good">
           {attrA.sides === attrB.sides
             ? `${SHAPE_LABELS[kindA]} and ${SHAPE_LABELS[kindB]} have the SAME number of sides (${attrA.sides}).`
             : attrA.sides > attrB.sides
               ? `${SHAPE_LABELS[kindA]} has MORE sides than ${SHAPE_LABELS[kindB]}.`
               : `${SHAPE_LABELS[kindB]} has MORE sides than ${SHAPE_LABELS[kindA]}.`}
-        </p>
+        </ReadAloud>
       </div>
     </div>
   );
@@ -401,7 +402,7 @@ function sidesAndCornersProblem(targetBucket?: string): Problem {
     bucket,
     story: `Here is a ${labelA.toLowerCase()} and a ${labelB.toLowerCase()}.`,
     visual: () => (
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <ShapeGlyph kind={kindA} tone="a" label="shape A" />
         <ShapeGlyph kind={kindB} tone="c" label="shape B" />
       </div>
