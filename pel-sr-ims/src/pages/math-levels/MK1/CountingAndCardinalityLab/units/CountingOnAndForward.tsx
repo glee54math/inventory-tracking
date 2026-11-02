@@ -5,6 +5,7 @@ import { choice, type Problem, type Step } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { countingOnAndForwardTest } from "./CountingOnAndForwardTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -30,7 +31,7 @@ function NextNumberVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> You count: 27, 28, 29... What number comes right after 29?
       </p>
@@ -62,13 +63,13 @@ function NextNumberVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — after 29 comes thirty, and thirty is the first number of a brand new ten (the 30s)."
             : 'Not quite — the number after 29 is NOT "twenty-ten." Every ten has exactly ten numbers (20-29 is the 20s), so after the last one (29) comes the first number of the next ten.'}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -100,7 +101,7 @@ function OnesVsTensQuestion({ onComplete }: { onComplete?: () => void }) {
   );
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> You are at 20.
       </p>
@@ -112,13 +113,13 @@ function OnesVsTensQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — counting by tens jumps a whole group of ten (20 to 30), but counting by ones moves just one step (20 to 21). Same starting number, two different \"next\" answers, depending on HOW you're counting."
             : "Not quite — \"by tens\" and \"by ones\" are different counting rules, even starting from the same number. By tens jumps a whole group of ten; by ones moves just one step."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -133,7 +134,7 @@ function DecadeRuleQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: every time a count crosses from a number ending in 9 (like 19, 29, 39...) to the very next number, that next
         number always ends in 0.
@@ -151,13 +152,13 @@ function DecadeRuleQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — it's always true, not just for 29. Every group of ten (the 20s, the 30s, the 40s...) has exactly ten numbers, so the number right after the last one (ending in 9) always starts the next ten, ending in 0."
             : "Not quite — check a few more examples: 19 → 20, 39 → 40, 59 → 60. Every ten has exactly ten numbers in it, so this pattern never breaks."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -194,7 +195,7 @@ function CountForwardThreeQuestion({ onComplete }: { onComplete?: () => void }) 
   );
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Start at 38. Count forward three numbers, in order.
       </p>
@@ -207,13 +208,13 @@ function CountForwardThreeQuestion({ onComplete }: { onComplete?: () => void }) 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 38, 39, 40, 41. You crossed right over a new ten (the 40s) partway through, without skipping or repeating any number."
             : "Not quite — count one at a time from 38: 39, then cross into a new ten at 40, then 41."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -227,7 +228,7 @@ function CountingCheckForUnderstanding({ onComplete }: { onComplete?: () => void
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure counting forward makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure counting forward makes sense before you try practice problems.</ReadAloud>
       <NextNumberVocabQuestion onComplete={mark("vocab")} />
       <OnesVsTensQuestion onComplete={mark("onesVsTens")} />
       <DecadeRuleQuestion onComplete={mark("decadeRule")} />
@@ -261,7 +262,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented
           label="Count by"
           value={mode}
@@ -285,7 +286,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <CountingCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <div className="control-row" style={{ alignItems: "center" }}>
+      <div className="control-row" style={{ alignItems: "center" }} data-readaloud-part>
         <button className="btn primary" onClick={sayNext} disabled={current >= 100}>
           Say the next number
         </button>
@@ -310,12 +311,12 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       {crossedDecade && <p className="feedback good">You just started a brand new ten!</p>}
 
       <TenGroups value={current} tone="a" />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         {current === 0
           ? "Start at 0 and press the button to begin counting."
           : `You've counted up to ${current} — that's ${Math.floor(current / 10)} group${Math.floor(current / 10) === 1 ? "" : "s"} of ten and ${current % 10} more.`}{" "}
         Notice how every ten dots makes a new bundle — crossing from a number ending in 9 into the next ten (like 29 → 30) always starts a fresh bundle.
-      </p>
+      </ReadAloud>
     </div>
   );
 }

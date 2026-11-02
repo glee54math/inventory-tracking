@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { writingAndMatchingNumeralsTest } from "./WritingAndMatchingNumeralsTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // Number words 0-20 — stand in for a "spoken/heard" number, since this app
 // has no audio. Index === the numeral itself.
@@ -40,7 +41,7 @@ function NumeralVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Look at the counters.
       </p>
@@ -73,11 +74,11 @@ function NumeralVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? 'Correct — there are 5 counters, and "5" is the numeral: the written symbol for that count.' : "Not quite — count the dots again, and remember a numeral is the written symbol for a number, not a letter."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -108,7 +109,7 @@ function SixNineQuestion({ onComplete }: { onComplete?: () => void }) {
   );
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Two numerals are shown below.
       </p>
@@ -121,11 +122,11 @@ function SixNineQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct! 6 and 9 are easy to mix up, but you told them apart." : "Not quite — look closely at which numeral has its loop near the top, and which has it near the bottom."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -139,7 +140,7 @@ function FlipGeneralizationQuestion({ onComplete }: { onComplete?: () => void })
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: every pair of numerals people mix up (like 6 &amp; 9, or 2 &amp; 5) turns into the other one when you flip it
         upside down.
@@ -157,13 +158,13 @@ function FlipGeneralizationQuestion({ onComplete }: { onComplete?: () => void })
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — false! 6 and 9 really ARE upside-down flips of each other. But 2 and 5 are NOT — they just happen to have similar curvy shapes, and 1 and 7 aren't flips either. Mixing numerals up can happen for more than one reason."
             : "Not quite — try turning a 6 upside down (it becomes a 9), then try turning a 2 upside down. Does it become a 5? It doesn't — 2 and 5 are mixed up for a different reason."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -182,7 +183,7 @@ function PictureToNumeralQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Count the counters.
       </p>
@@ -213,11 +214,11 @@ function PictureToNumeralQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 9 counters match the numeral 9, and one fewer than 9 is 8." : "Not quite — count the scattered counters carefully one at a time, then count one backward from your answer."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -231,7 +232,7 @@ function NumeralCheckForUnderstanding({ onComplete }: { onComplete?: () => void 
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure numerals make sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure numerals make sense before you try practice problems.</ReadAloud>
       <NumeralVocabQuestion onComplete={mark("vocab")} />
       <SixNineQuestion onComplete={mark("sixNine")} />
       <FlipGeneralizationQuestion onComplete={mark("flip")} />
@@ -261,7 +262,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Number" value={value} min={0} max={20} step={1} onChange={setValue} tone="a" />
         <Segmented label="Arrangement" value={arrangement} onChange={setArrangement} options={[{ id: "line", label: "Line" }, { id: "array", label: "Grid" }, { id: "scatter", label: "Scattered" }]} />
         {!introActive && (
@@ -281,12 +282,12 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <CounterGroup count={value} arrangement={arrangement} tone="a" seed={value * 7 + 3} />
         {bigDigit(String(value))}
       </div>
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         {value} counter{value === 1 ? "" : "s"}, and the numeral written for that count is "{value}". The word for {value} is "{NUMBER_WORDS[value]}" —
         the numeral is the SYMBOL, not the word.
-      </p>
+      </ReadAloud>
 
-      <div className="align-stack-wrap">
+      <ReadAloud className="align-stack-wrap">
         <p>
           <b>Numeral look-alikes</b> — some numerals are easy to mix up.
         </p>
@@ -299,7 +300,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         </div>
         <p className="muted small">{pair.note}</p>
-      </div>
+      </ReadAloud>
     </div>
   );
 }

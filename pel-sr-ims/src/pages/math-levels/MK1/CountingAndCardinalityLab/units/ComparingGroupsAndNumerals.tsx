@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingGroupsAndNumeralsTest } from "./ComparingGroupsAndNumeralsTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 const bigDigit = (d: number | string) => (
   <span style={{ display: "inline-block", fontSize: 54, fontWeight: 800, fontFamily: "'Courier New', monospace" }}>{d}</span>
@@ -77,7 +78,7 @@ function SpaceVsCountQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Both groups below have exactly 6 counters — one is spread out, one is bunched up close together.
       </p>
@@ -112,13 +113,13 @@ function SpaceVsCountQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — both groups have exactly 6. Spreading counters out (or squeezing them together) changes how much SPACE they take up, but never changes how MANY there are."
             : "Not quite — count each group one at a time. They both have 6, even though the spread-out one looks bigger at a glance."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -137,7 +138,7 @@ function MoreFewerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Group A has 7 counters. Group B has 4 counters.
       </p>
@@ -167,13 +168,13 @@ function MoreFewerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? '"More than" means a bigger amount — Group A (7) has more. "Fewer than" means a smaller amount — Group B (4) has fewer.'
             : 'Not quite — "more" means a bigger count, "fewer" means a smaller count. Compare 7 and 4 again.'}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -188,7 +189,7 @@ function ObjectsVsNumeralsQuestion({ onComplete }: { onComplete?: () => void }) 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> You can compare two groups of objects by counting them, OR compare two written numerals (like 6 and 9) with no objects shown at
         all.
@@ -207,13 +208,13 @@ function ObjectsVsNumeralsQuestion({ onComplete }: { onComplete?: () => void }) 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "False — it's the exact same idea either way. 9 is bigger than 6 because nine OBJECTS would be more than six objects. The numeral just stands in for the count."
             : "Not quite — a numeral is just a written stand-in for a count. Comparing 6 and 9 means exactly the same thing as comparing 6 objects to 9 objects."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -231,7 +232,7 @@ function CloseVsObviousQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Group A has 6 counters. Group B has 7 counters.
       </p>
@@ -261,13 +262,13 @@ function CloseVsObviousQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 7 is more than 6, but just by 1, so this is a CLOSE comparison. A difference like 3 vs. 9 would be obvious at a glance; 6 vs. 7 needs an actual careful count."
             : "Not quite — count both groups exactly. A difference of just 1 (like 6 vs. 7) is close, and close differences need careful counting, not a quick glance."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -281,7 +282,7 @@ function ComparingCheckForUnderstanding({ onComplete }: { onComplete?: () => voi
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure comparing makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure comparing makes sense before you try practice problems.</ReadAloud>
       <SpaceVsCountQuestion onComplete={mark("space")} />
       <MoreFewerVocabQuestion onComplete={mark("vocab")} />
       <ObjectsVsNumeralsQuestion onComplete={mark("objVsNum")} />
@@ -307,7 +308,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Group A" value={a} min={0} max={10} step={1} onChange={setA} tone="a" />
         <Segmented label="A's look" value={arrA} onChange={setArrA} options={[{ id: "line", label: "Line" }, { id: "array", label: "Grid" }, { id: "scatter", label: "Scattered" }]} />
         {!introActive && (
@@ -321,7 +322,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Group B" value={b} min={0} max={10} step={1} onChange={setB} tone="b" />
         <Segmented label="B's look" value={arrB} onChange={setArrB} options={[{ id: "line", label: "Line" }, { id: "array", label: "Grid" }, { id: "scatter", label: "Scattered" }]} />
       </div>
@@ -331,13 +332,13 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <CounterGroup count={a} arrangement={arrA} tone="a" seed={a * 9 + 1} />
         <CounterGroup count={b} arrangement={arrB} tone="b" seed={b * 9 + 2} />
       </div>
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         Group A has {a}, Group B has {b} — Group A has <b>{verdict}</b> Group B. "More than" means a bigger amount; "fewer than" means a smaller
         amount; "the same as" means equal amounts. Try spreading one group out or bunching it up — the comparison never changes, because the
         COUNT didn't change.
-      </p>
+      </ReadAloud>
 
-      <div className="align-stack-wrap">
+      <ReadAloud className="align-stack-wrap">
         <p>
           <b>Just the numerals</b> — no objects at all:
         </p>
@@ -347,7 +348,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           {bigDigit(b)}
         </div>
         <p className="muted small">Comparing the numerals {a} and {b} is the exact same idea as comparing {a} objects to {b} objects.</p>
-      </div>
+      </ReadAloud>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { howManyCardinalityTest } from "./HowManyCardinalityTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -30,7 +31,7 @@ function LastNumberVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> You count 5 blocks out loud: "1, 2, 3, 4, 5."
       </p>
@@ -62,13 +63,13 @@ function LastNumberVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? 'Correct — the last number you say ("5") isn\'t just a label for the last block — it tells you the TOTAL count of every block in the group.'
             : "Not quite — the last number you count isn't just about the last object you touched. It tells you how many objects there are altogether."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -86,7 +87,7 @@ function RecountQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> You count a group of toys and get 6. Nobody added or removed any toys. You count the SAME group again, starting over from 1.
       </p>
@@ -117,13 +118,13 @@ function RecountQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — counting again doesn't start the amount over at 0; the group still has 6 toys, so counting it correctly always gives 6 again."
             : "Not quite — the toys themselves didn't change, so counting them again (correctly) always gives the exact same total: 6."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -137,7 +138,7 @@ function StartingPointQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> Counters are arranged in a circle — it's easy to lose track of which one you started with.
       </p>
@@ -156,13 +157,13 @@ function StartingPointQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the total only depends on how many objects there are, never on which one you happened to start with. The tricky part in a circle is just remembering where you started, so you don't count it twice."
             : "Not quite — try it: start from a different counter in the circle and count around. As long as you count each one exactly once, the total is always the same."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -182,7 +183,7 @@ function OneMoreQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Count the counters.
       </p>
@@ -215,13 +216,13 @@ function OneMoreQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — there are 7, and one more counter would make 8. Every time you add exactly one more object, the new total is always exactly one bigger — never two, never the same."
             : "Not quite — count the group first, then think about what number comes right after that total when you count forward just one more step."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -235,7 +236,7 @@ function CardinalityCheckForUnderstanding({ onComplete }: { onComplete?: () => v
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure counting a group makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure counting a group makes sense before you try practice problems.</ReadAloud>
       <LastNumberVocabQuestion onComplete={mark("lastNumber")} />
       <RecountQuestion onComplete={mark("recount")} />
       <StartingPointQuestion onComplete={mark("startingPoint")} />
@@ -270,7 +271,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="How many counters" value={count} min={3} max={20} step={1} onChange={(n) => newGroup(n, arrangement)} tone="a" />
         <Segmented
           label="Arrangement"
@@ -294,11 +295,11 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <CardinalityCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <p className="muted small">Click each counter once, in any order you like, to count it.</p>
+      <ReadAloud as="p" className="muted small">Click each counter once, in any order you like, to count it.</ReadAloud>
       <CounterGroup count={count} arrangement={arrangement} tone="a" seed={count * 9 + 5} countedOrder={order} onToggle={toggle} />
-      <p className="feedback good" style={{ minHeight: 24 }}>
+      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         {order.length === 0 ? "" : done ? `That's ${order.length} in all — the LAST number you said!` : `Counted ${order.length} so far...`}
-      </p>
+      </ReadAloud>
       {done && count < 20 && (
         <button
           className="btn primary"
@@ -311,10 +312,10 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Add one more counter
         </button>
       )}
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         Try the same number of counters in a different arrangement (a circle is the trickiest — it's easy to lose track of where you started!). No
         matter the arrangement, counting correctly always gives the same total.
-      </p>
+      </ReadAloud>
     </div>
   );
 }
