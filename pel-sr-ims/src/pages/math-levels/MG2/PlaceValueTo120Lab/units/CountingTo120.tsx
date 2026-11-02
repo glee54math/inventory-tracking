@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { countingTo120Test } from "./CountingTo120Test";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -24,7 +25,7 @@ function NinetyNineVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> You count: 97, 98, 99... What number comes right after 99?
       </p>
@@ -42,13 +43,13 @@ function NinetyNineVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? 'Correct — after 99 comes 100, one hundred. There is no "ninety-ten" or "ninety-eleven" — once you run out of 2-digit numbers, a brand new digit appears.'
             : 'Not quite — "ninety-ten" and "ninety-eleven" are not real numbers. After 99 (the last 2-digit number), the very next number needs a THIRD digit: 100.'}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -68,7 +69,7 @@ function TenVsHundredQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> You count: 107, 108, 109...
       </p>
@@ -99,13 +100,13 @@ function TenVsHundredQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 110 starts a new ten (the 110s), but you're still inside the SAME hundred (the 100s). A new hundred only starts at 200."
             : "Not quite — 109 to 110 only crosses into a new TEN (the 110s). You stay in the 100s hundred the whole way from 100 to 199; a new hundred doesn't start until 200."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -120,7 +121,7 @@ function PatternRepeatsQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: the pattern "count up through the ones, then start a new ten" repeats exactly the same way every single time — all the way
         from the 20s up through the 110s.
@@ -138,13 +139,13 @@ function PatternRepeatsQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — it never breaks, not even at 100. 29→30, 59→60, 99→100, 109→110: every single one is the exact same pattern happening again."
             : "Not quite — check 99→100 and 109→110 against 29→30. It's the exact same pattern every time, it just keeps happening past 100 too."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -180,7 +181,7 @@ function CrossOneHundredQuestion({ onComplete }: { onComplete?: () => void }) {
   );
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Start at 97. Count forward three numbers, in order.
       </p>
@@ -193,13 +194,13 @@ function CrossOneHundredQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 97, 98, 99, 100. Right at the end you crossed from the last 2-digit number into the first 3-digit number."
             : "Not quite — count one at a time: 98, then 99, then one more than 99 is 100 (not \"ninety-ten\")."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -213,7 +214,7 @@ function CountingCheckForUnderstanding({ onComplete }: { onComplete?: () => void
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure counting all the way to 120 makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure counting all the way to 120 makes sense before you try practice problems.</ReadAloud>
       <NinetyNineVocabQuestion onComplete={mark("vocab")} />
       <TenVsHundredQuestion onComplete={mark("tenVsHundred")} />
       <PatternRepeatsQuestion onComplete={mark("pattern")} />
@@ -242,7 +243,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Start at" value={start} min={1} max={119} step={1} onChange={resetTo} tone="a" />
         <button className="btn primary" onClick={sayNext} disabled={current >= 120}>
           Say the next number
@@ -268,11 +269,11 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       {!crossedHundred && crossedDecade && <p className="feedback good">You just started a brand new ten!</p>}
 
       <HundredChart marks={[{ n: start, tone: "a" }, { n: current, tone: current === start ? "a" : "b" }]} upTo={current} />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         Every row of this chart is one ten, and every column keeps the same last digit all the way down. Counting forward by ones moves you one cell to the
         right — and when you run off the end of a row, you wrap to the start of the next one. That's exactly what happens at 99 → 100, too — it's just the
         same wrap, one more time.
-      </p>
+      </ReadAloud>
     </div>
   );
 }

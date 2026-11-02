@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingTwoDigitNumbersTest } from "./ComparingTwoDigitNumbersTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -22,7 +23,7 @@ function SymbolVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Which symbol means "is LESS than"?
       </p>
@@ -40,11 +41,11 @@ function SymbolVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — < means \"is less than\": the smaller number comes first, the point of the symbol." : "Not quite — < (the symbol that looks like it's pointing left, getting narrower) means \"is less than.\""}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -63,7 +64,7 @@ function TensFirstReasoningQuestion({ onComplete }: { onComplete?: () => void })
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Compare 42 and 45.
       </p>
@@ -94,13 +95,13 @@ function TensFirstReasoningQuestion({ onComplete }: { onComplete?: () => void })
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 42 < 45. You always check the TENS digit first; only when the tens are TIED do you move on to compare the ones."
             : "Not quite — check the tens first (both are 4, a tie), THEN compare the ones (2 vs 5) to break the tie. 42 < 45."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -114,7 +115,7 @@ function EqualTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> Compare 53 and 53.
       </p>
@@ -132,13 +133,13 @@ function EqualTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 53 = 53. Both the tens AND the ones match exactly, so \"equal\" is the real, correct answer here — not a trick."
             : "Not quite — 53 and 53 have the exact same tens digit AND the exact same ones digit. That makes them equal: 53 = 53."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -153,7 +154,7 @@ function ReversedDigitsQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> 36 and 63 use the exact same two digits (3 and 6). True or false: that means 36 and 63 must be equal.
       </p>
@@ -170,13 +171,13 @@ function ReversedDigitsQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — false! WHICH digit is in the tens place matters. 36 has 3 tens; 63 has 6 tens. Same digits, totally different value: 36 < 63."
             : "Not quite — having the same two digits isn't enough. 36 has 3 tens and 6 ones; 63 has 6 tens and 3 ones. 36 < 63, they are NOT equal."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -190,7 +191,7 @@ function ComparingCheckForUnderstanding({ onComplete }: { onComplete?: () => voi
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure comparing two-digit numbers makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure comparing two-digit numbers makes sense before you try practice problems.</ReadAloud>
       <SymbolVocabQuestion onComplete={mark("vocab")} />
       <TensFirstReasoningQuestion onComplete={mark("tensFirst")} />
       <EqualTrapQuestion onComplete={mark("equalTrap")} />
@@ -213,7 +214,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Number A" value={a} min={10} max={99} step={1} onChange={setA} tone="a" />
         <Stepper label="Number B" value={b} min={10} max={99} step={1} onChange={setB} tone="b" />
         {!introActive && (
@@ -235,11 +236,11 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <span style={{ color: "var(--qb)" }}>{b}</span>
       </div>
       <HundredChart marks={[{ n: a, tone: "a" }, { n: b, tone: "b" }]} />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         {sameTens
           ? "Both numbers land in the SAME row — their tens digit is tied, so look at which column (ones digit) is further right."
           : "The two numbers land in DIFFERENT rows — whichever row is further down has the bigger tens digit, which already decides the comparison, no matter what the ones digits are."}
-      </p>
+      </ReadAloud>
     </div>
   );
 }

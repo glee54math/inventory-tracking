@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { tenMoreTenLessTest } from "./TenMoreTenLessTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -22,7 +23,7 @@ function TenMoreBaselineQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> What is 10 more than 23?
       </p>
@@ -40,13 +41,13 @@ function TenMoreBaselineQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 10 more than 23 is 33. Only the TENS digit changed (2 -> 3); the ones digit (3) stayed exactly the same."
             : "Not quite — adding 10 only changes the tens digit. 23's ones digit (3) never moves: 10 more than 23 is 33."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -65,7 +66,7 @@ function TenLessCrossingQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> What is 10 less than 12?
       </p>
@@ -96,13 +97,13 @@ function TenLessCrossingQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 10 less than 12 is 2. The tens digit dropped from 1 to 0 (so it disappears), and the ones digit (2) never changed. No recounting needed!"
             : "Not quite — 10 less than 12 is 2: the tens digit drops from 1 to 0, leaving just the ones digit. You never need to recount by ones to find 10 more or 10 less."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -116,7 +117,7 @@ function OnesNeverChangeQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: adding or subtracting 10 from a two-digit number ALWAYS changes only the tens digit — the ones digit never changes.
       </p>
@@ -133,13 +134,13 @@ function OnesNeverChangeQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — always true. Moving by exactly 10 only ever changes the tens digit, whether you're adding or subtracting, no matter the starting number."
             : "Not quite — try a few: 23+10=33, 45-10=35, 12-10=2. The ones digit is identical every single time; only the tens digit moves."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -153,7 +154,7 @@ function SubtractMultipleOfTenQuestion({ onComplete }: { onComplete?: () => void
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> What is 70 minus 30?
       </p>
@@ -171,13 +172,13 @@ function SubtractMultipleOfTenQuestion({ onComplete }: { onComplete?: () => void
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 70 - 30 = 40. 7 tens take away 3 tens leaves 4 tens, with 0 ones the whole time."
             : "Not quite — think of it as tens: 7 tens take away 3 tens leaves 4 tens, which is 40."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -191,7 +192,7 @@ function TenMoreTenLessCheckForUnderstanding({ onComplete }: { onComplete?: () =
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure moving by tens makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure moving by tens makes sense before you try practice problems.</ReadAloud>
       <TenMoreBaselineQuestion onComplete={mark("baseline")} />
       <TenLessCrossingQuestion onComplete={mark("crossing")} />
       <OnesNeverChangeQuestion onComplete={mark("generalization")} />
@@ -213,7 +214,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Start at" value={start} min={1} max={99} step={1} onChange={setStart} tone="a" />
         <Stepper label="Move by tens" value={tensMove} min={-3} max={3} step={1} onChange={setTensMove} tone="b" />
         {!introActive && (
@@ -233,10 +234,10 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         {start} {tensMove >= 0 ? "+" : "-"} {Math.abs(tensMove) * 10} = {result >= 1 && result <= 120 ? result : "?"}
       </div>
       {result >= 1 && result <= 120 && <HundredChart marks={[{ n: start, tone: "a" }, { n: result, tone: "b" }]} />}
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         Moving by tens always lands you in the SAME column (the ones digit never changes) — just a different row, straight up or straight down. That's true
         even when the tens digit drops all the way to 0.
-      </p>
+      </ReadAloud>
     </div>
   );
 }

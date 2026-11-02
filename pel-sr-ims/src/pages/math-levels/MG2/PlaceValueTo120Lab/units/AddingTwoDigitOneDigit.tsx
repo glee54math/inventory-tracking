@@ -5,6 +5,7 @@ import type { Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { addingTwoDigitOneDigitTest } from "./AddingTwoDigitOneDigitTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // SHARED BREAKDOWN — the one function both Explore's diagram AND Practice's
@@ -48,7 +49,7 @@ function NoRegroupBaselineQuestion({ onComplete }: { onComplete?: () => void }) 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> What is 34 + 5?
       </p>
@@ -66,11 +67,11 @@ function NoRegroupBaselineQuestion({ onComplete }: { onComplete?: () => void }) 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 34 + 5 = 39. The ones (4 + 5 = 9) fit without needing a new ten." : "Not quite — add the ones first: 4 + 5 = 9. That's still under 10, so just put 9 in the ones place: 39."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -88,7 +89,7 @@ function RegroupHardCaseQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> What is 38 + 5?
       </p>
@@ -119,13 +120,13 @@ function RegroupHardCaseQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 38 + 5 = 43. 8 + 5 = 13 ones, which is 1 new ten and 3 leftover ones. That new ten gets ADDED to the tens digit: 3 + 1 = 4 tens."
             : "Not quite — 8 + 5 = 13 ones. 13 is more than a single digit can hold, so bundle 10 of them into a brand new ten (making 4 tens total) and keep the 3 leftover ones: 43, NOT 33 (33 forgets to add that new ten in)."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -139,7 +140,7 @@ function RegroupRuleQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: whenever the ones digits add up to MORE than 9, you need to bundle 10 of them into a new ten and add 1 to the tens digit.
       </p>
@@ -156,13 +157,13 @@ function RegroupRuleQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — every time the ones sum passes 9, exactly 10 of them become a brand new ten, and that new ten is added onto the tens digit."
             : "Not quite — check 38+5 (13 ones -> a new ten) and 47+6 (13 ones -> a new ten again). Every time the ones sum passes 9, you bundle a new ten."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -197,7 +198,7 @@ function SecondRegroupExampleQuestion({ onComplete }: { onComplete?: () => void 
   );
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Work through 47 + 6, one piece at a time.
       </p>
@@ -210,13 +211,13 @@ function SecondRegroupExampleQuestion({ onComplete }: { onComplete?: () => void 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 7 + 6 = 13 ones, which bundles into 1 new ten + 3 ones. 4 tens + 1 new ten = 5 tens. 47 + 6 = 53."
             : "Not quite — 7 + 6 = 13 ones. Bundle 10 of them into a new ten (4 tens become 5 tens), keeping 3 leftover ones: 47 + 6 = 53."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -230,7 +231,7 @@ function AddingCheckForUnderstanding({ onComplete }: { onComplete?: () => void }
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure regrouping makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure regrouping makes sense before you try practice problems.</ReadAloud>
       <NoRegroupBaselineQuestion onComplete={mark("baseline")} />
       <RegroupHardCaseQuestion onComplete={mark("hardCase")} />
       <RegroupRuleQuestion onComplete={mark("rule")} />
@@ -262,7 +263,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Starting number" value={start} min={10} max={89} step={1} onChange={setStartNum} tone="a" />
         <Stepper label="Add" value={add} min={1} max={9} step={1} onChange={setAddNum} tone="b" />
         {!introActive && (
@@ -291,9 +292,9 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           <BaseTenBlocks tens={b.tens} ones={b.sumOnes} tenTone="a" oneTone="b" flagOverflow />
           {b.regrouped ? (
             <>
-              <p className="feedback good">
+              <ReadAloud as="p" className="feedback good">
                 {b.ones} + {add} = {b.sumOnes} ones — too many for one digit! Bundle 10 of them into a new ten.
-              </p>
+              </ReadAloud>
               <button className="btn primary" onClick={() => setStage("bundled")}>
                 Bundle 10 ones into a new ten
               </button>
@@ -308,16 +309,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       {stage === "bundled" && (
         <>
           <BaseTenBlocks tens={b.newTens} ones={b.newOnes} tenTone="a" oneTone="b" />
-          <p style={{ fontWeight: 800, fontSize: 20 }}>
+          <ReadAloud as="p" style={{ fontWeight: 800, fontSize: 20 }}>
             {start} + {add} = {b.total}
-          </p>
+          </ReadAloud>
         </>
       )}
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         {b.regrouped
           ? "Adding the ones can make MORE than 9 loose ones — that's always exactly enough to bundle one brand new ten, which gets added onto the tens digit."
           : "Here the ones fit under 10, so no bundling is needed — just add the ones and keep the tens digit as it was."}
-      </p>
+      </ReadAloud>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { tensAndOnesTest } from "./TensAndOnesTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -27,7 +28,7 @@ function StandardDecompQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Look at 36. How many tens, and how many ones?
       </p>
@@ -63,11 +64,11 @@ function StandardDecompQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 36 is 3 tens and 6 ones. That's 30 + 6." : "Not quite — the first digit (3) is the tens, the second digit (6) is the ones."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -86,7 +87,7 @@ function TeenDecompQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Look at 14 — "fourteen."
       </p>
@@ -119,13 +120,13 @@ function TeenDecompQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? 'Correct — even though "fourteen" doesn\'t sound like it has "ten" in it, 14 is still exactly 1 ten and 4 ones, same as every other two-digit number.'
             : 'Not quite — "fourteen" LOOKS like one unrelated word, but it still means 1 ten and 4 ones underneath, just like 24 means 2 tens and 4 ones.'}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -139,7 +140,7 @@ function ExactlyTenQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> 10 is 1 ten and how many ones?
       </p>
@@ -157,13 +158,13 @@ function ExactlyTenQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 10 is 1 ten and 0 ones. Every two-digit number HAS a ones amount, even when that amount happens to be zero."
             : "Not quite — 10 still has a ones digit, it's just 0. \"0 ones\" means none are left over, not that the ones place doesn't exist."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -178,7 +179,7 @@ function ZeroOnesGeneralizationQuestion({ onComplete }: { onComplete?: () => voi
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> True or false: a number's ones digit always tells you exactly how many single, unbundled ones are left over — even when that digit is 0,
         like in 70.
@@ -196,13 +197,13 @@ function ZeroOnesGeneralizationQuestion({ onComplete }: { onComplete?: () => voi
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 70 is exactly 7 tens and 0 ones. The 0 is real information: it tells you there are no loose ones at all, not that the number has none to report."
             : "Not quite — look at 70's blocks: 7 full ten-sticks and not one single loose cube. The ones digit (0) is reporting that truthfully."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -216,7 +217,7 @@ function TensAndOnesCheckForUnderstanding({ onComplete }: { onComplete?: () => v
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure tens and ones make sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure tens and ones make sense before you try practice problems.</ReadAloud>
       <StandardDecompQuestion onComplete={mark("standard")} />
       <TeenDecompQuestion onComplete={mark("teen")} />
       <ExactlyTenQuestion onComplete={mark("exactTen")} />
@@ -239,7 +240,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Tens" value={tens} min={0} max={9} step={1} onChange={(v) => setTens(v)} tone="a" />
         <Stepper label="Ones" value={ones} min={0} max={9} step={1} onChange={(v) => setOnes(v)} tone="b" />
         {!introActive && (
@@ -257,20 +258,20 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
       <BaseTenBlocks tens={tens} ones={ones} tenTone="a" oneTone="b" />
 
-      <div className="control-row" style={{ alignItems: "center" }}>
+      <div className="control-row" style={{ alignItems: "center" }} data-readaloud-part>
         <button className="btn ghost" onClick={() => setRevealSentence((v) => !v)}>
           {revealSentence ? "Hide" : "Show"} the number sentence
         </button>
       </div>
       {revealSentence && (
-        <p style={{ fontWeight: 800, fontSize: 20 }}>
+        <ReadAloud as="p" style={{ fontWeight: 800, fontSize: 20 }}>
           {value} = {tens} ten{tens === 1 ? "" : "s"} + {ones} one{ones === 1 ? "" : "s"}
-        </p>
+        </ReadAloud>
       )}
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         Build the blocks FIRST, then peek at the number sentence — the sentence is just a shorter way to write what the tens-sticks and ones-cubes already
         show you.
-      </p>
+      </ReadAloud>
     </div>
   );
 }
