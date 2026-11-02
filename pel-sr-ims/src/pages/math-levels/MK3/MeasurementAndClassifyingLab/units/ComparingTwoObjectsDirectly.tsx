@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingTest } from "./ComparingTwoObjectsDirectlyTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // SHARED HELPERS — distinct-pair generators, duplicated (not imported) in
@@ -69,7 +70,7 @@ function DifferenceLanguageQuestion({ onComplete }: { onComplete?: () => void })
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Rod A has 7 blocks. Rod B has 4 blocks. Both start at the same place.
       </p>
@@ -101,13 +102,13 @@ function DifferenceLanguageQuestion({ onComplete }: { onComplete?: () => void })
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — Rod A is longer, and it's longer BY 3 blocks (7 take away 4), not by its whole 7-block length."
             : "Not quite — \"by how many\" means the DIFFERENCE between the two rods, not either rod's whole length."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -125,7 +126,7 @@ function MisalignedTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Rod A has 7 blocks and starts at the dashed line. Rod B has 4 blocks but starts further to the right.
       </p>
@@ -156,13 +157,13 @@ function MisalignedTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — Rod B's end reaches farther right, but Rod A (7 blocks) is actually longer than Rod B (4 blocks). Where a rod STARTS matters."
             : "Not quite — look at where each rod starts, not just where it ends. Rod B starts much further right, so its end can look farther along even though it's the shorter rod."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -176,7 +177,7 @@ function CommonStartQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: to compare two rods fairly by looking at their ends, they must start at the same point.
       </p>
@@ -193,13 +194,13 @@ function CommonStartQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — if two rods don't start together, comparing their ends alone can trick you (remember Rod A and Rod B above)."
             : "Not quite — think back to the last question. Rod B's end reached farther right, but it wasn't the longer rod, because it didn't start at the same place as Rod A."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -217,7 +218,7 @@ function BalanceVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Look at the balance scale.
       </p>
@@ -248,13 +249,13 @@ function BalanceVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the Left side is heavier, and the heavier side always tips DOWN (the lighter side tips up)."
             : "Not quite — the side with more weight on it always sinks DOWN, not up."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -268,7 +269,7 @@ function ComparingCheckForUnderstanding({ onComplete }: { onComplete?: () => voi
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure comparing two objects fairly makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure comparing two objects fairly makes sense before you try practice problems.</ReadAloud>
       <DifferenceLanguageQuestion onComplete={mark("diffLanguage")} />
       <MisalignedTrapQuestion onComplete={mark("misaligned")} />
       <CommonStartQuestion onComplete={mark("commonStart")} />
@@ -295,7 +296,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented
           label="Starting point"
           value={aligned}
@@ -315,7 +316,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <ComparingCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <p className="muted small">Drag the circle at the end of each rod to change how long it is.</p>
+      <ReadAloud as="p" className="muted small">Drag the circle at the end of each rod to change how long it is.</ReadAloud>
       <LengthBars
         bars={[
           { blocks: blocksA, tone: "a", label: "Rod A" },
@@ -323,19 +324,19 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         ]}
         onBlocksChange={(i, n) => (i === 0 ? setBlocksA(n) : setBlocksB(n))}
       />
-      <p className="feedback good" style={{ minHeight: 24 }}>
+      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         {longer ? `Rod ${longer} is longer.` : "The rods are the same length."}
-      </p>
+      </ReadAloud>
 
-      <p className="muted small">Add weight to each side of the balance and see which way it tips.</p>
-      <div className="control-row">
+      <ReadAloud as="p" className="muted small">Add weight to each side of the balance and see which way it tips.</ReadAloud>
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Left weight" value={leftW} min={0} max={8} onChange={setLeftW} tone="a" />
         <Stepper label="Right weight" value={rightW} min={0} max={8} onChange={setRightW} tone="b" />
       </div>
       <BalanceScale left={leftW} right={rightW} leftTone="a" rightTone="b" />
-      <p className="feedback good" style={{ minHeight: 24 }}>
+      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         {heavier ? `The ${heavier} side is heavier.` : "Both sides balance evenly."}
-      </p>
+      </ReadAloud>
     </div>
   );
 }

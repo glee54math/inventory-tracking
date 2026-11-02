@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { classifyingTest } from "./ClassifyingAndCountingByCategoryTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // SHARED HELPERS — item builders, duplicated (not imported) in
@@ -46,7 +47,7 @@ function SortingVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> When you sort objects into groups by one feature, like color, each group has a name.
       </p>
@@ -76,11 +77,11 @@ function SortingVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — a category is one of the groups, and the attribute is the feature you're sorting by." : "Not quite — a category is a GROUP; the attribute is the FEATURE you sorted by to make the groups."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -98,7 +99,7 @@ function SwitchedAttributeQuestion({ onComplete }: { onComplete?: () => void }) 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> A student is sorting objects by COLOR. The first two objects go in the Red group because they're red. Then the student puts a blue square in the Red group too, because it's a square shape.
       </p>
@@ -128,13 +129,13 @@ function SwitchedAttributeQuestion({ onComplete }: { onComplete?: () => void }) 
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — no, that was sorted wrong. A blue square doesn't belong with red objects just because it's a square. Once you pick color as the attribute, every object must be sorted by COLOR, not shape."
             : "Not quite — the group was started as a COLOR sort (red objects). A blue square is the wrong color, even though its shape matches something else."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -148,7 +149,7 @@ function ConsistentAttributeQuestion({ onComplete }: { onComplete?: () => void }
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: once you start sorting by one attribute (like color), you should keep using that SAME attribute for every object.
       </p>
@@ -165,13 +166,13 @@ function ConsistentAttributeQuestion({ onComplete }: { onComplete?: () => void }
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — switching attributes partway through (like the blue square above) makes the groups stop meaning anything."
             : "Not quite — remember the blue square. Switching from color to shape partway through breaks the sort."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -192,7 +193,7 @@ function CountAndCompareQuestion({ onComplete }: { onComplete?: () => void }) {
   const binB: BinItem[] = Array.from({ length: 4 }, () => ({ id: nextId(), shape: "circle", color: itemColors.green.main }));
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> These are already sorted and counted by color.
       </p>
@@ -224,11 +225,11 @@ function CountAndCompareQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — Green has fewer (4 vs 6), and 6 - 4 = 2 fewer." : "Not quite — count each group (Red has 6, Green has 4), then subtract to find how many fewer."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -242,7 +243,7 @@ function ClassifyingCheckForUnderstanding({ onComplete }: { onComplete?: () => v
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure sorting, counting, and comparing categories makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure sorting, counting, and comparing categories makes sense before you try practice problems.</ReadAloud>
       <SortingVocabQuestion onComplete={mark("vocab")} />
       <SwitchedAttributeQuestion onComplete={mark("switched")} />
       <ConsistentAttributeQuestion onComplete={mark("consistent")} />
@@ -307,7 +308,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented
           label="Sort by"
           value={mode}
@@ -336,11 +337,11 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <ClassifyingCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <p className="muted small">Click an item, then click the group it belongs in.</p>
+      <ReadAloud as="p" className="muted small">Click an item, then click the group it belongs in.</ReadAloud>
       <SortedBins tray={tray} bins={bins} selectedId={selected} onItemClick={onItemClick} onBinClick={onBinClick} />
-      <p className="feedback good" style={{ minHeight: 24 }}>
+      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         {tray.length === 0 ? "Every item is sorted! Check the counts under each group." : `${tray.length} left to sort.`}
-      </p>
+      </ReadAloud>
     </div>
   );
 }

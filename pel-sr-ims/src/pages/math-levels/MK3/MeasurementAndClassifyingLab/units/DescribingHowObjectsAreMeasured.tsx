@@ -4,6 +4,7 @@ import { pick } from "../../../shared/lib/math";
 import { choice, sentence, selectBlank, type Problem } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 import { describingTest } from "./DescribingHowObjectsAreMeasuredTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // SHARED DATA — object pool + describing-word pool. Duplicated (not
@@ -65,7 +66,7 @@ function VocabWordsQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Two of these words tell you about weight, and two tell you about length.
       </p>
@@ -95,13 +96,13 @@ function VocabWordsQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? '"Heavy" is about weight, and "long" is about length — even though "tall" and "light" sound like they could also fit, "tall" is really about length and "light" is really about weight.'
             : "Not quite — read each word carefully. \"Tall\" and \"long\" both describe length; \"heavy\" and \"light\" both describe weight."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -120,7 +121,7 @@ function SizeVsWeightQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Look at a big balloon and a small rock.
       </p>
@@ -154,13 +155,13 @@ function SizeVsWeightQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the balloon looks bigger, but the rock is heavier. Looking bigger and being heavier are two different things."
             : "Not quite — look again. The balloon takes up more space, but a small rock can still be heavier than it."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -174,7 +175,7 @@ function BiggerAlwaysHeavierQuestion({ onComplete }: { onComplete?: () => void }
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: an object that looks bigger is always heavier than an object that looks smaller.
       </p>
@@ -191,13 +192,13 @@ function BiggerAlwaysHeavierQuestion({ onComplete }: { onComplete?: () => void }
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — false. Remember the balloon and the rock: the balloon looks bigger but the rock is heavier. Size and weight don't always match."
             : "Not quite — think back to the balloon and the rock. The balloon looked bigger, but it wasn't the heavier one."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -215,7 +216,7 @@ function TwoAttributesQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Look at the train.
       </p>
@@ -246,13 +247,13 @@ function TwoAttributesQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the train is BOTH long AND heavy. One object can have more than one measurable attribute at the same time."
             : "Not quite — a train is long (think how far it stretches) and heavy (think how hard it would be to lift)."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -266,7 +267,7 @@ function DescribingCheckForUnderstanding({ onComplete }: { onComplete?: () => vo
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure these describing words make sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure these describing words make sense before you try practice problems.</ReadAloud>
       <VocabWordsQuestion onComplete={mark("vocab")} />
       <SizeVsWeightQuestion onComplete={mark("sizeVsWeight")} />
       <BiggerAlwaysHeavierQuestion onComplete={mark("trap")} />
@@ -289,7 +290,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         {!introActive && (
           <button
             type="button"
@@ -303,8 +304,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <DescribingCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <p className="muted small">Click an object to see how it can be described.</p>
-      <div className="control-row" role="listbox" aria-label="Pick an object">
+      <ReadAloud as="p" className="muted small">Click an object to see how it can be described.</ReadAloud>
+      <div className="control-row" role="listbox" aria-label="Pick an object" data-readaloud-part>
         {shown.map((o, i) => (
           <button key={o.name} role="option" aria-selected={i === objIndex} className={`btn ghost ${i === objIndex ? "pressed" : ""}`} onClick={() => setObjIndex(i)}>
             {o.glyph} {o.name}
@@ -312,12 +313,12 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         ))}
       </div>
       <ObjectGlyph glyph={obj.glyph} name={obj.name} big />
-      <p className="feedback good" style={{ minHeight: 24 }}>
+      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         This {obj.name} is <b>{obj.length}</b> and <b>{obj.weight}</b>.
-      </p>
+      </ReadAloud>
 
-      <p className="muted small">Click a describing word to see which attribute it's about.</p>
-      <div className="control-row">
+      <ReadAloud as="p" className="muted small">Click a describing word to see which attribute it's about.</ReadAloud>
+      <div className="control-row" data-readaloud-part>
         {WORDS.map((w) => (
           <button key={w.word} type="button" className="btn ghost" onClick={() => setRevealedWord(w.word)}>
             {w.word}
@@ -325,9 +326,9 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         ))}
       </div>
       {revealedWord && (
-        <p className="feedback good">
+        <ReadAloud as="p" className="feedback good">
           "{revealedWord}" describes {WORDS.find((w) => w.word === revealedWord)!.attr}.
-        </p>
+        </ReadAloud>
       )}
     </div>
   );
