@@ -167,7 +167,20 @@ function UnitView({
   const solvedSinceIntro = (progress?.solved ?? 0) - (progress?.introDoneAtSolved ?? 0);
   const introNeedsRefresh = !!unit.reintroEverySolved && !!progress?.introDone && solvedSinceIntro >= unit.reintroEverySolved;
   const introSatisfied = !unit.requiresIntro || ((!!progress?.introDone || (progress?.solved ?? 0) > 0) && !introNeedsRefresh);
-  const RefreshCheck = introNeedsRefresh ? REFRESH_CHECKS[unit.id] : undefined;
+  // Once a check (the main CFU or the refresh check) is passed, keep THAT
+  // check open (with its feedback) until the student leaves the Explore tab,
+  // instead of letting it vanish the moment the last answer is right.
+  const [cfuJustPassed, setCfuJustPassed] = useState<null | "intro" | "refresh">(null);
+  if (tab !== "explore" && cfuJustPassed) setCfuJustPassed(null);
+  const handleIntroDone = useCallback(() => {
+    setCfuJustPassed("intro");
+    onIntroDone();
+  }, [onIntroDone]);
+  const handleRefreshDone = useCallback(() => {
+    setCfuJustPassed("refresh");
+    onIntroDone();
+  }, [onIntroDone]);
+  const RefreshCheck = introNeedsRefresh || cfuJustPassed === "refresh" ? REFRESH_CHECKS[unit.id] : undefined;
 
   return (
     <div className="unit">
@@ -202,15 +215,15 @@ function UnitView({
 
       {tab === "explore" && (
         <div className="panel" role="tabpanel">
-          {introSatisfied ? (
+          {introSatisfied && !cfuJustPassed ? (
             <unit.Explore />
           ) : RefreshCheck ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <RefreshCheck onComplete={onIntroDone} />
+              <RefreshCheck onComplete={handleRefreshDone} />
               <unit.Explore />
             </div>
           ) : (
-            <unit.Explore onIntroDone={onIntroDone} />
+            <unit.Explore onIntroDone={handleIntroDone} />
           )}
           <div className="panel-foot">
             {introSatisfied ? (

@@ -165,6 +165,17 @@ background/border when active, plain when not — see
 `RealWorldNegatives.tsx`/`CoordinatePlaneUnit.tsx` for the exact inline
 style), and `{(introActive || showCheck) && <YourCFU onComplete={onIntroDone} />}`.
 
+**A passed CFU must stay open (user requirement).** It must not vanish the
+moment the last answer is right; it stays on screen, feedback and all,
+until the student leaves the Explore tab. Every lab shell's `UnitView`
+does this with a `cfuJustPassed` latch: `handleIntroDone` sets it and
+calls `onIntroDone`, it resets when `tab !== "explore"`, and Explore
+renders as `{introSatisfied && !cfuJustPassed ? <unit.Explore /> :
+<unit.Explore onIntroDone={handleIntroDone} />}`. Copy that from an
+existing shell (e.g. `MG1_AdditionAndSubtractionWithin20Lab.tsx`);
+`MG8_FactorsMultiplesAndPatternsLab.tsx` shows the variant for a separate
+refresh check.
+
 If the unit's core content is a fact meant to be memorized long-term rather
 than re-derived from reasoning each time (a conversion factor, a fixed
 formula), also set `Unit.reintroEverySolved` alongside `requiresIntro` so the
@@ -196,6 +207,34 @@ questions yourself (don't present a menu of candidates) using this bar:
   dropdowns + one shared "Check Answer" button + one combined feedback
   paragraph — see `ReflectionFormulaQuestion`/`AxisDistanceQuestion` in
   `CoordinatePlaneUnit.tsx`) over several trivial single-pick questions.
+- **Fill-in rule (user requirement):** at least 40% of a unit's CFU
+  questions must have the student TYPE answers (not just pick from a
+  dropdown/true-false), so they translate the concept into the math
+  procedure themselves — e.g. type the parts of a number bond, then the
+  numbers in the matching equations, then the final answer. Prefer putting
+  the boxes inside the visual itself. Reference: `BondFill` in
+  `MG1/AdditionAndSubtractionWithin20Lab/units/MakingTenAndDecomposing.tsx`.
+- **Multi-box answer rule (required for every question with 2+ dropdowns or
+  input boxes, CFU and gated Explore drills alike):**
+  1. "Check Answer" stays `disabled` until EVERY box has an answer.
+  2. After Check, EACH box gets its own green/red border for its own
+     correctness — not one shared verdict colour.
+  3. The feedback sentence only renders once every box is filled
+     (`{checked && filled && (...)}`), so a blank box is never graded as wrong.
+  Never grade live as boxes change (no `{(a || b) && <feedback>}`); always
+  use an explicit Check button. Use the shared helpers in
+  `shared/lib/answerChecks.ts`:
+  ```tsx
+  const [checked, setChecked] = useState(false);
+  const filled = allFilled(a, b);
+  const ok = aOk && bOk;
+  <select className="answer" value={a} style={answerBorder(aOk, checked)} …>
+  <select className="answer" value={b} style={answerBorder(bOk, checked)} …>
+  <button className="btn primary" type="button" disabled={!filled} onClick={() => setChecked(true)}>Check Answer</button>
+  {checked && filled && <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">…</p>}
+  ```
+  If an input already has a `style={{ width: … }}`, spread it in:
+  `style={{ width: 55, ...answerBorder(aOk, checked) }}`.
 - If a dropdown is needed and `select.answer` isn't already styled in this
   lab's stylesheet, add it (copy `MG9_IntroToFractionsLab_styles.css`'s
   `.itf-lab select.answer` block, scoped to this lab's own class).
@@ -385,7 +424,12 @@ show up in a loaded browser.
     should define its own CSS custom-property palette guarded by
     `@media (prefers-color-scheme: dark)` + `[data-theme="dark"]` and
     inherit chrome from `lab-base`, not Tailwind `dark:` variants.
-11. Only when adding `requiresIntro`/`requiredBuckets` to a unit in an
+11. Multi-box answer check: for every CFU question or gated drill with 2+
+    boxes, confirm Check Answer is greyed out with zero or one box filled
+    and no feedback text shows. Then fill every box with one wrong answer and
+    press Check: the right box should be green, the wrong box red, and the
+    "Not quite" text should appear.
+12. Only when adding `requiresIntro`/`requiredBuckets` to a unit in an
     EXISTING lab: verify as both a brand-new student and a student with
     pre-existing practice history — the latter must not be locked out
     retroactively.

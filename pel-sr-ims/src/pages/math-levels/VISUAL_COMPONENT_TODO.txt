@@ -286,6 +286,16 @@ ELEMENTARY
           makeTenBreakdown/subtractThroughTenBreakdown, each shared verbatim between a unit's
           diagram-render and its step-checking logic so the picture and the grading can't drift.
 
+          Added later: PartPartWhole.tsx (number bond — whole on top, two parts below, each
+          circle holding its numeral plus colored dots in rows of 5; the whole's dots are the
+          parts' colors put back together) and EquationStrip (big colored number sentence).
+          Layout adapted from the legacy MG3/MG3.tsx PartPartWhole demo, but redrawn as SVG in
+          this lab's palette instead of imported — that demo uses Tailwind classes and its own
+          text inputs, which don't fit the Unit engine. Used across Making Ten and Decomposing
+          Numbers (Explore, CFU, Practice) to replace sentence-style explanations with pictures
+          for first graders. Unknown parts render as dashed "?" circles and fill in as Practice
+          steps are answered. Kept lab-local; MK2's SplitGroup is the closest relative.
+
           No new shared/engine Step kinds were needed — every question uses the existing
           "number" and "choice" kinds.
 [x] MG2  — PlaceValueTo120Lab           (MG2/MG2_PlaceValueTo120Lab.tsx) — wired as a

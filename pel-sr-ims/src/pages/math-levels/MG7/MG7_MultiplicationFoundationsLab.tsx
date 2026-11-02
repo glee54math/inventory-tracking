@@ -163,6 +163,16 @@ function UnitView({
   const introNeedsRefresh = !!unit.reintroEverySolved && !!progress?.introDone && solvedSinceIntro >= unit.reintroEverySolved;
   const introSatisfied = !unit.requiresIntro || ((!!progress?.introDone || (progress?.solved ?? 0) > 0) && !introNeedsRefresh);
 
+  // Once the Check for Understanding is passed, keep it open (with its
+  // feedback) until the student leaves the Explore tab, instead of letting
+  // it vanish the moment the last answer is right.
+  const [cfuJustPassed, setCfuJustPassed] = useState(false);
+  if (tab !== "explore" && cfuJustPassed) setCfuJustPassed(false);
+  const handleIntroDone = useCallback(() => {
+    setCfuJustPassed(true);
+    onIntroDone();
+  }, [onIntroDone]);
+
   return (
     <div className="unit">
       <header className="unit-head">
@@ -196,7 +206,7 @@ function UnitView({
 
       {tab === "explore" && (
         <div className="panel" role="tabpanel">
-          {introSatisfied ? <unit.Explore /> : <unit.Explore onIntroDone={onIntroDone} />}
+          {introSatisfied && !cfuJustPassed ? <unit.Explore /> : <unit.Explore onIntroDone={handleIntroDone} />}
           <div className="panel-foot">
             {introSatisfied ? (
               <button className="btn primary" onClick={() => setTab("practice")}>
