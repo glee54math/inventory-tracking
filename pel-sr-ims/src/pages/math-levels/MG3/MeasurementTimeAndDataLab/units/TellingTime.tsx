@@ -4,6 +4,7 @@ import { randInt } from "../../../shared/lib/math";
 import { choice, customStep, type Problem } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 import { tellingTimeTest } from "./TellingTimeTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
@@ -31,7 +32,7 @@ function SetClockHandsStep({ target, onDone }: { target: ClockTime; onDone: () =
   return (
     <div className="clock-set-stage">
       <Clock time={time} onChange={setTime} tone="a" />
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <button
           className="btn primary"
           type="button"
@@ -44,9 +45,9 @@ function SetClockHandsStep({ target, onDone }: { target: ClockTime; onDone: () =
         </button>
       </div>
       {checked && !ok && (
-        <p className="feedback bad" role="alert">
+        <ReadAloud as="p" className="feedback bad" role="alert">
           Not yet — drag the thick hour hand around the face until the clock shows {clockLabel(target)}.
-        </p>
+        </ReadAloud>
       )}
     </div>
   );
@@ -66,7 +67,7 @@ function WhichHandQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> A clock has two hands: a short one and a long one.
       </p>
@@ -87,13 +88,13 @@ function WhichHandQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the SHORT hand is the hour hand, and the LONG hand is the minute hand. It's easy to think the busier-looking long hand must be more important, but it's not the hour hand."
             : "Not quite — the SHORT hand is the hour hand. The long hand (the minute hand) moves more, but that doesn't make it the one that tells you the hour."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -108,7 +109,7 @@ function MinuteHandMeaningQuestion({ onComplete }: { onComplete?: () => void }) 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> The long (minute) hand is pointing at the 6. Mateo says that means it's 6 o'clock.
       </p>
@@ -129,13 +130,13 @@ function MinuteHandMeaningQuestion({ onComplete }: { onComplete?: () => void }) 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the minute hand pointing at 6 always means \"half past\" the hour, never \"6 o'clock.\" Only the SHORT hour hand pointing at a number tells you the hour itself."
             : "Not quite — Mateo mixed up the two hands. The minute hand points at numbers too, but for the minute hand, 6 means \"half past\" the hour — not 6 o'clock. Only the hour hand tells you the hour."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -154,7 +155,7 @@ function HalfHourHourHandQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> Look closely at the hour hand below — it's sitting between the 4 and the 5, closer to the 5 than you might expect for "half past."
       </p>
@@ -185,13 +186,13 @@ function HalfHourHourHandQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — at half past any hour, the hour hand always sits exactly halfway between that hour and the next one. It hasn't reached the next number yet, so the time is still 4:30, not 5:30."
             : "Not quite — at half past the hour, the hour hand is always exactly halfway to the next number — it hasn't gotten there yet. This is 4:30, not 5:30, even though the hour hand looks closer to 5."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -206,7 +207,7 @@ function ClosestNumberTrapQuestion({ onComplete }: { onComplete?: () => void }) 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> True or false: whenever the hour hand is sitting between two numbers, you should read it as the LATER number, since that's the one
         it's closest to.
@@ -224,13 +225,13 @@ function ClosestNumberTrapQuestion({ onComplete }: { onComplete?: () => void }) 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — at half past, the hour hand always reads as the EARLIER number, the hour it's still within, not the one it's approaching."
             : "Not quite — remember 4:30: the hour hand looks closer to 5, but the time is still read as 4, the hour it hasn't finished yet."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -244,7 +245,7 @@ function TimeCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) 
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure reading a clock makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure reading a clock makes sense before you try practice problems.</ReadAloud>
       <WhichHandQuestion onComplete={mark("hands")} />
       <MinuteHandMeaningQuestion onComplete={mark("minuteMeaning")} />
       <HalfHourHourHandQuestion onComplete={mark("halfHour")} />
@@ -276,16 +277,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       )}
       {(introActive || showCheck) && <TimeCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <p className="muted small">Drag the thick hour hand all the way around the clock face.</p>
+      <ReadAloud as="p" className="muted small">Drag the thick hour hand all the way around the clock face.</ReadAloud>
       <Clock time={time} onChange={setTime} tone="a" />
-      <p className="feedback good" style={{ minHeight: 24 }}>
+      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         This clock shows <b>{clockLabel(time)}</b>
         {time.half ? " — half past the hour. Notice the minute hand points at 6, and the hour hand sits exactly halfway to the next number." : " — exactly on the hour. Notice the minute hand points straight up at 12."}
-      </p>
-      <p className="muted small">
+      </ReadAloud>
+      <ReadAloud as="p" className="muted small">
         Drag slowly past each half-hour position and watch the hour hand creep toward the next number without ever quite reaching it — that's the
         half-past position.
-      </p>
+      </ReadAloud>
     </div>
   );
 }

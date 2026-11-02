@@ -5,6 +5,7 @@ import { type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { organizingDataTest } from "./OrganizingDataTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 interface Theme {
   cats: { label: string; glyph: string }[];
@@ -40,7 +41,7 @@ function RowMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Here's a picture graph sorting a basket of fruit into categories.
       </p>
@@ -61,11 +62,11 @@ function RowMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — every icon stands for exactly one real apple, so counting the icons in a row tells you exactly how many apples there are." : "Not quite — each icon stands for ONE apple, not a whole group. Counting the icons in a row gives you the exact count for that category."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -80,7 +81,7 @@ function HowManyMoreQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Using the same chart: how many MORE apples are there than grapes?
       </p>
@@ -101,13 +102,13 @@ function HowManyMoreQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — Jada just restated how many apples there are. \"How many MORE\" asks for the DIFFERENCE: 5 apples take away 2 grapes leaves 2."
             : "Not quite — Jada answered with the apple count alone, which is a common mix-up. \"How many more\" means the DIFFERENCE between the two counts: 5 − 2 = 2."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -122,7 +123,7 @@ function CombinedTotalQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> Using the same chart again: how many pieces of fruit are there IN ALL — apples, bananas, AND grapes combined?
       </p>
@@ -143,13 +144,13 @@ function CombinedTotalQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 5 apples + 3 bananas + 2 grapes = 10. A combined total question like this needs EVERY category added in, not just the first two you look at."
             : "Not quite — 8 only counts apples and bananas. Don't forget the grapes: 5 + 3 + 2 = 10 altogether."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -164,7 +165,7 @@ function ShortcutTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> True or false: to answer a "how many more" question, you only ever need to look at the bigger category's count.
       </p>
@@ -181,13 +182,13 @@ function ShortcutTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — \"how many more\" always needs BOTH counts, subtracted. The bigger category's count alone (like Jada's \"5\") is never the full answer."
             : "Not quite — remember Jada's apples-and-grapes answer. You always need both counts and the difference between them, not just the bigger one."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -201,7 +202,7 @@ function DataCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) 
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure reading a chart makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure reading a chart makes sense before you try practice problems.</ReadAloud>
       <RowMeaningQuestion onComplete={mark("row")} />
       <HowManyMoreQuestion onComplete={mark("howManyMore")} />
       <CombinedTotalQuestion onComplete={mark("total")} />
@@ -240,7 +241,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <button className="btn ghost" onClick={newRound}>
           New mixed group
         </button>
@@ -259,9 +260,9 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
       {!showChart ? (
         <>
-          <p className="muted small">Click each item below to sort it — watch the tally for its category go up.</p>
+          <ReadAloud as="p" className="muted small">Click each item below to sort it — watch the tally for its category go up.</ReadAloud>
           <MixedScatter items={rawItems} seed={counts[0] * 97 + counts[1] * 13 + counts[2]} sortedIndices={sorted} onToggle={(i) => setSorted((s) => (s.includes(i) ? s : [...s, i]))} />
-          <div className="control-row">
+          <div className="control-row" data-readaloud-part>
             {theme.cats.map((c) => {
               const sortedCount = sorted.filter((i) => rawItems[i].glyph === c.glyph).length;
               return (
@@ -279,16 +280,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         </>
       ) : (
         <>
-          <p className="muted small">Sorted into a chart — one row per category, one icon per item.</p>
+          <ReadAloud as="p" className="muted small">Sorted into a chart — one row per category, one icon per item.</ReadAloud>
           <DataChart categories={theme.cats.map((c, i) => ({ label: c.label, glyph: c.glyph, count: counts[i], tone: (["a", "b", "c"] as const)[i] }))} />
-          <div className="control-row">
+          <div className="control-row" data-readaloud-part>
             {theme.cats.map((c, i) => (
               <Stepper key={c.label} label={c.label} value={counts[i]} min={0} max={9} onChange={(v) => setCounts((arr) => arr.map((x, j) => (j === i ? v : x)))} tone={(["a", "b", "c"] as const)[i]} />
             ))}
           </div>
-          <p className="feedback good">
+          <ReadAloud as="p" className="feedback good">
             {theme.cats.map((c, i) => `${c.label}: ${counts[i]}`).join(", ")} — {total} in all.
-          </p>
+          </ReadAloud>
           <button className="btn ghost" style={{ width: "fit-content" }} onClick={() => setShowChart(false)}>
             Back to sorting
           </button>

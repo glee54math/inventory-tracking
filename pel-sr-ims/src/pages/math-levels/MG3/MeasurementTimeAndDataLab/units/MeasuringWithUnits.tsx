@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { measuringWithUnitsTest } from "./MeasuringWithUnitsTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
@@ -22,7 +23,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> To measure length with unit tiles, you lay them end to end "with no gaps or overlaps."
       </p>
@@ -42,13 +43,13 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — each tile's edge must exactly touch the next tile's edge: no empty space between them, and no tile covering part of another."
             : "Not quite — \"no gaps or overlaps\" means each tile's edge exactly touches the next one: no empty space between tiles, and no tile covering part of another."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -69,7 +70,7 @@ function GappedExampleQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Priya laid tiles on this ribbon and counted {tilesShown} tiles.
       </p>
@@ -100,13 +101,13 @@ function GappedExampleQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? `Correct — the gaps between Priya's tiles took up room that real tiles would have filled. Laid correctly with no gaps, it actually takes ${length} tiles.`
             : `Not quite — look at the spaces between Priya's tiles. Those gaps are "wasted" room — laid correctly with no gaps, this ribbon actually takes ${length} tiles, not ${tilesShown}.`}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -127,7 +128,7 @@ function OverlapExampleQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> Deshawn laid tiles on this ribbon and counted {tilesShown} tiles.
       </p>
@@ -158,13 +159,13 @@ function OverlapExampleQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? `Correct — Deshawn's tiles overlap, so some tiles cover ground another tile already covered. Laid correctly with no overlaps, it actually takes ${length} tiles.`
             : `Not quite — look closely: Deshawn's tiles overlap each other, covering some of the same ground twice. Laid correctly, this ribbon actually takes only ${length} tiles, not ${tilesShown}.`}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -178,7 +179,7 @@ function CountTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> True or false: as long as you count every tile you see, that number is always the correct length — even if the tiles have gaps or
         overlap.
@@ -196,13 +197,13 @@ function CountTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the count only tells you the real length when the tiles are laid with no gaps and no overlaps. Gaps or overlaps always throw the count off."
             : "Not quite — remember Priya's gapped tiles and Deshawn's overlapping tiles. Both counts looked like real numbers, but both were wrong, because of the gaps/overlaps."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -216,7 +217,7 @@ function MeasuringCheckForUnderstanding({ onComplete }: { onComplete?: () => voi
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure measuring with unit tiles makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure measuring with unit tiles makes sense before you try practice problems.</ReadAloud>
       <VocabQuestion onComplete={mark("vocab")} />
       <GappedExampleQuestion onComplete={mark("gapped")} />
       <OverlapExampleQuestion onComplete={mark("overlap")} />
@@ -238,7 +239,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Ribbon length (units)" value={length} min={3} max={12} step={1} onChange={setLength} tone="a" />
         <Segmented
           label="How the tiles were laid"
@@ -260,14 +261,14 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       {(introActive || showCheck) && <MeasuringCheckForUnderstanding onComplete={onIntroDone} />}
 
       <UnitRuler length={length} mode={mode} miscount={2} tone="a" />
-      <p className="feedback good" style={{ minHeight: 24 }}>
+      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         {mode === "clean"
           ? `Laid correctly, this ribbon is ${length} units long — the tile count matches the real length.`
           : mode === "gapped"
           ? `These gapped tiles only show ${tilesShown} of them, but the ribbon is still really ${length} units long — the gaps used up room real tiles would have filled.`
           : `These overlapping tiles show ${tilesShown} of them, but the ribbon is still really ${length} units long — the overlaps covered the same ground more than once.`}
-      </p>
-      <p className="muted small">Switch between "No gaps or overlaps," "With gaps," and "Overlapping" to see how the tile count changes even though the ribbon itself never does.</p>
+      </ReadAloud>
+      <ReadAloud as="p" className="muted small">Switch between "No gaps or overlaps," "With gaps," and "Overlapping" to see how the tile count changes even though the ribbon itself never does.</ReadAloud>
     </div>
   );
 }

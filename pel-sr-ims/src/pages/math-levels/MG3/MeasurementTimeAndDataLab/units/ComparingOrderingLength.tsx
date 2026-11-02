@@ -4,6 +4,7 @@ import { randInt, shuffle } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 import { comparingOrderingLengthTest } from "./ComparingOrderingLengthTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // Concrete, named real-world objects (never a bare "Object A/B/C") — matches
 // this lab's audience framing (first grader, first exposure, every unit
@@ -41,7 +42,7 @@ function OppositeTermsQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> The red ribbon is <b>shorter</b> than the blue ribbon.
       </p>
@@ -61,13 +62,13 @@ function OppositeTermsQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — \"shorter than\" and \"longer than\" are two ways of saying the exact same comparison, just from each ribbon's own point of view."
             : "Not quite — if one object is shorter than another, the other one is always longer than it. They're the same comparison, said from each side."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -85,7 +86,7 @@ function MisalignedStartQuestion({ onComplete }: { onComplete?: () => void }) {
   ];
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> These two were NOT lined up at the same starting point before this picture was taken.
       </p>
@@ -106,13 +107,13 @@ function MisalignedStartQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the crayon's far end sticks out further right, but that's only because it STARTED further right too. The pencil stretches farther from its own start to its own end, so the pencil is the longer one."
             : "Not quite — the crayon's end sticks out furthest right, but it also started further right. Compare how far each one stretches from its OWN start to its OWN end, not where it ends up on the page."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -131,7 +132,7 @@ function TransitiveReasoningQuestion({ onComplete }: { onComplete?: () => void }
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> The marker is longer than the key. The key is longer than the feather. The marker and the feather are never shown next to each other.
       </p>
@@ -162,13 +163,13 @@ function TransitiveReasoningQuestion({ onComplete }: { onComplete?: () => void }
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — you never need to see two objects side by side if you already know how each one compares to a third object in between. Marker > key and key > feather chain together: marker > feather."
             : "Not quite — chain the two facts together: the marker beats the key, and the key beats the feather, so the marker must beat the feather too. That's true every time, not a guess."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -184,7 +185,7 @@ function FarEdgeGeneralizationQuestion({ onComplete }: { onComplete?: () => void
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> True or false: whenever one object's far end sticks out further than another's, it's always the longer object.
       </p>
@@ -201,13 +202,13 @@ function FarEdgeGeneralizationQuestion({ onComplete }: { onComplete?: () => void
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — that's only true when both objects start at the same place. If they don't, the one sticking out furthest might just have started further ahead, like the crayon above."
             : "Not quite — think back to the pencil and crayon: the crayon stuck out furthest right, but only because it started further right too. Starting point matters."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -221,7 +222,7 @@ function LengthCheckForUnderstanding({ onComplete }: { onComplete?: () => void }
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure comparing lengths makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure comparing lengths makes sense before you try practice problems.</ReadAloud>
       <OppositeTermsQuestion onComplete={mark("opposite")} />
       <MisalignedStartQuestion onComplete={mark("misaligned")} />
       <TransitiveReasoningQuestion onComplete={mark("transitive")} />
@@ -268,7 +269,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <button className="btn ghost" onClick={newTrio}>
           New objects
         </button>
@@ -285,24 +286,24 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <LengthCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <p className="muted small">Drag the handle (⠿) on each row to put the three objects in order, shortest to longest, top to bottom.</p>
+      <ReadAloud as="p" className="muted small">Drag the handle (⠿) on each row to put the three objects in order, shortest to longest, top to bottom.</ReadAloud>
       <LengthBars items={items} draggableReorder onReorder={setOrder} />
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <button className="btn primary" onClick={() => setChecked(true)}>
           Check my order
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${isCorrectOrder ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${isCorrectOrder ? "good" : "bad"}`} role="alert">
           {isCorrectOrder
             ? "That's shortest to longest! Notice all three start at the same left edge — that's what makes comparing them by eye fair."
             : "Not yet — drag rows up or down to put the shortest object on top and the longest on the bottom."}
-        </p>
+        </ReadAloud>
       )}
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         Try dragging again after clicking "New objects" a few times — the actual lengths change, but they always start lined up at the same left edge
         here, which is what makes comparing them fair just by looking.
-      </p>
+      </ReadAloud>
     </div>
   );
 }
