@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { definingAttributesTest } from "./DefiningAttributesTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 const CATEGORIES: ShapeKind[] = ["triangle", "square", "rectangle", "circle"];
 const ROTATIONS = [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 210, 240, 270, 300, 330];
@@ -43,7 +44,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> What makes this shape a triangle?
       </p>
@@ -58,11 +59,11 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         ))}
       </div>
       {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Right — the number of straight sides is what makes a triangle a triangle." : "Not quite — think about what every triangle has, no matter what it looks like."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -81,7 +82,7 @@ function SameCategoryQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Shape A and Shape B below are both triangles.
       </p>
@@ -116,11 +117,11 @@ function SameCategoryQuestion({ onComplete }: { onComplete?: () => void }) {
         Check Answer
       </button>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Right — 3 straight sides is what matters; size, color, and which way it's turned don't." : "Not quite — look again at what's actually the SAME between Shape A and Shape B."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -132,7 +133,7 @@ function TrueFalseQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or False: a shape stops being a square if you make it bigger or turn it sideways.
       </p>
@@ -152,13 +153,13 @@ function TrueFalseQuestion({ onComplete }: { onComplete?: () => void }) {
         ))}
       </div>
       {picked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "False — both shapes above are squares. 4 equal sides and 4 square corners is what counts; size and which way it's turned don't."
             : "Not quite — both shapes above have 4 equal straight sides and 4 square corners. Does being bigger or turned change that?"}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -171,7 +172,7 @@ function NonDefiningTrapQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Which one of these describes the shape below, but does NOT make it a triangle?
       </p>
@@ -186,11 +187,11 @@ function NonDefiningTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         ))}
       </div>
       {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Right — color is just how it looks. 3 straight sides is what makes it a triangle, no matter the color." : "Not quite — which one of those is true of EVERY triangle, no matter its color?"}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -202,7 +203,7 @@ function DefiningAttributesCheck({ onComplete }: { onComplete?: () => void }) {
   }, [allDone, onComplete]);
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure you can tell what REALLY makes a shape that shape before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Quick check: let's make sure you can tell what REALLY makes a shape that shape before you try practice problems.</ReadAloud>
       <VocabQuestion onComplete={() => setDone((d) => ({ ...d, q1: true }))} />
       <SameCategoryQuestion onComplete={() => setDone((d) => ({ ...d, q2: true }))} />
       <TrueFalseQuestion onComplete={() => setDone((d) => ({ ...d, q3: true }))} />
@@ -237,11 +238,11 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       )}
       {(introActive || showCheck) && <DefiningAttributesCheck onComplete={onIntroDone} />}
       <Segmented label="Shape" value={kind} onChange={setKind} options={CATEGORIES.map((k) => ({ id: k, label: SHAPE_NAMES[k][0].toUpperCase() + SHAPE_NAMES[k].slice(1) }))} />
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Size" value={size} min={24} max={60} step={6} onChange={setSize} tone="a" />
         <Stepper label="Turn" value={rotation} min={0} max={345} step={15} onChange={setRotation} tone="b" />
       </div>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         {SHAPE_COLORS.map((c, i) => (
           <button
             key={c}
@@ -262,10 +263,10 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       <ShapeCanvas width={160} height={160} label={`A ${SHAPE_COLOR_NAMES[colorIdx]} ${SHAPE_NAMES[kind]}, size ${size}, turned ${rotation} degrees`}>
         <ShapeTile kind={kind} cx={80} cy={80} size={size} rotation={rotation} color={SHAPE_COLORS[colorIdx]} />
       </ShapeCanvas>
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         A {SHAPE_NAMES[kind]} always has: <b>{DEFINING_ATTRIBUTE[kind]}</b>. Try dragging the Size and Turn controls, and tapping a different color — notice the shape
         stays a {SHAPE_NAMES[kind]} the whole time. Size, color, and which way it's turned never change what shape something is.
-      </p>
+      </ReadAloud>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { composingShapesTest } from "./ComposingShapesTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 const ALL_PIECE_KINDS: ShapeKind[] = ["square", "rectangle", "triangle", "trapezoid", "circle", "halfCircle", "quarterCircle"];
 const ALL_SOLID_KINDS: SolidKind[] = ["cube", "cone", "cylinder", "sphere"];
@@ -59,7 +60,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> What do we call a bigger shape made by putting basic shapes together?
       </p>
@@ -71,11 +72,11 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         ))}
       </div>
       {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Right — a shape built out of basic shapes is called a composite shape." : "Not quite — think of the word for a shape made by COMBINING other shapes."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -89,7 +90,7 @@ function TwoPathsQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Ana builds a rectangle from 2 squares. Ben builds a same-size rectangle from 2 triangles.
       </p>
@@ -120,13 +121,13 @@ function TwoPathsQuestion({ onComplete }: { onComplete?: () => void }) {
         Check Answer
       </button>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Right — the same composite shape can be built from more than one combination of pieces. Both are rectangles."
             : "Not quite — look at the OUTSIDE edge of each shape, not just which pieces built it."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -138,7 +139,7 @@ function ConflatedTermsQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> <i>Compose</i> means putting basic shapes together to build a bigger shape. <i>Decompose</i> means taking a composite shape apart to see
         which basic shapes built it. If you SPLIT a rectangle back into 2 squares, which word describes what you just did?
@@ -151,11 +152,11 @@ function ConflatedTermsQuestion({ onComplete }: { onComplete?: () => void }) {
         ))}
       </div>
       {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Right — taking a composite shape apart to find its pieces is decomposing it." : "Not quite — are you building a bigger shape, or taking one apart?"}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -166,7 +167,7 @@ function TrueFalseQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> True or False: a rectangle built from 2 squares is secretly a different shape than a same-size rectangle built from 2 triangles.
       </p>
@@ -178,11 +179,11 @@ function TrueFalseQuestion({ onComplete }: { onComplete?: () => void }) {
         ))}
       </div>
       {picked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "False — however it was built, the outside shape is still just a rectangle." : "Not quite — how it was split up doesn't change what the final outside shape is."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -194,7 +195,7 @@ function ComposingShapesCheck({ onComplete }: { onComplete?: () => void }) {
   }, [allDone, onComplete]);
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure composite shapes make sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Quick check: let's make sure composite shapes make sense before you try practice problems.</ReadAloud>
       <VocabQuestion onComplete={() => setDone((d) => ({ ...d, q1: true }))} />
       <TwoPathsQuestion onComplete={() => setDone((d) => ({ ...d, q2: true }))} />
       <ConflatedTermsQuestion onComplete={() => setDone((d) => ({ ...d, q3: true }))} />
@@ -274,8 +275,8 @@ function ComposeSandbox() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <Segmented label="Build a" value={targetKind} onChange={setTargetKind} options={ALL_COMPOSITES.map((k) => ({ id: k, label: COMPOSE_LABELS[k] }))} />
-      <p className="muted small">Drag 2 pieces from the tray below into the empty slots to build a {COMPOSITE_TARGET_NAME[targetKind]}.</p>
-      <div className="control-row">
+      <ReadAloud as="p" className="muted small">Drag 2 pieces from the tray below into the empty slots to build a {COMPOSITE_TARGET_NAME[targetKind]}.</ReadAloud>
+      <div className="control-row" data-readaloud-part>
         {tray.map((k, i) => (
           <div key={i} draggable onDragStart={() => setDragging(k)} onDragEnd={() => setDragging(null)} style={{ cursor: "grab" }} aria-label={`Drag a ${SHAPE_NAMES[k]}`}>
             <ShapeCanvas width={56} height={56} label={SHAPE_NAMES[k]}>
@@ -284,19 +285,19 @@ function ComposeSandbox() {
           </div>
         ))}
       </div>
-      <div className="control-row">{[1, 2].map((n) => renderSlot(n as 1 | 2))}</div>
+      <div className="control-row" data-readaloud-part>{[1, 2].map((n) => renderSlot(n as 1 | 2))}</div>
       {filled && !correct && (
-        <p className="feedback bad" role="alert">
+        <ReadAloud as="p" className="feedback bad" role="alert">
           Not quite a {COMPOSITE_TARGET_NAME[targetKind]} yet — drag a different piece on top of a slot to swap it.
-        </p>
+        </ReadAloud>
       )}
       {correct && (
-        <div className="align-stack-wrap">
-          <p className="feedback good" role="alert">
+        <ReadAloud className="align-stack-wrap">
+          <ReadAloud as="p" className="feedback good" role="alert">
             You built a {COMPOSITE_TARGET_NAME[targetKind]}, from {COMPOSITE_PIECES_LABEL[targetKind].toLowerCase()}!
-          </p>
+          </ReadAloud>
           <CompositeShape kind={targetKind} width={150} height={120} />
-        </div>
+        </ReadAloud>
       )}
     </div>
   );
@@ -307,15 +308,15 @@ function SolidSandbox() {
   const [top, setTop] = useState<SolidKind>("cone");
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <p className="muted small">1.G.2 also covers stacking 3D solids into a bigger composite. Pick two to stack.</p>
-      <div className="control-row">
+      <ReadAloud as="p" className="muted small">1.G.2 also covers stacking 3D solids into a bigger composite. Pick two to stack.</ReadAloud>
+      <div className="control-row" data-readaloud-part>
         <Segmented label="Bottom solid" value={bottom} onChange={setBottom} options={ALL_SOLID_KINDS.map((k) => ({ id: k, label: SOLID_NAMES[k] }))} />
         <Segmented label="Top solid" value={top} onChange={setTop} options={ALL_SOLID_KINDS.map((k) => ({ id: k, label: SOLID_NAMES[k] }))} />
       </div>
       <SolidTower solids={[bottom, top]} />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         This tower is made of a {SOLID_NAMES[bottom]} and a {SOLID_NAMES[top]} stacked together.
-      </p>
+      </ReadAloud>
     </div>
   );
 }

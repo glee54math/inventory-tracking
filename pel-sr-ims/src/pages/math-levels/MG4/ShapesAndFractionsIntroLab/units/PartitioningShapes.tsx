@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { partitioningShapesTest } from "./PartitioningShapesTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 const SHAPES: PartitionShape[] = ["circle", "square"];
 
@@ -32,7 +33,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> This circle is cut into 2 EQUAL pieces. What do we call each piece?
       </p>
@@ -45,11 +46,11 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         ))}
       </div>
       {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Right — 2 equal pieces of a whole are called halves." : "Not quite — how many equal pieces does 'half' always mean?"}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -67,7 +68,7 @@ function UnequalNonExampleQuestion({ onComplete }: { onComplete?: () => void }) 
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Look at this circle:
       </p>
@@ -95,13 +96,13 @@ function UnequalNonExampleQuestion({ onComplete }: { onComplete?: () => void }) 
         Check Answer
       </button>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Right — having 2 pieces isn't enough to call them halves. The 2 pieces also have to be the same size."
             : "Not quite — look carefully: are the 2 pieces really the same size?"}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -114,7 +115,7 @@ function CompareSizeQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> A pizza is cut into halves. The exact same-size pizza is cut into fourths. Which slice is bigger?
       </p>
@@ -136,13 +137,13 @@ function CompareSizeQuestion({ onComplete }: { onComplete?: () => void }) {
         ))}
       </div>
       {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Right — cutting the SAME-size pizza into more pieces makes each piece smaller, so a half slice is bigger than a fourth slice."
             : "Not quite — both pizzas are the same size. Which one got cut into more pieces?"}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -154,7 +155,7 @@ function MorePiecesTrueFalseQuestion({ onComplete }: { onComplete?: () => void }
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> True or False: since 4 is a bigger number than 2, cutting a shape into fourths makes BIGGER pieces than cutting it into halves.
       </p>
@@ -166,13 +167,13 @@ function MorePiecesTrueFalseQuestion({ onComplete }: { onComplete?: () => void }
         ))}
       </div>
       {picked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "False — the opposite is true! Cutting the same-size shape into MORE pieces (4 instead of 2) makes each piece SMALLER."
             : "Not quite — think about a pizza: does cutting it into more slices make each slice bigger or smaller?"}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -184,7 +185,7 @@ function PartitioningCheck({ onComplete }: { onComplete?: () => void }) {
   }, [allDone, onComplete]);
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure "halves" and "fourths" make sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Quick check: let's make sure "halves" and "fourths" make sense before you try practice problems.</ReadAloud>
       <VocabQuestion onComplete={() => setDone((d) => ({ ...d, q1: true }))} />
       <UnequalNonExampleQuestion onComplete={() => setDone((d) => ({ ...d, q2: true }))} />
       <CompareSizeQuestion onComplete={() => setDone((d) => ({ ...d, q3: true }))} />
@@ -234,7 +235,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       )}
       {(introActive || showCheck) && <PartitioningCheck onComplete={onIntroDone} />}
       <Segmented label="Shape" value={shape} onChange={setShape} options={SHAPES.map((s) => ({ id: s, label: s === "circle" ? "Circle" : "Square" }))} />
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented label="Pieces" value={pieceCount} onChange={setPieceCount} options={[{ id: "2", label: "2" }, { id: "4", label: "4" }]} />
         <Segmented label="Equal?" value={equal} onChange={setEqual} options={[{ id: "equal", label: "Equal" }, { id: "unequal", label: "Unequal" }]} />
       </div>
@@ -245,17 +246,17 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <Segmented label="Orientation" value={orientation} onChange={setOrientation} options={[{ id: "v", label: "Up-down" }, { id: "h", label: "Side-to-side" }, { id: "diag", label: "Diagonal" }]} />
       )}
       {equal === "unequal" && (
-        <div className="control-row">
+        <div className="control-row" data-readaloud-part>
           <Stepper label="How uneven" value={Math.round(skew * 100)} min={10} max={40} step={5} onChange={(v) => setSkew(v / 100)} tone="b" />
         </div>
       )}
       <ShapePartition shape={shape} pattern={pattern} cutStyle={cutStyle} orientation={orientation} unequalFractions={unequalFractions} width={160} height={160} />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         {meta.equal
           ? `This ${shape} is cut into ${meta.pieceCount} EQUAL pieces — each one is called ${meta.pieceCount === 2 ? "a half" : "a fourth (or quarter)"}.`
           : `This ${shape} has ${meta.pieceCount} pieces, but they're NOT the same size — so we can't call them ${meta.pieceCount === 2 ? "halves" : "fourths"}.`}
         {shape === "square" && pieceCount === "4" && equal === "equal" && " Try switching between the plus-cut and the X-cut — both give 4 EQUAL pieces, just shaped differently."}
-      </p>
+      </ReadAloud>
     </div>
   );
 }
@@ -403,14 +404,14 @@ function compareHalvesFourthsProblem(): Problem {
     bucket: "compare-halves-fourths",
     story: `Here are two same-size ${shape}s — one cut into halves, one cut into fourths.`,
     visual: () => (
-      <div className="control-row" style={{ gap: 20 }}>
+      <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
         <div style={{ textAlign: "center" }}>
           <ShapePartition shape={shape} pattern="halves-equal" width={120} height={120} />
-          <p className="muted small">Halves</p>
+          <ReadAloud as="p" className="muted small">Halves</ReadAloud>
         </div>
         <div style={{ textAlign: "center" }}>
           <ShapePartition shape={shape} pattern="fourths-equal" width={120} height={120} />
-          <p className="muted small">Fourths</p>
+          <ReadAloud as="p" className="muted small">Fourths</ReadAloud>
         </div>
       </div>
     ),
