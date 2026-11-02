@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { equalSignAndEquationsTest } from "./EqualSignAndEquationsTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -26,7 +27,7 @@ function EqualSignMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> What does the = sign mean?
       </p>
@@ -43,13 +44,13 @@ function EqualSignMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? 'Correct — "=" means both sides are equal in value, like a balanced scale. The answer doesn\'t have to come right after it.'
             : 'Not quite — "=" means both sides have the exact same amount, like a balanced scale — not "the answer comes next."'}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -68,7 +69,7 @@ function BackwardsEquationsQuestion({ onComplete }: { onComplete?: () => void })
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Is each equation true or false?
       </p>
@@ -98,13 +99,13 @@ function BackwardsEquationsQuestion({ onComplete }: { onComplete?: () => void })
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — BOTH are true. 5 = 2 + 3 (5 both times), and 7 + 1 = 6 + 2 (8 both times). The sum doesn't have to sit alone on the right."
             : "Not quite — both are true. 2 + 3 = 5 and 5 = 2 + 3 say the exact same thing, just flipped. Same for 7 + 1 = 6 + 2 — check that both sides equal 8."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -118,7 +119,7 @@ function TrivialTrueQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: 8 = 8
       </p>
@@ -135,13 +136,13 @@ function TrivialTrueQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — no computing needed here. The same number is on both sides, so of course they're equal."
             : "Not quite — there's nothing to compute here. 8 is 8, on both sides, so this is simply true."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -155,7 +156,7 @@ function UnknownNotLastQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Find the missing number: 8 + ☐ = 11
       </p>
@@ -173,13 +174,13 @@ function UnknownNotLastQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the missing number doesn't have to be at the very end. 8 + 3 = 11, so the blank is 3."
             : "Not quite — the blank can be anywhere in the equation. 11 − 8 = 3, so 8 + 3 = 11."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -193,7 +194,7 @@ function EqualSignCheckForUnderstanding({ onComplete }: { onComplete?: () => voi
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure the equal sign makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure the equal sign makes sense before you try practice problems.</ReadAloud>
       <EqualSignMeaningQuestion onComplete={mark("meaning")} />
       <BackwardsEquationsQuestion onComplete={mark("backwards")} />
       <TrivialTrueQuestion onComplete={mark("trivial")} />
@@ -220,7 +221,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         {!introActive && (
           <button
             type="button"
@@ -234,8 +235,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <EqualSignCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <p className="muted small">The = sign is like a balance scale: both sides must weigh the same. Try to make it balance.</p>
-      <div className="control-row">
+      <ReadAloud as="p" className="muted small">The = sign is like a balance scale: both sides must weigh the same. Try to make it balance.</ReadAloud>
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Left, first" value={leftA} min={0} max={15} step={1} onChange={setLeftA} tone="a" />
         <Stepper label="Left, second" value={leftB} min={0} max={15} step={1} onChange={setLeftB} tone="a" />
         <span className="affix" style={{ fontWeight: 800, fontSize: 20 }}>
@@ -244,23 +245,23 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <Stepper label="Right, first" value={rightA} min={0} max={15} step={1} onChange={setRightA} tone="b" />
         <Stepper label="Right, second" value={rightB} min={0} max={15} step={1} onChange={setRightB} tone="b" />
       </div>
-      <div className="control-row" style={{ gap: 24, alignItems: "flex-start" }}>
+      <div className="control-row" style={{ gap: 24, alignItems: "flex-start" }} data-readaloud-part>
         <div>
           <TenFrameGroup value={Math.min(20, leftTotal)} tone="a" />
-          <p className="muted small" style={{ textAlign: "center" }}>
+          <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
             {leftA} + {leftB} = {leftTotal}
-          </p>
+          </ReadAloud>
         </div>
         <div>
           <TenFrameGroup value={Math.min(20, rightTotal)} tone="b" />
-          <p className="muted small" style={{ textAlign: "center" }}>
+          <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
             {rightA} + {rightB} = {rightTotal}
-          </p>
+          </ReadAloud>
         </div>
       </div>
-      <p className={`feedback ${balanced ? "good" : "bad"}`}>
+      <ReadAloud as="p" className={`feedback ${balanced ? "good" : "bad"}`}>
         {balanced ? `Balanced! ${leftA} + ${leftB} = ${rightA} + ${rightB} — both sides equal ${leftTotal}.` : `Not balanced — ${leftTotal} ≠ ${rightTotal}. Adjust the numbers until both sides match.`}
-      </p>
+      </ReadAloud>
     </div>
   );
 }

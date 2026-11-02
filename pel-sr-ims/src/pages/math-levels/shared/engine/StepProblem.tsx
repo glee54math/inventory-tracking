@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
+import { ReadAloud } from "../tts/ReadAloud";
+import { stopIfPlaying } from "../tts/speechEngine";
 import type { Problem, SentenceBlank, Step } from "./types";
 import { fmt, fracText, gcd, numbersMatch, parseAnswer, rawFraction, verticalMultiplyBreakdown } from "../lib/math";
 
@@ -176,6 +178,9 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
   const [states, setStates] = useState<StepState[]>(() => problem.steps.map(fresh));
   const reported = useRef(false);
   const activeRef = useRef<HTMLLIElement>(null);
+  // Read-aloud: the active step's icon reads its prompt, answer choices and buttons together.
+  const inputRef = useRef<HTMLDivElement>(null);
+  const toolsRef = useRef<HTMLDivElement>(null);
   const finished = current >= problem.steps.length;
 
   // Note: give this component a new `key` for each new problem so its state resets.
@@ -192,6 +197,9 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
     // behavior, so it's safe to auto-focus; a button is not.
     if (current > 0) activeRef.current?.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true });
   }, [current]);
+
+  // A new step/question replaces the text on screen; stop reading the old one.
+  useEffect(() => stopIfPlaying(), [current]);
 
   useEffect(() => {
     if (finished && !reported.current) {
@@ -230,10 +238,10 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
         {problem.visual(current)}
       </div>
       <div className="problem-work">
-        <div className="story">
+        <ReadAloud className="story">
           <h3>{problem.title}</h3>
           <div>{problem.story}</div>
-        </div>
+        </ReadAloud>
 
         <ol className="steps">
           {problem.steps.map((step, i) => {
@@ -245,42 +253,51 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
                 <div className="step-num" aria-hidden>
                   {done ? "✓" : i + 1}
                 </div>
-                <div className="step-body">
-                  <div className="step-prompt">{step.prompt}</div>
-                  {done ? (
+                {done ? (
+                  <ReadAloud className="step-body">
+                    <div className="step-prompt">{step.prompt}</div>
                     <div className="step-result">
                       <span className={`answer-chip ${st.revealed ? "revealed" : ""}`}>{answerText(step)}</span>
                       <div className="explain">{step.explain}</div>
                     </div>
-                  ) : (
-                    <>
+                  </ReadAloud>
+                ) : (
+                  <div className="step-body">
+                    <ReadAloud className="step-prompt" alsoRead={[inputRef, toolsRef]}>
+                      {step.prompt}
+                    </ReadAloud>
+                    <div ref={inputRef} data-readaloud-part>
                       <StepInput step={step} state={st} onChange={(inputs) => update(i, { inputs, feedback: null })} onSubmit={(inputs) => submit(i, inputs)} />
-                      {st.feedback && (
-                        <p className="feedback bad" role="alert">
-                          {st.feedback}
-                        </p>
+                    </div>
+                    {st.feedback && (
+                      <ReadAloud as="p" className="feedback bad" role="alert">
+                        {st.feedback}
+                      </ReadAloud>
+                    )}
+                    {st.hint && (
+                      <ReadAloud as="p" className="hint">
+                        💡 {step.hint}
+                      </ReadAloud>
+                    )}
+                    <div className="step-tools" ref={toolsRef} data-readaloud-part>
+                      {step.kind !== "choice" && step.kind !== "custom" && (
+                        <button className="btn primary" onClick={() => submit(i)}>
+                          Check
+                        </button>
                       )}
-                      {st.hint && <p className="hint">💡 {step.hint}</p>}
-                      <div className="step-tools">
-                        {step.kind !== "choice" && step.kind !== "custom" && (
-                          <button className="btn primary" onClick={() => submit(i)}>
-                            Check
-                          </button>
-                        )}
-                        {!st.hint && (
-                          <button className="btn ghost" onClick={() => update(i, { hint: true })}>
-                            Show hint
-                          </button>
-                        )}
-                        {st.wrong >= 3 && (
-                          <button className="btn ghost" onClick={() => reveal(i)}>
-                            Show answer
-                          </button>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
+                      {!st.hint && (
+                        <button className="btn ghost" onClick={() => update(i, { hint: true })}>
+                          Show hint
+                        </button>
+                      )}
+                      {st.wrong >= 3 && (
+                        <button className="btn ghost" onClick={() => reveal(i)}>
+                          Show answer
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </li>
             );
           })}
@@ -293,7 +310,7 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
         </div>
 
         {finished && (
-          <div className="wrapup" role="status">
+          <ReadAloud className="wrapup" role="status">
             <div className="wrapup-title">{reveals === 0 && hintsUsed <= 1 ? "Solved it! ⭐" : "Solved, with help."}</div>
             <p>{problem.wrapUp}</p>
             {!(reveals === 0 && hintsUsed <= 1) && <p className="muted">Solve one with at most one hint to earn a mastery star.</p>}
@@ -302,7 +319,7 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
                 Next problem
               </button>
             )}
-          </div>
+          </ReadAloud>
         )}
       </div>
     </div>

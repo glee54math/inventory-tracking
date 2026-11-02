@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { fluencyFactsWithin20Test } from "./FluencyFactsWithin20Test";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // SHARED LOGIC — same function backs both the Explore grouping hint and the
@@ -52,7 +53,7 @@ function GroupingChoiceQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> 4 + 8 + 2 — which two numbers should you add FIRST, to make the next step easiest?
       </p>
@@ -70,13 +71,13 @@ function GroupingChoiceQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 8 + 2 = 10 first, then 10 + 4 = 14. Grouping the pair that makes a ten is usually the easiest path."
             : "Not quite — look for a pair that makes exactly 10. Here, 8 + 2 = 10, then 10 + 4 = 14 is the easiest path."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -89,7 +90,7 @@ function OrderDoesntMatterQuestion({ onComplete }: { onComplete?: () => void }) 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> True or false: when adding three numbers, you can add them in ANY order (any two first) and still get the same total.
       </p>
@@ -106,13 +107,13 @@ function OrderDoesntMatterQuestion({ onComplete }: { onComplete?: () => void }) 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the total never changes no matter which pair you add first. That's exactly why it's smart to pick the EASIEST pair, like one that makes ten."
             : "Not quite — it's always true: the total is the same no matter which two you add first. That's what makes picking an easy pair (like one that makes ten) a safe shortcut, not a risk."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -125,7 +126,7 @@ function WithinTenOrTwentyQuestion({ onComplete }: { onComplete?: () => void }) 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> 4 + 3 = 7, and 8 + 7 = 15. Which fact stays "within 10" (the total doesn't cross into the teens)?
       </p>
@@ -142,13 +143,13 @@ function WithinTenOrTwentyQuestion({ onComplete }: { onComplete?: () => void }) 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 4 + 3 = 7 stays within 10. 8 + 7 = 15 crosses past 10 into the teens, so it's a \"within 20\" fact instead."
             : "Not quite — 4 + 3 = 7 stays within 10. 8 + 7 = 15 is already past 10, so that one is a \"within 20\" fact."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -161,7 +162,7 @@ function UnfamiliarSpeedQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Without counting one-by-one, use what you know about making ten to quickly find 9 + 7.
       </p>
@@ -179,13 +180,13 @@ function UnfamiliarSpeedQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 9 + 1 = 10, then 10 + 6 = 16. The SAME make-ten strategy you already know makes facts like this fast, not just the ones you first practiced it on."
             : "Not quite — 9 needs just 1 more to make 10. Split 7 into 1 + 6: 9 + 1 = 10, then 10 + 6 = 16."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -199,7 +200,7 @@ function FluencyCheckForUnderstanding({ onComplete }: { onComplete?: () => void 
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure these ideas are clear before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure these ideas are clear before you try practice problems.</ReadAloud>
       <GroupingChoiceQuestion onComplete={mark("grouping")} />
       <OrderDoesntMatterQuestion onComplete={mark("order")} />
       <WithinTenOrTwentyQuestion onComplete={mark("withinRange")} />
@@ -228,7 +229,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented
           label="Fact type"
           value={mode}
@@ -250,7 +251,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
       {mode !== "three" ? (
         <>
-          <div className="control-row">
+          <div className="control-row" data-readaloud-part>
             <label>
               First number: <input type="range" min={1} max={9} value={a} onChange={(e) => setA(Number(e.target.value))} /> {a}
             </label>
@@ -259,14 +260,14 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             </label>
           </div>
           <TenFrameGroup value={Math.min(20, a + b)} tone="a" splitAt={Math.min(a, 20)} tone2="b" />
-          <p className="muted small">
+          <ReadAloud as="p" className="muted small">
             {a} + {b} = {a + b}. {a + b <= 10 ? "This stays within 10." : "This crosses past 10 — a within-20 fact."} The goal is to recall facts
             like this quickly, not count one-by-one every time.
-          </p>
+          </ReadAloud>
         </>
       ) : (
         <>
-          <div className="control-row">
+          <div className="control-row" data-readaloud-part>
             <label>
               a: <input type="range" min={1} max={9} value={a} onChange={(e) => setA(Number(e.target.value))} /> {a}
             </label>
@@ -278,10 +279,10 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             </label>
           </div>
           <TenFrameGroup value={Math.min(20, total)} tone="a" />
-          <p className="muted small">
+          <ReadAloud as="p" className="muted small">
             {nums[i]} + {nums[j]} = {pairSum} is the easiest pair to group first, then {pairSum} + {nums[kIdx]} = {total}. Try sliding the numbers
             around — the total ({total}) never changes no matter which pair you group first.
-          </p>
+          </ReadAloud>
         </>
       )}
     </div>

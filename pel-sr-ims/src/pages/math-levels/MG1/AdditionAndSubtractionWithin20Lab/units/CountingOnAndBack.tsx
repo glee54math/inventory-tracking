@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { countingOnAndBackTest } from "./CountingOnAndBackTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -33,7 +34,7 @@ function WhereAndHowManyQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> To add 8 + 3 by counting on (instead of starting over from 1), where do you START counting, and how many MORE numbers do you
         say?
@@ -66,13 +67,13 @@ function WhereAndHowManyQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — start at 8 (the number you already know) and count on just 3 more: 9, 10, 11. No need to start over from 1."
             : "Not quite — counting ON means starting at the number you already have (8), then counting just the amount you're adding (3) more times: 9, 10, 11."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -88,7 +89,7 @@ function SmartStartQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> You need to find 3 + 8. The problem is written with 3 first — but which number is the SMARTER one to start counting on from?
       </p>
@@ -105,13 +106,13 @@ function SmartStartQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — it doesn't matter which number is written first. Starting at the BIGGER number (8) and counting on 3 more (9, 10, 11) is faster than starting at 3 and counting on 8 more."
             : "Not quite — the order numbers are written in an addition problem doesn't matter. Always start counting on from the BIGGER number, even if it's written second, so you count on as few times as possible."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -148,7 +149,7 @@ function CountBackSequenceQuestion({ onComplete }: { onComplete?: () => void }) 
   );
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> 12 − 3. Counting back from 12, which THREE numbers do you say (in order)?
       </p>
@@ -161,13 +162,13 @@ function CountBackSequenceQuestion({ onComplete }: { onComplete?: () => void }) 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 11, 10, 9. Exactly three numbers for subtracting 3, landing on 9."
             : "Not quite — count back ONE number at a time, exactly 3 times (the number you're subtracting): 11, 10, 9. Saying one too few or one too many is the #1 count-back mistake."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -182,7 +183,7 @@ function CountBackRuleQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> True or false: when you count back to subtract, the number of times you count back should always exactly match the number
         you're subtracting — never one more, never one less.
@@ -200,13 +201,13 @@ function CountBackRuleQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — always true. Subtracting 4 means counting back exactly 4 times, no matter what number you start from."
             : "Not quite — it's always true: the number of counts back always matches the number you're subtracting, exactly, every time."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -220,7 +221,7 @@ function CountingCheckForUnderstanding({ onComplete }: { onComplete?: () => void
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure counting on and counting back make sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure counting on and counting back make sense before you try practice problems.</ReadAloud>
       <WhereAndHowManyQuestion onComplete={mark("whereHowMany")} />
       <SmartStartQuestion onComplete={mark("smartStart")} />
       <CountBackSequenceQuestion onComplete={mark("sequence")} />
@@ -255,7 +256,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented
           label="Direction"
           value={mode}
@@ -279,7 +280,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <CountingCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <div className="control-row" style={{ alignItems: "center" }}>
+      <div className="control-row" style={{ alignItems: "center" }} data-readaloud-part>
         <button
           className="btn primary"
           onClick={countOnce}
@@ -305,10 +306,10 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           ))}
         </span>
       </div>
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         You counted {mode === "on" ? "on" : "back"} {countsSoFar} time{countsSoFar === 1 ? "" : "s"} from {start}, landing on {current}. Notice
         you never had to start over from {mode === "on" ? "1" : "the very top"} — you kept the starting number and just kept going.
-      </p>
+      </ReadAloud>
 
       <NumberLine min={0} max={20} points={[{ value: start, label: "start", tone: "c" }, ...(current !== start ? [{ value: current, label: "now", tone: "a" as const }] : [])]} />
       <TenFrameGroup value={current} tone="a" />

@@ -241,6 +241,28 @@ questions yourself (don't present a menu of candidates) using this bar:
 - State every chosen CFU question, its correct answer, and why you picked
   it, in your final report — this is the part the user most wants to review.
 
+### Read-aloud (required for MK1–MK4 and MG1–MG5 labs only)
+PreK–2nd students can't reliably read instructions, so these labs use the
+shared read-aloud components in `shared/tts/ReadAloud.tsx` (speaker icon,
+word-by-word highlight, browser voice). Practice/Test text, `Says`,
+fractions and steppers are already covered by the shared engine; you only
+wire up the shell and the hand-written Explore/CFU text. Mirror
+`MG1/MG1_AdditionAndSubtractionWithin20Lab.tsx` and its units:
+- Shell: wrap everything inside the `lab-base` div in `<TtsProvider>`;
+  make `unit.goal`, the `key-idea` aside and hero/home paragraphs
+  `<ReadAloud as="p|aside" …>`; put a `<SpeakButton>` before the tab bar
+  (inside a `tts-inline-row` div); put `<ReadAllButton />` as the first
+  child of every tab panel and the module-test panel; add
+  `data-readaloud-part` to `panel-foot`.
+- Each CFU question box: `<ReadAloud className="align-stack-wrap">` (one
+  icon reads the question, dropdown options and Check Answer button).
+- Every feedback line: `<ReadAloud as="p" className={`feedback …`} role="alert">`.
+- Explore paragraphs outside question boxes (`intro-gate-title`, `muted
+  small`, plain `<p>`): `<ReadAloud as="p" …>`. Explore `control-row`s get
+  `data-readaloud-part` so "Read all" includes them.
+- Don't add `ReadAloud` inside `keyIdea` (the shell reads it) or inside
+  `preview` components. Don't add any of this to MG6+ labs.
+
 ### Practice
 One `ProblemType` per bucket-family, OR one `ProblemType` per distinguishable
 context with no buckets if contexts are mutually exclusive (see

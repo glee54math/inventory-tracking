@@ -1,4 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ReadAloud } from "../tts/ReadAloud";
+import { stopIfPlaying } from "../tts/speechEngine";
 import type { Unit } from "../units/types";
 import type { Step, TestQuestion } from "./types";
 import { answerText, check, fresh, StepInput, type StepState } from "./StepProblem";
@@ -44,8 +46,14 @@ export function UnitTestView({ test, onComplete }: UnitTestViewProps) {
   const [current, setCurrent] = useState(0);
   const [states, setStates] = useState<StepState[]>(() => questions.map(fresh));
   const [results, setResults] = useState<{ ok: boolean }[] | null>(null);
+  // Read-aloud: the question's icon also reads its answer choices and buttons.
+  const inputRef = useRef<HTMLDivElement>(null);
+  const toolsRef = useRef<HTMLDivElement>(null);
 
   const finished = current >= questions.length;
+
+  // A new step/question replaces the text on screen; stop reading the old one.
+  useEffect(() => stopIfPlaying(), [current]);
 
   const update = (i: number, patch: Partial<StepState>) => setStates((all) => all.map((s, k) => (k === i ? { ...s, ...patch } : s)));
 
@@ -81,11 +89,13 @@ export function UnitTestView({ test, onComplete }: UnitTestViewProps) {
           <div className="test-score-num">
             {score}/{questions.length}
           </div>
-          <div className="test-score-label">{passed ? "Passed — nice work!" : `Keep practicing — aim for ${test.passScore}/${questions.length}.`}</div>
+          <ReadAloud className="test-score-label" text={passed ? `${score} out of ${questions.length}. Passed, nice work!` : `${score} out of ${questions.length}. Keep practicing. Aim for ${test.passScore} out of ${questions.length}.`}>
+            {passed ? "Passed — nice work!" : `Keep practicing — aim for ${test.passScore}/${questions.length}.`}
+          </ReadAloud>
         </div>
         <ol className="test-review">
           {questions.map((q, i) => (
-            <li key={i} className={results[i].ok ? "ok" : "bad"}>
+            <ReadAloud as="li" key={i} className={results[i].ok ? "ok" : "bad"}>
               {q.visual && <div className="test-review-visual">{q.visual}</div>}
               <div className="test-review-prompt">{q.step.prompt}</div>
               <div className="test-review-answer">
@@ -97,7 +107,7 @@ export function UnitTestView({ test, onComplete }: UnitTestViewProps) {
                 </div>
               )}
               <div className="test-review-explain">{q.step.explain}</div>
-            </li>
+            </ReadAloud>
           ))}
         </ol>
         <button className="btn primary" onClick={retake}>
@@ -119,9 +129,13 @@ export function UnitTestView({ test, onComplete }: UnitTestViewProps) {
       </div>
       <div className="test-question">
         {q.visual && <div className="problem-visual">{q.visual}</div>}
-        <div className="test-prompt">{q.step.prompt}</div>
-        <StepInput step={q.step} state={st} onChange={(inputs) => update(current, { inputs })} onSubmit={next} />
-        <div className="step-tools">
+        <ReadAloud className="test-prompt" alsoRead={[inputRef, toolsRef]}>
+          {q.step.prompt}
+        </ReadAloud>
+        <div ref={inputRef} data-readaloud-part>
+          <StepInput step={q.step} state={st} onChange={(inputs) => update(current, { inputs })} onSubmit={next} />
+        </div>
+        <div className="step-tools" ref={toolsRef} data-readaloud-part>
           {current > 0 && (
             <button className="btn ghost" onClick={back}>
               ← Previous question

@@ -4,6 +4,7 @@ import { randInt, pick } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 import { putTogetherCompareWordProblemsTest } from "./PutTogetherCompareWordProblemsTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -30,7 +31,7 @@ function TotalOrAddendQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Mia has 4 red buttons and 5 blue buttons. How many buttons does Mia have IN ALL?
       </p>
@@ -61,11 +62,11 @@ function TotalOrAddendQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — \"in all\" means the TOTAL. 4 + 5 = 9." : "Not quite — \"in all\" is asking for the TOTAL (both parts combined): 4 + 5 = 9."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -83,7 +84,7 @@ function ManyWaysQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Jake has 6 trading cards. Some are sports cards and some are animal cards.
       </p>
@@ -114,13 +115,13 @@ function ManyWaysQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — there's MORE than one way: 2 sports + 4 animal works, but so would 1 + 5, 3 + 3, and others. This story doesn't have one single right split."
             : "Not quite — when both parts are unknown, there's MORE than one valid split (2 + 4, 1 + 5, 3 + 3 all work). For this one way: 2 sports cards leaves 6 − 2 = 4 animal cards."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -139,7 +140,7 @@ function MoreAndFewerSameQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> Lily has 9 crayons. Ben has 5 crayons.
       </p>
@@ -171,13 +172,13 @@ function MoreAndFewerSameQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — BOTH are 4! \"4 more\" and \"4 fewer\" describe the exact same gap between 9 and 5, just in different words: 9 − 5 = 4."
             : "Not quite — \"more\" and \"fewer\" here describe the SAME gap between Lily's 9 and Ben's 5: 9 − 5 = 4, both times."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -195,7 +196,7 @@ function FewerDirectionQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Ben has 5 crayons. Lily has 9 crayons. How many FEWER crayons does Ben have than Lily?
       </p>
@@ -226,13 +227,13 @@ function FewerDirectionQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — always subtract the SMALLER from the BIGGER (9 − 5 = 4), no matter whose name is mentioned first in the sentence."
             : "Not quite — \"Ben has 5, Lily has 9\" doesn't mean you subtract in that order. Always subtract the smaller amount from the bigger one: 9 − 5 = 4."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -246,9 +247,9 @@ function PutTogetherCompareCheckForUnderstanding({ onComplete }: { onComplete?: 
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">
+      <ReadAloud as="p" className="intro-gate-title">
         Check for understanding: let's make sure put-together and compare stories make sense before you try practice problems.
-      </p>
+      </ReadAloud>
       <TotalOrAddendQuestion onComplete={mark("totalOrAddend")} />
       <ManyWaysQuestion onComplete={mark("manyWays")} />
       <MoreAndFewerSameQuestion onComplete={mark("moreFewer")} />
@@ -276,7 +277,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         {!introActive && (
           <button
             type="button"
@@ -291,8 +292,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       {(introActive || showCheck) && <PutTogetherCompareCheckForUnderstanding onComplete={onIntroDone} />}
 
       <div>
-        <p className="muted small">Put together: two parts make a whole.</p>
-        <div className="control-row">
+        <ReadAloud as="p" className="muted small">Put together: two parts make a whole.</ReadAloud>
+        <div className="control-row" data-readaloud-part>
           <label>
             Red: <input type="range" min={0} max={15} value={redCount} onChange={(e) => setRedCount(Number(e.target.value))} /> {redCount}
           </label>
@@ -301,15 +302,15 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </label>
         </div>
         <TenFrameGroup value={Math.min(20, total)} tone="a" splitAt={redCount} tone2="b" />
-        <p className="muted small">
+        <ReadAloud as="p" className="muted small">
           {redCount} + {blueCount} = {total} in all. Try different red/blue splits that still add up to the same total — notice there's more than
           one way.
-        </p>
+        </ReadAloud>
       </div>
 
       <div>
-        <p className="muted small">Compare: two separate amounts, side by side.</p>
-        <div className="control-row">
+        <ReadAloud as="p" className="muted small">Compare: two separate amounts, side by side.</ReadAloud>
+        <div className="control-row" data-readaloud-part>
           <label>
             Amount A: <input type="range" min={0} max={20} value={amountA} onChange={(e) => setAmountA(Number(e.target.value))} /> {amountA}
           </label>
@@ -317,14 +318,14 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             Amount B: <input type="range" min={0} max={20} value={amountB} onChange={(e) => setAmountB(Number(e.target.value))} /> {amountB}
           </label>
         </div>
-        <div className="control-row" style={{ gap: 24, alignItems: "flex-start" }}>
+        <div className="control-row" style={{ gap: 24, alignItems: "flex-start" }} data-readaloud-part>
           <TenFrameGroup value={amountA} tone="a" />
           <TenFrameGroup value={amountB} tone="b" />
         </div>
-        <p className="muted small">
+        <ReadAloud as="p" className="muted small">
           The bigger amount is {bigger}, the smaller is {smaller}. The difference is always bigger − smaller = {diff} — whether you call it "
           {diff} more" or "{diff} fewer" depends only on which amount you're talking about, not on the math.
-        </p>
+        </ReadAloud>
       </div>
     </div>
   );
@@ -423,7 +424,7 @@ function wordProblem(targetBucket?: string): Problem {
         bucket,
         story: `${ctx.a} has ${big} ${ctx.item}. ${ctx.b} has ${small} ${ctx.item}. How many MORE ${ctx.item} does ${ctx.a} have than ${ctx.b}?`,
         visual: () => (
-          <div className="control-row" style={{ gap: 20 }}>
+          <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
             <TenFrameGroup value={big} tone="a" />
             <TenFrameGroup value={small} tone="b" />
           </div>
@@ -437,7 +438,7 @@ function wordProblem(targetBucket?: string): Problem {
       bucket,
       story: `${ctx.b} has ${small} ${ctx.item}. ${ctx.a} has ${big} ${ctx.item}. How many FEWER ${ctx.item} does ${ctx.b} have than ${ctx.a}?`,
       visual: () => (
-        <div className="control-row" style={{ gap: 20 }}>
+        <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
           <TenFrameGroup value={small} tone="b" />
           <TenFrameGroup value={big} tone="a" />
         </div>

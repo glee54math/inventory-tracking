@@ -4,6 +4,7 @@ import { randInt, pick } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 import { addToTakeFromWordProblemsTest } from "./AddToTakeFromWordProblemsTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -50,7 +51,7 @@ function RolePlusNumberQuestion({
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>{n}.</b> {story} {question}
       </p>
@@ -86,11 +87,11 @@ function RolePlusNumberQuestion({
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? `Correct — ${explain}` : `Not quite — ${explain}`}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -112,7 +113,7 @@ function WordProblemCheckForUnderstanding({ onComplete }: { onComplete?: () => v
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure you can tell these stories apart before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure you can tell these stories apart before you try practice problems.</ReadAloud>
       <RolePlusNumberQuestion
         n={1}
         story="Sam had 6 apples. He picked 5 more apples."
@@ -133,7 +134,7 @@ function WordProblemCheckForUnderstanding({ onComplete }: { onComplete?: () => v
         explain="the question asks how many he PICKED — the CHANGE, not the result. 11 − 6 = 5. The answer isn't always the biggest number in the story."
         onComplete={mark("q2")}
       />
-      <div className="align-stack-wrap">
+      <ReadAloud className="align-stack-wrap">
         <p>
           <b>3.</b> True or false: in every add-to or take-from story, the question is always asking for the total amount at the very END.
         </p>
@@ -150,13 +151,13 @@ function WordProblemCheckForUnderstanding({ onComplete }: { onComplete?: () => v
           </button>
         </div>
         {tfChecked && (
-          <p className={`feedback ${tfOk ? "good" : "bad"}`} role="alert">
+          <ReadAloud as="p" className={`feedback ${tfOk ? "good" : "bad"}`} role="alert">
             {tfOk
               ? "Correct — false. Sometimes the STARTING amount is unknown, and sometimes the CHANGE is unknown. Read the question carefully every time."
               : "Not quite — false. The ending amount isn't always what's missing — sometimes the starting amount or the change is what you need to find."}
-          </p>
+          </ReadAloud>
         )}
-      </div>
+      </ReadAloud>
       <RolePlusNumberQuestion
         n={4}
         story="Leo had some pennies. He got 4 more pennies, and now has 11 pennies."
@@ -186,7 +187,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         {!introActive && (
           <button
             type="button"
@@ -200,10 +201,10 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <WordProblemCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <p>
+      <ReadAloud as="p">
         Build your own story: start with some, then {action === "add" ? "add more" : "take some away"}.
-      </p>
-      <div className="control-row">
+      </ReadAloud>
+      <div className="control-row" data-readaloud-part>
         <label>
           Start:{" "}
           <input
@@ -230,26 +231,26 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Switch to {action === "add" ? "Take From" : "Add To"}
         </button>
       </div>
-      <div className="control-row" style={{ gap: 24, alignItems: "flex-start" }}>
+      <div className="control-row" style={{ gap: 24, alignItems: "flex-start" }} data-readaloud-part>
         <div>
           <TenFrameGroup value={start} tone="a" />
-          <p className="muted small" style={{ textAlign: "center" }}>
+          <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
             Start: {start}
-          </p>
+          </ReadAloud>
         </div>
         <div>
           <TenFrameGroup value={result} tone="c" />
-          <p className="muted small" style={{ textAlign: "center" }}>
+          <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
             Result: {result}
-          </p>
+          </ReadAloud>
         </div>
       </div>
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         {action === "add"
           ? `${start} + ${change} = ${result}. The amount grew — this is an "Add To" story.`
           : `${start} − ${change} = ${result}. The amount shrank — this is a "Take From" story.`}{" "}
         A story can ask for the start, the change, or the result — read carefully to see which one is missing.
-      </p>
+      </ReadAloud>
     </div>
   );
 }
@@ -294,7 +295,7 @@ function wordProblem(targetBucket?: string): Problem {
         bucket,
         story: `${ctx.person} had ${start} ${ctx.item}. Then ${ctx.person} ${ctx.verbAdd} ${change} more ${ctx.item}. How many ${ctx.item} does ${ctx.person} have now?`,
         visual: () => (
-          <div className="control-row" style={{ gap: 20 }}>
+          <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
             <TenFrameGroup value={start} tone="a" />
           </div>
         ),
@@ -308,7 +309,7 @@ function wordProblem(targetBucket?: string): Problem {
         bucket,
         story: `${ctx.person} had ${start} ${ctx.item}. ${ctx.person} ${ctx.verbAdd} some more, and now has ${result} ${ctx.item}. How many ${ctx.item} did ${ctx.person} ${ctx.verbAdd}?`,
         visual: () => (
-          <div className="control-row" style={{ gap: 20 }}>
+          <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
             <TenFrameGroup value={start} tone="a" />
             <TenFrameGroup value={result} tone="c" />
           </div>
@@ -322,7 +323,7 @@ function wordProblem(targetBucket?: string): Problem {
       bucket,
       story: `${ctx.person} had some ${ctx.item}. Then ${ctx.person} ${ctx.verbAdd} ${change} more, and now has ${result} ${ctx.item}. How many ${ctx.item} did ${ctx.person} have at the start?`,
       visual: () => (
-        <div className="control-row" style={{ gap: 20 }}>
+        <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
           <TenFrameGroup value={result} tone="c" />
         </div>
       ),
@@ -349,7 +350,7 @@ function wordProblem(targetBucket?: string): Problem {
       bucket,
       story: `${ctx.person} had ${start} ${ctx.item}. Then ${ctx.person} ${ctx.verbTake} ${change} ${ctx.item}. How many ${ctx.item} does ${ctx.person} have left?`,
       visual: () => (
-        <div className="control-row" style={{ gap: 20 }}>
+        <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
           <TenFrameGroup value={start} tone="a" />
         </div>
       ),
@@ -363,7 +364,7 @@ function wordProblem(targetBucket?: string): Problem {
       bucket,
       story: `${ctx.person} had ${start} ${ctx.item}. ${ctx.person} ${ctx.verbTake} some, and now has ${result} ${ctx.item} left. How many ${ctx.item} did ${ctx.person} ${ctx.verbTake}?`,
       visual: () => (
-        <div className="control-row" style={{ gap: 20 }}>
+        <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
           <TenFrameGroup value={start} tone="a" />
           <TenFrameGroup value={result} tone="c" />
         </div>
@@ -377,7 +378,7 @@ function wordProblem(targetBucket?: string): Problem {
     bucket,
     story: `${ctx.person} ${ctx.verbTake} ${change} ${ctx.item}, and now has ${result} ${ctx.item} left. How many ${ctx.item} did ${ctx.person} have at the start?`,
     visual: () => (
-      <div className="control-row" style={{ gap: 20 }}>
+      <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
         <TenFrameGroup value={result} tone="c" />
       </div>
     ),

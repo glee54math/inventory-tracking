@@ -7,6 +7,7 @@ import { StepProblem } from "../shared/engine/StepProblem";
 import { Segmented } from "../shared/engine/controls";
 import { UnitTestView } from "../shared/engine/UnitTest";
 import { UnitPreviewCarousel } from "../shared/components/UnitPreviewCarousel";
+import { ReadAllButton, ReadAloud, SpeakButton, TtsProvider } from "../shared/tts/ReadAloud";
 import type { Problem } from "../shared/engine/types";
 import { shuffle } from "../shared/lib/math";
 import { MASTERY_GOAL, isMastered as sharedIsMastered, starCount as sharedStarCount, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
@@ -73,7 +74,7 @@ function Home({
       <section className="hero">
         <div className="hero-text">
           <h1>8 + 3 = ?</h1>
-          <p>Counting on and back, making ten, word problems, fact fluency, and what the equal sign really means — all within 20.</p>
+          <ReadAloud as="p">Counting on and back, making ten, word problems, fact fluency, and what the equal sign really means — all within 20.</ReadAloud>
           <button className="btn primary big" onClick={() => onPick(next === -1 ? 0 : next)}>
             {next <= 0 ? "Start exploring" : `Continue: ${units[next].title}`}
           </button>
@@ -98,9 +99,9 @@ function Home({
             </li>
           ))}
         </ol>
-        <p className="muted small">
+        <ReadAloud as="p" className="muted small">
           Stars fill in as you clean-solve (at most one hint) every different kind of problem in Mixed mode — the last star needs all of them.
-        </p>
+        </ReadAloud>
       </section>
       <section>
         <button className="path-card module-test-card" onClick={onModuleTest}>
@@ -145,6 +146,7 @@ function UnitView({
   onNextUnit?: () => void;
 }) {
   const [tab, setTab] = useState<"explore" | "practice" | "test">("explore");
+  const tabsRef = useRef<HTMLDivElement>(null);
   const [typeIdx, setTypeIdx] = useState<number | "mix">("mix");
   const [seed, setSeed] = useState(0);
 
@@ -195,7 +197,9 @@ function UnitView({
       <header className="unit-head">
         <div>
           <h1>{unit.title}</h1>
-          <p className="goal">{unit.goal}</p>
+          <ReadAloud as="p" className="goal">
+            {unit.goal}
+          </ReadAloud>
         </div>
         <div className="unit-stars">
           <Stars unit={unit} p={progress} size="lg" />
@@ -205,32 +209,40 @@ function UnitView({
         </div>
       </header>
 
-      <aside className="key-idea">{unit.keyIdea}</aside>
+      <ReadAloud as="aside" className="key-idea">
+        {unit.keyIdea}
+      </ReadAloud>
 
-      <div className="tabs" role="tablist">
-        <button role="tab" aria-selected={tab === "explore"} className={tab === "explore" ? "on" : ""} onClick={() => setTab("explore")}>
-          Explore
-        </button>
-        <button role="tab" aria-selected={tab === "practice"} className={tab === "practice" ? "on" : ""} disabled={!introSatisfied} onClick={() => setTab("practice")}>
-          Practice
-        </button>
-        {unit.test && (
-          <button role="tab" aria-selected={tab === "test"} className={tab === "test" ? "on" : ""} onClick={() => setTab("test")}>
-            Test
+      <div className="tts-inline-row">
+        <SpeakButton targets={() => [tabsRef.current]} label="Read the tab names" />
+        <div className="tabs" role="tablist" ref={tabsRef}>
+          <button role="tab" aria-selected={tab === "explore"} className={tab === "explore" ? "on" : ""} onClick={() => setTab("explore")}>
+            Explore
           </button>
-        )}
+          <button role="tab" aria-selected={tab === "practice"} className={tab === "practice" ? "on" : ""} disabled={!introSatisfied} onClick={() => setTab("practice")}>
+            Practice
+          </button>
+          {unit.test && (
+            <button role="tab" aria-selected={tab === "test"} className={tab === "test" ? "on" : ""} onClick={() => setTab("test")}>
+              Test
+            </button>
+          )}
+        </div>
       </div>
 
       {tab === "explore" && (
         <div className="panel" role="tabpanel">
+          <ReadAllButton />
           {introSatisfied && !cfuJustPassed ? <unit.Explore /> : <unit.Explore onIntroDone={handleIntroDone} />}
-          <div className="panel-foot">
+          <div className="panel-foot" data-readaloud-part>
             {introSatisfied ? (
               <button className="btn primary" onClick={() => setTab("practice")}>
                 Try practice problems
               </button>
             ) : (
-              <p className="muted small">Complete the activity above to unlock practice problems.</p>
+              <ReadAloud as="p" className="muted small">
+                Complete the activity above to unlock practice problems.
+              </ReadAloud>
             )}
           </div>
         </div>
@@ -238,6 +250,7 @@ function UnitView({
 
       {tab === "practice" && (
         <div className="panel" role="tabpanel">
+          <ReadAllButton />
           <div className="practice-bar">
             <Segmented
               label="Problem type"
@@ -250,9 +263,9 @@ function UnitView({
             </button>
           </div>
           {typeIdx !== "mix" && (
-            <p className="muted small">
+            <ReadAloud as="p" className="muted small">
               Practicing one type is great for extra reps, but only <b>Mixed</b> problems count toward your mastery stars.
-            </p>
+            </ReadAloud>
           )}
           <StepProblem
             key={`${unit.id}-${seed}-${String(typeIdx)}`}
@@ -261,18 +274,19 @@ function UnitView({
             onNext={() => setSeed((s) => s + 1)}
           />
           {mastered && onNextUnit && (
-            <div className="mastered">
+            <ReadAloud className="mastered">
               <span>You've mastered {unit.title.toLowerCase()}.</span>
               <button className="btn primary" onClick={onNextUnit}>
                 Go to the next unit
               </button>
-            </div>
+            </ReadAloud>
           )}
         </div>
       )}
 
       {tab === "test" && unit.test && (
         <div className="panel" role="tabpanel">
+          <ReadAllButton />
           <UnitTestView key={unit.id} test={unit.test!} onComplete={onTest} />
         </div>
       )}
@@ -309,83 +323,88 @@ function AdditionAndSubtractionWithin20Lab() {
 
   return (
     <div className="as20-lab lab-base">
-      <div className="app">
-        <nav className="rail" aria-label="Units">
-          <button className="brand" onClick={() => go(null)}>
-            <span>Addition &amp; Subtraction Within 20</span>
-          </button>
-          <ol>
-            {units.map((u, i) => (
-              <li key={u.id}>
-                <button className={current === i ? "on" : ""} aria-current={current === i ? "page" : undefined} onClick={() => go(i)}>
-                  <span className="rail-num">{i + 1}</span>
-                  <span className="rail-title">{u.title}</span>
-                  <Stars unit={u} p={progress[u.id]} />
+      <TtsProvider>
+        <div className="app">
+          <nav className="rail" aria-label="Units">
+            <button className="brand" onClick={() => go(null)}>
+              <span>Addition &amp; Subtraction Within 20</span>
+            </button>
+            <ol>
+              {units.map((u, i) => (
+                <li key={u.id}>
+                  <button className={current === i ? "on" : ""} aria-current={current === i ? "page" : undefined} onClick={() => go(i)}>
+                    <span className="rail-num">{i + 1}</span>
+                    <span className="rail-title">{u.title}</span>
+                    <Stars unit={u} p={progress[u.id]} />
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <button className={`module-test-nav ${moduleTestOpen ? "on" : ""}`} aria-current={moduleTestOpen ? "page" : undefined} onClick={openModuleTest}>
+              <span className="module-test-row">
+                <span>📝 Module Test</span>
+                {moduleTestScore !== undefined && moduleTestScore >= moduleTest.passScore && (
+                  <span className="module-test-check" aria-label="Completed">
+                    ✓
+                  </span>
+                )}
+              </span>
+              {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} label="Module test rating" />}
+            </button>
+            <button
+              className="reset"
+              onClick={() => {
+                if (confirmReset) {
+                  reset();
+                  setConfirmReset(false);
+                } else setConfirmReset(true);
+              }}
+              onBlur={() => setConfirmReset(false)}
+            >
+              {confirmReset ? "Click again to clear all stars" : "Reset progress"}
+            </button>
+          </nav>
+          <main className="main">
+            {moduleTestOpen ? (
+              <div className="unit">
+                <header className="unit-head">
+                  <div>
+                    <h1>Module Test</h1>
+                    <ReadAloud as="p" className="goal">
+                      {MODULE_TEST_TOTAL} cumulative questions covering every unit in Addition &amp; Subtraction Within 20 — 5 from each.
+                    </ReadAloud>
+                  </div>
+                  <div className="unit-stars">
+                    {progress[MODULE_PROGRESS_KEY]?.testScore !== undefined && (
+                      <RatingStars n={moduleTestStars(progress[MODULE_PROGRESS_KEY].testScore)} size="lg" label="Module test rating" />
+                    )}
+                    <TestBadge p={progress[MODULE_PROGRESS_KEY]} passScore={moduleTest.passScore} total={MODULE_TEST_TOTAL} />
+                  </div>
+                </header>
+                <button className="btn ghost module-test-back" onClick={() => go(null)}>
+                  ← Back to Addition &amp; Subtraction Within 20
                 </button>
-              </li>
-            ))}
-          </ol>
-          <button className={`module-test-nav ${moduleTestOpen ? "on" : ""}`} aria-current={moduleTestOpen ? "page" : undefined} onClick={openModuleTest}>
-            <span className="module-test-row">
-              <span>📝 Module Test</span>
-              {moduleTestScore !== undefined && moduleTestScore >= moduleTest.passScore && (
-                <span className="module-test-check" aria-label="Completed">
-                  ✓
-                </span>
-              )}
-            </span>
-            {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} label="Module test rating" />}
-          </button>
-          <button
-            className="reset"
-            onClick={() => {
-              if (confirmReset) {
-                reset();
-                setConfirmReset(false);
-              } else setConfirmReset(true);
-            }}
-            onBlur={() => setConfirmReset(false)}
-          >
-            {confirmReset ? "Click again to clear all stars" : "Reset progress"}
-          </button>
-        </nav>
-        <main className="main">
-          {moduleTestOpen ? (
-            <div className="unit">
-              <header className="unit-head">
-                <div>
-                  <h1>Module Test</h1>
-                  <p className="goal">{MODULE_TEST_TOTAL} cumulative questions covering every unit in Addition &amp; Subtraction Within 20 — 5 from each.</p>
+                <div className="panel">
+                  <ReadAllButton />
+                  <UnitTestView test={moduleTest} onComplete={onModuleTestComplete} />
                 </div>
-                <div className="unit-stars">
-                  {progress[MODULE_PROGRESS_KEY]?.testScore !== undefined && (
-                    <RatingStars n={moduleTestStars(progress[MODULE_PROGRESS_KEY].testScore)} size="lg" label="Module test rating" />
-                  )}
-                  <TestBadge p={progress[MODULE_PROGRESS_KEY]} passScore={moduleTest.passScore} total={MODULE_TEST_TOTAL} />
-                </div>
-              </header>
-              <button className="btn ghost module-test-back" onClick={() => go(null)}>
-                ← Back to Addition &amp; Subtraction Within 20
-              </button>
-              <div className="panel">
-                <UnitTestView test={moduleTest} onComplete={onModuleTestComplete} />
               </div>
-            </div>
-          ) : unit ? (
-            <UnitView
-              key={unit.id}
-              unit={unit}
-              progress={progress[unit.id]}
-              onSolved={onSolved}
-              onTest={onTest}
-              onIntroDone={onIntroDone}
-              onNextUnit={current !== null && current < units.length - 1 ? () => go(current + 1) : undefined}
-            />
-          ) : (
-            <Home onPick={go} progress={progress} onModuleTest={openModuleTest} />
-          )}
-        </main>
-      </div>
+            ) : unit ? (
+              <UnitView
+                key={unit.id}
+                unit={unit}
+                progress={progress[unit.id]}
+                onSolved={onSolved}
+                onTest={onTest}
+                onIntroDone={onIntroDone}
+                onNextUnit={current !== null && current < units.length - 1 ? () => go(current + 1) : undefined}
+              />
+            ) : (
+              <Home onPick={go} progress={progress} onModuleTest={openModuleTest} />
+            )}
+          </main>
+        </div>
+      </TtsProvider>
     </div>
   );
 }

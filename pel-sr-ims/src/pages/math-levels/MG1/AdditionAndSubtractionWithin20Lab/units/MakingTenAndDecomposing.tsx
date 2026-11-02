@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { makingTenAndDecomposingTest } from "./MakingTenAndDecomposingTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -32,7 +33,7 @@ function Frame({ value, tone, splitAt, tone2 }: { value: number; tone: Tone; spl
   return (
     <div>
       <TenFrameGroup value={value} tone={tone} splitAt={splitAt} tone2={tone2} />
-      <p style={{ textAlign: "center", fontSize: "1.5rem", fontWeight: 700, margin: "4px 0 0" }}>{value}</p>
+      <ReadAloud as="p" style={{ textAlign: "center", fontSize: "1.5rem", fontWeight: 700, margin: "4px 0 0" }}>{value}</ReadAloud>
     </div>
   );
 }
@@ -97,7 +98,7 @@ function BondFill({
 
   return (
     <>
-      <div className="control-row" style={{ gap: 32, alignItems: "center" }}>
+      <div className="control-row" style={{ gap: 32, alignItems: "center" }} data-readaloud-part>
         <Bond
           whole={whole}
           parts={[
@@ -111,15 +112,15 @@ function BondFill({
           ))}
         </Equations>
       </div>
-      <div className="control-row" style={{ alignItems: "center" }}>
+      <div className="control-row" style={{ alignItems: "center" }} data-readaloud-part>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? `Correct! ${done}` : `Not quite. Fix the red boxes. ${hint}`}
-        </p>
+        </ReadAloud>
       )}
     </>
   );
@@ -134,7 +135,7 @@ function WhichAddendQuestion({ onComplete }: { onComplete?: () => void }) {
   const ok = picked === "6";
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> For 6 + 9, which number should you break apart to make a ten?
       </p>
@@ -156,9 +157,9 @@ function WhichAddendQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct! 9 is almost 10, so keep 9 whole. Now break apart 6 and solve:" : "Not quite. 9 is almost 10, so keep 9 whole. Try again!"}
-        </p>
+        </ReadAloud>
       )}
       {checked && ok && (
         <BondFill
@@ -176,7 +177,7 @@ function WhichAddendQuestion({ onComplete }: { onComplete?: () => void }) {
           onComplete={onComplete}
         />
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -184,7 +185,7 @@ function WhichAddendQuestion({ onComplete }: { onComplete?: () => void }) {
  *  method, not a single memorized answer. */
 function UnfamiliarFactQuestion({ onComplete }: { onComplete?: () => void }) {
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Solve 8 + 6 by making a ten. Break apart 6.
       </p>
@@ -209,7 +210,7 @@ function UnfamiliarFactQuestion({ onComplete }: { onComplete?: () => void }) {
         done="8 + 6 = 14"
         onComplete={onComplete}
       />
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -223,7 +224,7 @@ function StrategyVsFactQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: make-ten is a strategy that works for ANY addition fact with a number close to ten — it's not just one answer
         to remember.
@@ -241,20 +242,20 @@ function StrategyVsFactQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — it's a repeatable METHOD: find the gap to ten, split the other addend, add the two tens-friendly pieces. Works on any fact like this, not just the one you first learned it with."
             : "Not quite — make-ten is a repeatable strategy, not a single memorized fact. The same three steps (find the gap, split the other addend, add) work on every fact with a number close to ten."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
 /** Applying the SAME bridge-through-ten idea to subtraction. */
 function SubtractionBridgeQuestion({ onComplete }: { onComplete?: () => void }) {
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Solve 13 − 5 by landing on 10 first. Break apart 5.
       </p>
@@ -275,7 +276,7 @@ function SubtractionBridgeQuestion({ onComplete }: { onComplete?: () => void }) 
         done="13 − 5 = 8"
         onComplete={onComplete}
       />
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -289,7 +290,7 @@ function MakeTenCheckForUnderstanding({ onComplete }: { onComplete?: () => void 
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure making ten makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure making ten makes sense before you try practice problems.</ReadAloud>
       <WhichAddendQuestion onComplete={mark("whichAddend")} />
       <UnfamiliarFactQuestion onComplete={mark("unfamiliar")} />
       <StrategyVsFactQuestion onComplete={mark("strategy")} />
@@ -316,7 +317,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented label="Operation" value={mode} onChange={setMode} options={[{ id: "add", label: "Making ten" }, { id: "subtract", label: "Bridging through ten" }]} />
         {!introActive && (
           <button
@@ -333,16 +334,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
       {mode === "add" ? (
         <>
-          <div className="control-row">
+          <div className="control-row" data-readaloud-part>
             <Stepper label="Near-ten number" value={a} min={6} max={9} step={1} onChange={setA} tone="a" />
             <Stepper label="Other addend" value={b} min={2} max={9} step={1} onChange={setB} tone="b" />
           </div>
-          <div className="control-row" style={pictureRow}>
+          <div className="control-row" style={pictureRow} data-readaloud-part>
             <Frame value={a} tone="a" />
             <Sign>+</Sign>
             <Frame value={b} tone="b" splitAt={addBreak.addToA} tone2="c" />
           </div>
-          <div className="control-row" style={{ gap: 32, alignItems: "center" }}>
+          <div className="control-row" style={{ gap: 32, alignItems: "center" }} data-readaloud-part>
             <Bond whole={b} parts={[{ value: addBreak.addToA, tone: "b" }, { value: addBreak.remainder, tone: "c" }]} />
             <Equations>
               <EquationStrip tokens={[{ value: a, tone: "a" }, "+", { value: addBreak.addToA, tone: "b" }, "=", addBreak.ten]} />
@@ -352,12 +353,12 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         </>
       ) : (
         <>
-          <div className="control-row">
+          <div className="control-row" data-readaloud-part>
             <Stepper label="Starting number" value={start} min={11} max={19} step={1} onChange={setStart} tone="c" />
             <Stepper label="Subtract" value={sub} min={2} max={9} step={1} onChange={setSub} tone="b" />
           </div>
           <Frame value={start} tone="c" splitAt={subBreak.ten} tone2="b" />
-          <div className="control-row" style={{ gap: 32, alignItems: "center" }}>
+          <div className="control-row" style={{ gap: 32, alignItems: "center" }} data-readaloud-part>
             <Bond whole={sub} parts={[{ value: subBreak.toTen, tone: "b" }, { value: subBreak.remainder, tone: "a" }]} />
             <Equations>
               <EquationStrip tokens={[{ value: start, tone: "c" }, "−", { value: subBreak.toTen, tone: "b" }, "=", subBreak.ten]} />
@@ -384,7 +385,7 @@ function makeTenAdditionProblem(a: number, b: number, bucket: Bucket): Problem {
     bucket,
     story: `Find ${a} + ${b} using make-ten.`,
     visual: (done: number) => (
-      <div className="control-row" style={pictureRow}>
+      <div className="control-row" style={pictureRow} data-readaloud-part>
         <Frame value={a} tone="a" />
         <Sign>+</Sign>
         <Frame value={b} tone="b" splitAt={done >= 1 ? addToA : undefined} tone2="c" />
@@ -413,7 +414,7 @@ function subtractBridgeProblem(): Problem {
     bucket: "subtractBridge",
     story: `Find ${start} − ${sub} by bridging through ten.`,
     visual: (done: number) => (
-      <div className="control-row" style={pictureRow}>
+      <div className="control-row" style={pictureRow} data-readaloud-part>
         <Frame value={start} tone="c" splitAt={done >= 1 ? ten : undefined} tone2="b" />
         <Bond whole={sub} parts={[{ value: done >= 1 ? toTen : null, tone: "b" }, { value: done >= 2 ? remainder : null, tone: "a" }]} />
       </div>
@@ -449,7 +450,7 @@ function equivalentSumProblem(): Problem {
     story: `${a1} + ${b1} = ${a2} + ? — figure out the missing addend WITHOUT adding everything from scratch.`,
     // Two bonds, same whole: the parts change, the whole doesn't.
     visual: (done: number) => (
-      <div className="control-row" style={pictureRow}>
+      <div className="control-row" style={pictureRow} data-readaloud-part>
         <Bond whole={total} parts={[{ value: a1, tone: "a" }, { value: b1, tone: "b" }]} />
         <Bond whole={total} parts={[{ value: a2, tone: "a" }, { value: done >= 2 ? b2 : null, tone: "b" }]} />
       </div>

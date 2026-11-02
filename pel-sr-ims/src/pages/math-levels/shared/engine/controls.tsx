@@ -1,4 +1,5 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
+import { ReadAloud } from "../tts/ReadAloud";
 
 /**
  * Quantity words, colored to match the diagrams. `color` overrides the default
@@ -24,7 +25,8 @@ export const QC = ({ children, color }: { children: React.ReactNode; color?: str
  * color/weight from an ancestor like QA/QB, since it sets neither itself.
  */
 export const Frac = ({ n, d }: { n: React.ReactNode; d: React.ReactNode }) => (
-  <span className="frac" role="math" aria-label={`${n}/${d}`}>
+  // data-tts-say: read-aloud says "3 fourths" instead of "34".
+  <span className="frac" role="math" aria-label={`${n}/${d}`} data-tts-say={typeof n !== "object" && typeof d !== "object" ? `${n}/${d}` : undefined}>
     <span className="frac-n">{n}</span>
     <span className="frac-d">{d}</span>
   </span>
@@ -53,14 +55,14 @@ export interface StepperProps {
 export function Stepper({ label, value, min, max, step = 1, onChange, tone }: StepperProps) {
   const clamp = (v: number) => Math.min(max, Math.max(min, Math.round(v * 1000) / 1000));
   return (
-    <div className={`stepper ${tone ? "tone-" + tone : ""}`}>
+    <div className={`stepper ${tone ? "tone-" + tone : ""}`} data-readaloud-part>
       <span className="stepper-label">{label}</span>
       <div className="stepper-ctl">
-        <button aria-label="decrease" disabled={value <= min} onClick={() => onChange(clamp(value - step))}>
+        <button aria-label="decrease" data-tts-skip disabled={value <= min} onClick={() => onChange(clamp(value - step))}>
           −
         </button>
         <output>{value}</output>
-        <button aria-label="increase" disabled={value >= max} onClick={() => onChange(clamp(value + step))}>
+        <button aria-label="increase" data-tts-skip disabled={value >= max} onClick={() => onChange(clamp(value + step))}>
           +
         </button>
       </div>
@@ -80,7 +82,7 @@ export interface SliderProps {
 
 export function Slider({ label, value, min, max, step = 1, onChange, display }: SliderProps) {
   return (
-    <label className="slider">
+    <label className="slider" data-readaloud-part>
       <span className="stepper-label">
         {label} <b>{display ?? value}</b>
       </span>
@@ -113,7 +115,7 @@ export function Segmented<T extends string>({ options, value, onChange, label }:
   }, [value, options]);
 
   return (
-    <div className="segmented" role="radiogroup" aria-label={label} ref={trackRef}>
+    <div className="segmented" role="radiogroup" aria-label={label} ref={trackRef} data-readaloud-part>
       {indicator && <span className="segmented-indicator" style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }} aria-hidden="true" />}
       {options.map((o) => (
         <button key={o.id} role="radio" aria-checked={o.id === value} className={o.id === value ? "on" : ""} onClick={() => onChange(o.id)}>
@@ -126,7 +128,11 @@ export function Segmented<T extends string>({ options, value, onChange, label }:
 
 /** A sentence card that states a relationship in words. */
 export function Says({ children }: { children: React.ReactNode }) {
-  return <p className="says">{children}</p>;
+  return (
+    <ReadAloud as="p" className="says">
+      {children}
+    </ReadAloud>
+  );
 }
 
 /** Picks a "nice" tick step so an axis has about `target` ticks. */
