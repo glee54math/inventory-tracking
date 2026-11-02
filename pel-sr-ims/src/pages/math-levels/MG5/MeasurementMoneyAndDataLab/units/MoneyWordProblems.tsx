@@ -4,6 +4,7 @@ import { randInt, shuffle } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 import { moneyWordProblemsTest } from "./MoneyWordProblemsTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 const NAMES = ["Mia", "Jun", "Sam", "Priya", "Leo", "Ava", "Noah", "Zoe"] as const;
 const pickName = () => shuffle(NAMES)[0];
@@ -24,7 +25,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Which coin is worth 25 cents?
       </p>
@@ -41,11 +42,11 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — a quarter is worth 25¢. A dime is worth 10¢." : "Not quite — the QUARTER is worth 25¢. The dime is worth only 10¢."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -60,7 +61,7 @@ function CountValueQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
   const ids: CoinId[] = ["quarter", "quarter", "quarter", "dime", "dime", "nickel"];
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Here are 3 quarters, 2 dimes, and 1 nickel.
       </p>
@@ -81,13 +82,13 @@ function CountValueQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 3 quarters (75¢) + 2 dimes (20¢) + 1 nickel (5¢) = 95¢. There are 6 coins, but the coins aren't all worth the same amount, so you add their VALUES, not just count them."
             : "Not quite — there ARE 6 coins, but they're not all worth the same. Add up what each one is worth: 25+25+25+10+10+5 = 95¢."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -100,7 +101,7 @@ function MoreCoinsTrapQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: whoever has MORE coins always has more money.
       </p>
@@ -122,13 +123,13 @@ function MoreCoinsTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 3 pennies is only 3¢, but 1 quarter is 25¢. One quarter is worth more than three pennies, even though three is a bigger NUMBER of coins."
             : "Not quite — look above: 3 pennies is only 3¢, but 1 quarter is 25¢. More COINS doesn't mean more MONEY."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -141,7 +142,7 @@ function NotationQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> $1.25 is the same amount of money as how many cents?
       </p>
@@ -158,11 +159,11 @@ function NotationQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — $1.25 = 1 dollar (100¢) + 25¢ = 125¢." : "Not quite — $1.25 means 1 dollar (100¢) plus 25 more cents: 100 + 25 = 125¢."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -176,7 +177,7 @@ function MoneyCheckForUnderstanding({ onComplete }: { onComplete?: () => void })
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure money problems make sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure money problems make sense before you try practice problems.</ReadAloud>
       <VocabQuestion onComplete={mark("vocab")} />
       <CountValueQuestion onComplete={mark("countValue")} />
       <MoreCoinsTrapQuestion onComplete={mark("trap")} />
@@ -197,7 +198,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <button className="btn ghost" onClick={() => setPurse([])}>
           Empty the purse
         </button>
@@ -214,13 +215,13 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <MoneyCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <p className="muted small">Click a coin or bill below to add it to your purse. Watch the total — it adds up VALUE, not just how many you clicked.</p>
+      <ReadAloud as="p" className="muted small">Click a coin or bill below to add it to your purse. Watch the total — it adds up VALUE, not just how many you clicked.</ReadAloud>
       <CoinPicker onAdd={(id) => setPurse((p) => [...p, id])} kinds={COIN_TYPES.filter((c) => c.kind === "coin").map((c) => c.id)} />
       <div className="digital-display" style={{ fontSize: 24, padding: "10px 16px" }}>
         Purse: {purse.length} coin{purse.length === 1 ? "" : "s"} = {total}¢ (${dollars(total)})
       </div>
       <CoinRow ids={purse} onRemove={(i) => setPurse((p) => p.filter((_, k) => k !== i))} />
-      <p className="muted small">Click a coin in your purse to remove it.</p>
+      <ReadAloud as="p" className="muted small">Click a coin in your purse to remove it.</ReadAloud>
     </div>
   );
 }
@@ -317,10 +318,10 @@ function compareAmountsProblem(): Problem {
     story: `${nameA} and ${nameB} each counted their coins.`,
     visual: () => (
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <div className="control-row" style={{ alignItems: "center" }}>
+        <div className="control-row" style={{ alignItems: "center" }} data-readaloud-part>
           <span style={{ fontWeight: 700, minWidth: 60 }}>{nameA}:</span> <CoinRow ids={idsA} />
         </div>
-        <div className="control-row" style={{ alignItems: "center" }}>
+        <div className="control-row" style={{ alignItems: "center" }} data-readaloud-part>
           <span style={{ fontWeight: 700, minWidth: 60 }}>{nameB}:</span> <CoinRow ids={idsB} />
         </div>
       </div>

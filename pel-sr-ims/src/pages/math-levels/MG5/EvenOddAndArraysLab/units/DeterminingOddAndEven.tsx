@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { determiningOddAndEvenTest } from "./DeterminingOddAndEvenTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -28,7 +29,7 @@ function WhatProvesEvenQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Which of these actually PROVES a group of objects is even?
       </p>
@@ -46,13 +47,13 @@ function WhatProvesEvenQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — a number is even because every object can be paired up with none left over. The ending-digit pattern is just a shortcut that happens to follow from that, not the reason itself."
             : "Not quite — noticing the last digit is just a shortcut. What actually MAKES a number even is that every object can be paired up with a partner, with none left over."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -71,7 +72,7 @@ function OddVsEvenContrastQuestion({ onComplete }: { onComplete?: () => void }) 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> 14 objects can be paired into exactly 7 pairs, with none left over. Is 14 odd or even? If you had 15 objects instead and tried
         the same pairing, how many would be left unpaired?
@@ -103,13 +104,13 @@ function OddVsEvenContrastQuestion({ onComplete }: { onComplete?: () => void }) 
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 14 pairs up evenly (even), but one more object (15) always leaves exactly 1 unpaired (odd)."
             : "Not quite — 14 pairs up with none left over, so it's EVEN. One more object (15) always leaves exactly 1 unpaired, so 15 is ODD."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -124,7 +125,7 @@ function ArrangementDoesNotChangeParityQuestion({ onComplete }: { onComplete?: (
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: if you have 12 counters in a neat line and then dump them into a messy, scattered pile, the 12 counters could
         become ODD instead of EVEN.
@@ -142,13 +143,13 @@ function ArrangementDoesNotChangeParityQuestion({ onComplete }: { onComplete?: (
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — false. How the objects are arranged never changes how many there are, so it never changes whether that count is odd or even."
             : "Not quite — it's false. Scattering the same 12 counters doesn't change how many there are, so it can't change whether the count is odd or even."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -167,7 +168,7 @@ function PairThenClassifyQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> A group has 9 objects. Can every single one be paired with a partner, with none left over? So is 9 odd or even?
       </p>
@@ -197,13 +198,13 @@ function PairThenClassifyQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 9 objects make 4 pairs with 1 left over, so they can't all be paired up. That leftover is exactly what makes 9 odd."
             : "Not quite — 9 objects make 4 pairs with 1 left over. Since not everyone gets a partner, 9 is ODD."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -217,7 +218,7 @@ function OddEvenCheckForUnderstanding({ onComplete }: { onComplete?: () => void 
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure odd and even really come from pairing before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure odd and even really come from pairing before you try practice problems.</ReadAloud>
       <WhatProvesEvenQuestion onComplete={mark("proves")} />
       <OddVsEvenContrastQuestion onComplete={mark("contrast")} />
       <ArrangementDoesNotChangeParityQuestion onComplete={mark("arrangement")} />
@@ -242,7 +243,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="How many objects" value={count} min={0} max={20} step={1} onChange={setCount} tone="a" />
         <Segmented
           label="Arrangement"
@@ -274,13 +275,13 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       {(introActive || showCheck) && <OddEvenCheckForUnderstanding onComplete={onIntroDone} />}
 
       <PairCounters count={count} arrangement={arrangement} tone="a" seed={seed} showPairs={showPairs} />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         {showPairs
           ? isEven
             ? `All ${count} objects paired up with none left over — ${count} is EVEN.`
             : `${count - 1} objects paired up, but 1 is left without a partner — ${count} is ODD.`
           : `Try pairing up all ${count} objects in your head, then click "Show pairs" to check. Changing the arrangement never changes whether ${count} is odd or even.`}
-      </p>
+      </ReadAloud>
     </div>
   );
 }

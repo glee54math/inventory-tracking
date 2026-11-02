@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingUnitsLengthDifferencesTest } from "./ComparingUnitsLengthDifferencesTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 const OBJECTS = [
   { name: "Ribbon", glyph: "🎀" },
@@ -30,7 +31,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Inches and centimeters are both examples of what?
       </p>
@@ -47,11 +48,11 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — inches and centimeters are units: fixed-size steps you measure length in." : "Not quite — inches and centimeters are UNITS, the fixed-size steps you measure with. A ruler is the tool that has those units marked on it."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -65,7 +66,7 @@ function SameObjectQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> The exact same ribbon measures 7 inches long. It also measures 18 centimeters long.
       </p>
@@ -89,13 +90,13 @@ function SameObjectQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the ribbon never changed size. A centimeter is a smaller step than an inch, so it takes MORE of them to cover the exact same length."
             : "Not quite — the ribbon is exactly the same length both times. It's the UNIT that's different: a centimeter is a smaller step than an inch, so covering the same length takes more of them."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -108,7 +109,7 @@ function GeneralizationQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: a bigger measurement number always means a bigger (longer) object.
       </p>
@@ -125,13 +126,13 @@ function GeneralizationQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — remember the ribbon: 18 centimeters and 7 inches are the exact same length. The unit size matters just as much as the number."
             : "Not quite — remember the ribbon measured 7 inches AND 18 centimeters. 18 is bigger than 7, but it's the exact same ribbon — the unit matters, not just the number."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -145,7 +146,7 @@ function CrossUnitTrapQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> A pencil measures 7 centimeters. A ribbon measures 12 inches.
       </p>
@@ -165,13 +166,13 @@ function CrossUnitTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — you can only compare the raw numbers directly when they're measured in the SAME unit. 12 inches and 7 centimeters use different-size steps, so 12 vs 7 alone tells you nothing."
             : "Not quite — 12 and 7 are measured in DIFFERENT units (inches vs centimeters). You can't compare raw numbers across different units without converting them first."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -185,7 +186,7 @@ function ComparingCheckForUnderstanding({ onComplete }: { onComplete?: () => voi
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure comparing units makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure comparing units makes sense before you try practice problems.</ReadAloud>
       <VocabQuestion onComplete={mark("vocab")} />
       <SameObjectQuestion onComplete={mark("sameObject")} />
       <GeneralizationQuestion onComplete={mark("general")} />
@@ -210,7 +211,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented
           label="Measure in"
           value={unitMode}
@@ -233,19 +234,19 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <ComparingCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         This is the SAME {obj.name.toLowerCase()} both times — only the unit changes. Switch between inches and centimeters and watch the count.
-      </p>
+      </ReadAloud>
       {unitMode === "in" ? (
         <Ruler unit="in" maxUnits={12} objectStart={0} objectLength={inchLength} label={obj.glyph} tone="a" />
       ) : (
         <Ruler unit="cm" maxUnits={20} objectStart={0} objectLength={cmLength} label={obj.glyph} tone="b" />
       )}
-      <p className="feedback good" style={{ minHeight: 24 }}>
+      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         {unitMode === "in"
           ? `Measured in inches, it's ${inchLength} — inches are a bigger unit, so it takes fewer of them.`
           : `Measured in centimeters, it's ${cmLength} — centimeters are a smaller unit, so it takes more of them, even though the ${obj.name.toLowerCase()} is exactly the same.`}
-      </p>
+      </ReadAloud>
     </div>
   );
 }
@@ -323,7 +324,7 @@ function crossUnitTrapProblem(): Problem {
     bucket: "crossUnitTrap",
     story: `The ${a.name.toLowerCase()} measures ${numA} ${unitA}. The ${b.name.toLowerCase()} measures ${numB} ${unitB}.`,
     visual: () => (
-      <div className="control-row" style={{ justifyContent: "center", fontSize: 32 }}>
+      <div className="control-row" style={{ justifyContent: "center", fontSize: 32 }} data-readaloud-part>
         <span>
           {a.glyph} {numA} {unitA}
         </span>

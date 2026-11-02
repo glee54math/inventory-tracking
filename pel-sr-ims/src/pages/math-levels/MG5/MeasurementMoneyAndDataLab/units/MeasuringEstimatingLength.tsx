@@ -4,6 +4,7 @@ import { randInt, shuffle } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 import { measuringEstimatingLengthTest } from "./MeasuringEstimatingLengthTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // Concrete, named real-world objects — matches this lab's audience framing
 // (a 2nd grader seeing this for the first time, regardless of posted grade).
@@ -35,7 +36,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> What's the word for the distance from one end of an object to the other?
       </p>
@@ -53,11 +54,11 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — length is how far it stretches from one end to the other." : "Not quite — that distance from end to end is called length."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -71,7 +72,7 @@ function BrokenRulerQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> This crayon does NOT start at the ruler's zero mark.
       </p>
@@ -92,13 +93,13 @@ function BrokenRulerQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the crayon starts at 3 and ends at 9, so it covers 9 − 3 = 6 inches. The 9 is just where it happens to END, not how long it is."
             : "Not quite — the crayon doesn't start at 0, so you can't just read the end mark. It starts at 3 and ends at 9: 9 − 3 = 6 inches long."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -112,7 +113,7 @@ function GeneralizationQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: you can always find an object's length just by reading the number at its right end.
       </p>
@@ -129,13 +130,13 @@ function GeneralizationQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — that only works when the object starts at 0. If it doesn't, you have to subtract the start mark from the end mark."
             : "Not quite — think back to the crayon: it ended at 9, but it didn't start at 0, so 9 wasn't its length. Always check the start mark too."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -148,7 +149,7 @@ function ToolScaleQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> You want to measure the length of your pencil.
       </p>
@@ -168,13 +169,13 @@ function ToolScaleQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — a small ruler is already as long as (or longer than) the pencil, so you can read its length in one look."
             : "Not quite — a yardstick is way bigger than a pencil. A small ruler fits the pencil's own size better."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -188,7 +189,7 @@ function LengthCheckForUnderstanding({ onComplete }: { onComplete?: () => void }
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure measuring makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure measuring makes sense before you try practice problems.</ReadAloud>
       <VocabQuestion onComplete={mark("vocab")} />
       <BrokenRulerQuestion onComplete={mark("broken")} />
       <GeneralizationQuestion onComplete={mark("general")} />
@@ -216,7 +217,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <button className="btn ghost" onClick={newObject}>
           New object
         </button>
@@ -233,16 +234,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <LengthCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         Drag the {obj.glyph} {obj.name} along the ruler. Watch what happens to the start and end marks — the LENGTH stays the same no matter where it sits.
-      </p>
+      </ReadAloud>
       <Ruler unit="in" maxUnits={12} objectStart={objectStart} objectLength={objectLength} label={obj.glyph} tone="a" onDrag={setObjectStart} />
       <div className="digital-display" style={{ fontSize: 20, padding: "10px 16px" }}>
         Start: {reading.start} &nbsp; End: {reading.end} &nbsp; Length: {reading.end} − {reading.start} = {reading.length} in
       </div>
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         Notice the end mark changes as you drag, but {reading.end} − {reading.start} always comes out to {reading.length} — that's the real length.
-      </p>
+      </ReadAloud>
     </div>
   );
 }

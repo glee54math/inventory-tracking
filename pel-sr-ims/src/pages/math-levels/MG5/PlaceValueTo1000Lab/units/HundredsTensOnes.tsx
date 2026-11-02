@@ -6,6 +6,7 @@ import type { Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { hundredsTensOnesTest } from "./HundredsTensOnesTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -25,7 +26,7 @@ function DigitValueQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> In the number 342, what does the digit 4 represent?
       </p>
@@ -45,13 +46,13 @@ function DigitValueQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the 4 is in the tens place, so it's worth 4 tens, or 40."
             : "Not quite — look at WHICH place the 4 sits in (hundreds, tens, or ones), not just the digit itself."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -67,7 +68,7 @@ function SeparateFactsTrapQuestion({ onComplete }: { onComplete?: () => void }) 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> True or False: In the number 350, the 3 means "3 hundreds" and the 50 means "50 ones" — two separate facts that have nothing to do with each other.
       </p>
@@ -84,13 +85,13 @@ function SeparateFactsTrapQuestion({ onComplete }: { onComplete?: () => void }) 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — it's False. 350 is 3 hundreds + 5 tens + 0 ones. The 5 is in the TENS place (worth 50), not a separate '50 ones' idea — every digit's value comes from its position in the SAME number."
             : "Not quite — it's actually False. 350 is 3 hundreds + 5 tens + 0 ones, all one number, not two unrelated pieces."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -106,7 +107,7 @@ function HundredEqualsTenTensQuestion({ onComplete }: { onComplete?: () => void 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or False: 100 is the exact same amount as 10 tens bundled together.
       </p>
@@ -123,13 +124,13 @@ function HundredEqualsTenTensQuestion({ onComplete }: { onComplete?: () => void 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 10 tens-sticks pushed together make exactly one hundred-flat. Same amount, just bundled differently."
             : "Not quite — it's True. Try the toggle above: 10 separate tens-sticks take up the exact same space as 1 hundred-flat."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -149,7 +150,7 @@ function RegroupFillInQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> 15 tens is the same as{" "}
         <select className="answer" style={{ width: 60, ...fieldStyle(okH, checked) }} value={hundreds} onChange={(e) => setHundreds(e.target.value)}>
@@ -181,11 +182,11 @@ function RegroupFillInQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 10 of those 15 tens bundle into 1 hundred, leaving 5 tens over: 1 hundred, 5 tens." : "Not quite — 10 tens always bundles into exactly 1 hundred. How many tens are left over after bundling 10 of the 15?"}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -199,7 +200,7 @@ function HundredsTensOnesCheck({ onComplete }: { onComplete?: () => void }) {
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure place value makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure place value makes sense before you try practice problems.</ReadAloud>
       <DigitValueQuestion onComplete={mark("digit")} />
       <SeparateFactsTrapQuestion onComplete={mark("separate")} />
       <HundredEqualsTenTensQuestion onComplete={mark("hundredTens")} />
@@ -223,7 +224,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Hundreds" value={h} min={0} max={9} step={1} onChange={setH} tone="a" />
         <Stepper label="Tens" value={t} min={0} max={19} step={1} onChange={setT} tone="b" />
         <Stepper label="Ones" value={o} min={0} max={9} step={1} onChange={setO} tone="c" />
@@ -239,17 +240,17 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         )}
       </div>
       <BaseTenBlocks hundreds={h} tens={t} ones={o} flagOverflowTens={t >= 10} />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         {h} hundred{h === 1 ? "" : "s"}, {t} ten{t === 1 ? "" : "s"}, and {o} one{o === 1 ? "" : "s"} make {value}.
         {t >= 10 && " Notice 10 of those tens-sticks are ready to bundle into a brand new hundred-flat."}
-      </p>
-      <div className="control-row">
+      </ReadAloud>
+      <div className="control-row" data-readaloud-part>
         <button type="button" className="btn ghost" onClick={() => setShowAsTens((v) => !v)}>
           {showAsTens ? "Show as 1 hundred-flat" : "Show 100 as 10 tens instead"}
         </button>
       </div>
       {showAsTens ? <BaseTenBlocks hundreds={0} tens={10} ones={0} /> : <BaseTenBlocks hundreds={1} tens={0} ones={0} />}
-      <p className="muted small">100 is the exact same amount whether it's drawn as 1 hundred-flat or as 10 separate tens-sticks bundled together.</p>
+      <ReadAloud as="p" className="muted small">100 is the exact same amount whether it's drawn as 1 hundred-flat or as 10 separate tens-sticks bundled together.</ReadAloud>
       {(introActive || showCheck) && <HundredsTensOnesCheck onComplete={onIntroDone} />}
     </div>
   );

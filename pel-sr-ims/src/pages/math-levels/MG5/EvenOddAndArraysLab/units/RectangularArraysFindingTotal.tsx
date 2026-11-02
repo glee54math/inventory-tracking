@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { rectangularArraysFindingTotalTest } from "./RectangularArraysFindingTotalTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -31,7 +32,7 @@ function RowsAndColumnsDirectionQuestion({ onComplete }: { onComplete?: () => vo
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> In a rectangular array, which direction do ROWS go, and which direction do COLUMNS go?
       </p>
@@ -61,11 +62,11 @@ function RowsAndColumnsDirectionQuestion({ onComplete }: { onComplete?: () => vo
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — rows run across, columns run up and down." : "Not quite — ROWS run across (left to right); COLUMNS run up and down."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -80,7 +81,7 @@ function BothMethodsWorkQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> An array has 4 rows and 3 columns. Is the total found by adding 3 four times (3+3+3+3), by adding 4 three times (4+4+4), or by
         both?
@@ -99,13 +100,13 @@ function BothMethodsWorkQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — both 3+3+3+3 (adding by rows) and 4+4+4 (adding by columns) total 12. Either way of adding the same array gives the same answer."
             : "Not quite — BOTH work. Adding by rows (3+3+3+3) and adding by columns (4+4+4) both total 12, since it's the same array either way."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -120,7 +121,7 @@ function RenamingDoesNotChangeTotalQuestion({ onComplete }: { onComplete?: () =>
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: if you call the rows "columns" and the columns "rows" instead, the array's total changes.
       </p>
@@ -137,13 +138,13 @@ function RenamingDoesNotChangeTotalQuestion({ onComplete }: { onComplete?: () =>
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — false. Swapping which dimension you call rows vs. columns never changes how many objects are actually in the array."
             : "Not quite — it's false. The array itself doesn't change just because you swap which dimension you call rows vs. columns."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -162,7 +163,7 @@ function RunningRowTotalsQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> A 3-row by 4-column array is counted row by row, keeping a running total: after row 1, the total is 4. Fill in the running
         total after row 2 and after row 3.
@@ -196,13 +197,13 @@ function RunningRowTotalsQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 4, 8, 12. Each new row adds exactly 4 more — skipping or double-counting a row would throw off every total after it."
             : "Not quite — each row adds exactly 4 more: 4, then 8, then 12. Double-counting or skipping a row changes every total that follows."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -216,7 +217,7 @@ function ArrayTotalsCheckForUnderstanding({ onComplete }: { onComplete?: () => v
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure reading rows and columns carefully makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure reading rows and columns carefully makes sense before you try practice problems.</ReadAloud>
       <RowsAndColumnsDirectionQuestion onComplete={mark("direction")} />
       <BothMethodsWorkQuestion onComplete={mark("both")} />
       <RenamingDoesNotChangeTotalQuestion onComplete={mark("rename")} />
@@ -238,7 +239,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Rows" value={rows} min={1} max={5} step={1} onChange={setRows} tone="a" />
         <Stepper label="Columns" value={cols} min={1} max={5} step={1} onChange={setCols} tone="b" />
         <Segmented
@@ -265,11 +266,11 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       {(introActive || showCheck) && <ArrayTotalsCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ArrayGrid rows={rows} cols={cols} tone="a" groupBy={groupBy} />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         {groupBy === "row" && `Adding by rows: ${cols} + ${cols}${rows > 2 ? " + ..." : rows === 2 ? "" : ""} (${rows} rows of ${cols}) = ${rows * cols}.`}
         {groupBy === "col" && `Adding by columns: ${rows} + ${rows}${cols > 2 ? " + ..." : cols === 2 ? "" : ""} (${cols} columns of ${rows}) = ${rows * cols}.`}
         {groupBy === "none" && `This array has ${rows} rows and ${cols} columns — ${rows * cols} objects total. Try "Rows" or "Columns" above to see how adding by each one works.`}
-      </p>
+      </ReadAloud>
     </div>
   );
 }

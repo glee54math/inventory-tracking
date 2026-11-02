@@ -6,6 +6,7 @@ import type { Problem } from "../../../shared/engine/types";
 import { Stepper, Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { addSubtractWithin1000Test } from "./AddSubtractWithin1000Test";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -25,7 +26,7 @@ function WhyCantBorrowQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> In 403 − 158, why can't you borrow a ten directly from the tens place to help the ones place?
       </p>
@@ -43,11 +44,11 @@ function WhyCantBorrowQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — the tens place holds a 0, so there's nothing there yet to lend to the ones place." : "Not quite — the tens digit of 403 is 0. You can't lend a ten from a place that doesn't have one."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -59,7 +60,7 @@ function WhereFirstQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Since the tens place in 403 has nothing to lend, what do you do first?
       </p>
@@ -76,11 +77,11 @@ function WhereFirstQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — borrowing a hundred from the hundreds place gives the tens place 10 tens. It can then lend one of those tens to the ones place." : "Not quite — you first borrow from the hundreds place, which gives the tens place something to work with (and then lend)."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -92,7 +93,7 @@ function CannotSubtractAtAllTrueFalseQuestion({ onComplete }: { onComplete?: () 
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: if the tens digit is 0, you can't subtract at all.
       </p>
@@ -109,11 +110,11 @@ function CannotSubtractAtAllTrueFalseQuestion({ onComplete }: { onComplete?: () 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — false. You just have to borrow from the hundreds place first, so the tens place has something to work with." : "Not quite — false is right. A zero in the tens place just means you borrow from the hundreds place first."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -127,7 +128,7 @@ function WorkedExampleQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> After borrowing from the hundreds place in 403 − 158, the hundreds digit becomes ___ and the tens digit becomes ___.
       </p>
@@ -153,11 +154,11 @@ function WorkedExampleQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — the hundreds digit drops from 4 to 2 (one hundred given to the tens place). The tens place then lends one of its 10 tens to the ones place, leaving 9." : "Not quite — borrowing a hundred from the 4 leaves 2 in the hundreds place (it passed through a temporary 3-becomes-10-tens state), and after the tens place lends one ten to the ones place, it's left with 9."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -170,7 +171,7 @@ function Within1000CheckForUnderstanding({ onComplete }: { onComplete?: () => vo
   const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure these ideas are clear before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure these ideas are clear before you try practice problems.</ReadAloud>
       <WhyCantBorrowQuestion onComplete={mark("why")} />
       <WhereFirstQuestion onComplete={mark("where")} />
       <CannotSubtractAtAllTrueFalseQuestion onComplete={mark("trueFalse")} />
@@ -199,7 +200,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented label="Operation" value={op} onChange={setOp} options={[{ id: "add", label: "Addition" }, { id: "subtract", label: "Subtraction" }]} />
         {!introActive && (
           <button type="button" className="btn ghost" style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined} onClick={() => setShowCheck((v) => !v)}>
@@ -211,32 +212,32 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
       {op === "add" ? (
         <>
-          <div className="control-row">
+          <div className="control-row" data-readaloud-part>
             <Stepper label="First number" value={a} min={100} max={899} step={1} onChange={setA} tone="a" />
             <Stepper label="Second number" value={b} min={100} max={899} step={1} onChange={setB} tone="b" />
           </div>
           <BaseTenBlocks hundreds={Math.floor(a / 100) % 10} tens={Math.floor(a / 10) % 10} ones={a % 10} />
           <PlaceValueColumns breakdown={addBreakdown} revealCols={addBreakdown.numCols} />
-          <p className="muted small">
+          <ReadAloud as="p" className="muted small">
             {a} + {b} = {addBreakdown.total}. {regroupCount(addBreakdown) === 0 ? "No regrouping needed here." : regroupCount(addBreakdown) === 1 ? "One column regroups into the next." : "Both the ones and tens columns regroup here."}
-          </p>
+          </ReadAloud>
         </>
       ) : (
         <>
-          <div className="control-row">
+          <div className="control-row" data-readaloud-part>
             <Stepper label="Start" value={sub} min={101} max={999} step={1} onChange={setSub} tone="c" />
             <Stepper label="Subtract" value={subAmt} min={1} max={sub - 1} step={1} onChange={setSubAmt} tone="b" />
           </div>
           <BaseTenBlocks hundreds={hundredsDigit} tens={tensDigit} ones={sub % 10} />
           <PlaceValueColumns breakdown={subBreakdown} revealCols={subBreakdown.numCols} />
-          <p className="muted small">
+          <ReadAloud as="p" className="muted small">
             {sub} − {subAmt} = {subBreakdown.total}.{" "}
             {borrowsThroughZero(subBreakdown)
               ? "The tens place starts at 0, so it has to borrow from the hundreds place BEFORE it can lend a ten to the ones place."
               : subBreakdown.carry.slice(0, 2).some((c) => c > 0)
                 ? "One place borrows from the next."
                 : "No borrowing needed here."}
-          </p>
+          </ReadAloud>
         </>
       )}
     </div>

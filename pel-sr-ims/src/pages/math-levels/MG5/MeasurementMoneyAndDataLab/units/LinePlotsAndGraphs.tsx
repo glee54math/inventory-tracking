@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper, Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { linePlotsAndGraphsTest } from "./LinePlotsAndGraphsTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
@@ -47,7 +48,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> On a line plot, each × above a number stands for how many measurements?
       </p>
@@ -65,11 +66,11 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — every × is its own separate measurement." : "Not quite — each × is its OWN measurement. Several ×'s stacked above the same number means several separate measurements landed on that same value."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -83,7 +84,7 @@ function StackedMarksQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Three pencils were each measured at exactly 4 inches.
       </p>
@@ -104,13 +105,13 @@ function StackedMarksQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — each pencil gets its OWN ×, even if several pencils share the same length. Three pencils at 4 inches means three stacked ×'s, not one."
             : "Not quite — each pencil is a separate measurement and needs its own ×, even though they're all the same length. Three pencils at 4 inches means three stacked ×'s above the 4."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -123,7 +124,7 @@ function StackedTrapQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: if three ×'s are stacked above the number 4, that only counts as ONE measurement of 4 inches.
       </p>
@@ -140,13 +141,13 @@ function StackedTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — three stacked ×'s means THREE separate measurements of 4 inches, not one."
             : "Not quite — each × is its own measurement. Three stacked ×'s above the 4 means three separate measurements of 4 inches."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -161,7 +162,7 @@ function GridlineQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
   const categories: GraphCategory[] = [{ glyph: "⚽", label: "Soccer", count: 6, tone: "a" }];
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> This bar graph's gridlines are labeled 0, 2, 4, 6, 8 — they go up by 2 each time, not by 1.
       </p>
@@ -182,13 +183,13 @@ function GridlineQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — since these gridlines count by 2, the 3rd one up is labeled 6, not 3. Always read the LABEL, not just how many lines you passed."
             : "Not quite — these gridlines count by 2 (0, 2, 4, 6...), so the 3rd gridline up is labeled 6. Counting \"1, 2, 3 gridlines\" gives the wrong number when the scale isn't by 1."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -202,7 +203,7 @@ function DataCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) 
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure reading plots and graphs makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure reading plots and graphs makes sense before you try practice problems.</ReadAloud>
       <VocabQuestion onComplete={mark("vocab")} />
       <StackedMarksQuestion onComplete={mark("stacked")} />
       <StackedTrapQuestion onComplete={mark("trap")} />
@@ -229,7 +230,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented
           label="What to explore"
           value={mode}
@@ -254,8 +255,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
       {mode === "plot" ? (
         <>
-          <p className="muted small">Pretend each stepper is a pencil you measured. Raise a value's count and watch its ×'s stack up.</p>
-          <div className="control-row">
+          <ReadAloud as="p" className="muted small">Pretend each stepper is a pencil you measured. Raise a value's count and watch its ×'s stack up.</ReadAloud>
+          <div className="control-row" data-readaloud-part>
             {PLOT_VALUES.map((v) => (
               <Stepper key={v} label={`${v} in`} value={counts[v] ?? 0} min={0} max={5} onChange={(n) => setCounts((c) => ({ ...c, [v]: n }))} tone="a" />
             ))}
@@ -264,13 +265,13 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         </>
       ) : (
         <>
-          <div className="control-row">
+          <div className="control-row" data-readaloud-part>
             <Segmented label="Graph type" value={graphMode} onChange={setGraphMode} options={[{ id: "picture", label: "Picture Graph" }, { id: "bar", label: "Bar Graph" }]} />
             <button className="btn ghost" onClick={() => setCategories(randomCategories(3))}>
               New categories
             </button>
           </div>
-          <div className="control-row">
+          <div className="control-row" data-readaloud-part>
             {categories.map((c, i) => (
               <Stepper key={c.label} label={`${c.glyph} ${c.label}`} value={c.count} min={0} max={9} onChange={(n) => setCategories((cs) => cs.map((x, k) => (k === i ? { ...x, count: n } : x)))} tone="a" />
             ))}

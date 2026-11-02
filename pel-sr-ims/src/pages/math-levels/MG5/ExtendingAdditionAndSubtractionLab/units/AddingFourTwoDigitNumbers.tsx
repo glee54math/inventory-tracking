@@ -6,6 +6,7 @@ import type { Problem } from "../../../shared/engine/types";
 import { Stepper, Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { addingFourTwoDigitNumbersTest } from "./AddingFourTwoDigitNumbersTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -27,7 +28,7 @@ function DigitVsCarryQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> The ones column of 8 + 9 + 4 + 6 adds up to 27. What digit do you write below the line, and what do you carry to the tens column?
       </p>
@@ -55,13 +56,13 @@ function DigitVsCarryQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 27 means you write the 7 and carry the 2 (two whole tens) into the tens column."
             : "Not quite — 27 means write 7 below the line, and carry 2 (not just 1!) into the tens column, since 27 is two whole tens plus 7 ones."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -73,7 +74,7 @@ function CarryAlwaysOneTrueFalseQuestion({ onComplete }: { onComplete?: () => vo
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> True or false: when adding two-digit numbers, the carry into the next column can never be more than 1.
       </p>
@@ -90,13 +91,13 @@ function CarryAlwaysOneTrueFalseQuestion({ onComplete }: { onComplete?: () => vo
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — false. That's true when you only add TWO numbers (max carry is 1), but adding three or four numbers can push a column's sum past 20, 30, even higher — carrying 2 or 3."
             : "Not quite — false is right. With only two addends, the carry is at most 1. But with three or four addends, a column's sum can be 20-39, which carries 2 or even 3."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -108,7 +109,7 @@ function WhyItMattersQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> Adding 48 + 37 + 26, the ones column is 8 + 7 + 6 = 21. A student writes 1 below the line and carries only 1 (instead of carrying 2) into the tens column. Does their final answer come out right or wrong?
       </p>
@@ -125,13 +126,13 @@ function WhyItMattersQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 48 + 37 + 26 = 111, but carrying only 1 instead of 2 gives 101, which is 10 too small. The digit you write down can be right while the carry is still wrong."
             : "Not quite — carrying only 1 (instead of 2) loses a whole ten. 48 + 37 + 26 really is 111, not 101."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -143,7 +144,7 @@ function WhichDigitToWriteQuestion({ onComplete }: { onComplete?: () => void }) 
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> If a column's digits add up to 23, which single digit goes below the line in THAT column?
       </p>
@@ -161,11 +162,11 @@ function WhichDigitToWriteQuestion({ onComplete }: { onComplete?: () => void }) 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — only the 3 (the ones digit of 23) goes below the line in this column; the 2 is what carries to the NEXT column." : "Not quite — 23 splits into a digit that stays in this column (3) and a digit that carries to the next column (2)."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -178,7 +179,7 @@ function FourAddendsCheckForUnderstanding({ onComplete }: { onComplete?: () => v
   const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure these ideas are clear before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure these ideas are clear before you try practice problems.</ReadAloud>
       <DigitVsCarryQuestion onComplete={mark("digitCarry")} />
       <CarryAlwaysOneTrueFalseQuestion onComplete={mark("trueFalse")} />
       <WhyItMattersQuestion onComplete={mark("whyMatters")} />
@@ -202,7 +203,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented label="How many addends" value={String(count)} onChange={(v) => setCount(Number(v) as 2 | 3 | 4)} options={[{ id: "2", label: "2" }, { id: "3", label: "3" }, { id: "4", label: "4" }]} />
         {!introActive && (
           <button type="button" className="btn ghost" style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined} onClick={() => setShowCheck((v) => !v)}>
@@ -212,16 +213,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <FourAddendsCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         {addends.map((v, i) => (
           <Stepper key={i} label={`Addend ${i + 1}`} value={v} min={10} max={99} step={1} onChange={(nv) => setVals((all) => all.map((x, k) => (k === i ? nv : x)))} tone={i === 0 ? "a" : i === 1 ? "b" : "c"} />
         ))}
       </div>
       <PlaceValueColumns breakdown={breakdown} revealCols={breakdown.numCols} />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         Ones column: {breakdown.digitsByOperand.map((d) => d[0]).join(" + ")} = {breakdown.digitsByOperand.reduce((s, d) => s + d[0], 0)} → write {breakdown.resultDigits[0]}, carry {breakdown.carry[0]}.{" "}
         {breakdown.carry[0] > 1 ? "Notice the carry here is MORE than 1 — that only happens with three or four addends." : "With just two addends, the carry here can never be more than 1."}
-      </p>
+      </ReadAloud>
     </div>
   );
 }

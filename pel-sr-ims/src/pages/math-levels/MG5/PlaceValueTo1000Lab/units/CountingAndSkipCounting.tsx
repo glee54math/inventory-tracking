@@ -6,6 +6,7 @@ import type { Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { countingAndSkipCountingTest } from "./CountingAndSkipCountingTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -27,7 +28,7 @@ function AfterBoundaryQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Counting by ones: 298, 299, ___?
       </p>
@@ -47,11 +48,11 @@ function AfterBoundaryQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 299 + 1 = 300. Crossing into a new hundred is just a smooth +1, nothing more dramatic." : "Not quite — counting by ones is always just +1, even right at a hundred boundary. 299 + 1 = ?"}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -68,7 +69,7 @@ function NamedMistakeQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> A student wrote this counting sequence: 298, 299, 2,100. What mistake did they make?
       </p>
@@ -88,11 +89,11 @@ function NamedMistakeQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 299 + 1 is just 300, written the normal way. There's no comma, and no reset." : "Not quite — look at what actually changed between 299 and their answer. The real next number is just 300."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -108,7 +109,7 @@ function SameRuleQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or False: Counting from 399 to 400 works the exact same way as counting from 9 to 10 — no special new rule is needed just because you crossed into a new hundred.
       </p>
@@ -125,11 +126,11 @@ function SameRuleQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — it's always just +1, whether you're crossing from 9 to 10, 99 to 100, or 399 to 400." : "Not quite — it's actually True. Every boundary, however big the numbers, is still just +1."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -147,7 +148,7 @@ function SkipTenFillInQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Skip-counting by 10s: 280, 290,{" "}
         <select className="answer" style={{ width: 70, ...fieldStyle(okFirst, checked) }} value={first} onChange={(e) => setFirst(e.target.value)}>
@@ -179,11 +180,11 @@ function SkipTenFillInQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 290 + 10 = 300, and 300 + 10 = 310. Crossing the hundred doesn't change the +10 pattern." : "Not quite — keep adding 10 each time, even across the hundred."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -197,7 +198,7 @@ function CountingCheck({ onComplete }: { onComplete?: () => void }) {
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure crossing a new hundred makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure crossing a new hundred makes sense before you try practice problems.</ReadAloud>
       <AfterBoundaryQuestion onComplete={mark("after")} />
       <NamedMistakeQuestion onComplete={mark("mistake")} />
       <SameRuleQuestion onComplete={mark("sameRule")} />
@@ -228,7 +229,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented label="Count by" value={skipId} onChange={setSkipId} options={[...SKIP_OPTIONS]} />
         <Stepper label="Start at" value={start} min={0} max={950} step={1} onChange={setStart} tone="a" />
         {!introActive && (
@@ -243,9 +244,9 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         )}
       </div>
       <CountingTrack sequence={sequence} knownCount={sequence.length} tone="a" markHundredChange />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         Counting by {skip}s starting at {start}: {sequence.join(", ")}. {start % skip !== 0 && skip !== 1 && `${start} isn't a multiple of ${skip} — the pattern still works perfectly from any starting point.`}
-      </p>
+      </ReadAloud>
       {(introActive || showCheck) && <CountingCheck onComplete={onIntroDone} />}
     </div>
   );

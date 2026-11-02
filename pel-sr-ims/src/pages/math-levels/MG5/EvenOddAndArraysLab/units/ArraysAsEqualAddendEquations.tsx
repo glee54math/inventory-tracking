@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { arraysAsEqualAddendEquationsTest } from "./ArraysAsEqualAddendEquationsTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -31,7 +32,7 @@ function WhatEachNumberMeansQuestion({ onComplete }: { onComplete?: () => void }
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> In the equation 3 + 3 + 3 + 3 for an array: what does the repeated number (3) represent? What does the number of times it
         repeats (4) represent?
@@ -62,13 +63,13 @@ function WhatEachNumberMeansQuestion({ onComplete }: { onComplete?: () => void }
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the repeated number is the SIZE of each group; how many times it repeats is the NUMBER of groups. It's easy to flip these."
             : "Not quite — the repeated number (3) is the SIZE of each group; the number of times it repeats (4) is how MANY groups there are."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -87,7 +88,7 @@ function RowEquationVsColumnEquationQuestion({ onComplete }: { onComplete?: () =
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> An array has 4 rows and 3 columns. Which equation adds it by ROWS? Which equation adds it by COLUMNS?
       </p>
@@ -117,13 +118,13 @@ function RowEquationVsColumnEquationQuestion({ onComplete }: { onComplete?: () =
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — adding by rows means 4 groups of size 3 (3+3+3+3); adding by columns means 3 groups of size 4 (4+4+4)."
             : "Not quite — by ROWS: 4 groups of size 3, so 3+3+3+3. By COLUMNS: 3 groups of size 4, so 4+4+4."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -139,7 +140,7 @@ function BothEquationsSameArrayQuestion({ onComplete }: { onComplete?: () => voi
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: 3 + 3 + 3 + 3 and 4 + 4 + 4 could BOTH be correct equations for the same array.
       </p>
@@ -156,13 +157,13 @@ function BothEquationsSameArrayQuestion({ onComplete }: { onComplete?: () => voi
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — true. A 4-row, 3-column array adds to 3+3+3+3 by rows AND 4+4+4 by columns — same array, both equations, same total of 12."
             : "Not quite — it's true. A 4-row, 3-column array gives 3+3+3+3 added by rows and 4+4+4 added by columns — both describe the exact same array."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -181,7 +182,7 @@ function ReverseFromEquationQuestion({ onComplete }: { onComplete?: () => void }
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> An array's equation is 4 + 4 + 4 (three 4's added). How many groups of 4 are there? What's the total?
       </p>
@@ -211,13 +212,13 @@ function ReverseFromEquationQuestion({ onComplete }: { onComplete?: () => void }
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the number is repeated 3 times, so there are 3 groups of 4, totaling 12. The number of TERMS tells you the group count, not the group size."
             : "Not quite — 4 + 4 + 4 has 3 terms, so there are 3 groups of 4 — not 4 groups. 3 groups of 4 = 12 total."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -231,7 +232,7 @@ function ArrayEquationsCheckForUnderstanding({ onComplete }: { onComplete?: () =
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure you can tell a group's SIZE apart from how MANY groups there are before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure you can tell a group's SIZE apart from how MANY groups there are before you try practice problems.</ReadAloud>
       <WhatEachNumberMeansQuestion onComplete={mark("meaning")} />
       <RowEquationVsColumnEquationQuestion onComplete={mark("rowCol")} />
       <BothEquationsSameArrayQuestion onComplete={mark("both")} />
@@ -257,7 +258,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Rows" value={rows} min={2} max={5} step={1} onChange={setRows} tone="a" />
         <Stepper label="Columns" value={cols} min={2} max={5} step={1} onChange={setCols} tone="b" />
         <Segmented label="Add by" value={groupBy} onChange={setGroupBy} options={[{ id: "row", label: "Rows" }, { id: "col", label: "Columns" }]} />
@@ -275,10 +276,10 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       {(introActive || showCheck) && <ArrayEquationsCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ArrayGrid rows={rows} cols={cols} tone="a" groupBy={groupBy} />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         Adding by {groupBy === "row" ? "rows" : "columns"}: {equation} = {rows * cols}. The repeated number ({addend}) is the SIZE of each group;
         it repeats {count} times because that's how MANY groups there are.
-      </p>
+      </ReadAloud>
     </div>
   );
 }

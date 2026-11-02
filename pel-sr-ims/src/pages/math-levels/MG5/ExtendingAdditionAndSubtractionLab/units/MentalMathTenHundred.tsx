@@ -6,6 +6,7 @@ import type { Problem } from "../../../shared/engine/types";
 import { Stepper, Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { mentalMathTenHundredTest } from "./MentalMathTenHundredTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -25,7 +26,7 @@ function RippleQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> What is 290 + 10?
       </p>
@@ -43,13 +44,13 @@ function RippleQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 9 tens plus 1 more ten makes 10 tens, which is a whole new hundred. The tens digit rolls back to 0 AND the hundreds digit goes up by 1: 290 + 10 = 300."
             : 'Not quite — 290 + 10: the tens digit 9 can\'t just become "10." Ten tens make a new hundred, so the tens digit rolls to 0 and the hundreds digit increases: 290 + 10 = 300.'}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -61,7 +62,7 @@ function TenVsHundredQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Adding 10 to a number directly changes which digit (before any rippling)? Adding 100 directly changes which digit?
       </p>
@@ -78,11 +79,11 @@ function TenVsHundredQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — +10 directly affects the tens place, +100 directly affects the hundreds place. Either one can still RIPPLE further if that place rolls past 9." : "Not quite — +10 directly changes the tens digit, and +100 directly changes the hundreds digit. (A ripple into another digit can still happen on top of that.)"}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -94,7 +95,7 @@ function AlwaysJustTensTrueFalseQuestion({ onComplete }: { onComplete?: () => vo
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: subtracting 10 from a number always just lowers the tens digit by 1, and nothing else ever changes.
       </p>
@@ -111,11 +112,11 @@ function AlwaysJustTensTrueFalseQuestion({ onComplete }: { onComplete?: () => vo
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — false. 300 − 10 = 290: the tens digit can't go below 0, so it borrows from the hundreds place, which drops from 3 to 2." : "Not quite — false is right. Try 300 − 10: the tens digit (0) can't drop by 1 on its own, so the hundreds digit has to drop too, giving 290."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -127,7 +128,7 @@ function EdgeCaseQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> What is 900 + 100?
       </p>
@@ -138,11 +139,11 @@ function EdgeCaseQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 9 hundreds plus 1 more hundred makes 10 hundreds, which is a whole new thousand: 1000." : "Not quite — 900 + 100: 9 hundreds plus 1 more hundred makes 10 hundreds, which rolls all the way into a new thousand: 1000."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -155,7 +156,7 @@ function MentalMathCheckForUnderstanding({ onComplete }: { onComplete?: () => vo
   const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure these ideas are clear before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure these ideas are clear before you try practice problems.</ReadAloud>
       <RippleQuestion onComplete={mark("ripple")} />
       <TenVsHundredQuestion onComplete={mark("tenVsHundred")} />
       <AlwaysJustTensTrueFalseQuestion onComplete={mark("trueFalse")} />
@@ -177,7 +178,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Number" value={n} min={0} max={900} step={10} onChange={setN} tone="a" />
         <Segmented
           label="Move"
@@ -194,10 +195,10 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       {(introActive || showCheck) && <MentalMathCheckForUnderstanding onComplete={onIntroDone} />}
 
       <PlaceValueBoxes shift={shift} showAfter />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         {n} {delta > 0 ? "+" : "−"} {Math.abs(delta)} = {shift.result}.{" "}
         {shift.rippled ? "Notice this rippled into another digit, not just the one you'd expect." : "Only the one digit you'd expect changed here."}
-      </p>
+      </ReadAloud>
     </div>
   );
 }

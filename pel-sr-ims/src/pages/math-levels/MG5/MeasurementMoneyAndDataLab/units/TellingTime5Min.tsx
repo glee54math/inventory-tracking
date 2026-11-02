@@ -4,6 +4,7 @@ import { randInt } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 import { tellingTime5MinTest } from "./TellingTime5MinTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
@@ -28,7 +29,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> What does "a.m." mean?
       </p>
@@ -45,11 +46,11 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — a.m. is any time from midnight up to noon." : "Not quite — a.m. means morning, before noon. Afternoon and evening times use p.m."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -64,7 +65,7 @@ function HourHandBetweenQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
   const t: ClockTimeG2 = { hour: 3, minute: 50 };
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Look closely at the hour hand — it's sitting almost on the 4.
       </p>
@@ -85,13 +86,13 @@ function HourHandBetweenQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the hour hand creeps toward the next number all through the hour, but it's still 3:50 until it actually REACHES the 4. Read the minute hand (almost all the way around, at 50) and keep the EARLIER hour."
             : "Not quite — the hour hand only LOOKS close to 4 because 50 minutes have passed. It hasn't reached the 4 yet, so the hour is still 3: this is 3:50, not 4:50."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -104,7 +105,7 @@ function HourHandTrapQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: whenever the hour hand is very close to a number, the hour has already become that number.
       </p>
@@ -121,13 +122,13 @@ function HourHandTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — remember 3:50: the hour hand looked almost at the 4, but the hour was still 3 until the hand actually reached it."
             : "Not quite — remember 3:50: the hour hand looked almost at the 4, but it hadn't REACHED the 4 yet, so the hour was still 3."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -140,7 +141,7 @@ function AmPmQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> You're eating breakfast and getting ready for school.
       </p>
@@ -160,11 +161,11 @@ function AmPmQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — breakfast and getting ready for school happen in the morning, a.m." : "Not quite — breakfast and getting ready for school happen in the morning, which is a.m."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -178,7 +179,7 @@ function TimeCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) 
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure reading the clock to 5 minutes makes sense before you try practice.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure reading the clock to 5 minutes makes sense before you try practice.</ReadAloud>
       <VocabQuestion onComplete={mark("vocab")} />
       <HourHandBetweenQuestion onComplete={mark("hourHand")} />
       <HourHandTrapQuestion onComplete={mark("trap")} />
@@ -210,12 +211,12 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       )}
       {(introActive || showCheck) && <TimeCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <p className="muted small">Drag the thick hour hand slowly around the clock face and watch both hands move together.</p>
+      <ReadAloud as="p" className="muted small">Drag the thick hour hand slowly around the clock face and watch both hands move together.</ReadAloud>
       <ClockG2 time={time} onChange={setTime} tone="a" />
-      <p className="feedback good" style={{ minHeight: 24 }}>
+      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         This clock shows <b>{clockLabelG2(time)}</b> — the minute hand sits on the {time.minute}-minute mark, and the hour hand has crept {Math.round((time.minute / 60) * 100)}% of the way toward the next hour.
-      </p>
-      <p className="muted small">Drag past :50 slowly — notice the hour hand gets VERY close to the next number but the hour doesn't change until it actually gets there.</p>
+      </ReadAloud>
+      <ReadAloud as="p" className="muted small">Drag past :50 slowly — notice the hour hand gets VERY close to the next number but the hour doesn't change until it actually gets there.</ReadAloud>
     </div>
   );
 }
@@ -346,7 +347,7 @@ function elapsedTimeProblem(): Problem {
     bucket: "elapsedTimeCrossHour",
     story: `It is ${clockLabelG2(start)}. ${elapsed} minutes later, what time is it?`,
     visual: () => (
-      <div className="control-row" style={{ justifyContent: "center" }}>
+      <div className="control-row" style={{ justifyContent: "center" }} data-readaloud-part>
         <ClockG2 time={start} tone="a" />
         <span style={{ fontSize: 28, alignSelf: "center" }}>→ +{elapsed} min →</span>
         <ClockG2 time={end} tone="b" />

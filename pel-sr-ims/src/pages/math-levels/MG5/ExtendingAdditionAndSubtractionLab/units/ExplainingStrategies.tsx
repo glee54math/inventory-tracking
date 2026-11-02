@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { explainingStrategiesTest } from "./ExplainingStrategiesTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -25,7 +26,7 @@ function RegroupValueQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> You trade 10 ones for 1 ten. Does the NUMBER'S VALUE change, stay the same, or does it depend on the number?
       </p>
@@ -43,11 +44,11 @@ function RegroupValueQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 10 ones and 1 ten are two different ways of writing the SAME amount, so trading between them never changes the value." : "Not quite — 10 ones IS 1 ten. Trading between them is just a different way of grouping the same amount; the value never changes."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -59,7 +60,7 @@ function ShortcutStillWorksQuestion({ onComplete }: { onComplete?: () => void })
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> A shortcut adds the ones column and the tens column separately, writing each sum straight down, no carrying. It works fine for 34 + 22 (no regrouping needed). Does the SAME shortcut, used unchanged, work for 37 + 28 (where the ones column regroups)?
       </p>
@@ -76,11 +77,11 @@ function ShortcutStillWorksQuestion({ onComplete }: { onComplete?: () => void })
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 37 + 28: ones column 7+8=15, tens column 3+2=5. Writing both straight down gives \"515\", but the real answer is 65. The shortcut needs an extra carrying step once a column regroups." : "Not quite — try it: 37 + 28's ones column is 7+8=15 (two digits!) and tens column is 3+2=5. Writing both straight down gives the wrong answer \"515\" instead of the real 65 — carrying is required once a column regroups."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -92,7 +93,7 @@ function WorksOnFewExamplesTrueFalseQuestion({ onComplete }: { onComplete?: () =
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: if a method gives the right answer on a few easy examples, it will always give the right answer on every example.
       </p>
@@ -109,11 +110,11 @@ function WorksOnFewExamplesTrueFalseQuestion({ onComplete }: { onComplete?: () =
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — false. A method that happens to work on easy, no-regroup examples can quietly break once a harder case (like regrouping) shows up. You have to check the method against the HARD cases, not just the easy ones." : "Not quite — false is right. Working on a few easy examples doesn't prove a method always works — you have to test it against the harder cases too, like ones that need regrouping."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -127,7 +128,7 @@ function CritiqueExampleQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> For 48 + 37, a student adds columns separately with no carrying: ones 8+7=15, tens 4+3=7, and writes "715." What went wrong, and what's the real answer?
       </p>
@@ -152,11 +153,11 @@ function CritiqueExampleQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 8+7=15 means write 5, carry 1. Then 4+3+1=8. The real answer is 85, not 715." : "Not quite — the ones column (8+7=15) needed to carry its extra ten into the tens column. 4+3+1(carried)=8, so the real answer is 85."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -169,7 +170,7 @@ function ExplainingCheckForUnderstanding({ onComplete }: { onComplete?: () => vo
   const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure these ideas are clear before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure these ideas are clear before you try practice problems.</ReadAloud>
       <RegroupValueQuestion onComplete={mark("value")} />
       <ShortcutStillWorksQuestion onComplete={mark("shortcut")} />
       <WorksOnFewExamplesTrueFalseQuestion onComplete={mark("trueFalse")} />
@@ -191,7 +192,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented label="Idea" value={mode} onChange={setMode} options={[{ id: "trade", label: "Trading is equal value" }, { id: "columns", label: "Why columns work" }]} />
         {!introActive && (
           <button type="button" className="btn ghost" style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined} onClick={() => setShowCheck((v) => !v)}>
@@ -203,7 +204,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
       {mode === "trade" ? (
         <>
-          <div className="control-row">
+          <div className="control-row" data-readaloud-part>
             <label>
               Tens to trade: <input type="range" min={1} max={9} value={tens} onChange={(e) => setTens(Number(e.target.value))} /> {tens}
             </label>
@@ -212,14 +213,14 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             </button>
           </div>
           {traded && tens >= 10 ? <BaseTenBlocks hundreds={1} tens={0} ones={0} /> : <BaseTenBlocks hundreds={0} tens={tens} ones={0} />}
-          <p className="muted small">
+          <ReadAloud as="p" className="muted small">
             {tens} tens is worth {tens * 10}. {traded && tens >= 10 ? "Traded for 1 hundred — still worth the same amount." : tens >= 10 ? "You can trade this for 1 hundred without changing the value." : "Need 10 tens before you can trade for a hundred."}
-          </p>
+          </ReadAloud>
         </>
       ) : (
         <>
           <PlaceValueColumns breakdown={buildAddColumns([34, 22], 3)} revealCols={3} />
-          <p className="muted small">34 + 22: each column's digits add to less than 10, so you can add ones-to-ones and tens-to-tens separately with no carrying — that's WHY the column method works here.</p>
+          <ReadAloud as="p" className="muted small">34 + 22: each column's digits add to less than 10, so you can add ones-to-ones and tens-to-tens separately with no carrying — that's WHY the column method works here.</ReadAloud>
         </>
       )}
     </div>

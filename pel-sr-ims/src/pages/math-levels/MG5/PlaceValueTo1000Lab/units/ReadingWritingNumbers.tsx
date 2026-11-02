@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { readingWritingNumbersTest } from "./ReadingWritingNumbersTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -26,7 +27,7 @@ function ExpandedZeroQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> What is 403 written in expanded form?
       </p>
@@ -46,13 +47,13 @@ function ExpandedZeroQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 403 has no tens, so there's no tens term at all. The empty place just disappears from expanded form instead of getting its own '+ 0'."
             : "Not quite — 403 has 0 tens. An empty place doesn't get its own term in expanded form; it just isn't written."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -69,7 +70,7 @@ function WordZeroQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> What is 403 written in words?
       </p>
@@ -89,11 +90,11 @@ function WordZeroQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — the empty tens place is silent. You never SAY 'zero' for a missing place." : "Not quite — an empty place is never spoken as its own word. Say the hundreds, then skip straight to the ones."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -109,7 +110,7 @@ function ThreeTermsTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or False: Every 3-digit number's expanded form always has exactly three parts added together, one for each digit.
       </p>
@@ -126,13 +127,13 @@ function ThreeTermsTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — it's False. 500's expanded form is just '500', one term, since the tens and ones places are both empty."
             : "Not quite — it's actually False. A number like 500 has only ONE term in expanded form, not three, since there's nothing in the tens or ones places to add."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -151,7 +152,7 @@ function ZeroWordFillInQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> 340 in words is: three hundred{" "}
         <select className="answer" style={{ width: 110, ...fieldStyle(okFirst, checked) }} value={first} onChange={(e) => setFirst(e.target.value)}>
@@ -183,11 +184,11 @@ function ZeroWordFillInQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — the empty place is always silently skipped, whether it's the tens or the ones." : "Not quite — in both numbers, the empty place is simply skipped over, not spoken as 'zero'."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -201,7 +202,7 @@ function ReadingWritingCheck({ onComplete }: { onComplete?: () => void }) {
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure empty places make sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure empty places make sense before you try practice problems.</ReadAloud>
       <ExpandedZeroQuestion onComplete={mark("expanded")} />
       <WordZeroQuestion onComplete={mark("word")} />
       <ThreeTermsTrapQuestion onComplete={mark("threeTerms")} />
@@ -225,7 +226,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Hundreds" value={h} min={1} max={9} step={1} onChange={setH} tone="a" />
         <Stepper label="Tens" value={t} min={0} max={9} step={1} onChange={setT} tone="b" />
         <Stepper label="Ones" value={o} min={0} max={9} step={1} onChange={setO} tone="c" />
@@ -241,16 +242,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         )}
       </div>
       <PlaceValueChart value={n} tone="a" highlightPlace={hasEmptyPlace ? (t === 0 ? "tens" : "ones") : undefined} />
-      <div className="control-row" style={{ flexWrap: "wrap" }}>
-        <p className="says">
+      <div className="control-row" style={{ flexWrap: "wrap" }} data-readaloud-part>
+        <ReadAloud as="p" className="says">
           Numeral: <b>{n}</b>
-        </p>
-        <p className="says">
+        </ReadAloud>
+        <ReadAloud as="p" className="says">
           Words: <b>{numberWords(n)}</b>
-        </p>
-        <p className="says">
+        </ReadAloud>
+        <ReadAloud as="p" className="says">
           Expanded form: <b>{expandedForm(n)}</b>
-        </p>
+        </ReadAloud>
       </div>
       {hasEmptyPlace && <p className="muted small">Notice the empty {t === 0 ? "tens" : "ones"} place: it never gets its own word or its own "+ 0" term — it just disappears.</p>}
       {(introActive || showCheck) && <ReadingWritingCheck onComplete={onIntroDone} />}

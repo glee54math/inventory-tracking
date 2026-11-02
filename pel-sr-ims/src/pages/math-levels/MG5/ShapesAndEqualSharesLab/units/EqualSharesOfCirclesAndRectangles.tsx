@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { equalSharesTest } from "./EqualSharesOfCirclesAndRectanglesTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 const SHAPES: ShareShape[] = ["circle", "rectangle"];
 
@@ -26,7 +27,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> This rectangle is cut into 3 EQUAL pieces. What do we call each piece?
       </p>
@@ -39,11 +40,11 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         ))}
       </div>
       {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Right — 3 equal pieces of a whole are called thirds." : "Not quite — how many equal pieces does this whole have?"}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -60,7 +61,7 @@ function UnequalNonExampleQuestion({ onComplete }: { onComplete?: () => void }) 
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Look at this circle:
       </p>
@@ -88,13 +89,13 @@ function UnequalNonExampleQuestion({ onComplete }: { onComplete?: () => void }) 
         Check Answer
       </button>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Right — having 3 pieces isn't enough to call them thirds. The 3 pieces also have to be the same size."
             : "Not quite — look carefully: are all 3 pieces really the same size?"}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -113,7 +114,7 @@ function SameWholeDifferentShapeQuestion({ onComplete }: { onComplete?: () => vo
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> Here are two SAME-SIZE rectangles, both cut into halves, but in different ways:
       </p>
@@ -150,13 +151,13 @@ function SameWholeDifferentShapeQuestion({ onComplete }: { onComplete?: () => vo
         Check Answer
       </button>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Right — equal shares of the same whole can be cut in different ways and come out looking like different shapes, as long as each piece is the same AMOUNT."
             : "Not quite — compare how much space each piece takes up, not just its outline shape."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -168,7 +169,7 @@ function HalfVsThirdTrueFalseQuestion({ onComplete }: { onComplete?: () => void 
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> True or False: since 3 is a bigger number than 2, cutting a shape into thirds makes BIGGER pieces than cutting it into halves.
       </p>
@@ -190,13 +191,13 @@ function HalfVsThirdTrueFalseQuestion({ onComplete }: { onComplete?: () => void 
         ))}
       </div>
       {picked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "False — the opposite is true! Cutting the same-size whole into MORE pieces (3 instead of 2) makes each piece SMALLER, so a half is bigger than a third."
             : "Not quite — look at the pictures: is a third slice bigger or smaller than a half slice, of the same-size whole?"}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -208,7 +209,7 @@ function EqualSharesCheck({ onComplete }: { onComplete?: () => void }) {
   }, [allDone, onComplete]);
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure halves, thirds, and fourths make sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Quick check: let's make sure halves, thirds, and fourths make sense before you try practice problems.</ReadAloud>
       <VocabQuestion onComplete={() => setDone((d) => ({ ...d, q1: true }))} />
       <UnequalNonExampleQuestion onComplete={() => setDone((d) => ({ ...d, q2: true }))} />
       <SameWholeDifferentShapeQuestion onComplete={() => setDone((d) => ({ ...d, q3: true }))} />
@@ -249,7 +250,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       )}
       {(introActive || showCheck) && <EqualSharesCheck onComplete={onIntroDone} />}
       <Segmented label="Shape" value={shape} onChange={setShape} options={SHAPES.map((s) => ({ id: s, label: s === "circle" ? "Circle" : "Rectangle" }))} />
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented label="Pieces" value={pieceCount} onChange={setPieceCount} options={[{ id: "2", label: "2 (halves)" }, { id: "3", label: "3 (thirds)" }, { id: "4", label: "4 (fourths)" }]} />
         <Segmented label="Equal?" value={equal} onChange={setEqual} options={[{ id: "equal", label: "Equal" }, { id: "unequal", label: "Unequal" }]} />
       </div>
@@ -262,17 +263,17 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         />
       )}
       {equal === "unequal" && (
-        <div className="control-row">
+        <div className="control-row" data-readaloud-part>
           <Stepper label="How uneven" value={Math.round(skew * 100)} min={8} max={30} step={2} onChange={(v) => setSkew(v / 100)} tone="b" />
         </div>
       )}
       <SharePartition shape={shape} pattern={pattern} cutStyle={shape === "rectangle" ? cutStyle : undefined} fractions={fractions} width={170} height={130} />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         {meta.equal
           ? `This ${shape} is cut into ${meta.pieceCount} EQUAL pieces — each one is called a ${meta.shareName}.`
           : `This ${shape} has ${meta.pieceCount} pieces, but they're NOT the same size — so we can't call them ${shareName}.`}
         {shape === "rectangle" && equal === "equal" && pieceCount === "2" && " Try switching between the straight cut and the diagonal cut — both give 2 EQUAL halves, just shaped differently."}
-      </p>
+      </ReadAloud>
     </div>
   );
 }
@@ -398,14 +399,14 @@ function halfVsThirdCompareProblem(): Problem {
     bucket: "half-vs-third-compare",
     story: `Here are two same-size ${shape}s — one cut into halves, one cut into thirds.`,
     visual: () => (
-      <div className="control-row" style={{ gap: 20 }}>
+      <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
         <div style={{ textAlign: "center" }}>
           <SharePartition shape={shape} pattern="halves-equal" width={120} height={95} />
-          <p className="muted small">Halves</p>
+          <ReadAloud as="p" className="muted small">Halves</ReadAloud>
         </div>
         <div style={{ textAlign: "center" }}>
           <SharePartition shape={shape} pattern="thirds-equal" width={120} height={95} />
-          <p className="muted small">Thirds</p>
+          <ReadAloud as="p" className="muted small">Thirds</ReadAloud>
         </div>
       </div>
     ),

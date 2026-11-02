@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { classifyingShapesTest } from "./ClassifyingShapesByAttributesTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 const ROTATIONS = [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 210, 240, 270, 300, 330];
 
@@ -35,7 +36,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> What makes this shape a hexagon?
       </p>
@@ -50,11 +51,11 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         ))}
       </div>
       {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Right — the number of straight sides and angles is what makes a hexagon a hexagon." : "Not quite — think about what every hexagon has, no matter what it looks like."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -72,7 +73,7 @@ function SameCategoryQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Shape A and Shape B below are both pentagons.
       </p>
@@ -107,13 +108,13 @@ function SameCategoryQuestion({ onComplete }: { onComplete?: () => void }) {
         Check Answer
       </button>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Right — 5 sides and 5 angles is what matters; size, lopsidedness, and which way it's turned don't."
             : "Not quite — look again at what's actually the SAME between Shape A and Shape B."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -126,7 +127,7 @@ function TrueFalseQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or False: a shape stops being a pentagon if it's lopsided (irregular) or turned sideways.
       </p>
@@ -146,13 +147,13 @@ function TrueFalseQuestion({ onComplete }: { onComplete?: () => void }) {
         ))}
       </div>
       {picked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "False — both shapes above are pentagons. 5 sides and 5 angles is what counts; being lopsided or turned doesn't change that."
             : "Not quite — both shapes above have 5 straight sides and 5 angles. Does being lopsided or turned change that count?"}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -165,7 +166,7 @@ function CubeVs2DQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> What makes this shape a cube?
       </p>
@@ -180,13 +181,13 @@ function CubeVs2DQuestion({ onComplete }: { onComplete?: () => void }) {
         ))}
       </div>
       {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Right — a cube is a SOLID (3D) shape, so what counts is its faces, not a flat side count like a 2D shape has."
             : "Not quite — a cube is a solid shape with FACES, not flat sides like a 2D pentagon or hexagon. Which choice talks about faces?"}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -198,7 +199,7 @@ function ClassifyingCheck({ onComplete }: { onComplete?: () => void }) {
   }, [allDone, onComplete]);
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure you can tell what REALLY makes a shape that shape before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Quick check: let's make sure you can tell what REALLY makes a shape that shape before you try practice problems.</ReadAloud>
       <VocabQuestion onComplete={() => setDone((d) => ({ ...d, q1: true }))} />
       <SameCategoryQuestion onComplete={() => setDone((d) => ({ ...d, q2: true }))} />
       <TrueFalseQuestion onComplete={() => setDone((d) => ({ ...d, q3: true }))} />
@@ -243,12 +244,12 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       {!showCube && (
         <>
           <Segmented label="Shape" value={kind} onChange={(k) => { setKind(k); setVariant(0); }} options={SHAPE_KINDS.map((k) => ({ id: k, label: SHAPE_NAMES[k][0].toUpperCase() + SHAPE_NAMES[k].slice(1) }))} />
-          <div className="control-row">
+          <div className="control-row" data-readaloud-part>
             <Stepper label="Size" value={size} min={24} max={60} step={6} onChange={setSize} tone="a" />
             <Stepper label="Turn" value={rotation} min={0} max={345} step={15} onChange={setRotation} tone="b" />
             <Stepper label="Lopsided-ness" value={variant} min={0} max={VARIANT_COUNT[kind] - 1} step={1} onChange={setVariant} tone="c" />
           </div>
-          <div className="control-row">
+          <div className="control-row" data-readaloud-part>
             {SHAPE_COLORS.map((c, i) => (
               <button
                 key={c}
@@ -262,10 +263,10 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           <ShapeCanvas width={160} height={160} label={`A ${SHAPE_COLOR_NAMES[colorIdx]} ${SHAPE_NAMES[kind]}, size ${size}, turned ${rotation} degrees`}>
             <ShapeTile kind={kind} cx={80} cy={80} size={size} variant={variant} rotation={rotation} color={SHAPE_COLORS[colorIdx]} />
           </ShapeCanvas>
-          <p className="muted small">
+          <ReadAloud as="p" className="muted small">
             A {SHAPE_NAMES[kind]} always has: <b>{DEFINING_ATTRIBUTE[kind]}</b>. Try the Size, Turn, and Lopsided-ness controls, and tapping a different color —
             notice the shape stays a {SHAPE_NAMES[kind]} the whole time. Size, color, orientation, and even how regular it looks never change what shape something is.
-          </p>
+          </ReadAloud>
         </>
       )}
       {showCube && (
@@ -273,9 +274,9 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           <ShapeCanvas width={160} height={160} label="A cube">
             <CubeGlyph cx={80} cy={80} size={size > 50 ? 44 : 34} color={SHAPE_COLORS[colorIdx]} />
           </ShapeCanvas>
-          <p className="muted small">
+          <ReadAloud as="p" className="muted small">
             A cube always has: <b>{CUBE_DEFINING_ATTRIBUTE}</b>. A cube is a SOLID (3D) shape — it has FACES, not flat sides the way a 2D pentagon or hexagon does.
-          </p>
+          </ReadAloud>
         </>
       )}
     </div>

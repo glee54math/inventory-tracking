@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Slider } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingNumbersTest } from "./ComparingNumbersTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -27,7 +28,7 @@ function SymbolVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Which symbol means "is greater than"?
       </p>
@@ -47,11 +48,11 @@ function SymbolVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? 'Correct — the wide-open end of ">" faces the bigger number: "5 > 3" reads "5 is greater than 3."' : 'Not quite — think of the symbol as a mouth that opens toward the bigger number. ">" means "is greater than."'}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -69,7 +70,7 @@ function LeftToRightQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Which number is greater: 512 or 498?
       </p>
@@ -89,13 +90,13 @@ function LeftToRightQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 512 has 5 hundreds and 498 has only 4 hundreds, so 512 wins right away. 498's '9' doesn't matter — it's in the TENS place, a smaller place than hundreds."
             : "Not quite — start with the hundreds place, not whichever digit looks biggest. 512 has 5 hundreds; 498 has only 4 hundreds."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -111,7 +112,7 @@ function MoreNinesTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or False: Whichever number has more digits that are "9" is always the bigger number.
       </p>
@@ -128,13 +129,13 @@ function MoreNinesTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — it's False. 912 has only one '9' but beats 299's two '9's, because 912's hundreds digit (9) beats 299's hundreds digit (2)."
             : "Not quite — it's actually False. Compare 912 and 299: 299 has two 9's, but 912 is still bigger, because the HUNDREDS place decides first."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -165,7 +166,7 @@ function FormCompareQuestion({ onComplete }: { onComplete?: () => void }) {
   );
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> "three hundred twenty-four" {symbolSelect(first, setFirst, okFirst)} 320
       </p>
@@ -176,13 +177,13 @@ function FormCompareQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? '"Three hundred twenty-four" is 324, which is greater than 320. And 200 + 60 + 5 adds up to 265, which exactly equals 265.'
             : 'Convert each form to a plain numeral FIRST, then compare: "three hundred twenty-four" = 324, and 200 + 60 + 5 = 265.'}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -196,7 +197,7 @@ function ComparingCheck({ onComplete }: { onComplete?: () => void }) {
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure comparing numbers makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure comparing numbers makes sense before you try practice problems.</ReadAloud>
       <SymbolVocabQuestion onComplete={mark("symbol")} />
       <LeftToRightQuestion onComplete={mark("leftToRight")} />
       <MoreNinesTrapQuestion onComplete={mark("moreNines")} />
@@ -218,7 +219,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row" style={{ flexWrap: "wrap" }}>
+      <div className="control-row" style={{ flexWrap: "wrap" }} data-readaloud-part>
         <Slider label="Number A" value={a} min={100} max={999} step={1} onChange={setA} />
         <Slider label="Number B" value={b} min={100} max={999} step={1} onChange={setB} />
         {!introActive && (
@@ -237,11 +238,11 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <span style={{ fontSize: 32, fontWeight: 800 }}>{cmp.symbol}</span>
         <PlaceValueChart value={b} tone="b" highlightPlace={cmp.decidingPlace === "equal" ? undefined : cmp.decidingPlace} />
       </div>
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         {cmp.decidingPlace === "equal"
           ? `${a} and ${b} are exactly equal — every place matches.`
           : `Starting from the hundreds place and moving right, the ${cmp.decidingPlace} place is the first one that's different, so it decides: ${a} ${cmp.symbol} ${b}.`}
-      </p>
+      </ReadAloud>
       {(introActive || showCheck) && <ComparingCheck onComplete={onIntroDone} />}
     </div>
   );
@@ -298,7 +299,7 @@ export function comparingProblem(targetBucket?: string): Problem {
             <PlaceValueChart value={b} tone="b" highlightPlace={done >= 2 && cmp.decidingPlace !== "equal" ? cmp.decidingPlace : undefined} />
           </div>
         ) : (
-          <p className="muted small">First, turn {useWord ? `"${formText}"` : formText} into a plain numeral.</p>
+          <ReadAloud as="p" className="muted small">First, turn {useWord ? `"${formText}"` : formText} into a plain numeral.</ReadAloud>
         ),
       steps: [
         { kind: "number", prompt: `What numeral is ${useWord ? `"${formText}"` : formText}?`, hint: useWord ? "Build the hundreds first, then the rest." : "Add the terms together.", explain: `${useWord ? `"${formText}"` : formText} is the numeral ${a}.`, answer: a },

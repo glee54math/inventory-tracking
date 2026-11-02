@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { lengthWordProblemsNumberLineTest } from "./LengthWordProblemsNumberLineTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 const NAMES = ["Mia", "Jun", "Sam", "Priya", "Leo", "Ava", "Noah", "Zoe"] as const;
 const pickName = () => shuffle(NAMES)[0];
@@ -23,7 +24,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> When you join two lengths together to find the total, what operation do you use?
       </p>
@@ -40,11 +41,11 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — joining two lengths together is addition." : "Not quite — joining lengths together to find a total is addition."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -59,7 +60,7 @@ function StartUnknownQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Jenna had some ribbon. She used 15 inches for a bow. Now she has 22 inches left. How much ribbon did she START with?
       </p>
@@ -79,13 +80,13 @@ function StartUnknownQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — to find the START, you add the part she used back to what's left: 22 + 15 = 37 inches. The word \"used\" doesn't automatically mean subtract when it's the STARTING amount you're solving for."
             : 'Not quite — think about it in reverse: she USED 15 and had 22 LEFT, so she must have started with the 22 she has now PLUS the 15 she used: 22 + 15 = 37.'}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -98,7 +99,7 @@ function KeywordTrapQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: the word "left" in a problem always means you should subtract.
       </p>
@@ -115,13 +116,13 @@ function KeywordTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? 'Correct — remember Jenna\'s ribbon: it used the word "left," but finding her STARTING amount needed addition. Always picture the whole story, not just one keyword.'
             : 'Not quite — remember Jenna\'s ribbon problem: it had "left" in it, but solving for her STARTING amount actually needed addition (22 + 15), not subtraction.'}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -134,7 +135,7 @@ function TickMarkQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> On this number line, the marked ticks are 0, 10, 20, 30...
       </p>
@@ -155,13 +156,13 @@ function TickMarkQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — each tick on THIS number line is worth 10, so moving 3 ticks lands on 30, not 3. Always check what one tick is worth before counting ticks."
             : "Not quite — look at the numbers under the ticks: 0, 10, 20, 30. Each tick is worth 10 here, so 3 ticks to the right lands on 30."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -175,7 +176,7 @@ function LengthWordProblemsCheckForUnderstanding({ onComplete }: { onComplete?: 
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure these word problems and the number line make sense before you try practice.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure these word problems and the number line make sense before you try practice.</ReadAloud>
       <VocabQuestion onComplete={mark("vocab")} />
       <StartUnknownQuestion onComplete={mark("startUnknown")} />
       <KeywordTrapQuestion onComplete={mark("trap")} />
@@ -197,7 +198,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Start at" value={start} min={0} max={80} step={5} onChange={setStart} tone="a" />
         <Stepper label="Jump" value={jump} min={-40} max={40} step={5} onChange={setJump} tone="b" />
         {!introActive && (
@@ -213,11 +214,11 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <LengthWordProblemsCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <p className="muted small">Drag the steppers to set a starting point and a jump. Watch the arc land exactly on start + jump.</p>
+      <ReadAloud as="p" className="muted small">Drag the steppers to set a starting point and a jump. Watch the arc land exactly on start + jump.</ReadAloud>
       <NumberLineMD max={100} tickStep={10} jumps={[{ from: start, to: Math.max(0, Math.min(100, result)) }]} tone="a" />
-      <p className="feedback good" style={{ minHeight: 24 }}>
+      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         {jump >= 0 ? `${start} + ${jump} = ${result}` : `${start} + (${jump}) = ${result}`} — the arc shows the jump landing right on the answer.
-      </p>
+      </ReadAloud>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { partitioningRectanglesTest } from "./PartitioningRectanglesTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 function fieldStyle(ok: boolean, checked: boolean) {
   if (!checked) return {};
@@ -33,7 +34,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> This rectangle is split into equal rows and columns of same-size squares:
       </p>
@@ -61,11 +62,11 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         Check Answer
       </button>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Right — 3 rows of 4: 4 + 4 + 4 = 12 squares total." : "Not quite — count the rows, then add each row's 4 squares together."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -78,7 +79,7 @@ function UnevenTrapQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Look at this rectangle:
       </p>
@@ -92,11 +93,11 @@ function UnevenTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         ))}
       </div>
       {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Right — the pieces are clearly different sizes, so this isn't really partitioned into equal squares yet." : "Look closely — compare the widths and heights of a few different pieces."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -109,7 +110,7 @@ function BorderMiscountQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> This rectangle is split into 3 rows and 4 columns of equal squares:
       </p>
@@ -123,11 +124,11 @@ function BorderMiscountQuestion({ onComplete }: { onComplete?: () => void }) {
         ))}
       </div>
       {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Right — the middle square(s) count too! The real total is all 3 rows × 4, counted by adding every row: 4 + 4 + 4 = 12." : "Not quite — this grid has an inside square too, not just an edge. Count every row fully."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -139,7 +140,7 @@ function AddRowsTrueFalseQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> True or False: if every row of a partitioned rectangle has the same number of equal squares, you can find the total by adding up every row's
         count.
@@ -152,13 +153,13 @@ function AddRowsTrueFalseQuestion({ onComplete }: { onComplete?: () => void }) {
         ))}
       </div>
       {picked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "True — adding every row's count together (repeated addition) always gives the total number of squares."
             : "Not quite — think about a 3-row, 4-column grid: 4 + 4 + 4 does give the right total, 12."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -170,7 +171,7 @@ function PartitioningCheck({ onComplete }: { onComplete?: () => void }) {
   }, [allDone, onComplete]);
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure partitioning and counting squares makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Quick check: let's make sure partitioning and counting squares makes sense before you try practice problems.</ReadAloud>
       <VocabQuestion onComplete={() => setDone((d) => ({ ...d, q1: true }))} />
       <UnevenTrapQuestion onComplete={() => setDone((d) => ({ ...d, q2: true }))} />
       <BorderMiscountQuestion onComplete={() => setDone((d) => ({ ...d, q3: true }))} />
@@ -205,17 +206,17 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         </button>
       )}
       {(introActive || showCheck) && <PartitioningCheck onComplete={onIntroDone} />}
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Rows" value={rows} min={2} max={6} step={1} onChange={setRows} tone="a" />
         <Stepper label="Columns" value={cols} min={2} max={6} step={1} onChange={setCols} tone="b" />
       </div>
       <Segmented label="Equal squares?" value={uneven} onChange={setUneven} options={[{ id: "equal", label: "Equal squares" }, { id: "uneven", label: "Uneven (trap)" }]} />
       <PartitionGrid rows={rows} cols={cols} uneven={uneven === "uneven"} width={220} height={160} />
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         {uneven === "equal"
           ? `This rectangle is split into ${rows} equal rows and ${cols} equal columns. Add each row's ${cols} squares: ${repeatedAdd(cols, rows)} = ${total} squares total.`
           : `This grid LOOKS partitioned, but the pieces aren't actually the same size — so we can't count it as a clean ${rows}-row by ${cols}-column grid of equal squares.`}
-      </p>
+      </ReadAloud>
     </div>
   );
 }

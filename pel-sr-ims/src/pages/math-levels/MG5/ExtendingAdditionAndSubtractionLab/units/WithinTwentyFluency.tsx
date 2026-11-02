@@ -5,6 +5,7 @@ import type { Problem } from "../../../shared/engine/types";
 import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { withinTwentyFluencyTest } from "./WithinTwentyFluencyTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -25,7 +26,7 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> To solve 9 + 7 using the "make a ten" strategy, you break 7 into two parts. Which split makes the next step a ten?
       </p>
@@ -43,11 +44,11 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 9 + 1 = 10, then 10 + 6 = 16. Splitting 7 into 1 + 6 is what makes the ten." : "Not quite — 9 needs exactly 1 more to make ten, so split 7 into 1 + 6: 9 + 1 = 10, then 10 + 6 = 16."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -59,7 +60,7 @@ function CountOnVsMakeTenQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> For 8 + 2, is it faster to count on by 2 ("8... 9, 10"), or to make a ten?
       </p>
@@ -76,13 +77,13 @@ function CountOnVsMakeTenQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — when the second number is small (like 1, 2, or 3), counting on is just as fast and doesn't need any splitting. Making a ten pays off most when the second number is bigger."
             : "Not quite — when the second number is already small (like 2), just counting on is simplest. Making a ten is most useful for a bigger second number, like 8 + 6."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -94,7 +95,7 @@ function SubtractionIsNotOnlyCountDownQuestion({ onComplete }: { onComplete?: ()
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: the ONLY way to solve 13 − 8 is to count down from 13, one at a time, until you reach 8.
       </p>
@@ -111,13 +112,13 @@ function SubtractionIsNotOnlyCountDownQuestion({ onComplete }: { onComplete?: ()
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? 'Correct — false. 13 − 8 is also "8 plus what makes 13?" — since 8 + 5 = 13, you can know 13 − 8 = 5 without counting down at all.'
             : 'Not quite — false is right. 13 − 8 is the SAME question as "8 plus what makes 13?" Since 8 + 5 = 13, that already tells you 13 − 8 = 5 — no counting down needed.'}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -131,7 +132,7 @@ function FactFamilyQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> 9 + 6 = 15. Fill in the two related facts: 15 − 9 = ___ and 15 − 6 = ___.
       </p>
@@ -159,11 +160,11 @@ function FactFamilyQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 15 − 9 = 6 and 15 − 6 = 9. All four facts (9+6=15, 6+9=15, 15−9=6, 15−6=9) come from the same three numbers." : "Not quite — both subtraction facts use the SAME three numbers as 9 + 6 = 15: 15 − 9 = 6, and 15 − 6 = 9."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -176,7 +177,7 @@ function WithinTwentyCheckForUnderstanding({ onComplete }: { onComplete?: () => 
   const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure these ideas are clear before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure these ideas are clear before you try practice problems.</ReadAloud>
       <VocabQuestion onComplete={mark("vocab")} />
       <CountOnVsMakeTenQuestion onComplete={mark("strategy")} />
       <SubtractionIsNotOnlyCountDownQuestion onComplete={mark("subtraction")} />
@@ -201,7 +202,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented label="Operation" value={mode} onChange={setMode} options={[{ id: "add", label: "Addition" }, { id: "subtract", label: "Subtraction" }]} />
         {!introActive && (
           <button type="button" className="btn ghost" style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined} onClick={() => setShowCheck((v) => !v)}>
@@ -213,7 +214,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
       {mode === "add" ? (
         <>
-          <div className="control-row">
+          <div className="control-row" data-readaloud-part>
             <label>
               First number: <input type="range" min={1} max={9} value={a} onChange={(e) => setA(Number(e.target.value))} /> {a}
             </label>
@@ -222,13 +223,13 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             </label>
           </div>
           <TenFrameGroup value={Math.min(20, sum)} tone="a" splitAt={a} tone2="b" />
-          <p className="muted small">
+          <ReadAloud as="p" className="muted small">
             {a} + {b} = {sum}. Related fact: {sum} − {a} = {b}, and {sum} − {b} = {a}. The same three numbers connect all of these.
-          </p>
+          </ReadAloud>
         </>
       ) : (
         <>
-          <div className="control-row">
+          <div className="control-row" data-readaloud-part>
             <label>
               Start: <input type="range" min={10} max={18} value={Math.max(a + b, 10)} onChange={(e) => setA(Number(e.target.value) - b)} /> {Math.max(a + b, 10)}
             </label>
@@ -237,9 +238,9 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             </label>
           </div>
           <TenFrameGroup value={Math.min(20, a + b)} tone="c" splitAt={diff} tone2="b" />
-          <p className="muted small">
+          <ReadAloud as="p" className="muted small">
             {a + b} − {b} = {diff}. You don't have to count down one at a time — since {diff} + {b} = {a + b}, that addition fact already tells you the answer.
-          </p>
+          </ReadAloud>
         </>
       )}
     </div>

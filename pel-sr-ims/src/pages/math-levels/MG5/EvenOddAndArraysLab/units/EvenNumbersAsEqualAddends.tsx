@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { evenNumbersAsEqualAddendsTest } from "./EvenNumbersAsEqualAddendsTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -27,7 +28,7 @@ function WhatAreEqualAddendsQuestion({ onComplete }: { onComplete?: () => void }
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> What makes two addends "equal addends" for a number?
       </p>
@@ -45,13 +46,13 @@ function WhatAreEqualAddendsQuestion({ onComplete }: { onComplete?: () => void }
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — equal addends must be the exact same number as each other, not just any two numbers that happen to add to the target."
             : "Not quite — equal addends must be the SAME number as each other AND add up to the target. Just summing to the right total isn't enough on its own."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -70,7 +71,7 @@ function RightAndWrongExampleQuestion({ onComplete }: { onComplete?: () => void 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> For the number 14: is "14 = 6 + 8" an example of equal addends? Is "14 = 7 + 7" an example of equal addends?
       </p>
@@ -100,13 +101,13 @@ function RightAndWrongExampleQuestion({ onComplete }: { onComplete?: () => void 
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 6 + 8 sums to 14 but the addends aren't the same, so it's NOT equal addends. 7 + 7 sums to 14 AND both addends match, so it IS."
             : "Not quite — 6 + 8 = 14 is true, but 6 ≠ 8, so it's not equal addends. 7 + 7 = 14 with matching addends IS equal addends."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -121,7 +122,7 @@ function EveryNumberTrueFalseQuestion({ onComplete }: { onComplete?: () => void 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: every whole number can be written as two equal whole-number addends.
       </p>
@@ -138,13 +139,13 @@ function EveryNumberTrueFalseQuestion({ onComplete }: { onComplete?: () => void 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — false. Odd numbers (like 9) can't be split into two equal whole-number addends — there's always one left over."
             : "Not quite — it's false. Only EVEN numbers can be split into two equal whole-number addends. Odd numbers always have one left over."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -163,7 +164,7 @@ function OddNumberAttemptQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> 9 is odd. If you try to split 9 into two EQUAL whole-number addends, what happens? So can every odd number be written as two
         equal whole-number addends?
@@ -194,13 +195,13 @@ function OddNumberAttemptQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 9 can only split into 4 + 5, which aren't equal whole numbers. No odd number can ever be written as two equal whole-number addends."
             : "Not quite — 9 only splits into 4 + 5, and those aren't equal. That's true of every odd number: it's never possible with whole numbers."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -214,7 +215,7 @@ function EqualAddendsCheckForUnderstanding({ onComplete }: { onComplete?: () => 
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's pin down exactly what "equal addends" means before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's pin down exactly what "equal addends" means before you try practice problems.</ReadAloud>
       <WhatAreEqualAddendsQuestion onComplete={mark("what")} />
       <RightAndWrongExampleQuestion onComplete={mark("example")} />
       <EveryNumberTrueFalseQuestion onComplete={mark("every")} />
@@ -236,7 +237,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Pick a number" value={n} min={1} max={20} step={1} onChange={setN} tone="a" />
         {!introActive && (
           <button
@@ -254,17 +255,17 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       {isEven ? (
         <>
           <EqualGroups groupA={half} groupB={n - half} sameColor />
-          <p className="muted small">
+          <ReadAloud as="p" className="muted small">
             {n} splits evenly into two groups of {half}: {n} = {half} + {half}.
-          </p>
+          </ReadAloud>
         </>
       ) : (
         <>
           <EqualGroups groupA={Math.floor(n / 2)} groupB={Math.ceil(n / 2)} sameColor={false} />
-          <p className="muted small">
+          <ReadAloud as="p" className="muted small">
             {n} is odd — the closest split is {Math.floor(n / 2)} + {Math.ceil(n / 2)}, and those two groups are NOT the same size. No odd number
             can be written as two equal whole-number addends.
-          </p>
+          </ReadAloud>
         </>
       )}
     </div>
