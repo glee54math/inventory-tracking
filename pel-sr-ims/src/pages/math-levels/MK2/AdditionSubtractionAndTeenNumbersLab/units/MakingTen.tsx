@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { makingTenTest } from "./MakingTenTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -29,7 +30,7 @@ function PartnerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> 6 and 4 add up to exactly 10.
       </p>
@@ -62,11 +63,11 @@ function PartnerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — 4 is called 6's partner for 10, since 6 + 4 = 10." : "Not quite — the number that joins another to make exactly 10 is its partner for 10. For 6, that's 4, since 6 + 4 = 10."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -80,7 +81,7 @@ function CountingUpVsRecallQuestion({ onComplete }: { onComplete?: () => void })
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> You need 7's partner for 10.
       </p>
@@ -101,13 +102,13 @@ function CountingUpVsRecallQuestion({ onComplete }: { onComplete?: () => void })
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the goal is to just KNOW each partner for 10 right away, without recounting from 1 every single time. That's what makes it a fast fact."
             : "Not quite — counting up from 1 every time works, but it's slow. The goal is to eventually just KNOW each partner for 10 instantly, the way you'd know your own name."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -121,7 +122,7 @@ function EveryNumberHasOneQuestion({ onComplete }: { onComplete?: () => void }) 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: every number from 1 to 9 has exactly one partner that makes 10 with it.
       </p>
@@ -138,13 +139,13 @@ function EveryNumberHasOneQuestion({ onComplete }: { onComplete?: () => void }) 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 1's partner is 9, 2's is 8, 3's is 7, 4's is 6, 5's is 5, and so on. Every number from 1 to 9 has exactly one partner for 10."
             : "Not quite — check a few: 1+9=10, 2+8=10, 3+7=10. Every number from 1 to 9 pairs with exactly one other number to make 10."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -163,7 +164,7 @@ function VerifyPairQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Check these two pairs.
       </p>
@@ -193,13 +194,13 @@ function VerifyPairQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 6 + 4 = 10 is true, but 5 + 4 = 9, not 10, so that one is false. Always check the actual sum, not just whether the numbers 'look close.'"
             : "Not quite — add each pair exactly: 6 + 4 = 10 (true), but 5 + 4 = 9 (false, not 10). Close isn't the same as exact."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -213,7 +214,7 @@ function MakingTenCheckForUnderstanding({ onComplete }: { onComplete?: () => voi
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure partners for 10 make sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure partners for 10 make sense before you try practice problems.</ReadAloud>
       <PartnerVocabQuestion onComplete={mark("vocab")} />
       <CountingUpVsRecallQuestion onComplete={mark("strategy")} />
       <EveryNumberHasOneQuestion onComplete={mark("everyNumber")} />
@@ -235,7 +236,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper
           label="Starting number"
           value={n}
@@ -265,13 +266,13 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       <button className="btn primary" style={{ width: "fit-content" }} onClick={() => setRevealed((r) => !r)}>
         {revealed ? "Hide the partner" : "Reveal the partner for 10"}
       </button>
-      <p className="feedback good" style={{ minHeight: 24 }}>
+      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         {revealed ? `${n} + ${partner} = 10. ${n}'s partner for 10 is ${partner}.` : `How many MORE do you need to fill the frame to 10?`}
-      </p>
-      <p className="muted small">
+      </ReadAloud>
+      <ReadAloud as="p" className="muted small">
         Try every starting number from 1 to 9 — notice each one has exactly ONE partner. The goal is to eventually just KNOW the partner instantly,
         without counting up from 1 each time.
-      </p>
+      </ReadAloud>
     </div>
   );
 }

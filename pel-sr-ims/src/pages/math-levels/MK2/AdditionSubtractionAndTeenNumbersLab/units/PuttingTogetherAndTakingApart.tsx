@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { puttingTogetherAndTakingApartTest } from "./PuttingTogetherAndTakingApartTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -31,7 +32,7 @@ function SymbolMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Look at the number sentence: 3 + 2 = 5.
       </p>
@@ -63,13 +64,13 @@ function SymbolMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — the + symbol means putting groups together, and the = symbol means both sides have the same amount."
             : "Not quite — the + symbol always means putting groups together, and = means both sides are the same amount, not a question or a comparison."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -89,7 +90,7 @@ function ActionWordingQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Mia has 5 apples.
       </p>
@@ -119,13 +120,13 @@ function ActionWordingQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? 'Correct — the number "2" was the same in both stories, but "given to" means a group joins (adding), and "taken away" means a group leaves (subtracting). The ACTION word tells you the operation, not the number.'
             : 'Not quite — look at the action words, not the numbers. "Given to" means something JOINS the group (adding). "Taken away" means something LEAVES the group (subtracting).'}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -139,7 +140,7 @@ function TakeAwayDirectionQuestion({ onComplete }: { onComplete?: () => void }) 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: when you take objects away from a group, the group can sometimes end up BIGGER than it started.
       </p>
@@ -156,13 +157,13 @@ function TakeAwayDirectionQuestion({ onComplete }: { onComplete?: () => void }) 
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — false! Taking objects away always leaves the same amount or fewer, never more. Only joining a group together can make it bigger."
             : "Not quite — try it with real objects: take any number away from a group. The group never grows from taking away — it only grows from objects joining it."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -182,7 +183,7 @@ function FingersEquationQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Hold up 3 fingers on one hand, and 1 finger on the other hand.
       </p>
@@ -215,13 +216,13 @@ function FingersEquationQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 3 fingers and 1 finger join to make 4 in all, written as 3 + 1 = 4."
             : "Not quite — count every raised finger on both hands first, then write the joining (+) sentence with that total on the right of the = sign."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -235,7 +236,7 @@ function PuttingTogetherCheckForUnderstanding({ onComplete }: { onComplete?: () 
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure joining and taking apart make sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure joining and taking apart make sense before you try practice problems.</ReadAloud>
       <SymbolMeaningQuestion onComplete={mark("symbols")} />
       <ActionWordingQuestion onComplete={mark("wording")} />
       <TakeAwayDirectionQuestion onComplete={mark("direction")} />
@@ -258,7 +259,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented
           label="What's happening"
           value={mode}
@@ -278,30 +279,30 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <PuttingTogetherCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label={mode === "join" ? "First group" : "Whole group"} value={a} min={0} max={10} step={1} onChange={setA} tone="a" />
         <Stepper label={mode === "join" ? "Second group" : "Part taken apart"} value={b} min={0} max={10 - a} step={1} onChange={setB} tone="b" />
       </div>
 
       <SplitGroup total={total} partA={a} toneA="a" toneB="b" />
-      <p className="feedback good" style={{ minHeight: 24 }}>
+      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         {mode === "join"
           ? `${a} and ${b} JOIN together to make ${total} in all.`
           : `${total} splits APART into ${a} and ${b}.`}
-      </p>
-      <p className="muted small">
+      </ReadAloud>
+      <ReadAloud as="p" className="muted small">
         {mode === "join"
           ? `Written as a number sentence: ${a} + ${b} = ${total}. The + symbol means the two groups are joining together.`
           : `Written as a number sentence: ${total} − ${b} = ${a}. The − symbol means a part is being taken away from the whole.`}
-      </p>
+      </ReadAloud>
 
-      <div className="align-stack-wrap">
+      <ReadAloud className="align-stack-wrap">
         <p>
           <b>Same idea, with fingers</b> — no picture of objects this time.
         </p>
         <Fingers count={total} tone="c" />
         <p className="muted small">{a} fingers and {b} fingers makes {total} fingers in all — fingers work exactly like any other group of objects.</p>
-      </div>
+      </ReadAloud>
     </div>
   );
 }

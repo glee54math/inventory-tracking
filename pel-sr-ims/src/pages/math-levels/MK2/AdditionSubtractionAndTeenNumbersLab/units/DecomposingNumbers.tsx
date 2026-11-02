@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { decomposingNumbersTest } from "./DecomposingNumbersTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -29,7 +30,7 @@ function DecomposeVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Breaking 7 into 4 and 3.
       </p>
@@ -62,11 +63,11 @@ function DecomposeVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — breaking 7 into 4 and 3 is called decomposing it, and 4 and 3 are the two parts." : "Not quite — breaking a number into pieces is called decomposing it, and the pieces are called parts, not digits or numerals."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -80,7 +81,7 @@ function MoreThanOneWayQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> 6 can be broken into 4 and 2.
       </p>
@@ -99,13 +100,13 @@ function MoreThanOneWayQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 6 = 4 + 2, AND 6 = 3 + 3, AND 6 = 5 + 1, AND 6 = 6 + 0. A number can be broken apart in more than one way."
             : "Not quite — check it: 3 + 3 really does equal 6, same as 4 + 2 does. Both are valid ways to break 6 apart."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -119,7 +120,7 @@ function OnlyOneWayTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: every number can be broken into two parts in only ONE way.
       </p>
@@ -136,13 +137,13 @@ function OnlyOneWayTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — false! For example, 5 can be 4 + 1, OR 3 + 2. Stopping after finding just one way misses all the others."
             : "Not quite — try 5: it can be broken into 4 + 1, but also 3 + 2. That's already two different ways, so 'only one way' isn't right."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -160,7 +161,7 @@ function EqualPartsQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> Think about the number 8.
       </p>
@@ -191,13 +192,13 @@ function EqualPartsQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 8 = 4 + 4, two EQUAL parts. Equal parts are still a valid decomposition, just like any other pair."
             : "Not quite — 8 = 4 + 4 works, and both parts are the same size (4 and 4). Equal parts are allowed."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -211,7 +212,7 @@ function DecomposingCheckForUnderstanding({ onComplete }: { onComplete?: () => v
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure breaking numbers apart makes sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure breaking numbers apart makes sense before you try practice problems.</ReadAloud>
       <DecomposeVocabQuestion onComplete={mark("vocab")} />
       <MoreThanOneWayQuestion onComplete={mark("moreThanOne")} />
       <OnlyOneWayTrapQuestion onComplete={mark("onlyOneTrap")} />
@@ -233,7 +234,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper
           label="Number to break apart"
           value={total}
@@ -261,13 +262,13 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       {(introActive || showCheck) && <DecomposingCheckForUnderstanding onComplete={onIntroDone} />}
 
       <SplitGroup total={total} partA={partA} toneA="a" toneB="b" />
-      <p className="feedback good" style={{ minHeight: 24 }}>
+      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         {total} breaks apart into {partA} and {partB}.
-      </p>
-      <p className="muted small">
+      </ReadAloud>
+      <ReadAloud as="p" className="muted small">
         Move the "First part" slider to see every way to break {total} apart — {total} has {total + 1} different pairs (counting 0 and {total} themselves), not just one.
         {partA === partB && partA * 2 === total ? ` Right now both parts are EQUAL (${partA} and ${partB}) — that's still a valid way!` : ""}
-      </p>
+      </ReadAloud>
     </div>
   );
 }

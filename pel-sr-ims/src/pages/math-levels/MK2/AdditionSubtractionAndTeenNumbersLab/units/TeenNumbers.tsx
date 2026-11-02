@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { teenNumbersTest } from "./TeenNumbersTest";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 const NUMBER_WORDS: Record<number, string> = {
   11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen", 15: "fifteen",
@@ -33,7 +34,7 @@ function DigitMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>1.</b> Look at the number 14.
       </p>
@@ -64,13 +65,13 @@ function DigitMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — in 14, the '1' stands for a whole group of TEN, not a single object, and the '4' stands for 4 extra ones."
             : "Not quite — the '1' in a teen number is never just one single object; it stands for one whole group of ten. The second digit is the extra ones."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -84,7 +85,7 @@ function TeenStructureQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>2.</b> Think about the number "sixteen."
       </p>
@@ -102,13 +103,13 @@ function TeenStructureQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — both describe the same total amount, but 'one group of ten plus 6 more ones' is the structure that actually matches how 16 is written and built."
             : 'Not quite — 16 objects really are the same amount either way, but "sixteen" is built from ONE bundled ten-group plus 6 more ones, not just a pile of 16 loose ones.'}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -122,7 +123,7 @@ function EveryTeenQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>3.</b> True or false: every number from 11 to 19 is made of exactly one group of ten, plus some extra ones.
       </p>
@@ -139,13 +140,13 @@ function EveryTeenQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 11 (ten + 1) all the way through 19 (ten + 9) are all built the exact same way: one ten-group, plus some extra ones."
             : "Not quite — check a few: 11 is ten plus 1, 15 is ten plus 5, 19 is ten plus 9. This pattern holds for every one of them."}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -164,7 +165,7 @@ function BuildAndRecordQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
+    <ReadAloud className="align-stack-wrap">
       <p>
         <b>4.</b> 10 objects are bundled into one ten-group. 3 more ones are added.
       </p>
@@ -196,13 +197,13 @@ function BuildAndRecordQuestion({ onComplete }: { onComplete?: () => void }) {
         </button>
       </div>
       {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — one ten-group plus 3 more ones is 13, recorded as 10 + 3 = 13. Watch out for 31 — that's the digits written backwards!"
             : 'Not quite — 10 + 3 = 13, NOT 31. Writing the digits backwards ("31" instead of "13") is a really common mix-up with teen numbers.'}
-        </p>
+        </ReadAloud>
       )}
-    </div>
+    </ReadAloud>
   );
 }
 
@@ -216,7 +217,7 @@ function TeenNumbersCheckForUnderstanding({ onComplete }: { onComplete?: () => v
 
   return (
     <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure teen numbers make sense before you try practice problems.</p>
+      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure teen numbers make sense before you try practice problems.</ReadAloud>
       <DigitMeaningQuestion onComplete={mark("digits")} />
       <TeenStructureQuestion onComplete={mark("structure")} />
       <EveryTeenQuestion onComplete={mark("every")} />
@@ -237,7 +238,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label="Extra ones beyond a full ten" value={ones} min={1} max={9} step={1} onChange={setOnes} tone="b" />
         {!introActive && (
           <button
@@ -253,13 +254,13 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       {(introActive || showCheck) && <TeenNumbersCheckForUnderstanding onComplete={onIntroDone} />}
 
       <TenAndOnes tens={1} ones={ones} tenTone="a" onesTone="b" />
-      <p className="feedback good" style={{ minHeight: 24 }}>
+      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         1 full ten-group and {ones} extra ones make {teen} — "{NUMBER_WORDS[teen]}."
-      </p>
-      <p className="muted small">
+      </ReadAloud>
+      <ReadAloud as="p" className="muted small">
         Written as a number sentence: 10 + {ones} = {teen}. The "1" in {teen} always means that whole ten-group, never just one single object — and
         every number from 11 to 19 is built exactly the same way.
-      </p>
+      </ReadAloud>
     </div>
   );
 }

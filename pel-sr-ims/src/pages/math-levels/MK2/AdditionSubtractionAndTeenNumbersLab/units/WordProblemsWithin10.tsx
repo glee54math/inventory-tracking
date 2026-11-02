@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { wordProblemsWithin10Test } from "./WordProblemsWithin10Test";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // EXPLORE
@@ -24,7 +25,7 @@ function Explore() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented
           label="Story type"
           value={scenario}
@@ -38,37 +39,37 @@ function Explore() {
           ]}
         />
       </div>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Stepper label={scenario === "compare" ? "Group A" : scenario === "missingPart" ? "Total" : "First amount"} value={a} min={1} max={10} step={1} onChange={setA} tone="a" />
         <Stepper label={scenario === "compare" ? "Group B" : scenario === "missingPart" ? "Known part" : "Second amount"} value={b} min={scenario === "missingPart" ? 1 : 0} max={scenario === "missingPart" ? a - 1 || 1 : maxB} step={1} onChange={setB} tone="b" />
       </div>
 
       {scenario === "addTo" && (
         <>
-          <p>Jen has {a} stickers. She gets {b} more. How many does she have now?</p>
+          <ReadAloud as="p">Jen has {a} stickers. She gets {b} more. How many does she have now?</ReadAloud>
           <SplitGroup total={a + b} partA={a} toneA="a" toneB="b" />
-          <p className="muted small">{a} + {b} = {a + b}. An "add to" story starts with one amount, and MORE joins it — look for words like "gets," "gives her," "more."</p>
+          <ReadAloud as="p" className="muted small">{a} + {b} = {a + b}. An "add to" story starts with one amount, and MORE joins it — look for words like "gets," "gives her," "more."</ReadAloud>
         </>
       )}
       {scenario === "takeFrom" && (
         <>
-          <p>Sam had {a} crackers. He ate {b} of them. How many are left?</p>
+          <ReadAloud as="p">Sam had {a} crackers. He ate {b} of them. How many are left?</ReadAloud>
           <SplitGroup total={a} partA={a - Math.min(b, a)} toneA="a" toneB="b" />
-          <p className="muted small">{a} − {Math.min(b, a)} = {a - Math.min(b, a)}. A "take from" story starts with one amount, and SOME of it leaves — look for words like "ate," "gave away," "left."</p>
+          <ReadAloud as="p" className="muted small">{a} − {Math.min(b, a)} = {a - Math.min(b, a)}. A "take from" story starts with one amount, and SOME of it leaves — look for words like "ate," "gave away," "left."</ReadAloud>
         </>
       )}
       {scenario === "together" && (
         <>
-          <p>Jen has {a} red marbles and {b} blue marbles, all together in one jar. How many marbles in the jar?</p>
+          <ReadAloud as="p">Jen has {a} red marbles and {b} blue marbles, all together in one jar. How many marbles in the jar?</ReadAloud>
           <SplitGroup total={a + b} partA={a} toneA="a" toneB="b" showDivider={false} />
-          <p className="muted small">{a} + {b} = {a + b}. A "put together" story describes two groups that coexist from the start — nothing joins or leaves; you're just finding their combined total.</p>
+          <ReadAloud as="p" className="muted small">{a} + {b} = {a + b}. A "put together" story describes two groups that coexist from the start — nothing joins or leaves; you're just finding their combined total.</ReadAloud>
         </>
       )}
       {scenario === "missingPart" && (
         <>
-          <p>There are {a} crayons in a box. {b} of them are red, and the rest are blue. How many are blue?</p>
+          <ReadAloud as="p">There are {a} crayons in a box. {b} of them are red, and the rest are blue. How many are blue?</ReadAloud>
           <SplitGroup total={a} partA={b} toneA="b" toneB="a" />
-          <p className="muted small">{a} − {b} = {a - b} blue crayons. When the TOTAL and one part are both known, you can subtract to find the missing part — even though the story never says "take away."</p>
+          <ReadAloud as="p" className="muted small">{a} − {b} = {a - b} blue crayons. When the TOTAL and one part are both known, you can subtract to find the missing part — even though the story never says "take away."</ReadAloud>
         </>
       )}
       {scenario === "compare" && (
@@ -77,10 +78,10 @@ function Explore() {
             <ObjectGroup count={a} arrangement="line" tone="a" seed={a * 9 + 1} />
             <ObjectGroup count={b} arrangement="line" tone="b" seed={b * 9 + 2} />
           </div>
-          <p>Mia has {a} apples. Theo has {b} apples. How many more apples does Mia have than Theo?</p>
-          <p className="muted small">
+          <ReadAloud as="p">Mia has {a} apples. Theo has {b} apples. How many more apples does Mia have than Theo?</ReadAloud>
+          <ReadAloud as="p" className="muted small">
             {a === b ? "They have the same amount — there's no difference to find." : `${Math.max(a, b)} − ${Math.min(a, b)} = ${Math.abs(a - b)}. A "compare" story has TWO separate groups that never join or split — you're just finding the gap between them.`}
-          </p>
+          </ReadAloud>
         </>
       )}
     </div>

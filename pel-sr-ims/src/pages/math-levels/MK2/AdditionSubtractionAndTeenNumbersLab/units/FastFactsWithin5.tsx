@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { fastFactsWithin5Test } from "./FastFactsWithin5Test";
+import { ReadAloud } from "../../../shared/tts/ReadAloud";
 
 // ============================================================================
 // EXPLORE
@@ -26,7 +27,7 @@ function Explore() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
+      <div className="control-row" data-readaloud-part>
         <Segmented
           label="Fact type"
           value={mode}
@@ -40,13 +41,13 @@ function Explore() {
         />
       </div>
       {mode !== "doubles" && (
-        <div className="control-row">
+        <div className="control-row" data-readaloud-part>
           <Stepper label={mode === "sub" ? "Start" : mode === "missing" ? "Known part" : "First number"} value={a} min={mode === "sub" ? 1 : 0} max={5} step={1} onChange={setA} tone="a" />
           {mode !== "missing" && <Stepper label="Second number" value={b} min={0} max={maxB} step={1} onChange={setB} tone="b" />}
         </div>
       )}
       {mode === "doubles" && (
-        <div className="control-row">
+        <div className="control-row" data-readaloud-part>
           <Stepper label="Number" value={a} min={1} max={2} step={1} onChange={setA} tone="a" />
         </div>
       )}
@@ -54,31 +55,31 @@ function Explore() {
       {mode === "add" && (
         <>
           <SplitGroup total={total} partA={a} toneA="a" toneB="b" />
-          <p className="feedback good">{a} + {b} = {total}. Try to just KNOW this fact instantly, without counting each dot one at a time.</p>
+          <ReadAloud as="p" className="feedback good">{a} + {b} = {total}. Try to just KNOW this fact instantly, without counting each dot one at a time.</ReadAloud>
         </>
       )}
       {mode === "sub" && (
         <>
           <SplitGroup total={a} partA={diff} toneA="a" toneB="b" />
-          <p className="feedback good">{a} − {Math.min(b, a)} = {diff}.</p>
+          <ReadAloud as="p" className="feedback good">{a} − {Math.min(b, a)} = {diff}.</ReadAloud>
         </>
       )}
       {mode === "doubles" && (
         <>
           <SplitGroup total={a + a} partA={a} toneA="a" toneB="a" showDivider={false} />
-          <p className="feedback good">{a} + {a} = {a + a} — a "doubles" fact, where both parts are the exact same number.</p>
+          <ReadAloud as="p" className="feedback good">{a} + {a} = {a + a} — a "doubles" fact, where both parts are the exact same number.</ReadAloud>
         </>
       )}
       {mode === "missing" && (
         <>
           <SplitGroup total={5} partA={a} toneA="a" toneB="b" />
-          <p className="feedback good">{a} + ? = 5. The missing number is {5 - a}.</p>
+          <ReadAloud as="p" className="feedback good">{a} + ? = 5. The missing number is {5 - a}.</ReadAloud>
         </>
       )}
-      <p className="muted small">
+      <ReadAloud as="p" className="muted small">
         Every fact here has an answer of 5 or less. The goal of this unit is SPEED — recognizing the answer instantly, the same way you already know
         your age without counting it out on your fingers.
-      </p>
+      </ReadAloud>
     </div>
   );
 }
