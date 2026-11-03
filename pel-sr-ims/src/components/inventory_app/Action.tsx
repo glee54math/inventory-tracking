@@ -138,10 +138,16 @@ function Action({ index, data, onChange }: ActionProps) {
     const newMovementMap = { ...data.movementMap };
     const newMovementNumOfCopiesMap = { ...data.movementNumOfCopiesMap };
 
-    // If deselected, remove from the maps
     if (isSelected) {
+      // If deselected, remove from the maps
       delete newMovementMap[range];
       delete newMovementNumOfCopiesMap[range];
+    } else {
+      // Newly checked: default to the common case (front copy, 1 copy) so manually adding
+      // one more range on top of an applied chip doesn't also require picking movement and
+      // copies by hand — still fully editable via the dropdown/input right below.
+      newMovementMap[range] = "FrontToStudent";
+      newMovementNumOfCopiesMap[range] = 1;
     }
 
     onChange({

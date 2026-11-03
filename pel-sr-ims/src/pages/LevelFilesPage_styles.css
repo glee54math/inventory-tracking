@@ -1,0 +1,52 @@
+/* Scoped under .level-files-page (paired with lab-base, same pattern every
+   math-levels Lab's own _styles.css uses). Only defines the palette lab-base's
+   .unit-carousel-* rules expect (this page has no lab root class of its own
+   to inherit one from) plus the per-Lab card grid wrapping each carousel.
+   Palette copied from MK1_CountingAndCardinalityLab_styles.css, the one most
+   App.css's app-wide primary/tertiary tokens were themselves seeded from. */
+
+.level-files-page {
+  --card: #ffffff;
+  --ink: #2a2440;
+  --muted: #746a90;
+  --line: #ddd0ee;
+  --qa: #2f8fd1;
+  --qc: #9452d6;
+  --radius-lg: 20px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .level-files-page:not([data-theme="light"]) {
+    --card: #271f3f;
+    --ink: #f0ebfb;
+    --muted: #b6a9d6;
+    --line: #473a66;
+    --qa: #6fc2ff;
+    --qc: #c69af5;
+  }
+}
+
+.level-files-page .level-files-labs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.level-files-page .level-files-lab-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: clamp(20px, 3vw, 28px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.level-files-page .level-files-lab-card h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: center;
+}
