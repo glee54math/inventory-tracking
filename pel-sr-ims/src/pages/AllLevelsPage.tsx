@@ -1,4 +1,14 @@
 import { Link } from "react-router-dom";
+import {
+    Baby,
+    Backpack,
+    BookOpen,
+    BookText,
+    GraduationCap,
+    Sigma,
+    Sparkles,
+    type LucideIcon,
+} from "lucide-react";
 import { countPreviewableFilesByLevel } from "./levelFileHelpers";
 
 // Broad glob over every file in every level folder — countPreviewableFilesByLevel
@@ -39,30 +49,93 @@ const englishLevels: Record<string, string[]> = {
     "High School": ["EH1", "EH2", "EH3", "EH4", "EH5", "EH6"],
 };
 
-function LevelGroup({
+// Full literal class strings per subject (never interpolated) so Tailwind's
+// static scanner can find them — same pattern Sidebar.tsx uses for its
+// accent/active-state maps.
+type SubjectMeta = {
+    icon: LucideIcon;
+    headerBg: string;
+    iconBg: string;
+    iconText: string;
+    bandIconText: string;
+    chipHoverBorder: string;
+    chipHoverBg: string;
+    chipHoverText: string;
+    chipFocusRing: string;
+    chipActiveBg: string;
+};
+
+const SUBJECT_META: Record<string, SubjectMeta> = {
+    Math: {
+        icon: Sigma,
+        headerBg: "bg-primary-50/60",
+        iconBg: "bg-primary-100",
+        iconText: "text-primary-700",
+        bandIconText: "text-primary-400",
+        chipHoverBorder: "hover:border-primary-300",
+        chipHoverBg: "hover:bg-primary-50",
+        chipHoverText: "hover:text-primary-700",
+        chipFocusRing: "focus-visible:ring-primary-400",
+        chipActiveBg: "active:bg-primary-100",
+    },
+    English: {
+        icon: BookText,
+        headerBg: "bg-tertiary-50/60",
+        iconBg: "bg-tertiary-100",
+        iconText: "text-tertiary-700",
+        bandIconText: "text-tertiary-400",
+        chipHoverBorder: "hover:border-tertiary-300",
+        chipHoverBg: "hover:bg-tertiary-50",
+        chipHoverText: "hover:text-tertiary-700",
+        chipFocusRing: "focus-visible:ring-tertiary-400",
+        chipActiveBg: "active:bg-tertiary-100",
+    },
+};
+
+const GRADE_BAND_ICON: Record<string, LucideIcon> = {
+    "Kindergarten": Baby,
+    "Elementary School": Backpack,
+    "Middle School": BookOpen,
+    "High School": GraduationCap,
+    "Special Topics": Sparkles,
+};
+
+function GradeBandGroup({
     title,
     levels,
     fileCounts,
+    meta,
 }: {
     title: string;
     levels: string[];
     fileCounts: Record<string, number>;
+    meta: SubjectMeta;
 }) {
+    if (levels.length === 0) return null;
+
+    const BandIcon = GRADE_BAND_ICON[title] ?? Sparkles;
+
     return (
-        <div className="mb-4">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">{title}</h3>
-            <div className="flex flex-wrap gap-2">
+        <div className="mb-5 last:mb-0">
+            <div className="mb-3 flex items-center gap-2">
+                <BandIcon size={16} className={meta.bandIconText} />
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">{title}</h3>
+                <span className="text-xs text-gray-400">({levels.length})</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {levels.map((level) => (
                     <Link
                         key={level}
                         to={`/levels/${level}/files`}
-                        className="px-3 py-1 bg-gray-100 hover:bg-green-200 border border-gray-300 hover:border-green-400 rounded text-sm font-medium text-gray-800 transition-colors"
+                        className={`group relative flex items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 active:translate-y-0 ${meta.chipHoverBorder} ${meta.chipHoverBg} ${meta.chipHoverText} ${meta.chipFocusRing} ${meta.chipActiveBg}`}
                     >
                         {level}
                         {/* Only worth flagging once there's more than one file to browse into —
                             every level folder has at least its (possibly empty) shell file. */}
                         {fileCounts[level] > 1 && (
-                            <span className="ml-1 text-xs text-gray-400">({fileCounts[level]})</span>
+                            <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary-100 px-1 text-[10px] font-semibold text-secondary-700 group-hover:bg-secondary-200">
+                                {fileCounts[level]}
+                            </span>
                         )}
                     </Link>
                 ))}
@@ -71,24 +144,45 @@ function LevelGroup({
     );
 }
 
+function SubjectCard({
+    title,
+    levels,
+    fileCounts,
+}: {
+    title: string;
+    levels: Record<string, string[]>;
+    fileCounts: Record<string, number>;
+}) {
+    const meta = SUBJECT_META[title];
+    const SubjectIcon = meta.icon;
+
+    return (
+        <section className="mb-8 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm last:mb-0">
+            <div className={`flex items-center gap-3 border-b border-gray-200 px-5 py-4 ${meta.headerBg}`}>
+                <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${meta.iconBg} ${meta.iconText}`}>
+                    <SubjectIcon size={20} />
+                </span>
+                <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+            </div>
+            <div className="p-5">
+                {Object.entries(levels).map(([group, groupLevels]) => (
+                    <GradeBandGroup key={group} title={group} levels={groupLevels} fileCounts={fileCounts} meta={meta} />
+                ))}
+            </div>
+        </section>
+    );
+}
+
 export default function AllLevelsPage() {
     return (
-        <div className="p-6 max-w-3xl mx-auto">
-            <h1 className="text-2xl font-bold mb-6">All Levels</h1>
+        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold tracking-tight text-gray-900">All Levels</h1>
+                <p className="mt-1 text-sm text-gray-500">Browse every level and its preview files, by subject and grade band.</p>
+            </div>
 
-            <section className="mb-8">
-                <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-4">Math</h2>
-                {Object.entries(mathLevels).map(([group, levels]) => (
-                    <LevelGroup key={group} title={group} levels={levels} fileCounts={mathFileCounts} />
-                ))}
-            </section>
-
-            <section>
-                <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-4">English</h2>
-                {Object.entries(englishLevels).map(([group, levels]) => (
-                    <LevelGroup key={group} title={group} levels={levels} fileCounts={englishFileCounts} />
-                ))}
-            </section>
+            <SubjectCard title="Math" levels={mathLevels} fileCounts={mathFileCounts} />
+            <SubjectCard title="English" levels={englishLevels} fileCounts={englishFileCounts} />
         </div>
     );
 }
