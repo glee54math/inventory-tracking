@@ -17,11 +17,17 @@ export type Speed = "slow" | "normal" | "fast";
 const RATES: Record<Speed, number> = { slow: 0.7, normal: 0.9, fast: 1.1 };
 const SPEED_KEY = "mathlab.tts.speed.v2";
 const TIMING_KEY = "mathlab.tts.timing";
+const AUTO_KEY = "mathlab.tts.autoRead";
 
 export interface TtsState {
   /** Id of the button/reader currently playing, or null. */
   playingId: string | null;
   speed: Speed;
+  /**
+   * Read new questions, feedback and hints out loud without a tap.
+   * null = the student hasn't chosen yet (the lab shows a "turn on sound" banner).
+   */
+  autoRead: boolean | null;
 }
 
 const supported = typeof window !== "undefined" && "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
@@ -37,8 +43,19 @@ function loadSpeed(): Speed {
   return "slow";
 }
 
+function loadAutoRead(): boolean | null {
+  try {
+    const v = localStorage.getItem(AUTO_KEY);
+    if (v === "on") return true;
+    if (v === "off") return false;
+  } catch {
+    /* storage blocked */
+  }
+  return null;
+}
+
 // ---------- tiny external store (for useSyncExternalStore) ----------
-let state: TtsState = { playingId: null, speed: loadSpeed() };
+let state: TtsState = { playingId: null, speed: loadSpeed(), autoRead: loadAutoRead() };
 const listeners = new Set<() => void>();
 const setState = (patch: Partial<TtsState>) => {
   state = { ...state, ...patch };
@@ -57,6 +74,22 @@ export function setSpeed(speed: Speed) {
     /* storage blocked */
   }
   setState({ speed });
+}
+
+export function setAutoRead(on: boolean) {
+  try {
+    localStorage.setItem(AUTO_KEY, on ? "on" : "off");
+  } catch {
+    /* storage blocked */
+  }
+  setState({ autoRead: on });
+}
+
+/** Read text that isn't on screen (e.g. "Sound is on."). On iOS the first one must start from a tap. */
+export function sayText(id: string, text: string) {
+  const el = document.createElement("span");
+  el.textContent = text;
+  play(id, [el]);
 }
 
 // ---------- voice ----------

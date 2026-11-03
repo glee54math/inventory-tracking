@@ -38,9 +38,14 @@ don't duplicate it here.
    plan adds units to an EXISTING lab rather than a new one, flag that
    explicitly too — the builder must grandfather students who already have
    practice history predating any new gate.
-4. State the target audience framing explicitly in the plan (default: built
-   for a student seeing this for the first time, regardless of the standard's
-   posted grade level — adjust only if the user says otherwise for this lab).
+4. State the target audience framing explicitly in the plan. Default: the
+   lab's intended grade audience, pitched at its youngest first-time student
+   (e.g. MK1–MK4 and MG1 = Kindergarten/1st graders seeing it for the first
+   time plus 2nd graders who are behind, working alone on an iPad, mostly
+   non-readers, so audio-first). If the intended audience for this lab isn't
+   clear from its slot, ask the user. Pass the framing to the builder — it
+   sets the reading level of every sentence, and whether the lab uses
+   early-learner mode.
 5. Present the full plan as a concise written summary and ask the user to
    confirm or edit it. This is open-ended curriculum judgment, not a
    short pick-one choice — have a real back-and-forth here if they want
@@ -82,3 +87,25 @@ When the subagent's completion notification arrives:
    you can re-invoke this same subagent (continue it via SendMessage using
    its name, rather than starting a fresh one, so it keeps full context of
    the partial build) once you have the answer.
+
+## Stage 3 — curriculum review
+
+Once the build is complete (not after a blocker):
+
+1. Launch the `math-lab-curriculum-designer` subagent via the Agent tool,
+   `run_in_background: true`. Give it the full approved plan (standards,
+   units, buckets, audience), the lab's file paths, and the builder's full
+   report. Tell the user the review is running.
+2. When it finishes, relay its verdict, top 5 changes, scorecard, and every
+   Blocker and Major finding in plain language. Offer the Minor/Polish list
+   and the proposed builder-rule additions without pasting them all.
+3. Ask the user which findings to fix. Send the chosen ones to the builder
+   (continue the same `math-lab-builder` agent via SendMessage so it keeps
+   context), then relay its fix report.
+4. If any Blocker or Major was fixed, offer one more review pass on just the
+   changed units. Stop after two review rounds unless the user asks for more.
+5. If the user approves any proposed builder-rule additions, add them to
+   `.claude/agents/math-lab-builder.md`.
+
+The user can also ask for this review on its own, for any existing lab —
+then skip Stages 0–2 and launch the curriculum designer directly.

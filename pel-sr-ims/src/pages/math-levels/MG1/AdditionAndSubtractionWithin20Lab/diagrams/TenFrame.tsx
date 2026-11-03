@@ -21,7 +21,7 @@ const FRAME_H = 2 * CELL + GAP + PAD * 2;
  * SAME picture that shows "how many" also shows "which part is which,"
  * instead of a plain undifferentiated count.
  */
-function TenFrame({ filled, tone, splitAt, tone2 }: { filled: number; tone?: Tone; splitAt?: number; tone2?: Tone }) {
+function TenFrame({ filled, tone, splitAt, tone2, highlightEmpty }: { filled: number; tone?: Tone; splitAt?: number; tone2?: Tone; highlightEmpty?: boolean }) {
   const f = Math.max(0, Math.min(10, Math.round(filled)));
   const color = toneColor(tone);
   const color2 = toneColor(tone2 ?? tone);
@@ -37,6 +37,7 @@ function TenFrame({ filled, tone, splitAt, tone2 }: { filled: number; tone?: Ton
         const { x, y } = cellAt(i);
         const isFilled = i < f;
         const isSplit = splitAt !== undefined && isFilled && i >= splitAt;
+        const lit = highlightEmpty && !isFilled;
         return (
           <rect
             key={i}
@@ -48,6 +49,8 @@ function TenFrame({ filled, tone, splitAt, tone2 }: { filled: number; tone?: Ton
             fill={isFilled ? (isSplit ? color2 : color) : "none"}
             stroke={palette.line}
             strokeWidth={1.5}
+            // Help ladder: light up the empty boxes ("how many more to make 10?").
+            style={lit ? { fill: palette.aSoft, stroke: palette.a, strokeWidth: 3, strokeDasharray: "5 3" } : undefined}
           />
         );
       })}
@@ -71,6 +74,8 @@ export interface TenFrameGroupProps {
    */
   splitAt?: number;
   tone2?: Tone;
+  /** Light up the first frame's empty boxes — the help ladder's "count the empty boxes" pointer. */
+  highlightEmpty?: boolean;
 }
 
 /**
@@ -81,7 +86,7 @@ export interface TenFrameGroupProps {
  * for every unit's diagrams: plain counts, make-ten decomposition, and
  * put-together/compare part-shading.
  */
-export function TenFrameGroup({ value, tone, splitAt, tone2 }: TenFrameGroupProps) {
+export function TenFrameGroup({ value, tone, splitAt, tone2, highlightEmpty }: TenFrameGroupProps) {
   const v = Math.max(0, Math.min(20, Math.round(value)));
   const firstCount = Math.min(10, v);
   const secondCount = Math.max(0, v - 10);
@@ -93,7 +98,7 @@ export function TenFrameGroup({ value, tone, splitAt, tone2 }: TenFrameGroupProp
       role="img"
       aria-label={`${v} shown on ten frame${v > 10 ? "s" : ""}`}
     >
-      <TenFrame filled={firstCount} tone={tone} splitAt={splitFirst} tone2={tone2} />
+      <TenFrame filled={firstCount} tone={tone} splitAt={splitFirst} tone2={tone2} highlightEmpty={highlightEmpty} />
       {v > 10 && <TenFrame filled={secondCount} tone={tone} splitAt={splitSecond} tone2={tone2} />}
     </div>
   );

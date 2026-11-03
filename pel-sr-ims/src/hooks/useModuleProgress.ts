@@ -11,11 +11,24 @@ export type { ProgressMap, UnitProgress } from "../utils/moduleProgressTypes";
 export const MASTERY_GOAL = 5;
 
 /**
+ * Clean solves needed per bucket (problem type) for mastery. 2, not 1: one
+ * clean solve can be luck, especially on a short multiple-choice problem.
+ */
+export const BUCKET_CLEAN_GOAL = 2;
+
+/** Clean solves recorded for one bucket (older saves only list covered buckets: count those as 1). */
+export function bucketClean(p: UnitProgress | undefined, bucket: string): number {
+  const n = p?.bucketCleanCounts?.[bucket];
+  if (n !== undefined) return n;
+  return p?.coveredBuckets?.includes(bucket) ? 1 : 0;
+}
+
+/**
  * An entry (unit, shape, topic — whatever `record()`'s `unitId` names) is
- * mastered once every one of its `requiredBuckets` scenario-classes has at
- * least one clean solve — not a separate `goal`-clean-solves floor on top of
- * that, since covering every bucket already implies at least that many
- * clean solves (each newly-covered bucket costs one, per `record()` above).
+ * mastered once every one of its `requiredBuckets` scenario-classes has
+ * BUCKET_CLEAN_GOAL clean solves — not a separate `goal`-clean-solves floor
+ * on top of that, since covering every bucket already implies plenty of
+ * clean solves.
  * A single bucket-coverage bar is also simpler for a student to reason about
  * than two overlapping ones. Entries with no bucket list (requiredBuckets
  * undefined or empty — most of the project, today) fall back to the plain
@@ -27,8 +40,7 @@ export const MASTERY_GOAL = 5;
  */
 export function isMastered(goal: number, requiredBuckets: string[] | undefined, p?: UnitProgress): boolean {
   if (!requiredBuckets || requiredBuckets.length === 0) return (p?.clean ?? 0) >= goal;
-  const covered = p?.coveredBuckets ?? [];
-  return requiredBuckets.every((b) => covered.includes(b));
+  return requiredBuckets.every((b) => bucketClean(p, b) >= BUCKET_CLEAN_GOAL);
 }
 
 /**
@@ -47,9 +59,8 @@ export function isMastered(goal: number, requiredBuckets: string[] | undefined, 
 export function starCount(goal: number, requiredBuckets: string[] | undefined, p?: UnitProgress): number {
   if (isMastered(goal, requiredBuckets, p)) return goal;
   if (!requiredBuckets || requiredBuckets.length === 0) return Math.min(goal - 1, p?.clean ?? 0);
-  const covered = p?.coveredBuckets ?? [];
-  const coveredCount = requiredBuckets.filter((b) => covered.includes(b)).length;
-  return Math.min(goal - 1, Math.ceil((goal * coveredCount) / requiredBuckets.length));
+  const earned = requiredBuckets.reduce((sum, b) => sum + Math.min(BUCKET_CLEAN_GOAL, bucketClean(p, b)), 0);
+  return Math.min(goal - 1, Math.ceil((goal * earned) / (requiredBuckets.length * BUCKET_CLEAN_GOAL)));
 }
 
 const cacheKey = (studentId: string | null, location: string | null, moduleId: string) =>
@@ -89,6 +100,15 @@ function mergeProgress(remote: ProgressMap, local: ProgressMap): ProgressMap {
           coveredBuckets:
             r.coveredBuckets || l.coveredBuckets
               ? Array.from(new Set([...(r.coveredBuckets ?? []), ...(l.coveredBuckets ?? [])]))
+              : undefined,
+          bucketCleanCounts:
+            r.bucketCleanCounts || l.bucketCleanCounts
+              ? Object.fromEntries(
+                  Array.from(new Set([...Object.keys(r.bucketCleanCounts ?? {}), ...Object.keys(l.bucketCleanCounts ?? {})])).map((b) => [
+                    b,
+                    Math.max(bucketClean(r, b), bucketClean(l, b)),
+                  ])
+                )
               : undefined,
         }
       : r;
@@ -158,6 +178,7 @@ export function useModuleProgress(
         // not just "saw every scenario at some point, however messily."
         const coveredBuckets =
           clean && bucket && !cur.coveredBuckets?.includes(bucket) ? [...(cur.coveredBuckets ?? []), bucket] : cur.coveredBuckets;
+        const bucketCleanCounts = clean && bucket ? { ...(cur.bucketCleanCounts ?? {}), [bucket]: bucketClean(cur, bucket) + 1 } : cur.bucketCleanCounts;
         const next = {
           ...p,
           [unitId]: {
@@ -165,6 +186,7 @@ export function useModuleProgress(
             solved: cur.solved + 1,
             clean: cur.clean + (clean ? 1 : 0),
             ...(coveredBuckets ? { coveredBuckets } : {}),
+            ...(bucketCleanCounts ? { bucketCleanCounts } : {}),
           },
         };
         persist(next);

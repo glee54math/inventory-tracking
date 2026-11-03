@@ -7,6 +7,7 @@ import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { classifyingTest } from "./ClassifyingAndCountingByCategoryTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // SHARED HELPERS — item builders, duplicated (not imported) in
@@ -54,23 +55,23 @@ function SortingVocabQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Each group is called a ___?{" "}
-          <select className="answer" value={groupPick} onChange={(e) => setGroupPick(e.target.value)} style={fieldOk(groupOk, checked)}>
+          <TapSelect value={groupPick} onChange={(e) => setGroupPick(e.target.value)} style={fieldOk(groupOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="category">category</option>
             <option value="number">number</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           The feature you sort by (like color or shape) is called the sorting ___?{" "}
-          <select className="answer" value={attrPick} onChange={(e) => setAttrPick(e.target.value)} style={fieldOk(attrOk, checked)}>
+          <TapSelect value={attrPick} onChange={(e) => setAttrPick(e.target.value)} style={fieldOk(attrOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="attribute">attribute</option>
             <option value="answer">answer</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -106,23 +107,23 @@ function SwitchedAttributeQuestion({ onComplete }: { onComplete?: () => void }) 
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Was the blue square sorted correctly for a COLOR sort?{" "}
-          <select className="answer" value={correctPick} onChange={(e) => setCorrectPick(e.target.value)} style={fieldOk(correctOk, checked)}>
+          <TapSelect value={correctPick} onChange={(e) => setCorrectPick(e.target.value)} style={fieldOk(correctOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="yes">Yes</option>
             <option value="no">No</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           When sorting by color, what should decide which group an object goes in?{" "}
-          <select className="answer" value={shouldMatterPick} onChange={(e) => setShouldMatterPick(e.target.value)} style={fieldOk(shouldMatterOk, checked)}>
+          <TapSelect value={shouldMatterPick} onChange={(e) => setShouldMatterPick(e.target.value)} style={fieldOk(shouldMatterOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="color">Its color</option>
             <option value="shape">Its shape</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -154,13 +155,13 @@ function ConsistentAttributeQuestion({ onComplete }: { onComplete?: () => void }
         <b>3.</b> True or false: once you start sorting by one attribute (like color), you should keep using that SAME attribute for every object.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -201,24 +202,24 @@ function CountAndCompareQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Which group has FEWER?{" "}
-          <select className="answer" value={fewerPick} onChange={(e) => setFewerPick(e.target.value)} style={fieldOk(fewerOk, checked)}>
+          <TapSelect value={fewerPick} onChange={(e) => setFewerPick(e.target.value)} style={fieldOk(fewerOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="Red">Red</option>
             <option value="Green">Green</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           How many fewer?{" "}
-          <select className="answer" value={byPick} onChange={(e) => setByPick(e.target.value)} style={fieldOk(byOk, checked)}>
+          <TapSelect value={byPick} onChange={(e) => setByPick(e.target.value)} style={fieldOk(byOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="2">2</option>
             <option value="4">4</option>
             <option value="6">6</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer

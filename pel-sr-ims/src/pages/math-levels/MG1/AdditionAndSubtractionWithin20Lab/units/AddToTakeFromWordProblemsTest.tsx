@@ -10,11 +10,12 @@ import type { Unit } from "../../../shared/units/types";
 
 const ROLES = ["the starting amount", "the change", "the result"];
 
-const CONTEXTS: { person: string; item: string; verbAdd: string; verbTake: string }[] = [
-  { person: "Nora", item: "buttons", verbAdd: "found", verbTake: "gave away" },
-  { person: "Owen", item: "coins", verbAdd: "earned", verbTake: "spent" },
-  { person: "Priya", item: "balloons", verbAdd: "got", verbTake: "popped" },
-  { person: "Theo", item: "cards", verbAdd: "traded for", verbTake: "traded away" },
+// verbTakeBase follows "did" ("How many did Owen spend?").
+const CONTEXTS: { person: string; item: string; verbAdd: string; verbTake: string; verbTakeBase: string }[] = [
+  { person: "Nora", item: "buttons", verbAdd: "found", verbTake: "gave away", verbTakeBase: "give away" },
+  { person: "Owen", item: "coins", verbAdd: "earned", verbTake: "spent", verbTakeBase: "spend" },
+  { person: "Priya", item: "balloons", verbAdd: "got", verbTake: "popped", verbTakeBase: "pop" },
+  { person: "Theo", item: "cards", verbAdd: "traded for", verbTake: "traded away", verbTakeBase: "trade away" },
 ];
 
 export const addToResultNumberQuestion = (): TestQuestion[] => {
@@ -142,7 +143,7 @@ export const takeFromChangeNumberQuestion = (): TestQuestion[] => {
       difficulty: "medium",
       step: {
         kind: "number",
-        prompt: `${ctx.person} had ${start} ${ctx.item}. ${ctx.person} ${ctx.verbTake} some, and now has ${result} ${ctx.item} left. How many ${ctx.item} did ${ctx.person} ${ctx.verbTake}?`,
+        prompt: `${ctx.person} had ${start} ${ctx.item}. ${ctx.person} ${ctx.verbTake} some, and now has ${result} ${ctx.item} left. How many ${ctx.item} did ${ctx.person} ${ctx.verbTakeBase}?`,
         hint: "Start − result = change.",
         explain: `${start} − ${result} = ${change}.`,
         answer: change,

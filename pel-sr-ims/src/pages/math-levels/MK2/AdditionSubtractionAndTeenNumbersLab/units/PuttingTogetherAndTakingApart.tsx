@@ -6,6 +6,7 @@ import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { puttingTogetherAndTakingApartTest } from "./PuttingTogetherAndTakingApartTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -39,25 +40,25 @@ function SymbolMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           What does the + symbol tell you to do?{" "}
-          <select className="answer" value={plusPick} onChange={(e) => setPlusPick(e.target.value)} style={fieldOk(plusOk, checked)}>
+          <TapSelect value={plusPick} onChange={(e) => setPlusPick(e.target.value)} style={fieldOk(plusOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="together">Put groups together</option>
             <option value="apart">Take a group apart</option>
             <option value="compare">Compare two groups</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           What does the = symbol mean?{" "}
-          <select className="answer" value={equalPick} onChange={(e) => setEqualPick(e.target.value)} style={fieldOk(equalOk, checked)}>
+          <TapSelect value={equalPick} onChange={(e) => setEqualPick(e.target.value)} style={fieldOk(equalOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="same">Is the same amount as</option>
             <option value="bigger">Is bigger than</option>
             <option value="question">A question mark</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -97,23 +98,23 @@ function ActionWordingQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Story A: 2 MORE apples are given to Mia. Is story A adding or subtracting?{" "}
-          <select className="answer" value={givenPick} onChange={(e) => setGivenPick(e.target.value)} style={fieldOk(givenOk, checked)}>
+          <TapSelect value={givenPick} onChange={(e) => setGivenPick(e.target.value)} style={fieldOk(givenOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="add">Adding</option>
             <option value="sub">Subtracting</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Story B: 2 apples are TAKEN AWAY from Mia. Is story B adding or subtracting?{" "}
-          <select className="answer" value={takenPick} onChange={(e) => setTakenPick(e.target.value)} style={fieldOk(takenOk, checked)}>
+          <TapSelect value={takenPick} onChange={(e) => setTakenPick(e.target.value)} style={fieldOk(takenOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="add">Adding</option>
             <option value="sub">Subtracting</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -145,13 +146,13 @@ function TakeAwayDirectionQuestion({ onComplete }: { onComplete?: () => void }) 
         <b>3.</b> True or false: when you take objects away from a group, the group can sometimes end up BIGGER than it started.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -191,25 +192,25 @@ function FingersEquationQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           How many fingers are up in all?{" "}
-          <select className="answer" value={totalPick} onChange={(e) => setTotalPick(e.target.value)} style={fieldOk(totalOk, checked)}>
+          <TapSelect value={totalPick} onChange={(e) => setTotalPick(e.target.value)} style={fieldOk(totalOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="3">3</option>
             <option value="4">4</option>
             <option value="5">5</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Which number sentence matches?{" "}
-          <select className="answer" value={eqPick} onChange={(e) => setEqPick(e.target.value)} style={fieldOk(eqOk, checked)}>
+          <TapSelect value={eqPick} onChange={(e) => setEqPick(e.target.value)} style={fieldOk(eqOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="3+1=4">3 + 1 = 4</option>
             <option value="4+1=3">4 + 1 = 3</option>
             <option value="3-1=4">3 − 1 = 4</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer

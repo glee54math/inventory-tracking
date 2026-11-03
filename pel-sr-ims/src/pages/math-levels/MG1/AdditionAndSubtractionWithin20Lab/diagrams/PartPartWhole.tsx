@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { palette, diagramFont } from "../../../shared/lib/palette";
 import type { Tone } from "./TenFrame";
+import { numberPadProps, useEarlyLearner } from "../../../shared/engine/audience";
 
 const toneColor = (tone?: Tone) => (tone === "b" ? palette.b : tone === "c" ? palette.c : palette.a);
 const toneSoft = (tone?: Tone) => (tone === "b" ? palette.bSoft : tone === "c" ? palette.cSoft : palette.aSoft);
@@ -119,10 +120,12 @@ function blankStyle(blank: Blank, tone?: Tone): CSSProperties {
 }
 
 function BlankInput({ blank, tone, style }: { blank: Blank; tone?: Tone; style?: CSSProperties }) {
+  const early = useEarlyLearner();
   return (
     <input
       type="text"
       inputMode="numeric"
+      {...numberPadProps(early)}
       maxLength={2}
       aria-label={blank.label}
       value={blank.value}

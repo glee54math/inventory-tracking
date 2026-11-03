@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { NumberLine } from "../../../shared/diagrams";
 import { TenFrameGroup } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
-import { choice, type Problem } from "../../../shared/engine/types";
+import { choice, pointing, type Problem, type VisualHelp } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { countingOnAndBackTest } from "./CountingOnAndBackTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -42,25 +43,25 @@ function WhereAndHowManyQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Start counting at:{" "}
-          <select className="answer" value={start} onChange={(e) => setStart(e.target.value)} style={fieldOk(startOk, checked)}>
+          <TapSelect value={start} onChange={(e) => setStart(e.target.value)} style={fieldOk(startOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="1">1</option>
             <option value="8">8</option>
             <option value="3">3</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           How many more numbers:{" "}
-          <select className="answer" value={many} onChange={(e) => setMany(e.target.value)} style={fieldOk(manyOk, checked)}>
+          <TapSelect value={many} onChange={(e) => setMany(e.target.value)} style={fieldOk(manyOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="3">3</option>
             <option value="8">8</option>
             <option value="11">11</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -94,13 +95,13 @@ function SmartStartQuestion({ onComplete }: { onComplete?: () => void }) {
         <b>2.</b> You need to find 3 + 8. The problem is written with 3 first — but which number is the SMARTER one to start counting on from?
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="3">3 (the first number written)</option>
           <option value="8">8 (the bigger number)</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -135,7 +136,7 @@ function CountBackSequenceQuestion({ onComplete }: { onComplete?: () => void }) 
   const selectRow = (label: string, value: string, setValue: (v: string) => void, isOk: boolean) => (
     <label>
       {label}:{" "}
-      <select className="answer" value={value} onChange={(e) => setValue(e.target.value)} style={fieldOk(isOk, checked)}>
+      <TapSelect value={value} onChange={(e) => setValue(e.target.value)} style={fieldOk(isOk, checked)}>
         <option value="" disabled>
           choose
         </option>
@@ -144,7 +145,7 @@ function CountBackSequenceQuestion({ onComplete }: { onComplete?: () => void }) 
             {o}
           </option>
         ))}
-      </select>
+      </TapSelect>
     </label>
   );
 
@@ -189,13 +190,13 @@ function CountBackRuleQuestion({ onComplete }: { onComplete?: () => void }) {
         you're subtracting — never one more, never one less.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -252,7 +253,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
     setCurrent(next);
     setTrail((t) => [...t.slice(-5), next]);
   };
-  const countsSoFar = trail.length - 1;
+  // From start/current, not the trail: the trail only keeps the last few numbers.
+  const countsSoFar = Math.abs(current - start);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -321,6 +323,24 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 // PRACTICE
 // ============================================================================
 
+/**
+ * Help ladder: after a wrong try (or the hint) draw the first hop, to show HOW
+ * to count; during "Show me" draw every hop to the answer. `targets` maps a
+ * step index to the number that step lands on.
+ */
+function hopsFor(help: VisualHelp | undefined, from: number, targets: Partial<Record<number, number>>) {
+  if (!help || !pointing(help, help.step)) return undefined;
+  const to = targets[help.step];
+  if (to === undefined || to === from) return undefined;
+  return { from, to: help.showMe ? to : from + Math.sign(to - from), tone: "a" as const };
+}
+
+/** "9, 10, 11" — the numbers you say counting from `from` to `to`. */
+const countWords = (from: number, to: number) => {
+  const dir = to > from ? 1 : -1;
+  return Array.from({ length: Math.abs(to - from) }, (_, k) => from + (k + 1) * dir).join(", ");
+};
+
 type Bucket = "countOnLarger" | "countOnSmallFirst" | "countBackSmall" | "countBackCross";
 const BUCKETS: Bucket[] = ["countOnLarger", "countOnSmallFirst", "countBackSmall", "countBackCross"];
 
@@ -341,11 +361,11 @@ function countingProblem(targetBucket?: string): Problem {
       title: "Counting on",
       bucket,
       story: `Find ${a} + ${b} by counting on.`,
-      visual: () => <NumberLine min={0} max={20} points={[{ value: a, label: "start", tone: "a" }]} />,
+      visual: (_done, help) => <NumberLine min={0} max={20} points={[{ value: a, label: "start", tone: "a" }]} hops={hopsFor(help, a, { 1: a + 1, 2: total })} />,
       steps: [
         choice({ prompt: `Which number should you start counting from, ${a} or ${b}?`, hint: "Start from the number you already have — don't start over from 1.", explain: `Start at ${a}, the number already given.` }, String(a), [String(b)]),
         { kind: "number", prompt: `What's the first number you say as you count on from ${a}?`, hint: "One more than the start.", explain: `${a} + 1 = ${a + 1}.`, answer: a + 1 },
-        { kind: "number", prompt: `Counting on ${b} more from ${a}, what do you land on?`, hint: `Count on ${b} times from ${a}.`, explain: `${a} + ${b} = ${total}.`, answer: total },
+        { kind: "number", prompt: `Counting on ${b} more from ${a}, what do you land on?`, hint: `Count on ${b} times from ${a}.`, showMe: `Start at ${a}. Count on ${b}: ${countWords(a, total)}.`, explain: `${a} + ${b} = ${total}.`, answer: total },
       ],
       wrapUp: `${a} + ${b} = ${total}, by counting on ${b} from ${a}.`,
     };
@@ -365,7 +385,9 @@ function countingProblem(targetBucket?: string): Problem {
       title: "Counting on — smart start",
       bucket,
       story: `Find ${small} + ${big} by counting on. (Notice ${small} is written first.)`,
-      visual: () => <NumberLine min={0} max={20} points={[{ value: small, label: String(small), tone: "b" }, { value: big, label: String(big), tone: "a" }]} />,
+      visual: (_done, help) => (
+        <NumberLine min={0} max={20} points={[{ value: small, label: String(small), tone: "b" }, { value: big, label: String(big), tone: "a" }]} hops={hopsFor(help, big, { 1: big + 1, 2: total })} />
+      ),
       steps: [
         choice(
           { prompt: `Even though ${small} is written first, which number is the SMARTER one to start counting on from?`, hint: "Start from the BIGGER number, no matter which one is written first.", explain: `Starting at ${big} (the bigger number) means counting on fewer times.` },
@@ -373,7 +395,7 @@ function countingProblem(targetBucket?: string): Problem {
           [String(small)]
         ),
         { kind: "number", prompt: `What's the first number you say as you count on from ${big}?`, hint: "One more than the bigger number.", explain: `${big} + 1 = ${big + 1}.`, answer: big + 1 },
-        { kind: "number", prompt: `Counting on ${small} more from ${big}, what do you land on?`, hint: `Count on ${small} times from ${big}.`, explain: `${big} + ${small} = ${total}.`, answer: total },
+        { kind: "number", prompt: `Counting on ${small} more from ${big}, what do you land on?`, hint: `Count on ${small} times from ${big}.`, showMe: `Start at ${big}. Count on ${small}: ${countWords(big, total)}.`, explain: `${big} + ${small} = ${total}.`, answer: total },
       ],
       wrapUp: `${small} + ${big} = ${total} — starting from ${big} (the bigger number) was the faster way.`,
     };
@@ -393,7 +415,7 @@ function countingProblem(targetBucket?: string): Problem {
       title: "Counting back",
       bucket,
       story: `Find ${start} − ${sub} by counting back.`,
-      visual: () => <NumberLine min={0} max={20} points={[{ value: start, label: "start", tone: "c" }]} />,
+      visual: (_done, help) => <NumberLine min={0} max={20} points={[{ value: start, label: "start", tone: "c" }]} hops={hopsFor(help, start, { 0: start - 1, 1: result, 2: result })} />,
       steps: [
         { kind: "number", prompt: `Count back ONE from ${start}. What do you land on?`, hint: "One less than the start.", explain: `${start} − 1 = ${start - 1}.`, answer: start - 1 },
         choice(
@@ -401,7 +423,7 @@ function countingProblem(targetBucket?: string): Problem {
           String(sub),
           [String(sub - 1), String(sub + 1)].filter((d) => Number(d) >= 1)
         ),
-        { kind: "number", prompt: `After counting back ${sub} times from ${start}, what do you land on?`, hint: `Count back ${sub} times total.`, explain: `${start} − ${sub} = ${result}.`, answer: result },
+        { kind: "number", prompt: `After counting back ${sub} times from ${start}, what do you land on?`, hint: `Count back ${sub} times total.`, showMe: `Start at ${start}. Count back ${sub}: ${countWords(start, result)}.`, explain: `${start} − ${sub} = ${result}.`, answer: result },
       ],
       wrapUp: `${start} − ${sub} = ${result}, by counting back ${sub} from ${start}.`,
     };
@@ -421,7 +443,7 @@ function countingProblem(targetBucket?: string): Problem {
     title: "Counting back across the teens",
     bucket,
     story: `Find ${start} − ${sub} by counting back. You'll cross out of the teens.`,
-    visual: () => <NumberLine min={0} max={20} points={[{ value: start, label: "start", tone: "c" }]} />,
+    visual: (_done, help) => <NumberLine min={0} max={20} points={[{ value: start, label: "start", tone: "c" }]} hops={hopsFor(help, start, { 0: start - 1, 1: result, 2: result })} />,
     steps: [
       { kind: "number", prompt: `Count back ONE from ${start}. What do you land on?`, hint: "One less than the start.", explain: `${start} − 1 = ${start - 1}.`, answer: start - 1 },
       choice(
@@ -429,7 +451,7 @@ function countingProblem(targetBucket?: string): Problem {
         String(sub),
         [String(sub - 1), String(sub + 1)].filter((d) => Number(d) >= 1)
       ),
-      { kind: "number", prompt: `After counting back ${sub} times from ${start}, what do you land on?`, hint: `Count back ${sub} times total — you'll land on a number less than 10.`, explain: `${start} − ${sub} = ${result}.`, answer: result },
+      { kind: "number", prompt: `After counting back ${sub} times from ${start}, what do you land on?`, hint: `Count back ${sub} times total — you'll land on a number less than 10.`, showMe: `Start at ${start}. Count back ${sub}: ${countWords(start, result)}.`, explain: `${start} − ${sub} = ${result}.`, answer: result },
     ],
     wrapUp: `${start} − ${sub} = ${result} — you crossed right out of the teens.`,
   };

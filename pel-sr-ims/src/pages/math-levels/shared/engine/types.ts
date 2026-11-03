@@ -8,13 +8,49 @@ interface BaseStep {
   hint: ReactNode;
   /** Shown once the step is correct: the "why". */
   explain: ReactNode;
+  /**
+   * Optional extra for the early-learner "Show me" walk-through (shown above
+   * `explain`), e.g. a worked line like "8 … 9, 10, 11". The picture also
+   * redraws this step as done, and gets help.showMe so it can animate.
+   */
+  showMe?: ReactNode;
+  /**
+   * Keep the "Show me" panel's "Got it" button grayed out for this long after
+   * it opens, so an animation in the picture can play first.
+   */
+  showMeHoldMs?: number;
 }
+
+/**
+ * What the student needs right now, passed to Problem.visual so a picture can
+ * point at the part that matters: e.g. light up the empty ten-frame boxes after
+ * a wrong try, or draw the counting hops during "Show me".
+ */
+export interface VisualHelp {
+  /** Index of the step being worked on. */
+  step: number;
+  /** Wrong tries on that step so far. */
+  wrong: number;
+  /** The hint is showing. */
+  hint: boolean;
+  /** The "Show me" walk-through is open (the picture is drawn with this step done). */
+  showMe: boolean;
+}
+
+/** True when a picture should point at the part that matters for this step. */
+export const pointing = (help: VisualHelp | undefined, step: number): boolean =>
+  !!help && help.step === step && (help.wrong > 0 || help.hint || help.showMe);
 
 export interface NumberStep extends BaseStep {
   kind: "number";
   answer: number;
   prefix?: string; // e.g. "$"
   suffix?: string; // e.g. "cups"
+  /**
+   * Tint the answer box with a quantity color, so it can match a highlighted
+   * spot in the picture (e.g. the "next dot" in MK1's TenGroups).
+   */
+  tone?: "a" | "b" | "c";
   /**
    * Whenever `answer` is NOT a whole dollar amount, require the typed answer
    * to be formatted as exactly two decimal places (e.g. "4.50", not "4.5" or
@@ -228,9 +264,15 @@ export interface Problem {
    * Draws the diagram for this problem. `done` is the number of steps answered
    * correctly so far, so the picture can fill in as the student works.
    */
-  visual: (done: number) => ReactNode;
+  visual: (done: number, help?: VisualHelp) => ReactNode;
   /** Final sentence shown when every step is done. */
   wrapUp: ReactNode;
+  /**
+   * Keep the wrap-up buttons ("Next problem", "Try one like it") grayed out
+   * for this long after the last step, e.g. so a closing animation in the
+   * picture plays through once before the student moves on.
+   */
+  wrapUpHoldMs?: number;
   /**
    * Which scenario-class this generated instance falls into, if the
    * generator tracks that (e.g. "shift2-pad" for a 2-decimal-place divisor

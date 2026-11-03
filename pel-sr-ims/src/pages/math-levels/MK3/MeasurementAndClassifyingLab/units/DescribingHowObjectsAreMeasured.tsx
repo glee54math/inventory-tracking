@@ -5,6 +5,7 @@ import { choice, sentence, selectBlank, type Problem } from "../../../shared/eng
 import type { Unit } from "../../../shared/units/types";
 import { describingTest } from "./DescribingHowObjectsAreMeasuredTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // SHARED DATA — object pool + describing-word pool. Duplicated (not
@@ -73,23 +74,23 @@ function VocabWordsQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Which word tells you about WEIGHT, not length?{" "}
-          <select className="answer" value={weightPick} onChange={(e) => setWeightPick(e.target.value)} style={fieldOk(weightOk, checked)}>
+          <TapSelect value={weightPick} onChange={(e) => setWeightPick(e.target.value)} style={fieldOk(weightOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="tall">tall</option>
             <option value="heavy">heavy</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Which word tells you about LENGTH, not weight?{" "}
-          <select className="answer" value={lengthPick} onChange={(e) => setLengthPick(e.target.value)} style={fieldOk(lengthOk, checked)}>
+          <TapSelect value={lengthPick} onChange={(e) => setLengthPick(e.target.value)} style={fieldOk(lengthOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="light">light</option>
             <option value="long">long</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -132,23 +133,23 @@ function SizeVsWeightQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Which one takes up MORE space (looks bigger)?{" "}
-          <select className="answer" value={biggerPick} onChange={(e) => setBiggerPick(e.target.value)} style={fieldOk(biggerOk, checked)}>
+          <TapSelect value={biggerPick} onChange={(e) => setBiggerPick(e.target.value)} style={fieldOk(biggerOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="balloon">balloon</option>
             <option value="rock">rock</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Which one is HEAVIER?{" "}
-          <select className="answer" value={heavierPick} onChange={(e) => setHeavierPick(e.target.value)} style={fieldOk(heavierOk, checked)}>
+          <TapSelect value={heavierPick} onChange={(e) => setHeavierPick(e.target.value)} style={fieldOk(heavierOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="balloon">balloon</option>
             <option value="rock">rock</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -180,13 +181,13 @@ function BiggerAlwaysHeavierQuestion({ onComplete }: { onComplete?: () => void }
         <b>3.</b> True or false: an object that looks bigger is always heavier than an object that looks smaller.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -224,23 +225,23 @@ function TwoAttributesQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Is the train long or short?{" "}
-          <select className="answer" value={lengthPick} onChange={(e) => setLengthPick(e.target.value)} style={fieldOk(lengthOk, checked)}>
+          <TapSelect value={lengthPick} onChange={(e) => setLengthPick(e.target.value)} style={fieldOk(lengthOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="long">long</option>
             <option value="short">short</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Is the train heavy or light?{" "}
-          <select className="answer" value={weightPick} onChange={(e) => setWeightPick(e.target.value)} style={fieldOk(weightOk, checked)}>
+          <TapSelect value={weightPick} onChange={(e) => setWeightPick(e.target.value)} style={fieldOk(weightOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="heavy">heavy</option>
             <option value="light">light</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer

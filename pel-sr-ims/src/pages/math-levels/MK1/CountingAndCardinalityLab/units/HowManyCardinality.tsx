@@ -6,6 +6,7 @@ import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { howManyCardinalityTest } from "./HowManyCardinalityTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -39,24 +40,24 @@ function LastNumberVocabQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           What does the LAST number you said ("5") tell you?{" "}
-          <select className="answer" value={meaningPick} onChange={(e) => setMeaningPick(e.target.value)} style={fieldOk(meaningOk, checked)}>
+          <TapSelect value={meaningPick} onChange={(e) => setMeaningPick(e.target.value)} style={fieldOk(meaningOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="total">It's the total — how many blocks there are in all</option>
             <option value="label">It's just the name of the last block you touched</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           So how many blocks are there in all?{" "}
-          <select className="answer" value={totalPick} onChange={(e) => setTotalPick(e.target.value)} style={fieldOk(totalOk, checked)}>
+          <TapSelect value={totalPick} onChange={(e) => setTotalPick(e.target.value)} style={fieldOk(totalOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="4">4</option>
             <option value="5">5</option>
             <option value="6">6</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -94,24 +95,24 @@ function RecountQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           What total will you get the second time?{" "}
-          <select className="answer" value={recountPick} onChange={(e) => setRecountPick(e.target.value)} style={fieldOk(recountOk, checked)}>
+          <TapSelect value={recountPick} onChange={(e) => setRecountPick(e.target.value)} style={fieldOk(recountOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="5">5</option>
             <option value="6">6</option>
             <option value="7">7</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           True or false: recounting a group that hasn't changed can give a different total.{" "}
-          <select className="answer" value={everDifferentPick} onChange={(e) => setEverDifferentPick(e.target.value)} style={fieldOk(everDifferentOk, checked)}>
+          <TapSelect value={everDifferentPick} onChange={(e) => setEverDifferentPick(e.target.value)} style={fieldOk(everDifferentOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="true">True</option>
             <option value="false">False</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -145,13 +146,13 @@ function StartingPointQuestion({ onComplete }: { onComplete?: () => void }) {
       <CounterGroup count={6} arrangement="circle" tone="b" seed={6} />
       <p>True or false: no matter which counter you start counting from, you'll always get the same total — as long as you count each one exactly once.</p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -191,25 +192,25 @@ function OneMoreQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           How many are there?{" "}
-          <select className="answer" value={totalPick} onChange={(e) => setTotalPick(e.target.value)} style={fieldOk(totalOk, checked)}>
+          <TapSelect value={totalPick} onChange={(e) => setTotalPick(e.target.value)} style={fieldOk(totalOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="6">6</option>
             <option value="7">7</option>
             <option value="8">8</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           If ONE MORE counter joined the group, how many would there be now?{" "}
-          <select className="answer" value={oneMorePick} onChange={(e) => setOneMorePick(e.target.value)} style={fieldOk(oneMoreOk, checked)}>
+          <TapSelect value={oneMorePick} onChange={(e) => setOneMorePick(e.target.value)} style={fieldOk(oneMoreOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="7">7</option>
             <option value="8">8</option>
             <option value="9">9</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -413,7 +414,9 @@ function cardinalityProblem(targetBucket?: string): Problem {
     title: "Count out some, see what's left",
     bucket,
     story: `There is a pile of ${total} counters. Count out ${take} of them to give to a friend.`,
-    visual: () => <CounterGroup count={total} arrangement="scatter" tone="b" seed={total * 7 + take} />,
+    // Step 1 counts the whole pile; from step 2 on, the `take` counters given
+    // away are crossed out so "how many are left?" has something to count.
+    visual: (done) => <CounterGroup count={total} arrangement="scatter" tone="b" seed={total * 7 + take} removed={done >= 1 ? take : 0} />,
     steps: [
       { kind: "number", prompt: "How many counters are in the pile to start?", hint: "Count the whole pile shown.", explain: `There are ${total} counters in the pile.`, answer: total },
       { kind: "number", prompt: `After counting out ${take} of them, how many are left in the pile?`, hint: "Start with the total and count backward by how many were taken.", explain: `${total} take away ${take} leaves ${remaining}.`, answer: remaining },

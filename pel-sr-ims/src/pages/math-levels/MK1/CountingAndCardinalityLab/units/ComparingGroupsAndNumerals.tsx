@@ -7,6 +7,7 @@ import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingGroupsAndNumeralsTest } from "./ComparingGroupsAndNumeralsTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 const bigDigit = (d: number | string) => (
   <span style={{ display: "inline-block", fontSize: 54, fontWeight: 800, fontFamily: "'Courier New', monospace" }}>{d}</span>
@@ -89,24 +90,24 @@ function SpaceVsCountQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Which group has more counters?{" "}
-          <select className="answer" value={morePick} onChange={(e) => setMorePick(e.target.value)} style={fieldOk(moreOk, checked)}>
+          <TapSelect value={morePick} onChange={(e) => setMorePick(e.target.value)} style={fieldOk(moreOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="bunched">The bunched-up group</option>
             <option value="spread">The spread-out group</option>
             <option value="equal">They have the same amount</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           True or false: spreading counters out so they take up more space makes the total bigger.{" "}
-          <select className="answer" value={changesPick} onChange={(e) => setChangesPick(e.target.value)} style={fieldOk(changesOk, checked)}>
+          <TapSelect value={changesPick} onChange={(e) => setChangesPick(e.target.value)} style={fieldOk(changesOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="true">True</option>
             <option value="false">False</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -145,23 +146,23 @@ function MoreFewerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Which group has MORE counters?{" "}
-          <select className="answer" value={morePick} onChange={(e) => setMorePick(e.target.value)} style={fieldOk(moreOk, checked)}>
+          <TapSelect value={morePick} onChange={(e) => setMorePick(e.target.value)} style={fieldOk(moreOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="A">Group A</option>
             <option value="B">Group B</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Which group has FEWER counters?{" "}
-          <select className="answer" value={fewerPick} onChange={(e) => setFewerPick(e.target.value)} style={fieldOk(fewerOk, checked)}>
+          <TapSelect value={fewerPick} onChange={(e) => setFewerPick(e.target.value)} style={fieldOk(fewerOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="A">Group A</option>
             <option value="B">Group B</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -196,13 +197,13 @@ function ObjectsVsNumeralsQuestion({ onComplete }: { onComplete?: () => void }) 
       </p>
       <p>True or false: comparing numerals uses a completely different idea of "bigger" than comparing groups of objects.</p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -239,23 +240,23 @@ function CloseVsObviousQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Which group has more?{" "}
-          <select className="answer" value={morePick} onChange={(e) => setMorePick(e.target.value)} style={fieldOk(moreOk, checked)}>
+          <TapSelect value={morePick} onChange={(e) => setMorePick(e.target.value)} style={fieldOk(moreOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="6">Group A (6)</option>
             <option value="7">Group B (7)</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Is this an easy difference to spot at a glance, or a close one that needs careful counting?{" "}
-          <select className="answer" value={typePick} onChange={(e) => setTypePick(e.target.value)} style={fieldOk(typeOk, checked)}>
+          <TapSelect value={typePick} onChange={(e) => setTypePick(e.target.value)} style={fieldOk(typeOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="easy">Easy to spot at a glance</option>
             <option value="close">Close — needs careful counting</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer

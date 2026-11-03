@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { TenFrameGroup } from "../diagrams";
 import { randInt, pick } from "../../../shared/lib/math";
-import { choice, type Problem } from "../../../shared/engine/types";
+import { choice, pointing, type Problem, type VisualHelp } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 import { addToTakeFromWordProblemsTest } from "./AddToTakeFromWordProblemsTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -58,7 +59,7 @@ function RolePlusNumberQuestion({
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           What's unknown?{" "}
-          <select className="answer" value={role} onChange={(e) => setRole(e.target.value)} style={fieldOk(roleOk, checked)}>
+          <TapSelect value={role} onChange={(e) => setRole(e.target.value)} style={fieldOk(roleOk, checked)}>
             <option value="" disabled>
               choose
             </option>
@@ -67,11 +68,11 @@ function RolePlusNumberQuestion({
                 {r}
               </option>
             ))}
-          </select>
+          </TapSelect>
         </label>
         <label>
           Answer:{" "}
-          <select className="answer" value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(answerOk, checked)}>
+          <TapSelect value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(answerOk, checked)}>
             <option value="" disabled>
               choose
             </option>
@@ -80,7 +81,7 @@ function RolePlusNumberQuestion({
                 {o}
               </option>
             ))}
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -139,13 +140,13 @@ function WordProblemCheckForUnderstanding({ onComplete }: { onComplete?: () => v
           <b>3.</b> True or false: in every add-to or take-from story, the question is always asking for the total amount at the very END.
         </p>
         <div className="control-row" style={{ alignItems: "center" }}>
-          <select className="answer" value={trueFalse} onChange={(e) => setTrueFalse(e.target.value)} style={fieldOk(tfOk, tfChecked)}>
+          <TapSelect value={trueFalse} onChange={(e) => setTrueFalse(e.target.value)} style={fieldOk(tfOk, tfChecked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="true">True</option>
             <option value="false">False</option>
-          </select>
+          </TapSelect>
           <button className="btn primary" type="button" onClick={() => setTfChecked(true)}>
             Check Answer
           </button>
@@ -262,12 +263,13 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 type Bucket = "addToResult" | "addToChange" | "addToStart" | "takeFromResult" | "takeFromChange" | "takeFromStart";
 const BUCKETS: Bucket[] = ["addToResult", "addToChange", "addToStart", "takeFromResult", "takeFromChange", "takeFromStart"];
 
-const CONTEXTS: { person: string; item: string; verbAdd: string; verbTake: string }[] = [
-  { person: "Mia", item: "stickers", verbAdd: "got", verbTake: "gave away" },
-  { person: "Jake", item: "marbles", verbAdd: "found", verbTake: "lost" },
-  { person: "Ava", item: "crayons", verbAdd: "received", verbTake: "shared away" },
-  { person: "Liam", item: "shells", verbAdd: "collected", verbTake: "gave to a friend" },
-  { person: "Zoe", item: "stamps", verbAdd: "bought", verbTake: "used up" },
+// verbAdd/verbTake are past tense ("Mia got 3"); the *Base forms follow "did" ("How many did Mia get?").
+const CONTEXTS: { person: string; item: string; verbAdd: string; verbAddBase: string; verbTake: string; verbTakeBase: string }[] = [
+  { person: "Mia", item: "stickers", verbAdd: "got", verbAddBase: "get", verbTake: "gave away", verbTakeBase: "give away" },
+  { person: "Jake", item: "marbles", verbAdd: "found", verbAddBase: "find", verbTake: "lost", verbTakeBase: "lose" },
+  { person: "Ava", item: "crayons", verbAdd: "got", verbAddBase: "get", verbTake: "shared", verbTakeBase: "share" },
+  { person: "Liam", item: "shells", verbAdd: "collected", verbAddBase: "collect", verbTake: "dropped", verbTakeBase: "drop" },
+  { person: "Zoe", item: "stamps", verbAdd: "bought", verbAddBase: "buy", verbTake: "used up", verbTakeBase: "use up" },
 ];
 
 function wordProblem(targetBucket?: string): Problem {
@@ -294,9 +296,10 @@ function wordProblem(targetBucket?: string): Problem {
         title: "Add To — how many now?",
         bucket,
         story: `${ctx.person} had ${start} ${ctx.item}. Then ${ctx.person} ${ctx.verbAdd} ${change} more ${ctx.item}. How many ${ctx.item} does ${ctx.person} have now?`,
-        visual: () => (
+        // Help ladder (step 1): act the story out, with the change in a second color.
+        visual: (_done: number, help?: VisualHelp) => (
           <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
-            <TenFrameGroup value={start} tone="a" />
+            {pointing(help, 1) ? <TenFrameGroup value={result} tone="a" splitAt={start} tone2="b" /> : <TenFrameGroup value={start} tone="a" />}
           </div>
         ),
         steps: [roleChoice(2), { kind: "number", prompt: `How many ${ctx.item} does ${ctx.person} have now?`, hint: "Start + change = result.", explain: `${start} + ${change} = ${result}.`, answer: result }],
@@ -307,14 +310,14 @@ function wordProblem(targetBucket?: string): Problem {
       return {
         title: "Add To — how many did they get?",
         bucket,
-        story: `${ctx.person} had ${start} ${ctx.item}. ${ctx.person} ${ctx.verbAdd} some more, and now has ${result} ${ctx.item}. How many ${ctx.item} did ${ctx.person} ${ctx.verbAdd}?`,
-        visual: () => (
+        story: `${ctx.person} had ${start} ${ctx.item}. ${ctx.person} ${ctx.verbAdd} some more, and now has ${result} ${ctx.item}. How many ${ctx.item} did ${ctx.person} ${ctx.verbAddBase}?`,
+        visual: (_done: number, help?: VisualHelp) => (
           <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
             <TenFrameGroup value={start} tone="a" />
-            <TenFrameGroup value={result} tone="c" />
+            {pointing(help, 1) ? <TenFrameGroup value={result} tone="a" splitAt={start} tone2="b" /> : <TenFrameGroup value={result} tone="c" />}
           </div>
         ),
-        steps: [roleChoice(1), { kind: "number", prompt: `How many ${ctx.item} did ${ctx.person} ${ctx.verbAdd}?`, hint: "Result − start = change.", explain: `${result} − ${start} = ${change}.`, answer: change }],
+        steps: [roleChoice(1), { kind: "number", prompt: `How many ${ctx.item} did ${ctx.person} ${ctx.verbAddBase}?`, hint: "Result − start = change.", explain: `${result} − ${start} = ${change}.`, answer: change }],
         wrapUp: `${start} + ${change} = ${result}.`,
       };
     }
@@ -322,9 +325,9 @@ function wordProblem(targetBucket?: string): Problem {
       title: "Add To — how many at the start?",
       bucket,
       story: `${ctx.person} had some ${ctx.item}. Then ${ctx.person} ${ctx.verbAdd} ${change} more, and now has ${result} ${ctx.item}. How many ${ctx.item} did ${ctx.person} have at the start?`,
-      visual: () => (
+      visual: (_done: number, help?: VisualHelp) => (
         <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
-          <TenFrameGroup value={result} tone="c" />
+          {pointing(help, 1) ? <TenFrameGroup value={result} tone="a" splitAt={start} tone2="b" /> : <TenFrameGroup value={result} tone="c" />}
         </div>
       ),
       steps: [
@@ -349,9 +352,9 @@ function wordProblem(targetBucket?: string): Problem {
       title: "Take From — how many left?",
       bucket,
       story: `${ctx.person} had ${start} ${ctx.item}. Then ${ctx.person} ${ctx.verbTake} ${change} ${ctx.item}. How many ${ctx.item} does ${ctx.person} have left?`,
-      visual: () => (
+      visual: (_done: number, help?: VisualHelp) => (
         <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
-          <TenFrameGroup value={start} tone="a" />
+          <TenFrameGroup value={start} tone="a" splitAt={pointing(help, 1) ? result : undefined} tone2="b" />
         </div>
       ),
       steps: [roleChoice(2), { kind: "number", prompt: `How many ${ctx.item} does ${ctx.person} have left?`, hint: "Start − change = result.", explain: `${start} − ${change} = ${result}.`, answer: result }],
@@ -362,14 +365,14 @@ function wordProblem(targetBucket?: string): Problem {
     return {
       title: "Take From — how many did they give away?",
       bucket,
-      story: `${ctx.person} had ${start} ${ctx.item}. ${ctx.person} ${ctx.verbTake} some, and now has ${result} ${ctx.item} left. How many ${ctx.item} did ${ctx.person} ${ctx.verbTake}?`,
-      visual: () => (
+      story: `${ctx.person} had ${start} ${ctx.item}. ${ctx.person} ${ctx.verbTake} some, and now has ${result} ${ctx.item} left. How many ${ctx.item} did ${ctx.person} ${ctx.verbTakeBase}?`,
+      visual: (_done: number, help?: VisualHelp) => (
         <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
-          <TenFrameGroup value={start} tone="a" />
+          <TenFrameGroup value={start} tone="a" splitAt={pointing(help, 1) ? result : undefined} tone2="b" />
           <TenFrameGroup value={result} tone="c" />
         </div>
       ),
-      steps: [roleChoice(1), { kind: "number", prompt: `How many ${ctx.item} did ${ctx.person} ${ctx.verbTake}?`, hint: "Start − result = change.", explain: `${start} − ${result} = ${change}.`, answer: change }],
+      steps: [roleChoice(1), { kind: "number", prompt: `How many ${ctx.item} did ${ctx.person} ${ctx.verbTakeBase}?`, hint: "Start − result = change.", explain: `${start} − ${result} = ${change}.`, answer: change }],
       wrapUp: `${start} − ${change} = ${result}.`,
     };
   }
@@ -377,9 +380,9 @@ function wordProblem(targetBucket?: string): Problem {
     title: "Take From — how many at the start?",
     bucket,
     story: `${ctx.person} ${ctx.verbTake} ${change} ${ctx.item}, and now has ${result} ${ctx.item} left. How many ${ctx.item} did ${ctx.person} have at the start?`,
-    visual: () => (
+    visual: (_done: number, help?: VisualHelp) => (
       <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
-        <TenFrameGroup value={result} tone="c" />
+        {pointing(help, 1) ? <TenFrameGroup value={start} tone="a" splitAt={result} tone2="b" /> : <TenFrameGroup value={result} tone="c" />}
       </div>
     ),
     steps: [

@@ -466,6 +466,14 @@
   opacity: 0.6;
 }
 
+/* Wrap-up buttons waiting for the picture's closing animation (Problem.wrapUpHoldMs). */
+.lab-base .wrapup .btn:disabled,
+.lab-base .show-me + .step-tools .btn:disabled {
+  opacity: 0.45;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
 .lab-base .btn.big {
   font-size: 18px;
   padding: 13px 26px;
@@ -819,6 +827,28 @@
   border-color: var(--qa);
   outline: none;
   box-shadow: 0 0 0 3px var(--qa-soft);
+}
+
+/* A number answer box tinted to match a highlighted spot in the picture. */
+.lab-base input.answer.qa,
+.lab-base input.answer.qa:focus {
+  border-color: var(--qa);
+  background: var(--qa-soft);
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+
+.lab-base input.answer.qb,
+.lab-base input.answer.qb:focus {
+  border-color: var(--qb);
+  background: var(--qb-soft);
+  box-shadow: 0 0 0 3px var(--qb-soft);
+}
+
+.lab-base input.answer.qc,
+.lab-base input.answer.qc:focus {
+  border-color: var(--qc);
+  background: var(--qc-soft);
+  box-shadow: 0 0 0 3px var(--qc-soft);
 }
 
 .lab-base .ratio-box {
@@ -1278,4 +1308,292 @@ input.align-slot.align-slot-input {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ==========================================================================
+   Help ladder (every lab): "look here" pulse on the picture after a wrong
+   try, and the early-learner "Show me" walk-through. See StepProblem.tsx.
+   ========================================================================== */
+
+/* The ring below is absolutely positioned inside the picture box. That box is
+   sticky on wide screens; where it is static (narrow screens), make it relative. */
+@media (max-width: 1040px) {
+  .lab-base .problem-visual {
+    position: relative;
+  }
+}
+
+.lab-base .problem-visual {
+  transition: padding-top 0.2s ease;
+}
+
+/* Extra room on top so the badge sits in its own strip, not over the picture. */
+.lab-base .problem-visual.look-here {
+  border-color: var(--qa);
+  border-style: solid;
+  padding-top: 44px;
+}
+
+/* Inside the box (not outside it): the picture box scrolls sideways, which clips anything past its edge. */
+.lab-base .look-here-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  border: 4px solid var(--qa);
+  pointer-events: none;
+  animation: labLookHere 0.9s ease-out 2;
+}
+
+.lab-base .look-here-badge {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: var(--qa);
+  color: var(--on-q);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* A blinking "take this one away" mark in a diagram (e.g. MK1 TenGroups `remove`). */
+.lab-base .diagram-blink {
+  animation: labBlink 1s ease-in-out infinite;
+}
+
+/* A dot popping in as it's counted (e.g. MK1 TenGroups `countAlong`). */
+.lab-base .diagram-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: labPop 0.35s ease-out;
+}
+
+@keyframes labPop {
+  0% {
+    transform: scale(0.3);
+  }
+  70% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-base .diagram-pop {
+    animation: none;
+  }
+}
+
+@keyframes labBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
+
+/* Blink exactly 3 times over 3s, e.g. the new group of ten during "Show me". */
+.lab-base .diagram-blink-3 {
+  animation: labBlink 1s ease-in-out 3;
+}
+
+/* One blink, started by an inline animation-delay (e.g. counting groups of ten one by one). */
+.lab-base .diagram-blink-once {
+  animation: labBlink 1s ease-in-out 1;
+}
+
+/* Hidden until its inline animation-delay, then fades in and stays. */
+.lab-base .diagram-reveal {
+  animation: labReveal 0.3s ease-out both;
+}
+
+@keyframes labReveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-base .diagram-blink,
+  .lab-base .diagram-blink-3,
+  .lab-base .diagram-blink-once,
+  .lab-base .diagram-reveal {
+    animation: none;
+  }
+}
+
+@keyframes labLookHere {
+  0% {
+    box-shadow: 0 0 0 0 var(--qa-soft);
+  }
+  60% {
+    box-shadow: 0 0 0 14px var(--qa-soft);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.lab-base .show-me {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--qa-soft);
+  border: 2px solid var(--qa);
+}
+
+.lab-base .show-me.tts-block {
+  --tts-inset: 14px;
+}
+
+.lab-base .show-me-title {
+  font-weight: 800;
+}
+
+.lab-base .choice.tried {
+  opacity: 0.45;
+  text-decoration: line-through;
+  cursor: default;
+}
+
+/* ==========================================================================
+   Tap buttons that replace CFU dropdowns (shared/components/TapSelect.tsx).
+   ========================================================================== */
+
+.lab-base .tap-select {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  vertical-align: middle;
+}
+
+.lab-base .tap-option {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  min-width: 48px;
+  justify-content: center;
+  padding: 8px 16px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lab-base .tap-option:hover {
+  border-color: var(--qa);
+}
+
+.lab-base .tap-option.on {
+  background: var(--qa-soft);
+  border-color: var(--qa);
+  box-shadow: inset 0 0 0 1px var(--qa);
+}
+
+.lab-base .tap-option:focus-visible {
+  outline: 3px solid var(--qa);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Early learners (K–1 labs: root has .lab-early). Bigger tap targets.
+   ========================================================================== */
+
+.lab-base.lab-early .btn {
+  min-height: 48px;
+  padding: 11px 22px;
+  font-size: 17px;
+}
+
+.lab-base.lab-early .choice {
+  min-height: 56px;
+  padding: 14px 18px;
+  font-size: 19px;
+}
+
+.lab-base.lab-early input.answer {
+  min-height: 52px;
+  font-size: 24px;
+  width: 120px;
+  text-align: center;
+}
+
+.lab-base.lab-early .tap-option {
+  min-height: 56px;
+  font-size: 19px;
+}
+
+.lab-base.lab-early .stepper-ctl button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.lab-base.lab-early .show-me-btn {
+  font-size: 19px;
+}
+
+/* ==========================================================================
+   On-screen number pads (shared/components/NumberPad.tsx).
+   Inline: in the page under a practice/test answer box. Floating: bottom-left,
+   above the read-aloud toolbar, for the few other number boxes.
+   ========================================================================== */
+
+.lab-base .numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 68px);
+  gap: 8px;
+  padding: 10px;
+  border-radius: 20px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+}
+
+.lab-base .numpad-key {
+  height: 60px;
+  border-radius: 14px;
+  border: 2px solid var(--line);
+  background: var(--bg, var(--card));
+  color: var(--ink);
+  font-size: 26px;
+  font-weight: 700;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lab-base .numpad-key:active {
+  background: var(--qa-soft);
+  border-color: var(--qa);
+}
+
+.lab-base .numpad-done {
+  background: var(--qa);
+  border-color: var(--qa);
+  color: var(--on-q);
+  font-size: 18px;
+}
+
+/* Sits beside the answer box, or wraps under it on a narrow screen. */
+.lab-base .numpad-inline {
+  width: max-content;
+  box-shadow: none;
+}
+
+.lab-base .numpad-float {
+  position: fixed;
+  left: 16px;
+  bottom: 84px;
+  z-index: 60;
 }

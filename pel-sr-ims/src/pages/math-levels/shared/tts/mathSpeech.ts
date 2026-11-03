@@ -61,6 +61,8 @@ const SYMBOLS: Record<string, string> = {
   "%": "percent",
   "°": "degrees",
   "&": "and",
+  "☐": "blank",
+  "□": "blank",
 };
 
 /** Kept as-is so the voice pauses naturally. */

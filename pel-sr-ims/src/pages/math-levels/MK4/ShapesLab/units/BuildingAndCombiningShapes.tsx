@@ -9,6 +9,7 @@ import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { buildingAndCombiningShapesTest } from "./BuildingAndCombiningShapesTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -39,23 +40,23 @@ function StickVocabQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Joined this way, the sticks can show a shape's...{" "}
-          <select className="answer" value={wordPick} onChange={(e) => setWordPick(e.target.value)} style={fieldOk(wordOk, checked)}>
+          <TapSelect value={wordPick} onChange={(e) => setWordPick(e.target.value)} style={fieldOk(wordOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="sides">Sides</option>
             <option value="colors">Colors</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           How many sticks do you need to build a triangle?{" "}
-          <select className="answer" value={countPick} onChange={(e) => setCountPick(e.target.value)} style={fieldOk(countOk, checked)}>
+          <TapSelect value={countPick} onChange={(e) => setCountPick(e.target.value)} style={fieldOk(countOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="3">3</option>
             <option value="4">4</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -90,23 +91,23 @@ function TwoTrianglesConflationQuestion({ onComplete }: { onComplete?: () => voi
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Joined one way, the two triangles can make a...{" "}
-          <select className="answer" value={resultPick} onChange={(e) => setResultPick(e.target.value)} style={fieldOk(resultOk, checked)}>
+          <TapSelect value={resultPick} onChange={(e) => setResultPick(e.target.value)} style={fieldOk(resultOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="square">Square</option>
             <option value="hexagon">Hexagon</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Could the SAME two triangles also make a different shape, joined a different way?{" "}
-          <select className="answer" value={otherWayPick} onChange={(e) => setOtherWayPick(e.target.value)} style={fieldOk(otherWayOk, checked)}>
+          <TapSelect value={otherWayPick} onChange={(e) => setOtherWayPick(e.target.value)} style={fieldOk(otherWayOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="yes">Yes</option>
             <option value="no">No</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -137,13 +138,13 @@ function OneWayTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         <b>3.</b> True or false: there is only ONE correct way to put smaller pieces together to build a bigger shape.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -180,23 +181,23 @@ function DotsAndSticksQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           What do the clay-ball DOTS represent?{" "}
-          <select className="answer" value={dotsPick} onChange={(e) => setDotsPick(e.target.value)} style={fieldOk(dotsOk, checked)}>
+          <TapSelect value={dotsPick} onChange={(e) => setDotsPick(e.target.value)} style={fieldOk(dotsOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="corners">Corners</option>
             <option value="sides">Sides</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           What do the STICKS represent?{" "}
-          <select className="answer" value={sticksPick} onChange={(e) => setSticksPick(e.target.value)} style={fieldOk(sticksOk, checked)}>
+          <TapSelect value={sticksPick} onChange={(e) => setSticksPick(e.target.value)} style={fieldOk(sticksOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="corners">Corners</option>
             <option value="sides">Sides</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer

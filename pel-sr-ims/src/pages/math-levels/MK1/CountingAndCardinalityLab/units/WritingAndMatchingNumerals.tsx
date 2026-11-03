@@ -6,6 +6,7 @@ import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { writingAndMatchingNumeralsTest } from "./WritingAndMatchingNumeralsTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // Number words 0-20 — stand in for a "spoken/heard" number, since this app
 // has no audio. Index === the numeral itself.
@@ -49,25 +50,25 @@ function NumeralVocabQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           How many?{" "}
-          <select className="answer" value={countPick} onChange={(e) => setCountPick(e.target.value)} style={fieldOk(countOk, checked)}>
+          <TapSelect value={countPick} onChange={(e) => setCountPick(e.target.value)} style={fieldOk(countOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="4">4</option>
             <option value="5">5</option>
             <option value="6">6</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           What do we call the written symbol "5" that stands for that count?{" "}
-          <select className="answer" value={wordPick} onChange={(e) => setWordPick(e.target.value)} style={fieldOk(wordOk, checked)}>
+          <TapSelect value={wordPick} onChange={(e) => setWordPick(e.target.value)} style={fieldOk(wordOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="numeral">a numeral</option>
             <option value="letter">a letter</option>
             <option value="label">a label</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -98,13 +99,13 @@ function SixNineQuestion({ onComplete }: { onComplete?: () => void }) {
   const selectRow = (label: string, value: string, setValue: (v: string) => void, isOk: boolean) => (
     <label>
       {label}:{" "}
-      <select className="answer" value={value} onChange={(e) => setValue(e.target.value)} style={fieldOk(isOk, checked)}>
+      <TapSelect value={value} onChange={(e) => setValue(e.target.value)} style={fieldOk(isOk, checked)}>
         <option value="" disabled>
           choose
         </option>
         <option value="left">Left</option>
         <option value="right">Right</option>
-      </select>
+      </TapSelect>
     </label>
   );
 
@@ -146,13 +147,13 @@ function FlipGeneralizationQuestion({ onComplete }: { onComplete?: () => void })
         upside down.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -191,23 +192,23 @@ function PictureToNumeralQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Which numeral matches this count?{" "}
-          <select className="answer" value={numeralPick} onChange={(e) => setNumeralPick(e.target.value)} style={fieldOk(numeralOk, checked)}>
+          <TapSelect value={numeralPick} onChange={(e) => setNumeralPick(e.target.value)} style={fieldOk(numeralOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="6">6</option>
             <option value="9">9</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           One FEWER than that would be:{" "}
-          <select className="answer" value={onelessPick} onChange={(e) => setOnelessPick(e.target.value)} style={fieldOk(onelessOk, checked)}>
+          <TapSelect value={onelessPick} onChange={(e) => setOnelessPick(e.target.value)} style={fieldOk(onelessOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="8">8</option>
             <option value="10">10</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -327,7 +328,9 @@ function numeralProblem(targetBucket?: string): Problem {
       title: "Write the numeral",
       bucket,
       story: `Write the numeral for the number word "${NUMBER_WORDS[n]}".`,
-      visual: () => bigDigit("?"),
+      // "?" until the numeral is written; then show it, since step 2 asks
+      // for one more than that numeral.
+      visual: (done) => bigDigit(done === 0 ? "?" : String(n)),
       steps: [
         { kind: "number", prompt: `What numeral is "${NUMBER_WORDS[n]}"?`, hint: "Think of the symbol, not the word — just the digit(s).", explain: `"${NUMBER_WORDS[n]}" is written as the numeral ${n}.`, answer: n },
         { kind: "number", prompt: `What numeral is one MORE than ${n}?`, hint: "Count one step forward from the numeral you just wrote.", explain: `One more than ${n} is ${n + 1}.`, answer: n + 1 },

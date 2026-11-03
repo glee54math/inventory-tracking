@@ -12,6 +12,7 @@ import { shuffle } from "../shared/lib/math";
 import { MASTERY_GOAL, isMastered as sharedIsMastered, starCount as sharedStarCount, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
 import { useStudentContext } from "../../../components/student_portal/StudentContext";
 import { ReadAllButton, ReadAloud, SpeakButton, TtsProvider } from "../shared/tts/ReadAloud";
+import { EarlyLearnerProvider } from "../shared/engine/audience";
 
 const MODULE_ID = "MK4_ShapesLab";
 // Synthetic progress key for the cross-unit module test — not a real unit id,
@@ -100,7 +101,7 @@ function Home({
           ))}
         </ol>
         <ReadAloud as="p" className="muted small">
-          Stars fill in as you clean-solve (at most one hint) every different kind of problem in Mixed mode — the last star needs all of them.
+          Solve each kind of problem 2 times by yourself to fill in your stars. Only Mixed problems count.
         </ReadAloud>
       </section>
       <section>
@@ -157,19 +158,36 @@ function UnitView({
   // bucket its own turn. Resets whenever the mode (mix vs a specific type)
   // changes, or naturally refills+reshuffles once exhausted.
   const bagRef = useRef<{ key: string; items: Array<() => Problem> }>({ key: "", items: [] });
+  // The generator behind the problem on screen, so "Try one like it" can draw the same kind again.
+  const lastMakeRef = useRef<(() => Problem) | null>(null);
+  // The last draw, so running this memo twice for the same draw (React
+  // StrictMode does this in dev) returns the same problem instead of popping
+  // a second one from the bag — which left lastMakeRef pointing at a
+  // different problem type than the one on screen.
+  const drawRef = useRef<{ token: string; problem: Problem } | null>(null);
 
   const problem = useMemo(() => {
     const key = typeIdx === "mix" ? "mix" : String(typeIdx);
+    const token = `${unit.id}|${key}|${seed}`;
+    if (drawRef.current?.token === token) return drawRef.current.problem;
     if (bagRef.current.key !== key || bagRef.current.items.length === 0) {
       const types = typeIdx === "mix" ? unit.problems : [unit.problems[typeIdx]];
       const items = types.flatMap((pt) => (pt.buckets && pt.buckets.length > 0 ? pt.buckets.map((b) => () => pt.make(b)) : [() => pt.make()]));
       bagRef.current = { key, items: shuffle(items) };
     }
     const make = bagRef.current.items.pop()!;
-    return make();
+    lastMakeRef.current = make;
+    const made = make();
+    drawRef.current = { token, problem: made };
+    return made;
     // seed forces drawing a fresh problem from the bag
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unit, typeIdx, seed]);
+
+  const retrySame = useCallback(() => {
+    if (lastMakeRef.current) bagRef.current.items.push(lastMakeRef.current);
+    setSeed((s) => s + 1);
+  }, []);
 
   const mastered = isMastered(unit, progress);
   // Grandfather in anyone who already has practice history from before this unit
@@ -263,6 +281,7 @@ function UnitView({
             problem={problem}
             onComplete={(clean, bucket) => onSolved(clean && typeIdx === "mix", bucket)}
             onNext={() => setSeed((s) => s + 1)}
+            onRetrySame={retrySame}
           />
           {mastered && onNextUnit && (
             <ReadAloud className="mastered">
@@ -313,86 +332,88 @@ function ShapesLab() {
   const onIntroDone = useCallback(() => unit && recordIntroDone(unit.id), [unit, recordIntroDone]);
 
   return (
-    <div className="shapes-lab lab-base">
+    <div className="shapes-lab lab-base lab-early">
       <TtsProvider>
-        <div className="app">
-          <nav className="rail" aria-label="Units">
-            <button className="brand" onClick={() => go(null)}>
-              <span>Shapes Lab</span>
-            </button>
-            <ol>
-              {units.map((u, i) => (
-                <li key={u.id}>
-                  <button className={current === i ? "on" : ""} aria-current={current === i ? "page" : undefined} onClick={() => go(i)}>
-                    <span className="rail-num">{i + 1}</span>
-                    <span className="rail-title">{u.title}</span>
-                    <Stars unit={u} p={progress[u.id]} />
+        <EarlyLearnerProvider>
+          <div className="app">
+            <nav className="rail" aria-label="Units">
+              <button className="brand" onClick={() => go(null)}>
+                <span>Shapes Lab</span>
+              </button>
+              <ol>
+                {units.map((u, i) => (
+                  <li key={u.id}>
+                    <button className={current === i ? "on" : ""} aria-current={current === i ? "page" : undefined} onClick={() => go(i)}>
+                      <span className="rail-num">{i + 1}</span>
+                      <span className="rail-title">{u.title}</span>
+                      <Stars unit={u} p={progress[u.id]} />
+                    </button>
+                  </li>
+                ))}
+              </ol>
+              <button className={`module-test-nav ${moduleTestOpen ? "on" : ""}`} aria-current={moduleTestOpen ? "page" : undefined} onClick={openModuleTest}>
+                <span className="module-test-row">
+                  <span>📝 Module Test</span>
+                  {moduleTestScore !== undefined && moduleTestScore >= moduleTest.passScore && (
+                    <span className="module-test-check" aria-label="Completed">
+                      ✓
+                    </span>
+                  )}
+                </span>
+                {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} label="Module test rating" />}
+              </button>
+              <button
+                className="reset"
+                onClick={() => {
+                  if (confirmReset) {
+                    reset();
+                    setConfirmReset(false);
+                  } else setConfirmReset(true);
+                }}
+                onBlur={() => setConfirmReset(false)}
+              >
+                {confirmReset ? "Click again to clear all stars" : "Reset progress"}
+              </button>
+            </nav>
+            <main className="main">
+              {moduleTestOpen ? (
+                <div className="unit">
+                  <header className="unit-head">
+                    <div>
+                      <h1>Module Test</h1>
+                      <ReadAloud as="p" className="goal">20 cumulative questions covering every unit in Shapes Lab — 5 from each.</ReadAloud>
+                    </div>
+                    <div className="unit-stars">
+                      {progress[MODULE_PROGRESS_KEY]?.testScore !== undefined && (
+                        <RatingStars n={moduleTestStars(progress[MODULE_PROGRESS_KEY].testScore)} size="lg" label="Module test rating" />
+                      )}
+                      <TestBadge p={progress[MODULE_PROGRESS_KEY]} passScore={moduleTest.passScore} total={MODULE_TEST_TOTAL} />
+                    </div>
+                  </header>
+                  <button className="btn ghost module-test-back" onClick={() => go(null)}>
+                    ← Back to Shapes Lab
                   </button>
-                </li>
-              ))}
-            </ol>
-            <button className={`module-test-nav ${moduleTestOpen ? "on" : ""}`} aria-current={moduleTestOpen ? "page" : undefined} onClick={openModuleTest}>
-              <span className="module-test-row">
-                <span>📝 Module Test</span>
-                {moduleTestScore !== undefined && moduleTestScore >= moduleTest.passScore && (
-                  <span className="module-test-check" aria-label="Completed">
-                    ✓
-                  </span>
-                )}
-              </span>
-              {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} label="Module test rating" />}
-            </button>
-            <button
-              className="reset"
-              onClick={() => {
-                if (confirmReset) {
-                  reset();
-                  setConfirmReset(false);
-                } else setConfirmReset(true);
-              }}
-              onBlur={() => setConfirmReset(false)}
-            >
-              {confirmReset ? "Click again to clear all stars" : "Reset progress"}
-            </button>
-          </nav>
-          <main className="main">
-            {moduleTestOpen ? (
-              <div className="unit">
-                <header className="unit-head">
-                  <div>
-                    <h1>Module Test</h1>
-                    <ReadAloud as="p" className="goal">20 cumulative questions covering every unit in Shapes Lab — 5 from each.</ReadAloud>
+                  <div className="panel">
+                    <ReadAllButton />
+                    <UnitTestView test={moduleTest} onComplete={onModuleTestComplete} />
                   </div>
-                  <div className="unit-stars">
-                    {progress[MODULE_PROGRESS_KEY]?.testScore !== undefined && (
-                      <RatingStars n={moduleTestStars(progress[MODULE_PROGRESS_KEY].testScore)} size="lg" label="Module test rating" />
-                    )}
-                    <TestBadge p={progress[MODULE_PROGRESS_KEY]} passScore={moduleTest.passScore} total={MODULE_TEST_TOTAL} />
-                  </div>
-                </header>
-                <button className="btn ghost module-test-back" onClick={() => go(null)}>
-                  ← Back to Shapes Lab
-                </button>
-                <div className="panel">
-                  <ReadAllButton />
-                  <UnitTestView test={moduleTest} onComplete={onModuleTestComplete} />
                 </div>
-              </div>
-            ) : unit ? (
-              <UnitView
-                key={unit.id}
-                unit={unit}
-                progress={progress[unit.id]}
-                onSolved={onSolved}
-                onTest={onTest}
-                onIntroDone={onIntroDone}
-                onNextUnit={current !== null && current < units.length - 1 ? () => go(current + 1) : undefined}
-              />
-            ) : (
-              <Home onPick={go} progress={progress} onModuleTest={openModuleTest} />
-            )}
-          </main>
-        </div>
+              ) : unit ? (
+                <UnitView
+                  key={unit.id}
+                  unit={unit}
+                  progress={progress[unit.id]}
+                  onSolved={onSolved}
+                  onTest={onTest}
+                  onIntroDone={onIntroDone}
+                  onNextUnit={current !== null && current < units.length - 1 ? () => go(current + 1) : undefined}
+                />
+              ) : (
+                <Home onPick={go} progress={progress} onModuleTest={openModuleTest} />
+              )}
+            </main>
+          </div>
+        </EarlyLearnerProvider>
       </TtsProvider>
     </div>
   );

@@ -13,10 +13,15 @@
  *
  * Mark an element `data-readaloud-part` to have "Read all" include it
  * without giving it its own icon, and `data-tts-skip` to never read it.
+ *
+ * Auto-read: once the student taps "Turn on sound" (saved per device), new
+ * questions, feedback and hints read themselves. A <ReadAloud role="alert">
+ * auto-reads whenever it appears or its text changes; pass autoPlay={false}
+ * to opt out, or autoPlayKey to re-read when the text stays the same.
  */
 import React, { useEffect, useId, useRef } from "react";
-import { Square, Volume2 } from "lucide-react";
-import { getState, isTtsSupported, play, setSpeed, stop, type Speed } from "./speechEngine";
+import { Square, Volume2, VolumeX } from "lucide-react";
+import { getState, isTtsSupported, play, sayText, setAutoRead, setSpeed, stop, type Speed } from "./speechEngine";
 import { TtsContext, useTtsEnabled, useTtsState } from "./ttsContext";
 import "./tts.css";
 
@@ -27,6 +32,7 @@ export function TtsProvider({ children, enabled = true }: { children: React.Reac
     <TtsContext.Provider value={{ enabled: on }}>
       {children}
       {on && <TtsToolbar />}
+      {on && <SoundBanner />}
     </TtsContext.Provider>
   );
 }
@@ -37,10 +43,61 @@ const SPEEDS: { id: Speed; label: string }[] = [
   { id: "fast", label: "🐇 Fast" },
 ];
 
+/** True when auto-read is on inside a read-aloud lab. */
+export function useAutoReadOn(): boolean {
+  const enabled = useTtsEnabled();
+  const { autoRead } = useTtsState();
+  return enabled && autoRead === true;
+}
+
+/** Read these elements now, but only if auto-read is on. Safe to call from effects. */
+export function autoRead(id: string, els: (Element | null | undefined)[]) {
+  if (!getState().autoRead) return;
+  const list = els.filter((e): e is Element => !!e);
+  if (list.length) play(id, list);
+}
+
+/** One-time big "turn on sound" ask. The tap also unlocks speech on iOS. */
+function SoundBanner() {
+  const { autoRead: choice } = useTtsState();
+  const id = useId();
+  if (choice !== null) return null;
+  return (
+    <div className="tts-sound-banner" role="dialog" aria-label="Turn on sound" data-tts-skip>
+      <button
+        type="button"
+        className="tts-sound-on"
+        onClick={() => {
+          setAutoRead(true);
+          sayText(id, "Sound is on. I will read to you.");
+        }}
+      >
+        <Volume2 size={34} aria-hidden /> Turn on sound
+      </button>
+      <button type="button" className="tts-sound-off" onClick={() => setAutoRead(false)}>
+        No thanks
+      </button>
+    </div>
+  );
+}
+
 function TtsToolbar() {
-  const { playingId, speed } = useTtsState();
+  const { playingId, speed, autoRead: auto } = useTtsState();
+  const id = useId();
   return (
     <div className="tts-toolbar" role="region" aria-label="Read aloud settings" data-tts-skip>
+      <button
+        type="button"
+        className={`tts-auto${auto ? " on" : ""}`}
+        aria-pressed={!!auto}
+        onClick={() => {
+          setAutoRead(!auto);
+          if (!auto) sayText(id, "Sound is on.");
+          else stop();
+        }}
+      >
+        {auto ? <Volume2 size={18} aria-hidden /> : <VolumeX size={18} aria-hidden />} {auto ? "Read to me: on" : "Read to me: off"}
+      </button>
       <span className="tts-toolbar-label">
         <Volume2 size={18} aria-hidden /> Speed
       </span>
@@ -101,13 +158,24 @@ type ReadAloudProps = {
   text?: string;
   /** More elements to read right after this one, with the same icon. */
   alsoRead?: React.RefObject<Element | null>[];
+  /** Read automatically when it appears (if auto-read is on). Defaults to true for role="alert". */
+  autoPlay?: boolean;
+  /** With autoPlay: re-read whenever this changes (defaults to the text, when the children are plain text). */
+  autoPlayKey?: string | number;
   children?: React.ReactNode;
   className?: string;
 } & Omit<React.HTMLAttributes<HTMLElement>, "children" | "className">;
 
-export function ReadAloud({ as = "div", text, alsoRead, className, children, ...rest }: ReadAloudProps) {
+export function ReadAloud({ as = "div", text, alsoRead, autoPlay, autoPlayKey, className, children, ...rest }: ReadAloudProps) {
   const enabled = useTtsEnabled();
   const ref = useRef<HTMLElement>(null);
+  const autoId = useId();
+  const shouldAuto = enabled && (autoPlay ?? rest.role === "alert");
+  const key = autoPlayKey ?? (typeof children === "string" ? children : text ?? "");
+  useEffect(() => {
+    if (shouldAuto) autoRead(autoId, [ref.current, ...(alsoRead ?? []).map((r) => r.current)]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldAuto, key]);
   if (!enabled) return React.createElement(as, { className, ...rest }, children);
   return React.createElement(
     as,

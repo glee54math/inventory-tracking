@@ -2,11 +2,12 @@ import { useEffect, useState, type ReactNode } from "react";
 import { TenFrameGroup, PartPartWhole, EquationStrip, type BondPart, type Tone, type Blank, type EqToken } from "../diagrams";
 import { makeTenBreakdown, subtractThroughTenBreakdown } from "../logic";
 import { randInt } from "../../../shared/lib/math";
-import { choice, type Problem } from "../../../shared/engine/types";
+import { choice, pointing, type Problem, type VisualHelp } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { makingTenAndDecomposingTest } from "./MakingTenAndDecomposingTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -29,10 +30,10 @@ function Bond({ whole, parts }: { whole: number | null; parts: [BondPart, BondPa
 }
 
 /** A ten-frame with its number underneath — the picture first, the numeral as its name. */
-function Frame({ value, tone, splitAt, tone2 }: { value: number; tone: Tone; splitAt?: number; tone2?: Tone }) {
+function Frame({ value, tone, splitAt, tone2, highlightEmpty }: { value: number; tone: Tone; splitAt?: number; tone2?: Tone; highlightEmpty?: boolean }) {
   return (
     <div>
-      <TenFrameGroup value={value} tone={tone} splitAt={splitAt} tone2={tone2} />
+      <TenFrameGroup value={value} tone={tone} splitAt={splitAt} tone2={tone2} highlightEmpty={highlightEmpty} />
       <ReadAloud as="p" style={{ textAlign: "center", fontSize: "1.5rem", fontWeight: 700, margin: "4px 0 0" }}>{value}</ReadAloud>
     </div>
   );
@@ -145,13 +146,13 @@ function WhichAddendQuestion({ onComplete }: { onComplete?: () => void }) {
         <Frame value={9} tone="b" />
       </div>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="6">6 (the first number)</option>
           <option value="9">9 (the second number)</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -230,13 +231,13 @@ function StrategyVsFactQuestion({ onComplete }: { onComplete?: () => void }) {
         to remember.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -384,16 +385,17 @@ function makeTenAdditionProblem(a: number, b: number, bucket: Bucket): Problem {
     title: "Making ten",
     bucket,
     story: `Find ${a} + ${b} using make-ten.`,
-    visual: (done: number) => (
+    visual: (done: number, help?: VisualHelp) => (
       <div className="control-row" style={pictureRow} data-readaloud-part>
-        <Frame value={a} tone="a" />
+        {/* Help ladder: light up the empty boxes for "how many more to make 10?" */}
+        <Frame value={a} tone="a" highlightEmpty={pointing(help, 0)} />
         <Sign>+</Sign>
         <Frame value={b} tone="b" splitAt={done >= 1 ? addToA : undefined} tone2="c" />
         <Bond whole={b} parts={[{ value: done >= 1 ? addToA : null, tone: "b" }, { value: done >= 2 ? remainder : null, tone: "c" }]} />
       </div>
     ),
     steps: [
-      { kind: "number", prompt: `How many more do you need to add to ${a} to make 10?`, hint: "What's the gap between this number and 10?", explain: `${a} + ${gap} = 10.`, answer: gap },
+      { kind: "number", prompt: `How many more do you need to add to ${a} to make 10?`, hint: "Count the empty boxes in the first ten-frame.", showMe: `${a} fills ${a} boxes. ${gap} boxes are empty.`, explain: `${a} + ${gap} = 10.`, answer: gap },
       { kind: "number", prompt: `If you take ${gap} from ${b} to help make ten, how many are left over?`, hint: `${b} − ${gap} = ?`, explain: `${b} − ${addToA} = ${remainder} left over.`, answer: remainder },
       { kind: "number", prompt: `So 10 + ${remainder} = ?`, hint: "Add the leftover onto the ten you just made.", explain: `10 + ${remainder} = ${total}, so ${a} + ${b} = ${total}.`, answer: total },
     ],
@@ -413,14 +415,15 @@ function subtractBridgeProblem(): Problem {
     title: "Bridging through ten",
     bucket: "subtractBridge",
     story: `Find ${start} − ${sub} by bridging through ten.`,
-    visual: (done: number) => (
+    visual: (done: number, help?: VisualHelp) => (
       <div className="control-row" style={pictureRow} data-readaloud-part>
-        <Frame value={start} tone="c" splitAt={done >= 1 ? ten : undefined} tone2="b" />
+        {/* Help ladder: color the ones past 10 when the student is stuck on step 1. */}
+        <Frame value={start} tone="c" splitAt={done >= 1 || pointing(help, 0) ? ten : undefined} tone2="b" />
         <Bond whole={sub} parts={[{ value: done >= 1 ? toTen : null, tone: "b" }, { value: done >= 2 ? remainder : null, tone: "a" }]} />
       </div>
     ),
     steps: [
-      { kind: "number", prompt: `Subtract just enough from ${start} to land exactly on a ten. How much is that?`, hint: `What's left of ${start} after you drop the ones digit?`, explain: `${start} − ${toTen} = ${ten}.`, answer: toTen },
+      { kind: "number", prompt: `Subtract just enough from ${start} to land exactly on a ten. How much is that?`, hint: `How many ones are past 10 in ${start}?`, showMe: `${start} is 10 and ${toTen} more. Take away ${toTen} to land on 10.`, explain: `${start} − ${toTen} = ${ten}.`, answer: toTen },
       { kind: "number", prompt: `Now how much more do you still need to subtract (from ${sub} total)?`, hint: `${sub} − ${toTen} = ?`, explain: `${sub} − ${toTen} = ${remainder} left to subtract.`, answer: remainder },
       { kind: "number", prompt: `${ten} − ${remainder} = ?`, hint: "Finish subtracting the leftover from the ten.", explain: `${ten} − ${remainder} = ${total}, so ${start} − ${sub} = ${total}.`, answer: total },
     ],

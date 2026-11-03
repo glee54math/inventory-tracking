@@ -22,6 +22,12 @@ export interface UnitProgress {
    * optional fields above. See the mastery check in useModuleProgress.ts.
    */
   coveredBuckets?: string[];
+  /**
+   * Clean solves per bucket key. Mastery needs BUCKET_CLEAN_GOAL of each (see
+   * useModuleProgress.ts). Older saves only have coveredBuckets; a bucket
+   * listed there with no count here counts as 1.
+   */
+  bucketCleanCounts?: Record<string, number>;
 }
 
 export type ProgressMap = Record<string, UnitProgress>;

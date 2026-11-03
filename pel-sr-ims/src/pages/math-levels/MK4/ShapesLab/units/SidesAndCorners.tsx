@@ -6,6 +6,7 @@ import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { sidesAndCornersTest } from "./SidesAndCornersTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -34,23 +35,23 @@ function SideCornerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           What do we call one of the straight lines on its edge?{" "}
-          <select className="answer" value={sidePick} onChange={(e) => setSidePick(e.target.value)} style={fieldOk(sideOk, checked)}>
+          <TapSelect value={sidePick} onChange={(e) => setSidePick(e.target.value)} style={fieldOk(sideOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="side">A side</option>
             <option value="corner">A corner</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           What do we call the point where two of those lines meet?{" "}
-          <select className="answer" value={cornerPick} onChange={(e) => setCornerPick(e.target.value)} style={fieldOk(cornerOk, checked)}>
+          <TapSelect value={cornerPick} onChange={(e) => setCornerPick(e.target.value)} style={fieldOk(cornerOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="side">A side</option>
             <option value="corner">A corner</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -87,23 +88,23 @@ function CircleZeroConflationQuestion({ onComplete }: { onComplete?: () => void 
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Does a circle have any STRAIGHT sides?{" "}
-          <select className="answer" value={sidesPick} onChange={(e) => setSidesPick(e.target.value)} style={fieldOk(sidesOk, checked)}>
+          <TapSelect value={sidesPick} onChange={(e) => setSidesPick(e.target.value)} style={fieldOk(sidesOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="yes">Yes</option>
             <option value="no">No</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Does a circle have any CORNERS?{" "}
-          <select className="answer" value={cornersPick} onChange={(e) => setCornersPick(e.target.value)} style={fieldOk(cornersOk, checked)}>
+          <TapSelect value={cornersPick} onChange={(e) => setCornersPick(e.target.value)} style={fieldOk(cornersOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="yes">Yes</option>
             <option value="no">No</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -139,13 +140,13 @@ function SameCountTrapQuestion({ onComplete }: { onComplete?: () => void }) {
       </div>
       <p>True or false: even though their sides are different lengths, they both have the same NUMBER of sides (4).</p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -185,23 +186,23 @@ function EqualLengthVsEqualCountQuestion({ onComplete }: { onComplete?: () => vo
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Which one has all 4 sides the SAME length?{" "}
-          <select className="answer" value={equalPick} onChange={(e) => setEqualPick(e.target.value)} style={fieldOk(equalOk, checked)}>
+          <TapSelect value={equalPick} onChange={(e) => setEqualPick(e.target.value)} style={fieldOk(equalOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="square">The square</option>
             <option value="rectangle">The rectangle</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Do they both have the same NUMBER of sides?{" "}
-          <select className="answer" value={countPick} onChange={(e) => setCountPick(e.target.value)} style={fieldOk(countOk, checked)}>
+          <TapSelect value={countPick} onChange={(e) => setCountPick(e.target.value)} style={fieldOk(countOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="yes">Yes</option>
             <option value="no">No</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer

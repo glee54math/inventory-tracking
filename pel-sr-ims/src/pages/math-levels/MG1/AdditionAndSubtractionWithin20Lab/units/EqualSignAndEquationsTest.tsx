@@ -25,9 +25,9 @@ export const equalSignMeaningChoiceQuestion = (): TestQuestion[] => [
 
 /** ☐ = A + B — the "answer slot" is on the left. */
 export const unknownOnLeftNumberQuestion = (): TestQuestion[] => {
-  const a = randInt(1, 12);
-  const b = randInt(1, 9);
-  const total = Math.min(20, a + b);
+  const a = randInt(1, 11);
+  const b = randInt(1, Math.min(9, 20 - a));
+  const total = a + b;
   return [
     {
       visual: <TenFrameGroup value={total} tone="a" splitAt={a} tone2="b" />,

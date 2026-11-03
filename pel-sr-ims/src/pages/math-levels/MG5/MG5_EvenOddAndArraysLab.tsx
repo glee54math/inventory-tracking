@@ -101,7 +101,7 @@ function Home({
           ))}
         </ol>
         <ReadAloud as="p" className="muted small">
-          Stars fill in as you clean-solve (at most one hint) every different kind of problem in Mixed mode — the last star needs all of them.
+          Stars fill in as you clean-solve (no wrong guesses, at most one hint) each kind of problem twice in Mixed mode — the last star needs all of them.
         </ReadAloud>
       </section>
       <section>

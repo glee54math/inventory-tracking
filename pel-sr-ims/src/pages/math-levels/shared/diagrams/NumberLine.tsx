@@ -49,6 +49,12 @@ export interface NumberLineProps {
    * dot can only ever land exactly on a drawn tick.
    */
   snapDenominator?: number;
+  /**
+   * Draws one numbered hop per whole number from `from` to `to` (either
+   * direction) — the "count on / count back" picture. Used by the help ladder
+   * to show counting when a student is stuck (see VisualHelp).
+   */
+  hops?: { from: number; to: number; tone?: "a" | "b" | "c" };
 }
 
 const MAX_UNIT_PX = 24; // today's spacing for a "normal"-sized range — never exceeded
@@ -99,7 +105,7 @@ function niceStep(unitPx: number, minLabelPx: number): number {
  *  normal range already uses, with only every Nth integer labeled, so
  *  points still render at a normal, visible size and tick labels stay
  *  legibly spaced apart, however wide the underlying range is. */
-export function NumberLine({ min, max, points = [], minorTicksPerUnit, snapDenominator }: NumberLineProps) {
+export function NumberLine({ min, max, points = [], minorTicksPerUnit, snapDenominator, hops }: NumberLineProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const span = max - min;
   const unitPx = Math.min(MAX_UNIT_PX, TARGET_WIDTH / span);
@@ -165,6 +171,21 @@ export function NumberLine({ min, max, points = [], minorTicksPerUnit, snapDenom
           </text>
         </g>
       ))}
+      {hops &&
+        Array.from({ length: Math.abs(hops.to - hops.from) }, (_, k) => {
+          const dir = hops.to > hops.from ? 1 : -1;
+          const a = toX(hops.from + k * dir);
+          const b = toX(hops.from + (k + 1) * dir);
+          const mid = (a + b) / 2;
+          return (
+            <g key={`hop-${k}`}>
+              <path d={`M ${a} ${MID_Y - 3} Q ${mid} ${MID_Y - 24} ${b} ${MID_Y - 3}`} fill="none" stroke={toneColor(hops.tone)} strokeWidth={2} />
+              <text x={mid} y={MID_Y - 16} textAnchor="middle" fontSize={10} fontWeight={700} fill={toneColor(hops.tone)}>
+                {k + 1}
+              </text>
+            </g>
+          );
+        })}
       {visiblePoints.map((p, i) => {
         const x = toX(p.value);
         const draggable = !!p.onChange;

@@ -6,6 +6,7 @@ import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingTest } from "./ComparingTwoObjectsDirectlyTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // SHARED HELPERS — distinct-pair generators, duplicated (not imported) in
@@ -78,24 +79,24 @@ function DifferenceLanguageQuestion({ onComplete }: { onComplete?: () => void })
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Which rod is longer?{" "}
-          <select className="answer" value={longerPick} onChange={(e) => setLongerPick(e.target.value)} style={fieldOk(longerOk, checked)}>
+          <TapSelect value={longerPick} onChange={(e) => setLongerPick(e.target.value)} style={fieldOk(longerOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="A">Rod A</option>
             <option value="B">Rod B</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Rod A is longer than Rod B by how many blocks?{" "}
-          <select className="answer" value={byPick} onChange={(e) => setByPick(e.target.value)} style={fieldOk(byOk, checked)}>
+          <TapSelect value={byPick} onChange={(e) => setByPick(e.target.value)} style={fieldOk(byOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="3">3</option>
             <option value="4">4</option>
             <option value="7">7</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -134,23 +135,23 @@ function MisalignedTrapQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Which rod's END reaches farther to the right?{" "}
-          <select className="answer" value={endPick} onChange={(e) => setEndPick(e.target.value)} style={fieldOk(endOk, checked)}>
+          <TapSelect value={endPick} onChange={(e) => setEndPick(e.target.value)} style={fieldOk(endOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="A">Rod A</option>
             <option value="B">Rod B</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Which rod is ACTUALLY longer?{" "}
-          <select className="answer" value={longerPick} onChange={(e) => setLongerPick(e.target.value)} style={fieldOk(longerOk, checked)}>
+          <TapSelect value={longerPick} onChange={(e) => setLongerPick(e.target.value)} style={fieldOk(longerOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="A">Rod A</option>
             <option value="B">Rod B</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -182,13 +183,13 @@ function CommonStartQuestion({ onComplete }: { onComplete?: () => void }) {
         <b>3.</b> True or false: to compare two rods fairly by looking at their ends, they must start at the same point.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -226,23 +227,23 @@ function BalanceVocabQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Which side is heavier?{" "}
-          <select className="answer" value={heavierPick} onChange={(e) => setHeavierPick(e.target.value)} style={fieldOk(heavierOk, checked)}>
+          <TapSelect value={heavierPick} onChange={(e) => setHeavierPick(e.target.value)} style={fieldOk(heavierOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="Left">Left</option>
             <option value="Right">Right</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           A heavier side makes the balance tip which way?{" "}
-          <select className="answer" value={tipPick} onChange={(e) => setTipPick(e.target.value)} style={fieldOk(tipOk, checked)}>
+          <TapSelect value={tipPick} onChange={(e) => setTipPick(e.target.value)} style={fieldOk(tipOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="up">up</option>
             <option value="down">down</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer

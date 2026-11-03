@@ -6,6 +6,7 @@ import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { equalSignAndEquationsTest } from "./EqualSignAndEquationsTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -32,13 +33,13 @@ function EqualSignMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
         <b>1.</b> What does the = sign mean?
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="next">"The answer comes right after this"</option>
           <option value="same">"Both sides have the exact same amount"</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -76,23 +77,23 @@ function BackwardsEquationsQuestion({ onComplete }: { onComplete?: () => void })
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           5 = 2 + 3:{" "}
-          <select className="answer" value={a} onChange={(e) => setA(e.target.value)} style={fieldOk(aOk, checked)}>
+          <TapSelect value={a} onChange={(e) => setA(e.target.value)} style={fieldOk(aOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="true">True</option>
             <option value="false">False</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           7 + 1 = 6 + 2:{" "}
-          <select className="answer" value={b} onChange={(e) => setB(e.target.value)} style={fieldOk(bOk, checked)}>
+          <TapSelect value={b} onChange={(e) => setB(e.target.value)} style={fieldOk(bOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="true">True</option>
             <option value="false">False</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -124,13 +125,13 @@ function TrivialTrueQuestion({ onComplete }: { onComplete?: () => void }) {
         <b>3.</b> True or false: 8 = 8
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -161,14 +162,14 @@ function UnknownNotLastQuestion({ onComplete }: { onComplete?: () => void }) {
         <b>4.</b> Find the missing number: 8 + ☐ = 11
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="3">3</option>
           <option value="8">8</option>
           <option value="19">19</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -277,9 +278,9 @@ function equalSignUnknownLeftProblem(): Problem {
   const shape = Math.random() < 0.5 ? "unknownOnLeft" : "operationBothSides";
   if (shape === "unknownOnLeft") {
     // ☐ = A + B — the "answer slot" is on the left, breaking the default.
-    const a = randInt(1, 12);
-    const b = randInt(1, 9);
-    const total = Math.min(20, a + b);
+    const a = randInt(1, 11);
+    const b = randInt(1, Math.min(9, 20 - a));
+    const total = a + b;
     return {
       title: "Equal sign — unknown on the left",
       bucket: "equalSignUnknownLeft",

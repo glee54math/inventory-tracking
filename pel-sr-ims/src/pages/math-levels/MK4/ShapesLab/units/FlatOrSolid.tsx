@@ -7,6 +7,7 @@ import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { flatOrSolidTest } from "./FlatOrSolidTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -38,23 +39,23 @@ function FlatSolidVocabQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           A flat shape, like a drawing, is called...{" "}
-          <select className="answer" value={flatPick} onChange={(e) => setFlatPick(e.target.value)} style={fieldOk(flatOk, checked)}>
+          <TapSelect value={flatPick} onChange={(e) => setFlatPick(e.target.value)} style={fieldOk(flatOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="2d">2D (flat)</option>
             <option value="3d">3D (solid)</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           A shape you can pick up and hold, like a block, is called...{" "}
-          <select className="answer" value={solidPick} onChange={(e) => setSolidPick(e.target.value)} style={fieldOk(solidOk, checked)}>
+          <TapSelect value={solidPick} onChange={(e) => setSolidPick(e.target.value)} style={fieldOk(solidOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="2d">2D (flat)</option>
             <option value="3d">3D (solid)</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -93,23 +94,23 @@ function CircleSphereConflationQuestion({ onComplete }: { onComplete?: () => voi
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Which one could you actually pick up and hold, like a ball?{" "}
-          <select className="answer" value={holdPick} onChange={(e) => setHoldPick(e.target.value)} style={fieldOk(holdOk, checked)}>
+          <TapSelect value={holdPick} onChange={(e) => setHoldPick(e.target.value)} style={fieldOk(holdOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="circle">The circle</option>
             <option value="sphere">The sphere</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Which one is flat, like a drawing?{" "}
-          <select className="answer" value={flatPick} onChange={(e) => setFlatPick(e.target.value)} style={fieldOk(flatOk, checked)}>
+          <TapSelect value={flatPick} onChange={(e) => setFlatPick(e.target.value)} style={fieldOk(flatOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="circle">The circle</option>
             <option value="sphere">The sphere</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -140,13 +141,13 @@ function LooksCanTrickYouTrapQuestion({ onComplete }: { onComplete?: () => void 
         <b>3.</b> True or false: any round shape you see in a picture must be solid (3D), since round things like balls are solid.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -183,24 +184,24 @@ function NameAndClassifyQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           What is the name of this solid shape?{" "}
-          <select className="answer" value={namePick} onChange={(e) => setNamePick(e.target.value)} style={fieldOk(nameOk, checked)}>
+          <TapSelect value={namePick} onChange={(e) => setNamePick(e.target.value)} style={fieldOk(nameOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="cube">Cube</option>
             <option value="cylinder">Cylinder</option>
             <option value="cone">Cone</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Is a cylinder flat or solid?{" "}
-          <select className="answer" value={classPick} onChange={(e) => setClassPick(e.target.value)} style={fieldOk(classOk, checked)}>
+          <TapSelect value={classPick} onChange={(e) => setClassPick(e.target.value)} style={fieldOk(classOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="2d">Flat (2D)</option>
             <option value="3d">Solid (3D)</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer

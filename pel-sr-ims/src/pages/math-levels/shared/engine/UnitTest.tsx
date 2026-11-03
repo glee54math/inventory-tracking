@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ReadAloud } from "../tts/ReadAloud";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
+import { autoRead, ReadAloud } from "../tts/ReadAloud";
 import { stopIfPlaying } from "../tts/speechEngine";
 import type { Unit } from "../units/types";
 import type { Step, TestQuestion } from "./types";
@@ -49,11 +49,21 @@ export function UnitTestView({ test, onComplete }: UnitTestViewProps) {
   // Read-aloud: the question's icon also reads its answer choices and buttons.
   const inputRef = useRef<HTMLDivElement>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
+  const promptRef = useRef<HTMLDivElement>(null);
+  const readerId = useId();
 
   const finished = current >= questions.length;
 
-  // A new step/question replaces the text on screen; stop reading the old one.
-  useEffect(() => stopIfPlaying(), [current]);
+  // A new question replaces the text on screen: stop the old reading, and
+  // read the new question (plus its choices) if the student turned sound on.
+  useEffect(() => {
+    stopIfPlaying();
+    if (current < questions.length) {
+      const choices = questions[current].step.kind === "choice" ? inputRef.current : null;
+      autoRead(readerId, [promptRef.current, choices]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current, questions]);
 
   const update = (i: number, patch: Partial<StepState>) => setStates((all) => all.map((s, k) => (k === i ? { ...s, ...patch } : s)));
 
@@ -89,7 +99,7 @@ export function UnitTestView({ test, onComplete }: UnitTestViewProps) {
           <div className="test-score-num">
             {score}/{questions.length}
           </div>
-          <ReadAloud className="test-score-label" text={passed ? `${score} out of ${questions.length}. Passed, nice work!` : `${score} out of ${questions.length}. Keep practicing. Aim for ${test.passScore} out of ${questions.length}.`}>
+          <ReadAloud className="test-score-label" autoPlay text={passed ? `${score} out of ${questions.length}. Passed, nice work!` : `${score} out of ${questions.length}. Keep practicing. Aim for ${test.passScore} out of ${questions.length}.`}>
             {passed ? "Passed — nice work!" : `Keep practicing — aim for ${test.passScore}/${questions.length}.`}
           </ReadAloud>
         </div>
@@ -129,9 +139,11 @@ export function UnitTestView({ test, onComplete }: UnitTestViewProps) {
       </div>
       <div className="test-question">
         {q.visual && <div className="problem-visual">{q.visual}</div>}
-        <ReadAloud className="test-prompt" alsoRead={[inputRef, toolsRef]}>
-          {q.step.prompt}
-        </ReadAloud>
+        <div ref={promptRef}>
+          <ReadAloud className="test-prompt" alsoRead={[inputRef, toolsRef]}>
+            {q.step.prompt}
+          </ReadAloud>
+        </div>
         <div ref={inputRef} data-readaloud-part>
           <StepInput step={q.step} state={st} onChange={(inputs) => update(current, { inputs })} onSubmit={next} />
         </div>

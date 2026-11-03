@@ -63,6 +63,41 @@ Conventions drift. Before writing code, re-verify against the actual repo:
   third silent copy. If your need is genuinely a one-off, keep it local; this
   codebase's convention is "promote on the second real consumer," never
   "promote speculatively because it might be reused someday."
+- For a K–1 lab (MK1–MK4, MG1, or any lab the plan marks "early learner"),
+  also read `shared/engine/audience.tsx`, `shared/components/NumberPad.tsx`,
+  `shared/components/TapSelect.tsx`, and the `VisualHelp`/`pointing` part of
+  `shared/engine/types.ts`. MG1's `AdditionAndSubtractionWithin20Lab` is the
+  reference build for all of the early-learner rules below.
+
+## Audience and language (user requirement)
+
+Write every sentence (goals, Explore text, CFU questions, prompts, hints,
+feedback, explanations) for the lab's **intended grade audience, pitched at
+its youngest first-time student**. The plan states the audience; if it
+doesn't, infer it from the slot and say so in the report. For MK1–MK4 and
+MG1 that means Kindergarten/1st graders seeing it for the first time plus
+2nd graders who are behind, working ALONE on an iPad with a busy teacher
+nearby. Most can't read yet, so the lab must work by ear:
+
+- Short sentences, one idea each, everyday words. No jargon ("addend,"
+  "decompose," "clean solve") unless the unit teaches that word first, and
+  then use it the same way every time.
+- Tell the student what to DO ("Tap the number that comes next"), not what
+  to think about.
+- The student mostly won't read the instructions or look at the diagram on
+  their own. Design so the picture and the voice carry the problem, and the
+  help steers them back to the picture (see Practice → help ladder).
+
+**Generated sentences must be grammatical for every value the generator can
+produce.** Early readers (and the read-aloud voice) decode by grammar, so a
+broken template teaches confusion. Watch especially:
+- Verb form after a helper verb: "How many did Mia **get**?", never "did Mia
+  got/found/gave away." Keep separate pools for past-tense and base-form
+  verbs (`verbAdd`/`verbAddBase`) rather than reusing one.
+- Singular/plural: "1 apple" / "3 apples," "is/are," "was/were."
+- a/an before pooled nouns, and pronouns that match the pooled name.
+Check this in the Verification brute-force script (print one sentence per
+template × every pool entry, and read them).
 
 ## File layout (mirror exactly)
 
@@ -87,6 +122,20 @@ component is invisible to students (it has happened: a live "no practice
 problems" bug) and nothing short of remembering to do it catches that. Tick
 the lab in `VISUAL_COMPONENT_TODO.txt`'s status legend at the same time.
 
+### Early-learner shell (K–1 labs only)
+Mirror `MG1/MG1_AdditionAndSubtractionWithin20Lab.tsx`:
+- Add the `lab-early` class to the root div (`"{prefix}-lab lab-base
+  lab-early"`) for bigger tap targets.
+- Wrap the lab's content in `<EarlyLearnerProvider>` (from
+  `shared/engine/audience.tsx`), just inside `<TtsProvider>`. This turns on
+  the help ladder, plain-language feedback, and the on-screen number pad
+  across the shared engine. Labs outside the provider keep the older
+  behavior (Show answer after 3 tries), so don't add it to MG6+ labs.
+- In `UnitView`, keep a `lastMakeRef` to the factory that made the current
+  problem, and pass `onRetrySame={retrySame}` to `StepProblem`. `retrySame`
+  pushes that factory back onto the shuffle bag and re-seeds, so "Try one
+  like it" after a helped solve gives a fresh problem of the SAME kind.
+
 ### Stars / mastery (shell's `isMastered`/`Stars`)
 Import `isMastered` and `starCount` from `src/hooks/useModuleProgress.ts`
 (alongside `MASTERY_GOAL`/`useModuleProgress`) — do NOT reimplement the
@@ -108,17 +157,26 @@ function starCount(unit: Unit, p?: UnitProgress): number {
 avoid shadowing — see `MM1_ExponentsAndExpressionsLab.tsx` for the exact
 pattern.) `Stars` then just calls `starCount(unit, p)` for its `n`.
 
-Stars divide up evenly across `requiredBuckets` coverage via
-`Math.ceil(MASTERY_GOAL * coveredCount / totalBuckets)`, capped at
-`MASTERY_GOAL - 1` until EVERY bucket is covered, at which point it jumps to
-the full `MASTERY_GOAL` — not "N-1 stars from clean-solve count, then a
-separate pass/fail cliff for the last star." If a unit has no
-`requiredBuckets` at all, both functions fall back to the plain
-clean-solve-count bar automatically — nothing extra to handle for that case.
+Mastery needs **`BUCKET_CLEAN_GOAL` (2) clean solves in EVERY required
+bucket** — one clean solve can be luck. Stars fill evenly toward that:
+`Math.ceil(MASTERY_GOAL * earned / (totalBuckets * BUCKET_CLEAN_GOAL))`,
+where `earned` counts up to 2 clean solves per bucket, capped at
+`MASTERY_GOAL - 1` until every bucket has its 2, then the full
+`MASTERY_GOAL`. If a unit has no `requiredBuckets` at all, both functions
+fall back to the plain clean-solve-count bar automatically. All of this
+lives in `useModuleProgress.ts`; don't restate it locally.
+
+"Clean" (decided in `StepProblem`) means: no Show me / Show answer, at most
+one hint, and **no wrong pick on any choice step** (a two-choice question
+can be guessed). Because choices can be guessed, every Practice problem type
+needs at least one typed-number step, so a clean solve proves the student
+can produce the answer, not just recognize it.
+
 Update the "Your path" helper paragraph under the star list to describe
-this (see `MM1_ExponentsAndExpressionsLab.tsx`'s copy) rather than leaving
-stale "earn a star for each problem you solve" wording once any unit in the
-lab has `requiredBuckets`.
+this in the audience's words. K–1 copy (MG1): "Solve each kind of problem
+2 times by yourself to fill in your stars. Only Mixed problems count."
+Older-grade copy: "(no wrong guesses, at most one hint) each kind of problem
+twice."
 
 ## Per-unit build
 
@@ -156,6 +214,35 @@ disturbing a sibling's position inside a flex/centering parent, give its box
 an explicit `min-height` and position the caption `absolute` inside it —
 don't reach for a negative margin to cancel out its height; that silently
 breaks the moment anything else on the row changes size.
+
+**Use the standard model, drawn the standard way, every time.** Young
+students learn to read a picture by seeing the same shape repeatedly, so a
+model drawn loosely teaches nothing. Established shapes in this codebase:
+- Ten-frame: 2 rows of 5. Counters fill the TOP row left to right, then the
+  bottom row, so 6 reads as "a full row of 5 and 1 more." Empty boxes stay
+  visible (they show how many more make ten).
+- Tens: each ten is one COMPLETE ten-frame; the leftover ones go in one more
+  frame. Never loose stacks or rods that only look like ten. (Reference:
+  `MK1/CountingAndCardinalityLab/diagrams/TenGroups.tsx`, `MG1/.../diagrams/TenFrame.tsx`.)
+- Compare: two rows lined up one-to-one (`MG1/.../diagrams/CompareRows.tsx`),
+  so the extras stick out. Not two separate groups.
+- Counting on/back: a number line with numbered hop arcs (`NumberLine`'s
+  `hops`).
+Before calling a diagram done, render it at its edge values (0, the first
+value of a new row/ten, 9 → 10 → 11, 19 → 20, the max) and look at each one.
+
+**Explore controls must do exactly what their label says, and every number
+shown must come from the real state.** A "Say the next number" button must
+say it. A "counts so far" label must be computed from the actual values
+(`Math.abs(current - start)`), never from a display list that gets trimmed
+(a trail capped at 5 items silently caps the count at 5).
+
+**The Key Idea must be true for every problem in the unit.** If any Practice
+or Test problem type adds, the Key Idea can't say "always subtract." State
+what's always true ("A compare story is about the difference. Sometimes you
+add, sometimes you subtract."), never a shortcut that only works for some
+problem types. Don't teach keyword-hunting ("'left' means subtract") — it
+breaks on the first story that doesn't follow it.
 
 ### Check for Understanding (CFU) — the mandatory gate
 Every unit should have one, unless the user says otherwise. Mechanism:
@@ -203,10 +290,20 @@ questions yourself (don't present a menu of candidates) using this bar:
 - At least one **generalization or true/false trap** — doesn't stop at one
   worked example, asks whether the pattern is *always* true, ideally with a
   counterexample in the explanation.
-- Prefer multi-part questions (2-3 sub-answers via `<select className="answer">`
-  dropdowns + one shared "Check Answer" button + one combined feedback
-  paragraph — see `ReflectionFormulaQuestion`/`AxisDistanceQuestion` in
+- Prefer multi-part questions (2-3 sub-answers + one shared "Check Answer"
+  button + one combined feedback paragraph — see
+  `ReflectionFormulaQuestion`/`AxisDistanceQuestion` in
   `CoordinatePlaneUnit.tsx`) over several trivial single-pick questions.
+  The sub-answers do NOT have to be dropdowns: pick the input that fits the
+  question (typed boxes, tap choices, boxes inside the diagram).
+- **K–1 labs: never use `<select>`.** iPad dropdowns are small, hide their
+  options, and can't be read aloud well. Use `<TapSelect>`
+  (`shared/components/TapSelect.tsx`) — it takes the same `value`/
+  `onChange`/`style`/`<option>` children, so it's a drop-in swap, and it
+  shows every option as a big tap target that the voice reads ("choose 4,
+  5, or 6"). Every typed box in a K–1 lab spreads
+  `{...numberPadProps(early)}` (`early = useEarlyLearner()`), so the
+  on-screen number pad opens instead of the iPad keyboard.
 - **Fill-in rule (user requirement):** at least 40% of a unit's CFU
   questions must have the student TYPE answers (not just pick from a
   dropdown/true-false), so they translate the concept into the math
@@ -214,7 +311,7 @@ questions yourself (don't present a menu of candidates) using this bar:
   numbers in the matching equations, then the final answer. Prefer putting
   the boxes inside the visual itself. Reference: `BondFill` in
   `MG1/AdditionAndSubtractionWithin20Lab/units/MakingTenAndDecomposing.tsx`.
-- **Multi-box answer rule (required for every question with 2+ dropdowns or
+- **Multi-box answer rule (required for every question with 2+ choice pickers or
   input boxes, CFU and gated Explore drills alike):**
   1. "Check Answer" stays `disabled` until EVERY box has an answer.
   2. After Check, EACH box gets its own green/red border for its own
@@ -228,16 +325,22 @@ questions yourself (don't present a menu of candidates) using this bar:
   const [checked, setChecked] = useState(false);
   const filled = allFilled(a, b);
   const ok = aOk && bOk;
-  <select className="answer" value={a} style={answerBorder(aOk, checked)} …>
-  <select className="answer" value={b} style={answerBorder(bOk, checked)} …>
+  <input className="answer" value={a} style={answerBorder(aOk, checked)} {...numberPadProps(early)} …/>
+  <TapSelect value={b} style={answerBorder(bOk, checked)} …>  {/* or <select className="answer"> in MG2+ labs */}
   <button className="btn primary" type="button" disabled={!filled} onClick={() => setChecked(true)}>Check Answer</button>
   {checked && filled && <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">…</p>}
   ```
   If an input already has a `style={{ width: … }}`, spread it in:
   `style={{ width: 55, ...answerBorder(aOk, checked) }}`.
-- If a dropdown is needed and `select.answer` isn't already styled in this
+- If a dropdown is used (MG2+ only) and `select.answer` isn't already styled in this
   lab's stylesheet, add it (copy `MG9_IntroToFractionsLab_styles.css`'s
   `.itf-lab select.answer` block, scoped to this lab's own class).
+- **Carry every CFU concept forward (user requirement).** Each idea or trap
+  the CFU checks (e.g. "the near-ten number is written second," "a compare
+  story can need adding") must ALSO appear as a Practice bucket (so mastery
+  requires solving it twice by itself) and in at least one Unit Test
+  question. A misconception checked only once in the CFU is not taught.
+  List the CFU → bucket → Test mapping in your final report.
 - State every chosen CFU question, its correct answer, and why you picked
   it, in your final report — this is the part the user most wants to review.
 
@@ -255,13 +358,22 @@ wire up the shell and the hand-written Explore/CFU text. Mirror
   child of every tab panel and the module-test panel; add
   `data-readaloud-part` to `panel-foot`.
 - Each CFU question box: `<ReadAloud className="align-stack-wrap">` (one
-  icon reads the question, dropdown options and Check Answer button).
+  icon reads the question, answer choices and Check Answer button).
 - Every feedback line: `<ReadAloud as="p" className={`feedback …`} role="alert">`.
 - Explore paragraphs outside question boxes (`intro-gate-title`, `muted
   small`, plain `<p>`): `<ReadAloud as="p" …>`. Explore `control-row`s get
   `data-readaloud-part` so "Read all" includes them.
 - Don't add `ReadAloud` inside `keyIdea` (the shell reads it) or inside
   `preview` components. Don't add any of this to MG6+ labs.
+- Auto-read comes free with `TtsProvider`: it shows a big "Turn on sound"
+  banner on first visit (the tap also unlocks iOS speech), and once sound
+  is on, Practice/Test questions, hints, Show me lines, and every
+  `role="alert"` feedback line read themselves. So give every feedback line
+  `role="alert"`, and don't add your own auto-play calls.
+- Write text the voice can say. The tokenizer reads `☐`/`□` as "blank" and
+  handles `+ − = < >`; anything else (custom symbols, emoji, "→") must be
+  checked, or give the element `data-tts-say="…"` with the spoken words.
+  Use `data-tts-skip` on purely decorative text.
 
 ### Practice
 One `ProblemType` per bucket-family, OR one `ProblemType` per distinguishable
@@ -274,7 +386,48 @@ generalization follow-up (e.g. "what does this number mean" after computing
 it, or "is this always true" after one instance). Tag `bucket` on every
 `Problem` your generator can produce; set `Unit.requiredBuckets` to the full
 list so mastery requires covering all of them, not just whichever the RNG
-favors.
+favors. **The bucket list must include every concept and trap the CFU
+checks** (see CFU → "Carry every CFU concept forward"); add a bucket if the
+plan's list is missing one, and note it in the report.
+
+**Getting unstuck: the help ladder (K–1 labs).** The main goal is that a
+student who is stuck can get unstuck without the teacher. Under
+`EarlyLearnerProvider`, `StepProblem` already runs the ladder: 1st wrong
+answer → plain feedback + the step's `hint` + a "look here" pulse on the
+picture; 2nd wrong → a "Show me" button that reveals the step's `showMe`;
+after a solve that needed help → "Try one like it." Your job is to give
+each rung something worth showing:
+
+- **Hints are an action that points at the picture**, not a restatement of
+  the prompt: "Count the empty boxes in the first ten-frame." / "How many
+  ones are past 10 in 14?" Never "Think about it," never "You should know
+  this," and never a hint that gives away a two-choice answer.
+- **The picture points.** `Problem.visual` is `(done, help?: VisualHelp) =>
+  ReactNode`. Use `pointing(help, stepIndex)` (from `shared/engine/types.ts`)
+  to change the picture when the student is stuck on that step: highlight
+  the empty ten-frame boxes, draw the number-line hops, circle the extras in
+  compare rows, split the counters into "start" and "change" to act the
+  story out. Every Problem type in a K–1 lab should do this for at least
+  its main step. See `MG1/.../units/AddToTakeFromWordProblems.tsx` (the
+  `pointing(help, 1)` split) and `CountingOnAndBack.tsx` (`hopsFor`).
+- **`showMe` on every final step**: a short worked line in the student's
+  words, e.g. ``showMe: `Start at ${a}. Count on ${b}: ${countWords(a, total)}.` ``
+  It's read aloud, so write it to be heard.
+
+**The picture matches the question, not the answer (user requirement).**
+Before help, the picture shows what the problem GIVES (the start amount,
+the two groups, the empty frame), never the result, or a student just counts
+dots and never does the math. This matters most in fluency/fact practice.
+The answer-revealing version (all counters, the completed hop, the gap
+circled) appears only through `pointing(help, …)` after a wrong answer, or
+after `done`. Check this in the progressive-reveal browser check
+(Verification #8).
+
+**Generators stay in range by construction.** Draw numbers so the result is
+already inside the unit's range (e.g. within 20: `a = randInt(1, 11); b =
+randInt(1, Math.min(9, 20 - a))`). Never clamp a result after the fact
+(`Math.min(20, a + b)`): the explanation then states false math like
+"12 + 9 = 20." Applies to Practice, Test, and Module Test generators.
 
 Randomization hygiene: when two values must stay distinct AFTER a
 transform (e.g. negating), draw the distinctness from the PRE-transform
@@ -365,7 +518,8 @@ and Practice actually teach: retire any question drilling a procedural
 detail the unit doesn't actually teach that way, and make sure the hardest
 tier Explore demonstrates has at least one Test item covering it — the Test
 should be audited against the final Explore/Practice content, not left as
-whatever was drafted first.
+whatever was drafted first. Every CFU concept/trap must have at least one
+Test question (ideally with the matching misconception as a distractor).
 
 Avoid `CustomStep` for test content unless you've confirmed
 `UnitTest.tsx`'s generic advance button excludes `"custom"` kind (it should,
@@ -427,9 +581,17 @@ show up in a loaded browser.
    a brute-force reimplementation where feasible, confirm every bucket's
    hard-case edge (not just its easy end) is actually reachable, and for any
    Test file confirm no distractor collides numerically with its own correct
-   answer. Delete the script afterward.
+   answer. Also print one sample sentence per prompt template × every word
+   in its pools (names, verbs, objects) and READ them as the voice would:
+   grammar after helper verbs ("did … get"), singular/plural, a/an, and
+   any symbol the voice can't say. Delete the script afterward.
 
-**Browser checks** (navigate to the new level in an actual loaded page):
+**Browser checks** (navigate to the new level in an actual loaded page). Run
+these at **iPad portrait size (820×1180, touch on)**, not a desktop window.
+Labs need a login; the working approach is a temporary harness page in
+`src/` that renders the lab inside `StudentProvider` with no student (guest
+progress in localStorage), driven by Playwright against the dev server.
+Delete the harness when done. Take screenshots and look at them.
 
 7. Confirm the lab renders — not a silent "Level not found" fallback, which
    is exactly what a circular import between a unit and its Test file
@@ -455,12 +617,28 @@ show up in a loaded browser.
     EXISTING lab: verify as both a brand-new student and a student with
     pre-existing practice history — the latter must not be locked out
     retroactively.
+13. K–1 labs: help-ladder walkthrough, with sound on (stub
+    `speechSynthesis.speak` to log what's spoken). On one problem per
+    Problem type: answer wrong once → feedback + hint read aloud, and the
+    picture changes to point at the answer; wrong again → Show me appears
+    and is read; finish → "Solved, with help." and "Try one like it" gives
+    the SAME problem type; stars do not go up for that solve. Check that
+    a tried choice is disabled and the number pad opens (no iPad keyboard).
+14. Layout on iPad portrait: the number pad, read-aloud toolbar and sound
+    banner must not cover Check / Show me / Next or the picture, and
+    nothing on the page jumps when the pad opens or closes (a jump makes
+    the student's tap land on the wrong button).
+15. Diagram edge values: render each new or changed diagram at its edge
+    values (see Explore → standard model) and look at every screenshot.
 
 ## Final report (what the user actually reads)
 
 For each unit: what Explore does, the exact CFU questions + answers + why
 you picked them, the Practice bucket list and step counts, the Test's 10
-question types and the misconception each engineered distractor targets.
+question types and the misconception each engineered distractor targets,
+and the CFU concept → Practice bucket → Test question mapping. For K–1
+labs, also what each Problem type's picture points at when the student is
+stuck.
 For the Module Test: which 5 generators per unit, with what parameters.
 List every file created/modified, plus any `shared/diagrams` or
 `shared/engine` promotions you made and why (what the second consumer was),
@@ -468,6 +646,6 @@ and any updates you made to `VISUAL_COMPONENT_TODO.txt` /
 `MATH_TSX_STYLE_GUIDE.txt`. List every autonomous decision you made beyond
 the approved plan, with a one-line reason. State verification results
 plainly (pass/fail per each static and browser check above). Close with:
-"Still worth a manual pass in the running app before calling this done" —
-you have not visually confirmed layout/rendering, only that it compiles,
-lints, builds, and the underlying math/logic simulations check out.
+"Still worth a manual pass on a real iPad before calling this done" — a
+headless browser can't confirm iOS Safari speech, real touch feel, or how a
+young student actually uses it.

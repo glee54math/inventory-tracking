@@ -1,8 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
-import { ReadAloud } from "../tts/ReadAloud";
+import React, { useEffect, useId, useRef, useState } from "react";
+import { autoRead, ReadAloud } from "../tts/ReadAloud";
 import { stopIfPlaying } from "../tts/speechEngine";
-import type { Problem, SentenceBlank, Step } from "./types";
+import type { Problem, SentenceBlank, Step, VisualHelp } from "./types";
 import { fmt, fracText, gcd, numbersMatch, parseAnswer, rawFraction, verticalMultiplyBreakdown } from "../lib/math";
+import { numberPadProps, useEarlyLearner } from "./audience";
+import { InlineNumberPad } from "../components/NumberPad";
 
 /** Exported so the end-of-unit test (engine/UnitTest.tsx) can type its own
  *  per-question answer state the same shape StepInput expects. */
@@ -12,9 +14,17 @@ export interface StepState {
   hint: boolean;
   revealed: boolean;
   feedback: string | null;
+  /** Early learners: the "Show me" walk-through is open for this step. */
+  showMe: boolean;
+  /** Choice steps: indexes already picked wrong (early learners can't re-pick them). */
+  tried: number[];
 }
 
-export const fresh = (): StepState => ({ inputs: ["", ""], wrong: 0, hint: false, revealed: false, feedback: null });
+export const fresh = (): StepState => ({ inputs: ["", ""], wrong: 0, hint: false, revealed: false, feedback: null, showMe: false, tried: [] });
+
+/** Plain-language messages for early learners (K–1): no decimals, fractions or "factor of 10". */
+const EARLY_WRONG = "Not yet. Look at the picture and try again.";
+const EARLY_WRONG_CHOICE = "Not that one. Look at the picture and try again.";
 
 /** Formats a step's canonical answer for display. Exported for reuse on the
  *  end-of-unit test's results review screen — see engine/UnitTest.tsx. */
@@ -60,10 +70,17 @@ const sentenceBlankOk = (b: SentenceBlank, raw: string): boolean => {
 /** Check one step. Returns null when right, or a targeted message when wrong.
  *  Exported for reuse by the end-of-unit test, so test questions are graded
  *  with the exact same logic as practice steps — see engine/UnitTest.tsx. */
-export const check = (s: Step, inputs: string[]): { ok: boolean; msg: string } => {
+export const check = (s: Step, inputs: string[], opts: { early?: boolean } = {}): { ok: boolean; msg: string } => {
   if (s.kind === "choice") {
     if (inputs[0] === "") return { ok: false, msg: "Pick one of the choices." };
-    return Number(inputs[0]) === s.correct ? { ok: true, msg: "" } : { ok: false, msg: "Not that one. Reread each choice and test it against the picture." };
+    return Number(inputs[0]) === s.correct
+      ? { ok: true, msg: "" }
+      : { ok: false, msg: opts.early ? EARLY_WRONG_CHOICE : "Not that one. Reread each choice and test it against the picture." };
+  }
+  if (s.kind === "number" && opts.early && !s.money && !s.frac && s.padTo === undefined) {
+    const v = parseAnswer(inputs[0]);
+    if (v === null) return { ok: false, msg: "Type a number." };
+    return numbersMatch(v, s.answer) ? { ok: true, msg: "" } : { ok: false, msg: EARLY_WRONG };
   }
   if (s.kind === "number") {
     const raw = s.money ? inputs[0].trim().replace(/^\$/, "") : inputs[0];
@@ -165,23 +182,56 @@ export interface StepProblemProps {
   problem: Problem;
   /**
    * Called once when the last step is finished. `clean` = no revealed
-   * answers and at most one hint. `bucket` forwards problem.bucket as-is
-   * (undefined for the large majority of problems that don't set one) — see
-   * Problem.bucket and UnitProgress.coveredBuckets for what it's for.
+   * answers, no wrong picks on a multiple-choice step (those can be
+   * guessed), and at most one hint. `bucket` forwards problem.bucket as-is
+   * (undefined for problems that don't set one) — see Problem.bucket and
+   * UnitProgress.coveredBuckets for what it's for.
    */
   onComplete?: (clean: boolean, bucket?: string) => void;
   onNext?: () => void;
+  /** Early learners: a new problem of the SAME kind, offered after a solve that needed help. */
+  onRetrySame?: () => void;
 }
 
-export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
+/**
+ * Help ladder.
+ *   Everyone: a wrong answer shows feedback and pulses the picture ("look here").
+ *   Early learners (EarlyLearnerProvider): the hint opens on the first wrong
+ *   try; after two wrong tries "Show me" walks through that step (the picture
+ *   fills in and the explanation is read aloud); a solve that needed help ends
+ *   with "Try one like it". Everyone else: the hint opens on the second wrong
+ *   try and "Show answer" appears on the third.
+ */
+export function StepProblem({ problem, onComplete, onNext, onRetrySame }: StepProblemProps) {
+  const early = useEarlyLearner();
   const [current, setCurrent] = useState(0);
   const [states, setStates] = useState<StepState[]>(() => problem.steps.map(fresh));
   const reported = useRef(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLLIElement>(null);
   // Read-aloud: the active step's icon reads its prompt, answer choices and buttons together.
   const inputRef = useRef<HTMLDivElement>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
+  const readerId = useId();
   const finished = current >= problem.steps.length;
+  const cur = finished ? null : states[current];
+  // Optional pause before "Show me"'s "Got it" works (see Step.showMeHoldMs).
+  const showMeHoldMs = cur?.showMe ? problem.steps[current].showMeHoldMs : undefined;
+  const [showMeReady, setShowMeReady] = useState<number | null>(null);
+  const showMeHolding = !!showMeHoldMs && showMeReady !== current;
+  useEffect(() => {
+    if (!showMeHoldMs) return;
+    const t = window.setTimeout(() => setShowMeReady(current), showMeHoldMs);
+    return () => window.clearTimeout(t);
+  }, [showMeHoldMs, current]);
+  // Optional pause before the wrap-up buttons work (see Problem.wrapUpHoldMs).
+  const [holdOver, setHoldOver] = useState(false);
+  const holding = finished && !!problem.wrapUpHoldMs && !holdOver;
+  useEffect(() => {
+    if (!finished || !problem.wrapUpHoldMs) return;
+    const t = window.setTimeout(() => setHoldOver(true), problem.wrapUpHoldMs);
+    return () => window.clearTimeout(t);
+  }, [finished, problem.wrapUpHoldMs]);
 
   // Note: give this component a new `key` for each new problem so its state resets.
 
@@ -194,33 +244,59 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
     // activate the now-focused button directly — silently "choosing" whichever
     // option happens to render first, with no validation gate, regardless of
     // whether it's correct. A text input has no such native Enter-activation
-    // behavior, so it's safe to auto-focus; a button is not.
-    if (current > 0) activeRef.current?.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true });
-  }, [current]);
+    // behavior, so it's safe to auto-focus; a button is not. Early learners
+    // also get the first step focused, so the number pad is ready to tap.
+    if (current > 0 || early) activeRef.current?.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true });
+  }, [current, early]);
 
-  // A new step/question replaces the text on screen; stop reading the old one.
-  useEffect(() => stopIfPlaying(), [current]);
+  // Auto-read (when the student turned sound on): a new question, then
+  // feedback + hint after a wrong try, the hint when asked for, the "Show me"
+  // walk-through, and the wrap-up. Otherwise just stop the old reading.
+  const prev = useRef<{ current: number; wrong: number; hint: boolean; showMe: boolean } | null>(null);
+  useEffect(() => {
+    const root = rootRef.current;
+    const q = (sel: string) => root?.querySelector(sel) ?? null;
+    const now = { current, wrong: cur?.wrong ?? 0, hint: cur?.hint ?? false, showMe: cur?.showMe ?? false };
+    const before = prev.current;
+    prev.current = now;
+    if (finished) return autoRead(readerId, [q(".wrapup")]);
+    if (!before || before.current !== current) {
+      stopIfPlaying();
+      const step = problem.steps[current];
+      return autoRead(readerId, [current === 0 ? q(".story") : null, q(".step.active .step-prompt"), step.kind === "choice" ? q(".step.active .choices") : null]);
+    }
+    if (now.showMe && !before.showMe) return autoRead(readerId, [q(".step.active .show-me")]);
+    if (now.wrong > before.wrong) return autoRead(readerId, [q(".step.active .feedback"), q(".step.active .hint")]);
+    if (now.hint && !before.hint) return autoRead(readerId, [q(".step.active .hint")]);
+  }, [current, finished, cur?.wrong, cur?.hint, cur?.showMe, problem, readerId]);
+
+  const isClean = (all: StepState[]) => {
+    const hints = all.filter((s) => s.hint).length;
+    const reveals = all.filter((s) => s.revealed).length;
+    const guessed = all.some((s, k) => problem.steps[k].kind === "choice" && s.wrong > 0);
+    return reveals === 0 && hints <= 1 && !guessed;
+  };
 
   useEffect(() => {
     if (finished && !reported.current) {
       reported.current = true;
-      const hints = states.filter((s) => s.hint).length;
-      const reveals = states.filter((s) => s.revealed).length;
-      onComplete?.(reveals === 0 && hints <= 1, problem.bucket);
+      onComplete?.(isClean(states), problem.bucket);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finished, states, onComplete, problem.bucket]);
 
   const update = (i: number, patch: Partial<StepState>) => setStates((all) => all.map((s, k) => (k === i ? { ...s, ...patch } : s)));
 
   const submit = (i: number, inputs = states[i].inputs) => {
     const step = problem.steps[i];
-    const res = check(step, inputs);
+    const res = check(step, inputs, { early });
     if (res.ok) {
       update(i, { inputs, feedback: null });
       setCurrent(i + 1);
     } else {
       const wrong = states[i].wrong + 1;
-      update(i, { inputs, wrong, feedback: res.msg, hint: states[i].hint || wrong >= 2 });
+      const tried = step.kind === "choice" && inputs[0] !== "" ? [...states[i].tried, Number(inputs[0])] : states[i].tried;
+      update(i, { inputs, wrong, tried, feedback: res.msg, hint: states[i].hint || wrong >= (early ? 1 : 2) });
     }
   };
 
@@ -229,13 +305,24 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
     setCurrent(i + 1);
   };
 
-  const hintsUsed = states.filter((s) => s.hint).length;
-  const reveals = states.filter((s) => s.revealed).length;
+  const openShowMe = (i: number) => update(i, { revealed: true, showMe: true, feedback: null });
+
+  const clean = isClean(states);
+  const help: VisualHelp | undefined = cur ? { step: current, wrong: cur.wrong, hint: cur.hint, showMe: cur.showMe } : undefined;
+  // While "Show me" is open the picture shows this step already done.
+  const visualDone = cur?.showMe ? current + 1 : current;
+  const lookHere = !!cur && (cur.showMe || (cur.wrong > 0 && cur.feedback !== null));
 
   return (
-    <div className="problem">
-      <div className="problem-visual" aria-live="polite">
-        {problem.visual(current)}
+    <div className="problem" ref={rootRef}>
+      <div className={`problem-visual${lookHere ? " look-here" : ""}`} aria-live="polite">
+        {problem.visual(visualDone, help)}
+        {lookHere && (
+          // Keyed on the try count so the pulse replays on every wrong try.
+          <span key={`${current}-${cur!.wrong}-${cur!.showMe}`} className="look-here-ring" aria-hidden>
+            <span className="look-here-badge">👀 Look here</span>
+          </span>
+        )}
       </div>
       <div className="problem-work">
         <ReadAloud className="story">
@@ -261,6 +348,23 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
                       <div className="explain">{step.explain}</div>
                     </div>
                   </ReadAloud>
+                ) : st.showMe ? (
+                  <div className="step-body">
+                    <ReadAloud className="step-prompt">{step.prompt}</ReadAloud>
+                    <ReadAloud className="show-me" role="status" autoPlay={false}>
+                      <div className="show-me-title">Here's how:</div>
+                      {step.showMe && <div className="show-me-extra">{step.showMe}</div>}
+                      <div className="explain">{step.explain}</div>
+                      <div>
+                        The answer is <span className="answer-chip revealed">{answerText(step)}</span>.
+                      </div>
+                    </ReadAloud>
+                    <div className="step-tools" data-readaloud-part>
+                      <button className="btn primary big" disabled={showMeHolding} onClick={() => setCurrent(i + 1)}>
+                        Got it
+                      </button>
+                    </div>
+                  </div>
                 ) : (
                   <div className="step-body">
                     <ReadAloud className="step-prompt" alsoRead={[inputRef, toolsRef]}>
@@ -270,7 +374,7 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
                       <StepInput step={step} state={st} onChange={(inputs) => update(i, { inputs, feedback: null })} onSubmit={(inputs) => submit(i, inputs)} />
                     </div>
                     {st.feedback && (
-                      <ReadAloud as="p" className="feedback bad" role="alert">
+                      <ReadAloud as="p" className="feedback bad" role="alert" autoPlay={false}>
                         {st.feedback}
                       </ReadAloud>
                     )}
@@ -290,11 +394,17 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
                           Show hint
                         </button>
                       )}
-                      {st.wrong >= 3 && (
-                        <button className="btn ghost" onClick={() => reveal(i)}>
-                          Show answer
-                        </button>
-                      )}
+                      {early
+                        ? st.wrong >= 2 && (
+                            <button className="btn primary show-me-btn" onClick={() => openShowMe(i)}>
+                              🙋 Show me
+                            </button>
+                          )
+                        : st.wrong >= 3 && (
+                            <button className="btn ghost" onClick={() => reveal(i)}>
+                              Show answer
+                            </button>
+                          )}
                     </div>
                   </div>
                 )}
@@ -311,14 +421,27 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
 
         {finished && (
           <ReadAloud className="wrapup" role="status">
-            <div className="wrapup-title">{reveals === 0 && hintsUsed <= 1 ? "Solved it! ⭐" : "Solved, with help."}</div>
+            <div className="wrapup-title">{clean ? "Solved it! ⭐" : "Solved, with help."}</div>
             <p>{problem.wrapUp}</p>
-            {!(reveals === 0 && hintsUsed <= 1) && <p className="muted">Solve one with at most one hint to earn a mastery star.</p>}
-            {onNext && (
-              <button className="btn primary" onClick={onNext}>
-                Next problem
-              </button>
+            {!clean && (
+              <p className="muted">
+                {early && onRetrySame ? "Now try one like it by yourself." : "Solve one with no wrong guesses and at most one hint to earn a mastery star."}
+              </p>
             )}
+            <div className="step-tools" data-readaloud-part>
+              {!clean && onRetrySame && (
+                <button className="btn primary" disabled={holding} onClick={onRetrySame}>
+                  Try one like it
+                </button>
+              )}
+              {onNext && (
+                // Solved with help (early-learner labs, which pass onRetrySame):
+                // "Next problem" stays off so the student must "Try one like it".
+                <button className={`btn ${!clean && onRetrySame ? "ghost" : "primary"}`} disabled={holding || (!clean && !!onRetrySame)} onClick={onNext}>
+                  Next problem
+                </button>
+              )}
+            </div>
           </ReadAloud>
         )}
       </div>
@@ -330,17 +453,25 @@ export function StepProblem({ problem, onComplete, onNext }: StepProblemProps) {
  *  the end-of-unit test — see engine/UnitTest.tsx. StepState is also exported
  *  so a caller outside this file can type its own per-question answer state. */
 export function StepInput({ step, state, onChange, onSubmit }: { step: Step; state: StepState; onChange: (v: string[]) => void; onSubmit: (v: string[]) => void }) {
+  const early = useEarlyLearner();
+  // Early learners type with on-screen number pads (their "Check" key presses Enter).
+  const pad = numberPadProps(early, "enter");
+  const answerRef = useRef<HTMLInputElement>(null);
   const enter = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") onSubmit(state.inputs);
   };
   if (step.kind === "choice") {
     return (
       <div className="choices" role="group">
-        {step.choices.map((c, k) => (
-          <button key={k} className="choice" onClick={() => onSubmit([String(k), ""])}>
-            {c}
-          </button>
-        ))}
+        {step.choices.map((c, k) => {
+          // Early learners can't re-pick a choice they already got wrong.
+          const tried = early && state.tried.includes(k);
+          return (
+            <button key={k} className={`choice${tried ? " tried" : ""}`} disabled={tried} aria-disabled={tried} onClick={() => onSubmit([String(k), ""])}>
+              {c}
+            </button>
+          );
+        })}
       </div>
     );
   }
@@ -371,6 +502,7 @@ export function StepInput({ step, state, onChange, onSubmit }: { step: Step; sta
           <input
             className="answer sentence-input-box"
             inputMode="decimal"
+            {...pad}
             autoComplete="off"
             aria-label={i === 0 ? "First blank" : "Second blank"}
             placeholder={b.money ? "0.00" : undefined}
@@ -396,8 +528,10 @@ export function StepInput({ step, state, onChange, onSubmit }: { step: Step; sta
       <div className="answer-row">
         {step.prefix && <span className="affix">{step.prefix}</span>}
         <input
-          className="answer"
+          ref={answerRef}
+          className={`answer${step.tone ? ` q${step.tone}` : ""}`}
           inputMode="decimal"
+          {...numberPadProps(early, "inline")}
           autoComplete="off"
           aria-label="Your answer"
           placeholder={step.money ? "0.00" : step.frac ? "n/d" : undefined}
@@ -406,6 +540,7 @@ export function StepInput({ step, state, onChange, onSubmit }: { step: Step; sta
           onKeyDown={enter}
         />
         {step.suffix && <span className="affix">{step.suffix}</span>}
+        {early && <InlineNumberPad inputRef={answerRef} />}
       </div>
     );
   }

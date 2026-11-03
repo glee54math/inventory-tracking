@@ -6,6 +6,7 @@ import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { decomposingNumbersTest } from "./DecomposingNumbersTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -38,25 +39,25 @@ function DecomposeVocabQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Breaking a number into smaller pieces like this is called ________ it.{" "}
-          <select className="answer" value={verbPick} onChange={(e) => setVerbPick(e.target.value)} style={fieldOk(verbOk, checked)}>
+          <TapSelect value={verbPick} onChange={(e) => setVerbPick(e.target.value)} style={fieldOk(verbOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="decomposing">decomposing</option>
             <option value="comparing">comparing</option>
             <option value="counting">counting</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           4 and 3 are both called the two ________.{" "}
-          <select className="answer" value={namePick} onChange={(e) => setNamePick(e.target.value)} style={fieldOk(nameOk, checked)}>
+          <TapSelect value={namePick} onChange={(e) => setNamePick(e.target.value)} style={fieldOk(nameOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="parts">parts</option>
             <option value="digits">digits</option>
             <option value="numerals">numerals</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -88,13 +89,13 @@ function MoreThanOneWayQuestion({ onComplete }: { onComplete?: () => void }) {
       <SplitGroup total={6} partA={4} toneA="a" toneB="b" />
       <p>True or false: 6 can ALSO be broken into 3 and 3 — a different pair that still makes 6.</p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -125,13 +126,13 @@ function OnlyOneWayTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         <b>3.</b> True or false: every number can be broken into two parts in only ONE way.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -168,24 +169,24 @@ function EqualPartsQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           True or false: 8 can be broken into two EQUAL parts.{" "}
-          <select className="answer" value={canPick} onChange={(e) => setCanPick(e.target.value)} style={fieldOk(canOk, checked)}>
+          <TapSelect value={canPick} onChange={(e) => setCanPick(e.target.value)} style={fieldOk(canOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="true">True</option>
             <option value="false">False</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           If so, each equal part would be:{" "}
-          <select className="answer" value={partsPick} onChange={(e) => setPartsPick(e.target.value)} style={fieldOk(partsOk, checked)}>
+          <TapSelect value={partsPick} onChange={(e) => setPartsPick(e.target.value)} style={fieldOk(partsOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="3">3</option>
             <option value="4">4</option>
             <option value="5">5</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer

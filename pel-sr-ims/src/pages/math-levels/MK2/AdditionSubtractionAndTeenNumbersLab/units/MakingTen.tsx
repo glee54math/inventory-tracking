@@ -6,6 +6,7 @@ import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { makingTenTest } from "./MakingTenTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -38,25 +39,25 @@ function PartnerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           The number that joins 6 to make exactly 10 is called 6's ________ for 10.{" "}
-          <select className="answer" value={namePick} onChange={(e) => setNamePick(e.target.value)} style={fieldOk(nameOk, checked)}>
+          <TapSelect value={namePick} onChange={(e) => setNamePick(e.target.value)} style={fieldOk(nameOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="partner">partner</option>
             <option value="opposite">opposite</option>
             <option value="double">double</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           What is 6's partner for 10?{" "}
-          <select className="answer" value={valuePick} onChange={(e) => setValuePick(e.target.value)} style={fieldOk(valueOk, checked)}>
+          <TapSelect value={valuePick} onChange={(e) => setValuePick(e.target.value)} style={fieldOk(valueOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="3">3</option>
             <option value="4">4</option>
             <option value="5">5</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -90,13 +91,13 @@ function CountingUpVsRecallQuestion({ onComplete }: { onComplete?: () => void })
         just KNOWING that 7 + 3 = 10 right away?
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="counting">Counting up from 1 every time</option>
           <option value="recall">Just knowing it (recall)</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -127,13 +128,13 @@ function EveryNumberHasOneQuestion({ onComplete }: { onComplete?: () => void }) 
         <b>3.</b> True or false: every number from 1 to 9 has exactly one partner that makes 10 with it.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -171,23 +172,23 @@ function VerifyPairQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           6 and 4 — do these make 10?{" "}
-          <select className="answer" value={truePick} onChange={(e) => setTruePick(e.target.value)} style={fieldOk(trueOk, checked)}>
+          <TapSelect value={truePick} onChange={(e) => setTruePick(e.target.value)} style={fieldOk(trueOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="true">True</option>
             <option value="false">False</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           5 and 4 — do these make 10?{" "}
-          <select className="answer" value={falsePick} onChange={(e) => setFalsePick(e.target.value)} style={fieldOk(falseOk, checked)}>
+          <TapSelect value={falsePick} onChange={(e) => setFalsePick(e.target.value)} style={fieldOk(falseOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="true">True</option>
             <option value="false">False</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer

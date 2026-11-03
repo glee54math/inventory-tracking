@@ -151,3 +151,73 @@
   font-weight: 700;
   cursor: pointer;
 }
+
+/* ---- auto-read on/off (toolbar) ---- */
+.tts-toolbar .tts-auto {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 2px solid var(--line, #ddd);
+  background: transparent;
+  color: var(--muted, #555);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tts-toolbar .tts-auto.on {
+  border-color: var(--qa, #2563eb);
+  color: var(--qa-text, var(--qa, #2563eb));
+}
+
+/* ---- one-time "Turn on sound" banner ---- */
+.tts-sound-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 24px;
+  background: var(--card, #fff);
+  border: 2px solid var(--qa, #2563eb);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.22);
+}
+.tts-sound-banner .tts-sound-on {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 64px;
+  padding: 10px 26px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--qa, #2563eb);
+  color: var(--on-q, #fff);
+  font: inherit;
+  font-size: 22px;
+  font-weight: 800;
+  cursor: pointer;
+  animation: ttsSoundNudge 1.6s ease-in-out infinite;
+}
+.tts-sound-banner .tts-sound-off {
+  border: 0;
+  background: none;
+  color: var(--muted, #555);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+@keyframes ttsSoundNudge {
+  50% {
+    transform: scale(1.06);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tts-sound-on {
+    animation: none;
+  }
+}

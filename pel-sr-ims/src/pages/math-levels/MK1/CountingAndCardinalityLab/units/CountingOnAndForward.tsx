@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { CounterGroup, TenGroups } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type Problem, type Step } from "../../../shared/engine/types";
-import { Segmented, Stepper } from "../../../shared/engine/controls";
+import { QB, Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { countingOnAndForwardTest } from "./CountingOnAndForwardTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -38,25 +39,25 @@ function NextNumberVocabQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Next number:{" "}
-          <select className="answer" value={word} onChange={(e) => setWord(e.target.value)} style={fieldOk(wordOk, checked)}>
+          <TapSelect value={word} onChange={(e) => setWord(e.target.value)} style={fieldOk(wordOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="thirty">thirty</option>
             <option value="twenty-ten">twenty-ten</option>
             <option value="forty">forty</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           What's special about it?{" "}
-          <select className="answer" value={special} onChange={(e) => setSpecial(e.target.value)} style={fieldOk(specialOk, checked)}>
+          <TapSelect value={special} onChange={(e) => setSpecial(e.target.value)} style={fieldOk(specialOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="new-ten">It starts a brand new ten (the 30s)</option>
             <option value="odd">It's an odd number</option>
             <option value="before">It comes before 29</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -90,13 +91,13 @@ function OnesVsTensQuestion({ onComplete }: { onComplete?: () => void }) {
   const selectRow = (label: string, value: string, setValue: (v: string) => void, isOk: boolean) => (
     <label>
       {label}:{" "}
-      <select className="answer" value={value} onChange={(e) => setValue(e.target.value)} style={fieldOk(isOk, checked)}>
+      <TapSelect value={value} onChange={(e) => setValue(e.target.value)} style={fieldOk(isOk, checked)}>
         <option value="" disabled>
           choose
         </option>
         <option value="21">21</option>
         <option value="30">30</option>
-      </select>
+      </TapSelect>
     </label>
   );
 
@@ -140,13 +141,13 @@ function DecadeRuleQuestion({ onComplete }: { onComplete?: () => void }) {
         number always ends in 0.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -181,7 +182,7 @@ function CountForwardThreeQuestion({ onComplete }: { onComplete?: () => void }) 
   const selectRow = (label: string, value: string, setValue: (v: string) => void, isOk: boolean) => (
     <label>
       {label}:{" "}
-      <select className="answer" value={value} onChange={(e) => setValue(e.target.value)} style={fieldOk(isOk, checked)}>
+      <TapSelect value={value} onChange={(e) => setValue(e.target.value)} style={fieldOk(isOk, checked)}>
         <option value="" disabled>
           choose
         </option>
@@ -190,7 +191,7 @@ function CountForwardThreeQuestion({ onComplete }: { onComplete?: () => void }) 
             {o}
           </option>
         ))}
-      </select>
+      </TapSelect>
     </label>
   );
 
@@ -310,7 +311,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {crossedDecade && <p className="feedback good">You just started a brand new ten!</p>}
 
-      <TenGroups value={current} tone="a" />
+      <TenGroups value={current} tone="a" labels />
       <ReadAloud as="p" className="muted small">
         {current === 0
           ? "Start at 0 and press the button to begin counting."
@@ -339,7 +340,8 @@ function countingProblem(targetBucket?: string): Problem {
       title: "What comes next?",
       bucket,
       story: `Count the dots: there are ${before}. What number comes right after ${before} when you keep counting?`,
-      visual: () => <CounterGroup count={before} arrangement="line" tone="a" seed={before} />,
+      // One more dot appears after each answered step, so step 2 ("after n?") shows n dots.
+      visual: (done) => <CounterGroup count={before + Math.min(done, 2)} arrangement="line" tone="a" seed={before} />,
       steps: [
         { kind: "number", prompt: `What number comes right after ${before}?`, hint: "Count one more than the dots shown.", explain: `${before} + 1 = ${n}.`, answer: n },
         { kind: "number", prompt: `Now what number comes right after ${n}?`, hint: "Keep going — one more than that.", explain: `${n} + 1 = ${after}.`, answer: after },
@@ -356,10 +358,21 @@ function countingProblem(targetBucket?: string): Problem {
       title: "Keep counting",
       bucket,
       story: `There are ${before} counters, all bundled into groups of ten. What comes right after ${before}?`,
-      visual: () => <TenGroups value={before} tone="a" />,
+      // The picture moves with the student: step 1 shows `before`, step 2
+      // shows `n`. The "?" box is where the next dot goes, colored to match
+      // the answer box.
+      // Once solved (no `help` = finished, not a "Show me" preview), count
+      // along before, n, after on the dots in a loop; the wrap-up buttons wait
+      // for one full pass (wrapUpHoldMs).
+      visual: (done, help) => {
+        if (done >= 2 && !help) return <TenGroups value={after} tone="a" labels countAlong={[before, n, after]} targetTone="b" />;
+        const shown = before + Math.min(done, 2);
+        return <TenGroups value={shown} tone="a" labels target={done < 2 ? shown + 1 : undefined} targetTone="b" />;
+      },
+      wrapUpHoldMs: 3000,
       steps: [
-        { kind: "number", prompt: `What number comes right after ${before}?`, hint: "Count one more.", explain: `${before} + 1 = ${n}.`, answer: n },
-        { kind: "number", prompt: `What number comes right after ${n}?`, hint: "One more again.", explain: `${n} + 1 = ${after}.`, answer: after },
+        { kind: "number", tone: "b", prompt: `What number comes right after ${before}?`, hint: "Find the ? box in the picture. That's one more dot. Count one more.", explain: `${before} + 1 = ${n}.`, answer: n },
+        { kind: "number", tone: "b", prompt: `What number comes right after ${n}?`, hint: "Find the ? box again. One more dot, one more number.", explain: `${n} + 1 = ${after}.`, answer: after },
       ],
       wrapUp: `${before}, ${n}, ${after}.`,
     };
@@ -373,10 +386,24 @@ function countingProblem(targetBucket?: string): Problem {
       title: "Counting by tens",
       bucket,
       story: `Count by tens: 10, 20, 30, and so on. If you've just said ${prevVal}, what comes next?`,
-      visual: () => <TenGroups value={prevVal} tone="b" />,
+      // Step 1 shows prevVal; once the jump is made, show nextVal so step 2
+      // ("how many groups of ten is nextVal?") has the right bundles to count.
+      // During step 1's "Show me", the new group of ten blinks 3 times (and
+      // "Got it" waits for it — showMeHoldMs) so the +10 jump is visible.
+      visual: (done, help) => (
+        <TenGroups
+          value={done === 0 ? prevVal : nextVal}
+          tone="b"
+          labels
+          blinkFrame={help?.showMe && help.step === 0 ? t : undefined}
+          // Step 2's "Show me": count the groups one per second (showMeHoldMs below).
+          countGroups={help?.showMe && help.step === 1}
+          targetTone="c"
+        />
+      ),
       steps: [
-        { kind: "number", prompt: `Counting by tens, what comes right after ${prevVal}?`, hint: "Each jump adds one whole group of ten.", explain: `${prevVal} + 10 = ${nextVal}.`, answer: nextVal },
-        { kind: "number", prompt: `How many groups of ten is ${nextVal}?`, hint: "Each bundle is ten — count the bundles, not the dots.", explain: `${nextVal} is ${t + 1} group${t + 1 === 1 ? "" : "s"} of ten.`, answer: t + 1 },
+        { kind: "number", showMeHoldMs: 3000, prompt: `Counting by tens, what comes right after ${prevVal}?`, hint: "Each jump adds one whole group of ten.", explain: `${prevVal} + 10 = ${nextVal}.`, answer: nextVal },
+        { kind: "number", showMeHoldMs: (t + 1) * 1000, prompt: `How many groups of ten is ${nextVal}?`, hint: "Each bundle is ten — count the bundles, not the dots.", explain: `${nextVal} is ${t + 1} group${t + 1 === 1 ? "" : "s"} of ten.`, answer: t + 1 },
       ],
       wrapUp: `Counting by tens: ${prevVal}, ${nextVal}.`,
     };
@@ -398,7 +425,7 @@ function countingProblem(targetBucket?: string): Problem {
   }
   const next = startNum + 1;
   const steps: Step[] = [
-    { kind: "number", prompt: `What number comes right after ${startNum}?`, hint: "Count one more than the number shown.", explain: `${startNum} + 1 = ${next}.`, answer: next },
+    { kind: "number", tone: "b", prompt: `What number comes right after ${startNum}?`, hint: "Find the ? box in the picture. Count one more than the number shown.", explain: `${startNum} + 1 = ${next}.`, answer: next },
   ];
   if (crossing) {
     const prevDecadeLabel = `the ${Math.floor(startNum / 10) * 10}s`;
@@ -411,13 +438,38 @@ function countingProblem(targetBucket?: string): Problem {
       )
     );
   }
-  steps.push({ kind: "number", prompt: `What number is one less than ${next}?`, hint: "One less means counting backward one step.", explain: `One less than ${next} is ${startNum}.`, answer: startNum });
+  const lessStep = steps.length;
+  steps.push({
+    kind: "number",
+    tone: "b",
+    prompt: (
+      <>
+        What number is{" "}
+        <span style={{ background: "var(--qb-soft)", borderRadius: 6, padding: "0 4px" }}>
+          <QB>one less than</QB>
+        </span>{" "}
+        {next}?
+      </>
+    ),
+    hint: "One less means take one dot away. Look at the dot with the X, and count backward one step.",
+    explain: `One less than ${next} is ${startNum}.`,
+    answer: startNum,
+  });
 
   return {
     title: "Counting forward",
     bucket,
     story: `Start counting at ${startNum}. What comes next?`,
-    visual: () => <TenGroups value={startNum} tone="c" />,
+    // First step: show startNum with the next dot's box marked. After that,
+    // show the new count.
+    // Step 1: the next dot's box is marked "?". The "one less" step: the last
+    // dot gets a blinking X. Once done, the picture is back to startNum.
+    visual: (done) => {
+      if (done === 0) return <TenGroups value={startNum} tone="c" labels target={next} targetTone="b" />;
+      if (done === lessStep) return <TenGroups value={next} tone="c" labels remove={next} targetTone="b" />;
+      if (done > lessStep) return <TenGroups value={startNum} tone="c" labels />;
+      return <TenGroups value={next} tone="c" labels />;
+    },
     steps,
     wrapUp: crossing ? `${startNum}, ${next} — crossing right into a brand new ten!` : `${startNum}, ${next}.`,
   };

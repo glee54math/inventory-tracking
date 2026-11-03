@@ -96,6 +96,10 @@ export interface CounterGroupProps {
    */
   countedOrder?: number[];
   onToggle?: (index: number) => void;
+  /** How many counters (the last ones in layout order) have been taken away —
+   *  drawn faded with an X so "how many are left?" has something to count.
+   *  Static display only; defaults to 0 (none taken). */
+  removed?: number;
 }
 
 /** A group of simple counters (dots, or an emoji glyph) laid out as a line,
@@ -103,7 +107,7 @@ export interface CounterGroupProps {
  *  stand-in for "how many" this whole lab uses instead of a bare numeral,
  *  per the K audience framing (no number should ever appear with nothing to
  *  count). Optionally click-to-count interactive for Explore. */
-export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyph, countedOrder, onToggle }: CounterGroupProps) {
+export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyph, countedOrder, onToggle, removed = 0 }: CounterGroupProps) {
   const points = layoutPositions(count, arrangement, seed);
   const color = toneColor(tone);
   const orderOf = (i: number) => (countedOrder ? countedOrder.indexOf(i) : -1);
@@ -124,11 +128,13 @@ export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyp
       {points.map((p, i) => {
         const order = orderOf(i);
         const counted = order >= 0;
+        const taken = i >= count - removed;
         return (
           <g
             key={i}
             style={interactive ? { cursor: "pointer" } : undefined}
             onClick={interactive ? () => onToggle!(i) : undefined}
+            opacity={taken ? 0.3 : undefined}
           >
             {glyph ? (
               <text x={p.x} y={p.y + R * 0.7} textAnchor="middle" fontSize={R * 2.1} opacity={counted || !countedOrder ? 1 : 0.35}>
@@ -142,6 +148,14 @@ export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyp
                 fill={counted || !countedOrder ? color : palette.grid}
                 stroke={palette.paper}
                 strokeWidth={2}
+              />
+            )}
+            {taken && (
+              <path
+                d={`M ${p.x - R + 3} ${p.y - R + 3} L ${p.x + R - 3} ${p.y + R - 3} M ${p.x + R - 3} ${p.y - R + 3} L ${p.x - R + 3} ${p.y + R - 3}`}
+                stroke={palette.ink}
+                strokeWidth={3}
+                strokeLinecap="round"
               />
             )}
             {countedOrder && counted && (

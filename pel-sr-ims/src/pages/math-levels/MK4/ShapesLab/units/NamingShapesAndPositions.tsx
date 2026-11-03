@@ -7,6 +7,7 @@ import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { namingShapesAndPositionsTest } from "./NamingShapesAndPositionsTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -34,13 +35,13 @@ function DiamondVocabQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           What shape is this, really?{" "}
-          <select className="answer" value={pick1} onChange={(e) => setPick1(e.target.value)} style={fieldOk(ok, checked)}>
+          <TapSelect value={pick1} onChange={(e) => setPick1(e.target.value)} style={fieldOk(ok, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="diamond">A diamond — turning it made it a new shape</option>
             <option value="square">Still a square — turning it never changes what shape it is</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
@@ -76,13 +77,13 @@ function ResizeConflationQuestion({ onComplete }: { onComplete?: () => void }) {
       </div>
       <p>True or false: they are both triangles, even though one is much bigger than the other.</p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -112,13 +113,13 @@ function TurningTrapQuestion({ onComplete }: { onComplete?: () => void }) {
         <b>3.</b> True or false: if you turn (rotate) a shape around, it becomes a different shape than it was before.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -156,23 +157,23 @@ function BesideVsInFrontQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Is any part of the box hidden from view?{" "}
-          <select className="answer" value={hiddenPick} onChange={(e) => setHiddenPick(e.target.value)} style={fieldOk(hiddenOk, checked)}>
+          <TapSelect value={hiddenPick} onChange={(e) => setHiddenPick(e.target.value)} style={fieldOk(hiddenOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="yes">Yes</option>
             <option value="no">No</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           So is the cat BESIDE the box, or IN FRONT OF the box?{" "}
-          <select className="answer" value={wordPick} onChange={(e) => setWordPick(e.target.value)} style={fieldOk(wordOk, checked)}>
+          <TapSelect value={wordPick} onChange={(e) => setWordPick(e.target.value)} style={fieldOk(wordOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="beside">Beside</option>
             <option value="inFrontOf">In front of</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer

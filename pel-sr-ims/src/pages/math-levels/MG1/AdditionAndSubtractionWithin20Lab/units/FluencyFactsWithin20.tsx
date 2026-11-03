@@ -6,6 +6,7 @@ import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { fluencyFactsWithin20Test } from "./FluencyFactsWithin20Test";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // SHARED LOGIC — same function backs both the Explore grouping hint and the
@@ -58,14 +59,14 @@ function GroupingChoiceQuestion({ onComplete }: { onComplete?: () => void }) {
         <b>1.</b> 4 + 8 + 2 — which two numbers should you add FIRST, to make the next step easiest?
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="4+8">4 + 8</option>
           <option value="8+2">8 + 2</option>
           <option value="4+2">4 + 2</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -95,13 +96,13 @@ function OrderDoesntMatterQuestion({ onComplete }: { onComplete?: () => void }) 
         <b>2.</b> True or false: when adding three numbers, you can add them in ANY order (any two first) and still get the same total.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -131,13 +132,13 @@ function WithinTenOrTwentyQuestion({ onComplete }: { onComplete?: () => void }) 
         <b>3.</b> 4 + 3 = 7, and 8 + 7 = 15. Which fact stays "within 10" (the total doesn't cross into the teens)?
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="4+3">4 + 3</option>
           <option value="8+7">8 + 7</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -167,14 +168,14 @@ function UnfamiliarSpeedQuestion({ onComplete }: { onComplete?: () => void }) {
         <b>4.</b> Without counting one-by-one, use what you know about making ten to quickly find 9 + 7.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="15">15</option>
           <option value="16">16</option>
           <option value="17">17</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>

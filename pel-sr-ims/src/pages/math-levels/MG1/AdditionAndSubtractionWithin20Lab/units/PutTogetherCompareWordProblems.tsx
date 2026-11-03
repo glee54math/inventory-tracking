@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { TenFrameGroup } from "../diagrams";
+import { CompareRows, TenFrameGroup } from "../diagrams";
 import { randInt, pick } from "../../../shared/lib/math";
-import { choice, type Problem } from "../../../shared/engine/types";
+import { choice, pointing, type Problem, type VisualHelp } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 import { putTogetherCompareWordProblemsTest } from "./PutTogetherCompareWordProblemsTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -38,24 +39,24 @@ function TotalOrAddendQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           What's unknown?{" "}
-          <select className="answer" value={role} onChange={(e) => setRole(e.target.value)} style={fieldOk(roleOk, checked)}>
+          <TapSelect value={role} onChange={(e) => setRole(e.target.value)} style={fieldOk(roleOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="total">the total</option>
             <option value="addend">one of the parts (an addend)</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Answer:{" "}
-          <select className="answer" value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(answerOk, checked)}>
+          <TapSelect value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(answerOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="1">1</option>
             <option value="5">5</option>
             <option value="9">9</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -91,24 +92,24 @@ function ManyWaysQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           How many different ways could the 6 cards split into sports and animal cards?{" "}
-          <select className="answer" value={waysPicked} onChange={(e) => setWaysPicked(e.target.value)} style={fieldOk(waysOk, checked)}>
+          <TapSelect value={waysPicked} onChange={(e) => setWaysPicked(e.target.value)} style={fieldOk(waysOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="one">Exactly one way</option>
             <option value="more">More than one way</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           If 2 are sports cards, how many are animal cards?{" "}
-          <select className="answer" value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(answerOk, checked)}>
+          <TapSelect value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(answerOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="2">2</option>
             <option value="4">4</option>
             <option value="6">6</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -147,25 +148,25 @@ function MoreAndFewerSameQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Lily has how many MORE crayons than Ben?{" "}
-          <select className="answer" value={moreAns} onChange={(e) => setMoreAns(e.target.value)} style={fieldOk(moreOk, checked)}>
+          <TapSelect value={moreAns} onChange={(e) => setMoreAns(e.target.value)} style={fieldOk(moreOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="4">4</option>
             <option value="5">5</option>
             <option value="9">9</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Ben has how many FEWER crayons than Lily?{" "}
-          <select className="answer" value={fewerAns} onChange={(e) => setFewerAns(e.target.value)} style={fieldOk(fewerOk, checked)}>
+          <TapSelect value={fewerAns} onChange={(e) => setFewerAns(e.target.value)} style={fieldOk(fewerOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="4">4</option>
             <option value="5">5</option>
             <option value="9">9</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -203,24 +204,24 @@ function FewerDirectionQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Which subtraction finds the answer?{" "}
-          <select className="answer" value={calc} onChange={(e) => setCalc(e.target.value)} style={fieldOk(calcOk, checked)}>
+          <TapSelect value={calc} onChange={(e) => setCalc(e.target.value)} style={fieldOk(calcOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="5-9">5 − 9</option>
             <option value="9-5">9 − 5</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Answer:{" "}
-          <select className="answer" value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(answerOk, checked)}>
+          <TapSelect value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(answerOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="4">4</option>
             <option value="5">5</option>
             <option value="9">9</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -423,11 +424,15 @@ function wordProblem(targetBucket?: string): Problem {
         title: "Compare — how many more?",
         bucket,
         story: `${ctx.a} has ${big} ${ctx.item}. ${ctx.b} has ${small} ${ctx.item}. How many MORE ${ctx.item} does ${ctx.a} have than ${ctx.b}?`,
-        visual: () => (
-          <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
-            <TenFrameGroup value={big} tone="a" />
-            <TenFrameGroup value={small} tone="b" />
-          </div>
+        // Rows line up one-to-one; when stuck, the extras get circled.
+        visual: (_done: number, help?: VisualHelp) => (
+          <CompareRows
+            rows={[
+              { label: ctx.a, count: big, tone: "a" },
+              { label: ctx.b, count: small, tone: "b" },
+            ]}
+            showGap={pointing(help, 0)}
+          />
         ),
         steps: [{ kind: "number", prompt: "How many more?", hint: "Subtract the smaller amount from the bigger amount.", explain: `${big} − ${small} = ${diff}.`, answer: diff }],
         wrapUp: `${big} − ${small} = ${diff}.`,
@@ -437,11 +442,14 @@ function wordProblem(targetBucket?: string): Problem {
       title: "Compare — how many fewer?",
       bucket,
       story: `${ctx.b} has ${small} ${ctx.item}. ${ctx.a} has ${big} ${ctx.item}. How many FEWER ${ctx.item} does ${ctx.b} have than ${ctx.a}?`,
-      visual: () => (
-        <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
-          <TenFrameGroup value={small} tone="b" />
-          <TenFrameGroup value={big} tone="a" />
-        </div>
+      visual: (_done: number, help?: VisualHelp) => (
+        <CompareRows
+          rows={[
+            { label: ctx.b, count: small, tone: "b" },
+            { label: ctx.a, count: big, tone: "a" },
+          ]}
+          showGap={pointing(help, 0) || pointing(help, 1)}
+        />
       ),
       steps: [
         choice(
@@ -469,7 +477,18 @@ function wordProblem(targetBucket?: string): Problem {
       title: "Compare — who has more?",
       bucket,
       story: `${ctx.b} has ${base} ${ctx.item}. ${ctx.a} has ${diff} more ${ctx.item} than ${ctx.b}. How many ${ctx.item} does ${ctx.a} have?`,
-      visual: () => <TenFrameGroup value={base} tone="b" />,
+      visual: (_done: number, help?: VisualHelp) =>
+        pointing(help, 1) ? (
+          <CompareRows
+            rows={[
+              { label: ctx.b, count: base, tone: "b" },
+              { label: ctx.a, count: biggerAmount, tone: "a" },
+            ]}
+            showGap
+          />
+        ) : (
+          <TenFrameGroup value={base} tone="b" />
+        ),
       steps: [
         choice({ prompt: `Is ${ctx.a}'s amount bigger or smaller than ${ctx.b}'s?`, hint: `"More than" means bigger.`, explain: `${ctx.a} has MORE, so ${ctx.a}'s amount is bigger than ${ctx.b}'s.` }, "Bigger", ["Smaller"]),
         { kind: "number", prompt: `How many does ${ctx.a} have?`, hint: "Add the difference onto the known amount.", explain: `${base} + ${diff} = ${biggerAmount}.`, answer: biggerAmount },
@@ -482,7 +501,18 @@ function wordProblem(targetBucket?: string): Problem {
     title: "Compare — who has fewer?",
     bucket,
     story: `${ctx.a} has ${base} ${ctx.item}. ${ctx.a} has ${diff} more ${ctx.item} than ${ctx.b}. How many ${ctx.item} does ${ctx.b} have?`,
-    visual: () => <TenFrameGroup value={base} tone="a" />,
+    visual: (_done: number, help?: VisualHelp) =>
+      pointing(help, 1) ? (
+        <CompareRows
+          rows={[
+            { label: ctx.a, count: base, tone: "a" },
+            { label: ctx.b, count: smallerAmount, tone: "b" },
+          ]}
+          showGap
+        />
+      ) : (
+        <TenFrameGroup value={base} tone="a" />
+      ),
     steps: [
       choice({ prompt: `Is ${ctx.b}'s amount bigger or smaller than ${ctx.a}'s?`, hint: `${ctx.a} has MORE, so ${ctx.b} must have less.`, explain: `${ctx.a} has MORE, so ${ctx.b}'s amount is smaller than ${ctx.a}'s.` }, "Smaller", ["Bigger"]),
       { kind: "number", prompt: `How many does ${ctx.b} have?`, hint: "Subtract the difference from the known amount.", explain: `${base} − ${diff} = ${smallerAmount}.`, answer: smallerAmount },
@@ -499,7 +529,7 @@ export const putTogetherCompareWordProblems: Unit = {
   keyIdea: (
     <>
       <p>Put-together stories have a TOTAL and two PARTS — when both parts are unknown, there's usually more than one valid way to split the total.</p>
-      <p>Compare stories always subtract the smaller amount from the bigger amount — "more" and "fewer" are just different WORDS for the same gap, not different operations.</p>
+      <p>Compare stories are about the GAP between two amounts. To find the gap, subtract the smaller from the bigger. If you know one amount and the gap, add or subtract the gap to find the other amount.</p>
     </>
   ),
   Explore,

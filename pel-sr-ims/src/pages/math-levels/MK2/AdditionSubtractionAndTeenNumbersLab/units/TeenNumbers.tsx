@@ -6,6 +6,7 @@ import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { teenNumbersTest } from "./TeenNumbersTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 const NUMBER_WORDS: Record<number, string> = {
   11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen", 15: "fifteen",
@@ -42,23 +43,23 @@ function DigitMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           In 14, the "1" stands for:{" "}
-          <select className="answer" value={tensPick} onChange={(e) => setTensPick(e.target.value)} style={fieldOk(tensOk, checked)}>
+          <TapSelect value={tensPick} onChange={(e) => setTensPick(e.target.value)} style={fieldOk(tensOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="one">one single object</option>
             <option value="ten">a whole group of ten</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           In 14, the "4" stands for:{" "}
-          <select className="answer" value={onesPick} onChange={(e) => setOnesPick(e.target.value)} style={fieldOk(onesOk, checked)}>
+          <TapSelect value={onesPick} onChange={(e) => setOnesPick(e.target.value)} style={fieldOk(onesOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="four">four extra ones</option>
             <option value="fourTens">four tens</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
@@ -91,13 +92,13 @@ function TeenStructureQuestion({ onComplete }: { onComplete?: () => void }) {
       </p>
       <p>Is "sixteen" best thought of as 16 separate single ones with no groups at all, or as ONE group of ten plus 6 more ones?</p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="sixteenOnes">16 separate single ones</option>
           <option value="tenPlusSix">One group of ten plus 6 more ones</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -128,13 +129,13 @@ function EveryTeenQuestion({ onComplete }: { onComplete?: () => void }) {
         <b>3.</b> True or false: every number from 11 to 19 is made of exactly one group of ten, plus some extra ones.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
           <option value="" disabled>
             choose
           </option>
           <option value="true">True</option>
           <option value="false">False</option>
-        </select>
+        </TapSelect>
         <button className="btn primary" type="button" onClick={() => setChecked(true)}>
           Check Answer
         </button>
@@ -173,24 +174,24 @@ function BuildAndRecordQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           What teen number is this?{" "}
-          <select className="answer" value={numberPick} onChange={(e) => setNumberPick(e.target.value)} style={fieldOk(numberOk, checked)}>
+          <TapSelect value={numberPick} onChange={(e) => setNumberPick(e.target.value)} style={fieldOk(numberOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="13">13</option>
             <option value="31">31</option>
-          </select>
+          </TapSelect>
         </label>
         <label>
           Which equation records this?{" "}
-          <select className="answer" value={eqPick} onChange={(e) => setEqPick(e.target.value)} style={fieldOk(eqOk, checked)}>
+          <TapSelect value={eqPick} onChange={(e) => setEqPick(e.target.value)} style={fieldOk(eqOk, checked)}>
             <option value="" disabled>
               choose
             </option>
             <option value="10+3=13">10 + 3 = 13</option>
             <option value="10+3=31">10 + 3 = 31</option>
             <option value="13-10=3">13 − 10 = 3</option>
-          </select>
+          </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
           Check Answer
