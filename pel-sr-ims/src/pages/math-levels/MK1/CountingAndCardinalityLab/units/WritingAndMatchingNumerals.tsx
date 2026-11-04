@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
-import { CounterGroup } from "../diagrams";
-import { randInt, pick } from "../../../shared/lib/math";
-import { choice, type Problem } from "../../../shared/engine/types";
+import { useEffect, useState, type ReactNode } from "react";
+import { BigDigit, CounterGroup, TenGroups, countAlongMs } from "../diagrams";
+import { randInt, pick, shuffle } from "../../../shared/lib/math";
+import { choice, customStep, pictureChoice, pointing, type Problem } from "../../../shared/engine/types";
+import { WordNumeralMatch } from "./WordNumeralMatch";
+import { counters, countShowMe, thereAre } from "./words";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { writingAndMatchingNumeralsTest } from "./WritingAndMatchingNumeralsTest";
@@ -15,11 +17,7 @@ export const NUMBER_WORDS = [
   "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty",
 ] as const;
 
-const bigDigit = (d: string, mirrored = false) => (
-  <span style={{ display: "inline-block", fontSize: 54, fontWeight: 800, fontFamily: "'Courier New', monospace", transform: mirrored ? "scaleX(-1)" : undefined }}>
-    {d}
-  </span>
-);
+const bigDigit = (d: string, mirrored = false) => <BigDigit d={d} mirrored={mirrored} />;
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -83,48 +81,59 @@ function NumeralVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   );
 }
 
-/** Conflation: 6 and 9 held in mind at the same time, each identified by position. */
+/** Two big numeral buttons; the student taps the one asked for. */
+function DigitPick({ digits, value, onChange, okFor, checked }: { digits: string[]; value: string; onChange: (d: string) => void; okFor: string; checked: boolean }) {
+  return (
+    <div className="choices" role="radiogroup" style={{ gridTemplateColumns: "repeat(2, max-content)" }}>
+      {digits.map((d) => {
+        const on = value === d;
+        const border = checked && on ? (d === okFor ? "var(--good)" : "var(--bad)") : on ? "var(--qa)" : undefined;
+        return (
+          <button
+            key={d}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            className="choice choice-pic"
+            style={{ borderColor: border, background: on ? "var(--qa-soft)" : undefined, borderWidth: on ? 3 : undefined }}
+            onClick={() => onChange(d)}
+          >
+            <BigDigit d={d} />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Conflation: 6 and 9 held in mind at the same time. The numerals are the buttons (no "left/right"). */
 function SixNineQuestion({ onComplete }: { onComplete?: () => void }) {
-  const sixOnLeft = useState(() => Math.random() < 0.5)[0];
+  const order = useState(() => (Math.random() < 0.5 ? ["6", "9"] : ["9", "6"]))[0];
   const [sixPick, setSixPick] = useState("");
   const [ninePick, setNinePick] = useState("");
   const [checked, setChecked] = useState(false);
-  const sixOk = sixPick === (sixOnLeft ? "left" : "right");
-  const nineOk = ninePick === (sixOnLeft ? "right" : "left");
-  const ok = sixOk && nineOk;
+  const filled = sixPick !== "" && ninePick !== "";
+  const ok = sixPick === "6" && ninePick === "9";
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
 
-  const selectRow = (label: string, value: string, setValue: (v: string) => void, isOk: boolean) => (
-    <label>
-      {label}:{" "}
-      <TapSelect value={value} onChange={(e) => setValue(e.target.value)} style={fieldOk(isOk, checked)}>
-        <option value="" disabled>
-          choose
-        </option>
-        <option value="left">Left</option>
-        <option value="right">Right</option>
-      </TapSelect>
-    </label>
-  );
-
   return (
     <ReadAloud className="align-stack-wrap">
       <p>
-        <b>2.</b> Two numerals are shown below.
+        <b>2.</b> Tap the six.
       </p>
-      <div style={{ display: "flex", gap: 24 }}>{sixOnLeft ? [bigDigit("6"), bigDigit("9")] : [bigDigit("9"), bigDigit("6")]}</div>
+      <DigitPick digits={order} value={sixPick} onChange={(d) => { setSixPick(d); setChecked(false); }} okFor="6" checked={checked} />
+      <p>Tap the nine.</p>
+      <DigitPick digits={order} value={ninePick} onChange={(d) => { setNinePick(d); setChecked(false); }} okFor="9" checked={checked} />
       <div className="control-row" style={{ alignItems: "center" }}>
-        {selectRow("Which one is six?", sixPick, setSixPick, sixOk)}
-        {selectRow("Which one is nine?", ninePick, setNinePick, nineOk)}
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!filled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && filled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct! 6 and 9 are easy to mix up, but you told them apart." : "Not quite — look closely at which numeral has its loop near the top, and which has it near the bottom."}
+          {ok ? "Correct! 6 and 9 are easy to mix up, but you told them apart." : "Not quite. Look at the circle. On a 6 the circle is at the bottom. On a 9 the circle is at the top."}
         </ReadAloud>
       )}
     </ReadAloud>
@@ -143,7 +152,7 @@ function FlipGeneralizationQuestion({ onComplete }: { onComplete?: () => void })
   return (
     <ReadAloud className="align-stack-wrap">
       <p>
-        <b>3.</b> True or false: every pair of numerals people mix up (like 6 &amp; 9, or 2 &amp; 5) turns into the other one when you flip it
+        <b>3.</b> True or false: every pair of numerals people mix up (like 6 and 9, or 2 and 5) turns into the other one when you turn it
         upside down.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
@@ -154,14 +163,14 @@ function FlipGeneralizationQuestion({ onComplete }: { onComplete?: () => void })
           <option value="true">True</option>
           <option value="false">False</option>
         </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!picked} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && picked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
-            ? "Correct — false! 6 and 9 really ARE upside-down flips of each other. But 2 and 5 are NOT — they just happen to have similar curvy shapes, and 1 and 7 aren't flips either. Mixing numerals up can happen for more than one reason."
+            ? "Correct, it's false! Turn 6 upside down and it looks like 9. But turn 2 upside down and it does not look like 5. They just both have curves. 1 and 7 don't turn into each other either."
             : "Not quite — try turning a 6 upside down (it becomes a 9), then try turning a 2 upside down. Does it become a 5? It doesn't — 2 and 5 are mixed up for a different reason."}
         </ReadAloud>
       )}
@@ -247,9 +256,9 @@ function NumeralCheckForUnderstanding({ onComplete }: { onComplete?: () => void 
 // ============================================================================
 
 const LOOKALIKE_PAIRS: Record<string, { digits: [string, string]; isFlip: boolean; note: string }> = {
-  "6-9": { digits: ["6", "9"], isFlip: true, note: "6 and 9 are true mirror-flips of each other — turn one upside down and it becomes the other." },
-  "2-5": { digits: ["2", "5"], isFlip: false, note: "2 and 5 are NOT flips of each other — they just have similar curvy shapes, so it's easy to mix them up." },
-  "1-7": { digits: ["1", "7"], isFlip: false, note: "1 and 7 are NOT flips either — 7 has an extra line across the top that 1 doesn't." },
+  "6-9": { digits: ["6", "9"], isFlip: true, note: "Turn 6 upside down and it looks like 9." },
+  "2-5": { digits: ["2", "5"], isFlip: false, note: "Turn 2 upside down and it does not look like 5. They just both have curves." },
+  "1-7": { digits: ["1", "7"], isFlip: false, note: "Turn 1 upside down and it does not look like 7. A 7 has a line across the top." },
 };
 
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
@@ -294,13 +303,13 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         </p>
         <Segmented label="Pair" value={pairKey} onChange={(k) => { setPairKey(k); setFlipped(false); }} options={[{ id: "6-9", label: "6 & 9" }, { id: "2-5", label: "2 & 5" }, { id: "1-7", label: "1 & 7" }]} />
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          {bigDigit(pair.digits[0], flipped && pair.isFlip)}
-          {bigDigit(pair.digits[1])}
-          <button className="btn ghost" onClick={() => setFlipped((f) => !f)} disabled={!pair.isFlip}>
-            {pair.isFlip ? (flipped ? "Un-flip" : "Flip the first one upside down") : "These two don't flip into each other"}
+          <BigDigit d={pair.digits[0]} upsideDown={flipped} />
+          <BigDigit d={pair.digits[1]} />
+          <button className="btn ghost" onClick={() => setFlipped((f) => !f)}>
+            {flipped ? "Turn it back" : `Turn the ${pair.digits[0]} upside down`}
           </button>
         </div>
-        <p className="muted small">{pair.note}</p>
+        {flipped && <p className="muted small">{pair.note}</p>}
       </ReadAloud>
     </div>
   );
@@ -310,8 +319,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 // PRACTICE
 // ============================================================================
 
-type Bucket = "writeFromWord" | "writeFromPicture" | "recognizeLookalike" | "reversedPairs";
-const BUCKETS: Bucket[] = ["writeFromWord", "writeFromPicture", "recognizeLookalike", "reversedPairs"];
+type Bucket = "writeFromWord" | "writeFromPicture" | "recognizeLookalike" | "reversedPairs" | "matchWords";
+const BUCKETS: Bucket[] = ["writeFromWord", "writeFromPicture", "recognizeLookalike", "reversedPairs", "matchWords"];
 
 const LOOKALIKE_SETS: [string, string][] = [["6", "9"], ["1", "7"], ["2", "5"]];
 // Digits that visibly change shape when mirrored left-right — used by the
@@ -319,41 +328,129 @@ const LOOKALIKE_SETS: [string, string][] = [["6", "9"], ["1", "7"], ["2", "5"]];
 // close enough) mirrored, so they wouldn't make a meaningful question.
 const MIRROR_SENSITIVE_DIGITS = ["2", "3", "4", "5", "6", "7", "9"];
 
+/** "a 1", "an 8", "an 11" — for spoken digit names. */
+const aDigit = (d: number) => (d === 8 || d === 11 || d === 18 ? `an ${d}` : `a ${d}`);
+
+/** Show me for writing a number word as a numeral. */
+const writeWordShowMe = (n: number) => {
+  if (n < 10) return `"${NUMBER_WORDS[n]}" is written ${n}.`;
+  if (n === 10) return `"Ten" is one ten. We write a 1, then a 0: 10.`;
+  return `"${NUMBER_WORDS[n]}" is ten and ${n - 10} more. We write a 1, then ${aDigit(n - 10)}: ${n}.`;
+};
+
+/** Number strip 1–9, the way it hangs in a classroom, with one numeral boxed. */
+const NumberStrip = ({ highlight }: { highlight: string }) => (
+  <div aria-label={`Number strip. Look at the ${highlight}.`} role="img" style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+    {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
+      <span key={d} style={{ padding: "2px 8px", borderRadius: 8, border: d === highlight ? "3px solid var(--qb)" : "1px solid var(--line)", background: d === highlight ? "var(--qb-soft)" : undefined }}>
+        <BigDigit d={d} size={32} />
+      </span>
+    ))}
+  </div>
+);
+
+/** Each word with its dots in ten-frames (and, during "Show me", its numeral). */
+const WordDots = ({ items, showNumerals }: { items: { n: number; word: string }[]; showNumerals: boolean }) => (
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14, width: "100%" }}>
+    {items.map((it) => (
+      <div key={it.n} style={{ display: "grid", gap: 4, justifyItems: "center" }}>
+        <span style={{ fontSize: 22, fontWeight: 800 }}>
+          {it.word}
+          {showNumerals && <span style={{ color: "var(--qb-text)" }}> = {it.n}</span>}
+        </span>
+        <TenGroups value={it.n} tone="a" />
+      </div>
+    ))}
+  </div>
+);
+
 function numeralProblem(targetBucket?: string): Problem {
   const bucket = (targetBucket as Bucket | undefined) ?? BUCKETS[randInt(0, BUCKETS.length - 1)];
 
+  if (bucket === "matchWords") {
+    // Several word-numeral pairs per problem, so random draws still cover
+    // many words: three from 0-10 (the ones K students meet most) + one teen.
+    const small = shuffle(Array.from({ length: 11 }, (_, i) => i)).slice(0, 3);
+    const teen = randInt(11, 20);
+    const items = shuffle([...small, teen]).map((n) => ({ n, word: NUMBER_WORDS[n] as string }));
+    const numeralOrder = shuffle(items.map((it) => it.n));
+    const resultText = items.map((it) => `${it.word} = ${it.n}`).join(", ");
+    return {
+      title: "Match the words",
+      bucket,
+      story: "Match each number word to its numeral.",
+      // Just the words at first. Stuck (or "Show me"): each word gets its
+      // dots to count; "Show me" and the finished problem add the numeral too.
+      visual: (done, help) =>
+        done >= 1 || pointing(help, 0) ? (
+          <WordDots items={items} showNumerals={done >= 1 || !!help?.showMe} />
+        ) : (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 22px", justifyContent: "center", fontSize: 34, fontWeight: 800 }}>
+            {items.map((it) => (
+              <span key={it.n}>{it.word}</span>
+            ))}
+          </div>
+        ),
+      steps: [
+        customStep(
+          {
+            prompt: "Drag each word to its numeral.",
+            hint: "Tap a word to hear it. Count the dots under it in the picture, then find that numeral.",
+            showMe: "Look at the picture: each word, its dots, and its numeral.",
+            explain: resultText + ".",
+          },
+          (onDone, onWrong) => <WordNumeralMatch items={items} numeralOrder={numeralOrder} onDone={onDone} onWrong={onWrong} />,
+          resultText
+        ),
+      ],
+      wrapUp: `${resultText}.`,
+    };
+  }
+
   if (bucket === "writeFromWord") {
     const n = randInt(0, 19); // leaves room for the "one more" follow-up to stay in 0-20
+    const word = NUMBER_WORDS[n];
     return {
       title: "Write the numeral",
       bucket,
-      story: `Write the numeral for the number word "${NUMBER_WORDS[n]}".`,
-      // "?" until the numeral is written; then show it, since step 2 asks
-      // for one more than that numeral.
-      visual: (done) => bigDigit(done === 0 ? "?" : String(n)),
+      story: `Write the numeral for the number word "${word}".`,
+      // The picture shows what the question gives: the word. When the student
+      // is stuck, it shows that many dots in ten-frames to count.
+      visual: (done, help) => {
+        if (done === 0) return pointing(help, 0) ? <TenGroups value={n} tone="a" labels /> : <span style={{ fontSize: 44, fontWeight: 800 }}>"{word}"</span>;
+        return <TenGroups value={n} tone="a" labels target={pointing(help, 1) || done >= 2 ? n + 1 : undefined} targetTone="b" />;
+      },
       steps: [
-        { kind: "number", prompt: `What numeral is "${NUMBER_WORDS[n]}"?`, hint: "Think of the symbol, not the word — just the digit(s).", explain: `"${NUMBER_WORDS[n]}" is written as the numeral ${n}.`, answer: n },
-        { kind: "number", prompt: `What numeral is one MORE than ${n}?`, hint: "Count one step forward from the numeral you just wrote.", explain: `One more than ${n} is ${n + 1}.`, answer: n + 1 },
+        { kind: "number", prompt: `What numeral is "${word}"?`, hint: "Count the dots in the picture. Type that number.", showMe: writeWordShowMe(n), explain: `"${word}" is written as the numeral ${n}.`, answer: n },
+        { kind: "number", tone: "b", prompt: `What numeral is one MORE than ${n}?`, hint: "Look at the box with the question mark. That is one more dot.", showMe: `Say ${n}. Now say the next number: ${n + 1}.`, explain: `One more than ${n} is ${n + 1}.`, answer: n + 1 },
       ],
-      wrapUp: `"${NUMBER_WORDS[n]}" is written ${n}, and one more is ${n + 1}.`,
+      wrapUp: `"${word}" is written ${n}, and one more is ${n + 1}.`,
     };
   }
 
   if (bucket === "writeFromPicture") {
     const n = randInt(0, 20);
-    const arrangement = pick(["line", "array", "scatter"] as const);
+    // Scattered only up to 10 (K.CC.5); bigger groups are lined up.
+    const arrangement = n <= 10 ? pick(["line", "array", "scatter"] as const) : pick(["line", "array"] as const);
     const neighbor = n > 0 ? n - 1 : 1;
-    const neighborPrompt = n > 0 ? `one FEWER than that` : `one MORE than that`;
+    const fewer = n > 0;
     return {
       title: "How many? Write it.",
       bucket,
-      story: "Count the counters, then write the numeral for how many there are.",
-      visual: () => <CounterGroup count={n} arrangement={arrangement} tone="b" seed={n * 13 + 5} />,
+      story: "Count the counters. Then write the numeral for how many there are.",
+      visual: (_done, help) => <CounterGroup count={n} arrangement={arrangement} tone="b" seed={n * 13 + 5} countAlong={!!help?.showMe && help.step === 0} />,
       steps: [
-        { kind: "number", prompt: "How many counters are there? Write the numeral.", hint: "Count each one exactly once.", explain: `There are ${n} counters — the numeral is ${n}.`, answer: n },
-        { kind: "number", prompt: `Now write the numeral for ${neighborPrompt}.`, hint: n > 0 ? "Count one step backward." : "Count one step forward.", explain: `${neighborPrompt === "one FEWER than that" ? "One fewer" : "One more"} than ${n} is ${neighbor}.`, answer: neighbor },
+        { kind: "number", showMeHoldMs: countAlongMs(n), prompt: "How many counters are there? Write the numeral.", hint: "Touch each counter as you count it. Count each one once.", showMe: countShowMe(n), explain: `${thereAre(n)} The numeral is ${n}.`, answer: n },
+        {
+          kind: "number",
+          prompt: `Now write the numeral for one ${fewer ? "FEWER" : "MORE"} than that.`,
+          hint: fewer ? "Count back one number." : "Count forward one number.",
+          showMe: fewer ? `Say ${n}. Count back one: ${neighbor}.` : `Say ${n}. Count forward one: ${neighbor}.`,
+          explain: `One ${fewer ? "fewer" : "more"} than ${n} is ${neighbor}.`,
+          answer: neighbor,
+        },
       ],
-      wrapUp: `There are ${n} counters, written as the numeral ${n}.`,
+      wrapUp: `${thereAre(n)} We write ${n}.`,
     };
   }
 
@@ -363,47 +460,61 @@ function numeralProblem(targetBucket?: string): Problem {
     const target = showA ? a : b;
     const other = showA ? b : a;
     const n = Number(target);
+    // One step on purpose: typing the count first made this choice just
+    // "find the key you pressed". Counting straight into the pick makes the
+    // student tell the look-alikes apart themselves.
+    const match = choice(
+      {
+        prompt: "Count the counters. Which numeral tells how many there are?",
+        hint: "Touch each counter as you count it. Then look closely at both numerals.",
+        showMe: `${countShowMe(n)} ${n} looks like this: ${target}.`,
+        explain: `${thereAre(n)} We write ${target}, not ${other}.`,
+      },
+      target,
+      [other]
+    );
+    match.showMeHoldMs = countAlongMs(n);
+    match.display = match.choices.map((c) => <BigDigit key={c} d={c} size={48} />);
     return {
       title: "Which numeral matches?",
       bucket,
-      story: `Count the counters below. Which numeral matches how many there are — ${target} or ${other}?`,
-      visual: () => <CounterGroup count={n} arrangement="scatter" tone="c" seed={n * 17 + 9} />,
-      steps: [
-        choice(
-          { prompt: "Which numeral matches this many counters?", hint: "Count carefully, then pick the matching numeral — don't just guess by shape.", explain: `There are ${n} counters, which is written as the numeral ${target}, not ${other}.` },
-          target,
-          [other]
-        ),
-      ],
-      wrapUp: `${n} counters is written as the numeral ${target}.`,
+      story: "Count the counters. Then find the numeral that matches.",
+      visual: (_done, help) => <CounterGroup count={n} arrangement="scatter" tone="c" seed={n * 17 + 9} countAlong={!!help?.showMe && help.step === 0} />,
+      steps: [match],
+      wrapUp: `${counters(n)} is written as the numeral ${target}.`,
     };
   }
 
-  // reversedPairs
+  // reversedPairs: the two numerals ARE the buttons (no "left/right" words).
   const digit = pick(MIRROR_SENSITIVE_DIGITS);
-  const correctSide: "Left" | "Right" = Math.random() < 0.5 ? "Left" : "Right";
+  const n = Number(digit);
+  const opts = shuffle([
+    { right: true, pic: <BigDigit d={digit} size={56} /> },
+    { right: false, pic: <BigDigit d={digit} size={56} mirrored /> },
+  ]);
+  const names = ["the first one", "the second one"];
   return {
-    title: "Which one is written correctly?",
+    title: "Which one is written the right way?",
     bucket,
-    story: "One of these two numerals is written correctly. The other is a mirror image (flipped left-to-right).",
-    visual: () => (
-      <div style={{ display: "flex", gap: 30, justifyContent: "center" }}>
-        {correctSide === "Left" ? bigDigit(digit) : bigDigit(digit, true)}
-        {correctSide === "Left" ? bigDigit(digit, true) : bigDigit(digit)}
-      </div>
-    ),
+    // Don't name the digit here: step 1 asks the student to count it.
+    story: "Count the counters. Then find the numeral that is written the right way.",
+    // Stuck on the choice: a number strip shows how the numeral should look.
+    visual: (done, help) =>
+      done >= 1 && pointing(help, 1) ? <NumberStrip highlight={digit} /> : <CounterGroup count={n} arrangement="array" tone="a" seed={n * 29 + 1} countAlong={!!help?.showMe && help.step === 0} />,
     steps: [
-      choice(
+      { kind: "number", showMeHoldMs: countAlongMs(n), prompt: "How many counters are there? Type the number.", hint: "Touch each counter as you count it. Count each one once.", showMe: countShowMe(n), explain: thereAre(n), answer: n },
+      pictureChoice(
         {
-          prompt: `Which one is the correctly written numeral ${digit} — Left or Right?`,
-          hint: "A mirror image is flipped left-to-right, so it looks backwards.",
-          explain: `The ${correctSide} one is correct. The other is ${digit} flipped into a mirror image, which is why it looks reversed.`,
+          prompt: `Tap the ${digit} that is written the right way.`,
+          hint: `Look at the ${digit} on the number strip. Find the one that looks the same.`,
+          showMe: `The right way looks just like the ${digit} on the number strip. The other one is backwards.`,
+          explain: `The other one is a backwards ${digit}.`,
         },
-        correctSide,
-        [correctSide === "Left" ? "Right" : "Left"]
+        opts.map((o, i): [string, ReactNode] => [names[i], o.pic]),
+        opts.findIndex((o) => o.right)
       ),
     ],
-    wrapUp: `The ${correctSide} numeral was the correctly written ${digit}.`,
+    wrapUp: `You found the ${digit} written the right way.`,
   };
 }
 
@@ -415,7 +526,7 @@ export const writingAndMatchingNumerals: Unit = {
   keyIdea: (
     <>
       <p>A numeral is the written symbol for a number — "7" is the numeral, "seven" is the word, and seven counters is the actual amount.</p>
-      <p>Some numerals look alike. 6 and 9 are true upside-down flips of each other; others (like 2 and 5) just happen to look similar.</p>
+      <p>Some numerals look alike. Turn 6 upside down and it looks like 9. Others, like 2 and 5, just look a little alike.</p>
     </>
   ),
   Explore,

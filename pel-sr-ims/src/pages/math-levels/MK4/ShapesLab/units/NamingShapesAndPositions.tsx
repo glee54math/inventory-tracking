@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ShapeGlyph, SHAPE_KINDS, SHAPE_LABELS, type ShapeKind } from "../diagrams/Shape2D";
+import { ShapeGlyph, SHAPE_KINDS, SHAPE_LABELS, TURN_DEMO_MS, type ShapeKind } from "../diagrams/Shape2D";
 import { PositionScene, RELATIONS, RELATION_LABELS, RELATION_RECIPROCAL, type Relation } from "../diagrams/PositionScene";
 import { pick, shuffle } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
@@ -310,7 +310,11 @@ function nameShapeProblem(targetBucket?: string): Problem {
     title: "Name the shape",
     bucket,
     story: `This shape has been ${variantNote}. What shape is it?`,
-    visual: () => <ShapeGlyph kind={kind} rotation={rotation} scale={scale} tone="a" label="a shape to name" />,
+    // Step 2's "Show me": the shape turns all the way around (a circle grows
+    // and shrinks instead) and is plainly still the same shape.
+    visual: (_done, help) => (
+      <ShapeGlyph kind={kind} rotation={rotation} scale={scale} tone="a" label="a shape to name" turnDemo={!!help?.showMe && help.step === 1} />
+    ),
     steps: [
       choice(
         { prompt: "What shape is this?", hint: "Count the sides and corners — that never changes, no matter how it's turned or sized.", explain: `This is a ${label}, no matter how it's turned or resized.` },
@@ -320,6 +324,8 @@ function nameShapeProblem(targetBucket?: string): Problem {
       choice(
         {
           prompt: `If this ${label.toLowerCase()} were turned a completely different way, would it still be a ${label}?`,
+          showMe: kind === "circle" ? "Watch it get smaller, then bigger. It is still a circle." : `Watch it turn all the way around. It is still a ${label.toLowerCase()}.`,
+          showMeHoldMs: TURN_DEMO_MS,
           hint: "Turning (or resizing) a shape never changes how many sides or corners it has.",
           explain: `Yes — turning or resizing a ${label.toLowerCase()} never changes what shape it is.`,
         },

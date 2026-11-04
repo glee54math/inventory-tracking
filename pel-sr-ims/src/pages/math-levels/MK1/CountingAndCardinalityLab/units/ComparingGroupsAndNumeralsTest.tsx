@@ -1,7 +1,10 @@
-import { CounterGroup } from "../diagrams";
+import { BigDigit, CounterGroup, TwoGroups } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { palette, diagramFont } from "../../../shared/lib/palette";
-import { choice, type TestQuestion } from "../../../shared/engine/types";
+import { choice, type ChoiceStep, type TestQuestion } from "../../../shared/engine/types";
+
+/** Show a choice's numerals as big digits in the buttons. */
+const withBigDigits = (step: ChoiceStep): ChoiceStep => ({ ...step, display: step.choices.map((c) => <BigDigit key={c} d={c} size={48} />) });
 import type { Unit } from "../../../shared/units/types";
 
 // ---------- end-of-unit test: Comparing Groups and Numerals ----------
@@ -10,9 +13,18 @@ import type { Unit } from "../../../shared/units/types";
 // ComparingGroupsAndNumerals.tsx, same convention as every other *Test.tsx
 // in this lab.
 
-const bigDigit = (d: number | string) => (
-  <span style={{ display: "inline-block", fontSize: 54, fontWeight: 800, fontFamily: "'Courier New', monospace" }}>{d}</span>
+const bigDigit = (d: number | string) => <BigDigit d={d} />;
+
+/** Two numerals side by side (no "vs.", which the voice can't say well). */
+const twoNumerals = (a: number, b: number) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 40 }}>
+    {bigDigit(a)}
+    {bigDigit(b)}
+  </div>
 );
+
+/** Two numbers in a random order, so the bigger group isn't always on the same side. */
+const randomSides = (x: number, y: number): [number, number] => (Math.random() < 0.5 ? [x, y] : [y, x]);
 
 function MatchingRows({ countA, countB }: { countA: number; countB: number }) {
   const GAP = 30;
@@ -68,7 +80,7 @@ export const matchingMoreQuestion = (): TestQuestion[] => {
       visual: <MatchingRows countA={a} countB={b} />,
       difficulty: "easy",
       step: choice(
-        { prompt: "Which row has MORE?", hint: "Look at which row has extra (dashed) counters left over.", explain: `The ${moreRow} has more.` },
+        { prompt: "Which row has MORE?", hint: "Look for counters with no partner.", explain: `The ${moreRow} has more.` },
         moreRow,
         [fewerRow] // misconception: misreading which row ran out first
       ),
@@ -90,7 +102,7 @@ export const matchingDiffQuestion = (): TestQuestion[] => {
       step: {
         kind: "number",
         prompt: `How many MORE does the ${moreRow} have than the ${fewerRow}?`,
-        hint: "Count the unmatched (dashed) counters.",
+        hint: "Count the counters with no partner.",
         explain: `${more} − ${fewer} = ${more - fewer}.`,
         answer: more - fewer,
       },
@@ -105,12 +117,7 @@ export const countCompareMoreQuestion = (): TestQuestion[] => {
   const fewer = a > b ? "Group B" : "Group A";
   return [
     {
-      visual: (
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          <CounterGroup count={a} arrangement="scatter" tone="a" seed={a * 5 + 11} />
-          <CounterGroup count={b} arrangement="scatter" tone="b" seed={b * 5 + 13} />
-        </div>
-      ),
+      visual: <TwoGroups a={a} b={b} seedA={a * 5 + 11} seedB={b * 5 + 13} />,
       difficulty: "easy",
       step: choice(
         { prompt: "Which group has MORE?", hint: "Count each group, then compare the two numbers.", explain: `Group A has ${a}, Group B has ${b}.` },
@@ -128,12 +135,7 @@ export const countCompareFewerQuestion = (): TestQuestion[] => {
   const fewer = a > b ? "Group B" : "Group A";
   return [
     {
-      visual: (
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          <CounterGroup count={a} arrangement="array" tone="a" seed={a * 7 + 1} />
-          <CounterGroup count={b} arrangement="array" tone="b" seed={b * 7 + 2} />
-        </div>
-      ),
+      visual: <TwoGroups a={a} b={b} arrA="array" arrB="array" seedA={a * 7 + 1} seedB={b * 7 + 2} />,
       difficulty: "easy",
       step: choice(
         { prompt: "Which group has FEWER?", hint: "Fewer means the smaller count.", explain: `Group A has ${a}, Group B has ${b}.` },
@@ -146,8 +148,9 @@ export const countCompareFewerQuestion = (): TestQuestion[] => {
 
 /** The genuinely hard bucket: a CLOSE difference (exactly 1), forced rather than left to chance. */
 export const closeDiffQuestion = (): TestQuestion[] => {
-  const a = randInt(1, 9);
-  const b = a + 1;
+  const small = randInt(1, 9);
+  const [a, b] = randomSides(small, small + 1);
+  const bigger = small + 1;
   return [
     {
       visual: (
@@ -157,15 +160,16 @@ export const closeDiffQuestion = (): TestQuestion[] => {
         </div>
       ),
       difficulty: "hard",
-      step: { kind: "number", prompt: "What is the bigger of the two counts?", hint: "These two are close — count carefully.", explain: `${b} is one more than ${a}, so ${b} is bigger.`, answer: b },
+      step: { kind: "number", prompt: "Count both groups. Type the bigger number.", hint: "These two are close. Count carefully.", explain: `${bigger} is one more than ${small}, so ${bigger} is bigger.`, answer: bigger },
     },
   ];
 };
 
 /** The easy end of the same skill: an obvious difference. */
 export const obviousDiffQuestion = (): TestQuestion[] => {
-  const a = randInt(1, 5);
-  const b = a + randInt(4, 6);
+  const small = randInt(1, 5);
+  const bigger = small + randInt(4, 5);
+  const [a, b] = randomSides(small, bigger);
   return [
     {
       visual: (
@@ -175,7 +179,7 @@ export const obviousDiffQuestion = (): TestQuestion[] => {
         </div>
       ),
       difficulty: "easy",
-      step: { kind: "number", prompt: "What is the bigger of the two counts?", hint: "One group clearly has a lot more than the other.", explain: `${b} is bigger than ${a}.`, answer: b },
+      step: { kind: "number", prompt: "Count both groups. Type the bigger number.", hint: "One group has a lot more than the other.", explain: `${bigger} is bigger than ${small}.`, answer: bigger },
     },
   ];
 };
@@ -212,15 +216,9 @@ export const numeralBiggerQuestion = (): TestQuestion[] => {
   const smaller = Math.min(a, b);
   return [
     {
-      visual: (
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          {bigDigit(a)}
-          <span style={{ fontSize: 30, color: "var(--muted)" }}>vs.</span>
-          {bigDigit(b)}
-        </div>
-      ),
+      visual: twoNumerals(a, b),
       difficulty: "easy",
-      step: choice({ prompt: `Which numeral is BIGGER, ${a} or ${b}?`, hint: "A bigger numeral always stands for a bigger amount.", explain: `${bigger} is bigger than ${smaller}.` }, String(bigger), [String(smaller)]),
+      step: withBigDigits(choice({ prompt: "Which number is BIGGER?", hint: "A bigger number means more.", explain: `${bigger} is bigger than ${smaller}.` }, String(bigger), [String(smaller)])),
     },
   ];
 };
@@ -232,15 +230,9 @@ export const numeralSmallerQuestion = (): TestQuestion[] => {
   const smaller = Math.min(a, b);
   return [
     {
-      visual: (
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          {bigDigit(a)}
-          <span style={{ fontSize: 30, color: "var(--muted)" }}>vs.</span>
-          {bigDigit(b)}
-        </div>
-      ),
+      visual: twoNumerals(a, b),
       difficulty: "easy",
-      step: choice({ prompt: `Which numeral is SMALLER, ${a} or ${b}?`, hint: "Smaller means the lesser amount.", explain: `${smaller} is smaller than ${bigger}.` }, String(smaller), [String(bigger)]),
+      step: withBigDigits(choice({ prompt: "Which number is SMALLER?", hint: "A smaller number means fewer.", explain: `${smaller} is smaller than ${bigger}.` }, String(smaller), [String(bigger)])),
     },
   ];
 };

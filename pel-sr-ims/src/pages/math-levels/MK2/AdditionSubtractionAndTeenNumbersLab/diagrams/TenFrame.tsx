@@ -17,6 +17,10 @@ export interface TenFrameProps {
    *  must not exceed 10. */
   fillB?: number;
   fillBTone?: "a" | "b" | "c";
+  /** Extra dots (in `fillBTone`) drawn just OUTSIDE the frame, to the right —
+   *  for showing a pair that goes past 10 (e.g. "7 and 4" spills one over).
+   *  0 by default. */
+  overflow?: number;
 }
 
 /** The standard 2-row-of-5 "ten frame," filled left-to-right then top-to-
@@ -26,19 +30,22 @@ export interface TenFrameProps {
  *  any count 0-100 into repeated ten-blocks) — this lab only ever needs a
  *  SINGLE frame, so a simpler, fixed-size component was clearer than reusing
  *  TenGroups' repeating-block layout for a case that never repeats. */
-export function TenFrame({ filled, tone, fillB, fillBTone }: TenFrameProps) {
+export function TenFrame({ filled, tone, fillB, fillBTone, overflow }: TenFrameProps) {
   const f = Math.max(0, Math.min(10, Math.round(filled)));
   const fb = Math.max(0, Math.min(10 - f, Math.round(fillB ?? 0)));
   const color = toneColor(tone);
   const colorB = toneColor(fillBTone ?? "b");
-  const width = COLS * CELL + PAD * 2;
+  const extra = Math.max(0, Math.min(10, Math.round(overflow ?? 0)));
+  const frameW = COLS * CELL + PAD * 2;
+  const extraCols = Math.ceil(extra / 2);
+  const width = frameW + (extra ? extraCols * CELL + 8 : 0);
   const height = 2 * CELL + PAD * 2;
 
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
       role="img"
-      aria-label={`A ten frame with ${f} filled${fb ? ` and ${fb} more highlighted` : ""}, out of 10 cells`}
+      aria-label={`A ten frame with ${f} filled${fb ? ` and ${fb} more highlighted` : ""}, out of 10 cells${extra ? `, plus ${extra} more that do not fit` : ""}`}
       style={{ display: "block", width: "100%", maxWidth: width, height: "auto", fontFamily: diagramFont }}
     >
       {Array.from({ length: 10 }, (_, i) => {
@@ -57,6 +64,17 @@ export function TenFrame({ filled, tone, fillB, fillBTone }: TenFrameProps) {
           </g>
         );
       })}
+      {Array.from({ length: extra }, (_, i) => (
+        <circle
+          key={`x${i}`}
+          cx={frameW + 8 + Math.floor(i / 2) * CELL + CELL / 2 - PAD / 2}
+          cy={PAD + (i % 2) * CELL + CELL / 2}
+          r={R}
+          fill={colorB}
+          stroke={palette.paper}
+          strokeWidth={2}
+        />
+      ))}
     </svg>
   );
 }

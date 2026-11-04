@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { CounterGroup, TenGroups } from "../diagrams";
+import { useEffect, useId, useState } from "react";
+import { CounterGroup, TenGroups, countAlongMs } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type Problem, type Step } from "../../../shared/engine/types";
 import { QB, Segmented, Stepper } from "../../../shared/engine/controls";
@@ -7,6 +7,8 @@ import type { Unit } from "../../../shared/units/types";
 import { countingOnAndForwardTest } from "./CountingOnAndForwardTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
 import { TapSelect } from "../../../shared/components/TapSelect";
+import { sayText } from "../../../shared/tts/speechEngine";
+import { countUp } from "./words";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -67,7 +69,7 @@ function NextNumberVocabQuestion({ onComplete }: { onComplete?: () => void }) {
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — after 29 comes thirty, and thirty is the first number of a brand new ten (the 30s)."
-            : 'Not quite — the number after 29 is NOT "twenty-ten." Every ten has exactly ten numbers (20-29 is the 20s), so after the last one (29) comes the first number of the next ten.'}
+            : 'Not quite — the number after 29 is NOT "twenty-ten." Every ten has exactly ten numbers (20 to 29 are the 20s), so after the last one (29) comes the first number of the next ten.'}
         </ReadAloud>
       )}
     </ReadAloud>
@@ -81,6 +83,7 @@ function OnesVsTensQuestion({ onComplete }: { onComplete?: () => void }) {
   const [tensNext, setTensNext] = useState("");
   const [onesNext, setOnesNext] = useState("");
   const [checked, setChecked] = useState(false);
+  const filled = tensNext !== "" && onesNext !== "";
   const tensOk = tensNext === "30";
   const onesOk = onesNext === "21";
   const ok = tensOk && onesOk;
@@ -109,11 +112,11 @@ function OnesVsTensQuestion({ onComplete }: { onComplete?: () => void }) {
       <div className="control-row" style={{ alignItems: "center" }}>
         {selectRow("Counting by TENS, next is", tensNext, setTensNext, tensOk)}
         {selectRow("Counting by ONES, next is", onesNext, setOnesNext, onesOk)}
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!filled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && filled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — counting by tens jumps a whole group of ten (20 to 30), but counting by ones moves just one step (20 to 21). Same starting number, two different \"next\" answers, depending on HOW you're counting."
@@ -148,15 +151,15 @@ function DecadeRuleQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="true">True</option>
           <option value="false">False</option>
         </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!picked} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && picked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — it's always true, not just for 29. Every group of ten (the 20s, the 30s, the 40s...) has exactly ten numbers, so the number right after the last one (ending in 9) always starts the next ten, ending in 0."
-            : "Not quite — check a few more examples: 19 → 20, 39 → 40, 59 → 60. Every ten has exactly ten numbers in it, so this pattern never breaks."}
+            : "Not quite — check a few more: 19 then 20, 39 then 40, 59 then 60. Every ten has exactly ten numbers in it, so this pattern never breaks."}
         </ReadAloud>
       )}
     </ReadAloud>
@@ -171,6 +174,7 @@ function CountForwardThreeQuestion({ onComplete }: { onComplete?: () => void }) 
   const [b, setB] = useState("");
   const [c, setC] = useState("");
   const [checked, setChecked] = useState(false);
+  const filled = a !== "" && b !== "" && c !== "";
   const aOk = a === "39";
   const bOk = b === "40";
   const cOk = c === "41";
@@ -204,11 +208,11 @@ function CountForwardThreeQuestion({ onComplete }: { onComplete?: () => void }) 
         {selectRow("1st", a, setA, aOk)}
         {selectRow("2nd", b, setB, bOk)}
         {selectRow("3rd", c, setC, cOk)}
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!filled} onClick={() => setChecked(true)}>
           Check Answer
         </button>
       </div>
-      {checked && (
+      {checked && filled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 38, 39, 40, 41. You crossed right over a new ten (the 40s) partway through, without skipping or repeating any number."
@@ -250,8 +254,11 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [trail, setTrail] = useState<number[]>([1]);
 
   const step = mode === "tens" ? 10 : 1;
+  const voiceId = useId();
   const sayNext = () => {
     const next = Math.min(100, current + step);
+    // The button's job is to say the number, so it speaks even if auto-read is off.
+    sayText(voiceId, String(next));
     setCurrent(next);
     setTrail((t) => [...t.slice(-4), next]);
   };
@@ -316,7 +323,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         {current === 0
           ? "Start at 0 and press the button to begin counting."
           : `You've counted up to ${current} — that's ${Math.floor(current / 10)} group${Math.floor(current / 10) === 1 ? "" : "s"} of ten and ${current % 10} more.`}{" "}
-        Notice how every ten dots makes a new bundle — crossing from a number ending in 9 into the next ten (like 29 → 30) always starts a fresh bundle.
+        Notice how every ten dots makes a new bundle — crossing from a number ending in 9 into the next ten (like 29 then 30) always starts a fresh bundle.
       </ReadAloud>
     </div>
   );
@@ -333,18 +340,22 @@ function countingProblem(targetBucket?: string): Problem {
   const bucket = (targetBucket as Bucket | undefined) ?? BUCKETS[randInt(0, BUCKETS.length - 1)];
 
   if (bucket === "onesShort") {
-    const n = randInt(2, 19);
+    const n = randInt(3, 19); // at least 2 dots to start: "there are 2"
     const before = n - 1;
     const after = n + 1;
     return {
       title: "What comes next?",
       bucket,
       story: `Count the dots: there are ${before}. What number comes right after ${before} when you keep counting?`,
-      // One more dot appears after each answered step, so step 2 ("after n?") shows n dots.
-      visual: (done) => <CounterGroup count={before + Math.min(done, 2)} arrangement="line" tone="a" seed={before} />,
+      // One more dot appears after each answered step, so step 2 ("after n?")
+      // shows n dots. Step 1's "Show me" counts the dots up to the new one.
+      visual: (done, help) => {
+        if (help?.showMe && help.step === 0) return <CounterGroup count={n} arrangement="line" tone="a" seed={before} countAlong />;
+        return <CounterGroup count={before + Math.min(done, 2)} arrangement="line" tone="a" seed={before} />;
+      },
       steps: [
-        { kind: "number", prompt: `What number comes right after ${before}?`, hint: "Count one more than the dots shown.", explain: `${before} + 1 = ${n}.`, answer: n },
-        { kind: "number", prompt: `Now what number comes right after ${n}?`, hint: "Keep going — one more than that.", explain: `${n} + 1 = ${after}.`, answer: after },
+        { kind: "number", showMeHoldMs: countAlongMs(n), prompt: `What number comes right after ${before}?`, hint: "Count the dots. Then say the next number.", showMe: `Count the dots: ${countUp(1, before)}. The next number is ${n}.`, explain: `${before} + 1 = ${n}.`, answer: n },
+        { kind: "number", prompt: `Now what number comes right after ${n}?`, hint: "Keep going. Say the next number.", showMe: `Say ${n}. The next number is ${after}.`, explain: `${n} + 1 = ${after}.`, answer: after },
       ],
       wrapUp: `Counting forward from ${before}: ${before}, ${n}, ${after}.`,
     };
@@ -364,15 +375,18 @@ function countingProblem(targetBucket?: string): Problem {
       // Once solved (no `help` = finished, not a "Show me" preview), count
       // along before, n, after on the dots in a loop; the wrap-up buttons wait
       // for one full pass (wrapUpHoldMs).
+      // "Show me" stays on the step being asked: it counts from that step's
+      // number onto the "?" dot (e.g. 93, 94), not ahead to the next step.
       visual: (done, help) => {
+        if (help?.showMe) return <TenGroups value={before + help.step + 1} tone="a" labels countAlong={[before + help.step, before + help.step + 1]} targetTone="b" />;
         if (done >= 2 && !help) return <TenGroups value={after} tone="a" labels countAlong={[before, n, after]} targetTone="b" />;
         const shown = before + Math.min(done, 2);
         return <TenGroups value={shown} tone="a" labels target={done < 2 ? shown + 1 : undefined} targetTone="b" />;
       },
       wrapUpHoldMs: 3000,
       steps: [
-        { kind: "number", tone: "b", prompt: `What number comes right after ${before}?`, hint: "Find the ? box in the picture. That's one more dot. Count one more.", explain: `${before} + 1 = ${n}.`, answer: n },
-        { kind: "number", tone: "b", prompt: `What number comes right after ${n}?`, hint: "Find the ? box again. One more dot, one more number.", explain: `${n} + 1 = ${after}.`, answer: after },
+        { kind: "number", tone: "b", showMeHoldMs: 2000, prompt: `What number comes right after ${before}?`, hint: "Find the box with the question mark. That's one more dot. Say the next number.", showMe: `Say ${before}. The next number is ${n}.`, explain: `${before} + 1 = ${n}.`, answer: n },
+        { kind: "number", tone: "b", showMeHoldMs: 2000, prompt: `What number comes right after ${n}?`, hint: "Find the box with the question mark again. One more dot, one more number.", showMe: `Say ${n}. The next number is ${after}.`, explain: `${n} + 1 = ${after}.`, answer: after },
       ],
       wrapUp: `${before}, ${n}, ${after}.`,
     };
@@ -402,8 +416,8 @@ function countingProblem(targetBucket?: string): Problem {
         />
       ),
       steps: [
-        { kind: "number", showMeHoldMs: 3000, prompt: `Counting by tens, what comes right after ${prevVal}?`, hint: "Each jump adds one whole group of ten.", explain: `${prevVal} + 10 = ${nextVal}.`, answer: nextVal },
-        { kind: "number", showMeHoldMs: (t + 1) * 1000, prompt: `How many groups of ten is ${nextVal}?`, hint: "Each bundle is ten — count the bundles, not the dots.", explain: `${nextVal} is ${t + 1} group${t + 1 === 1 ? "" : "s"} of ten.`, answer: t + 1 },
+        { kind: "number", showMeHoldMs: 3000, prompt: `Counting by tens, what comes right after ${prevVal}?`, hint: "Each jump adds one whole group of ten.", showMe: `Watch the new ten fill up. ${prevVal}, then one more ten makes ${nextVal}.`, explain: `${prevVal} + 10 = ${nextVal}.`, answer: nextVal },
+        { kind: "number", showMeHoldMs: (t + 1) * 1000, prompt: `How many groups of ten is ${nextVal}?`, hint: "Each full frame is ten. Count the frames, not the dots.", showMe: `Count the full frames: ${countUp(1, t + 1)}. That is ${t + 1} ten${t + 1 === 1 ? "" : "s"}.`, explain: `${nextVal} is ${t + 1} group${t + 1 === 1 ? "" : "s"} of ten.`, answer: t + 1 },
       ],
       wrapUp: `Counting by tens: ${prevVal}, ${nextVal}.`,
     };
@@ -425,14 +439,14 @@ function countingProblem(targetBucket?: string): Problem {
   }
   const next = startNum + 1;
   const steps: Step[] = [
-    { kind: "number", tone: "b", prompt: `What number comes right after ${startNum}?`, hint: "Find the ? box in the picture. Count one more than the number shown.", explain: `${startNum} + 1 = ${next}.`, answer: next },
+    { kind: "number", tone: "b", showMeHoldMs: 2000, prompt: `What number comes right after ${startNum}?`, hint: "Find the box with the question mark. Say the next number.", showMe: `Say ${startNum}. The next number is ${next}.`, explain: `${startNum} + 1 = ${next}.`, answer: next },
   ];
   if (crossing) {
     const prevDecadeLabel = `the ${Math.floor(startNum / 10) * 10}s`;
     const nextDecadeLabel = next === 100 ? "100" : `the ${Math.floor(next / 10) * 10}s`;
     steps.push(
       choice(
-        { prompt: `${startNum} to ${next} — which ten did you just start?`, hint: "A number ending in 9 is the LAST number of its ten — the next number starts a brand new ten.", explain: `${next} starts ${nextDecadeLabel}, right after finishing ${prevDecadeLabel}.` },
+        { prompt: `${startNum} to ${next}: which ten did you just start?`, hint: "A number ending in 9 is the LAST number of its ten. The next number starts a new ten.", showMe: next === 100 ? `${startNum} ends in 9. It is the last one. Next comes 100.` : `${startNum} ends in 9. It is the last one. ${next} starts ${nextDecadeLabel}.`, explain: `${next} starts ${nextDecadeLabel}, right after finishing ${prevDecadeLabel}.` },
         nextDecadeLabel,
         [prevDecadeLabel]
       )
@@ -442,16 +456,18 @@ function countingProblem(targetBucket?: string): Problem {
   steps.push({
     kind: "number",
     tone: "b",
+    showMeHoldMs: 2000,
     prompt: (
       <>
         What number is{" "}
         <span style={{ background: "var(--qb-soft)", borderRadius: 6, padding: "0 4px" }}>
           <QB>one less than</QB>
         </span>{" "}
-        {next}?
+        {`${next}?`}
       </>
     ),
-    hint: "One less means take one dot away. Look at the dot with the X, and count backward one step.",
+    hint: "One less means take one dot away. Look at the dot with the X. Count back one.",
+    showMe: `Say ${next}. Count back one: ${startNum}.`,
     explain: `One less than ${next} is ${startNum}.`,
     answer: startNum,
   });
@@ -464,7 +480,15 @@ function countingProblem(targetBucket?: string): Problem {
     // show the new count.
     // Step 1: the next dot's box is marked "?". The "one less" step: the last
     // dot gets a blinking X. Once done, the picture is back to startNum.
-    visual: (done) => {
+    // "Show me" shows the step being asked, not the next one: count on
+    // (startNum, next), the new ten for the "which ten" choice, and count
+    // back (next, startNum) for "one less".
+    visual: (done, help) => {
+      if (help?.showMe) {
+        if (help.step === 0) return <TenGroups value={next} tone="c" labels countAlong={[startNum, next]} targetTone="b" />;
+        if (help.step === lessStep) return <TenGroups value={next} tone="c" labels countAlong={[next, startNum]} targetTone="b" />;
+        return <TenGroups value={next} tone="c" labels />;
+      }
       if (done === 0) return <TenGroups value={startNum} tone="c" labels target={next} targetTone="b" />;
       if (done === lessStep) return <TenGroups value={next} tone="c" labels remove={next} targetTone="b" />;
       if (done > lessStep) return <TenGroups value={startNum} tone="c" labels />;

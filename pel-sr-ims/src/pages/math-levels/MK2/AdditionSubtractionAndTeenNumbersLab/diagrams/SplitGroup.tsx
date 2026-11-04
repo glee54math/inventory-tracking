@@ -20,6 +20,10 @@ export interface SplitGroupProps {
    *  put-together/take-apart scene or a decomposition), not just a tinted
    *  group. Turn off for a plain two-tone row with no visual seam. */
   showDivider?: boolean;
+  /** Draw part B faded with a dashed outline — "these ones went away" — so a
+   *  take-away step's "Show me" can show the part that left without hiding
+   *  it. Off by default. */
+  goneB?: boolean;
 }
 
 /** One group of objects shown as a single row/wrap, with the first `partA`
@@ -29,7 +33,7 @@ export interface SplitGroupProps {
  *  New for this lab: MK1's CounterGroup/TenGroups only ever render ONE tone
  *  for a whole group, so a visibly two-toned single group needed its own
  *  diagram rather than reusing those as-is. */
-export function SplitGroup({ total, partA, toneA = "a", toneB = "b", showDivider = true }: SplitGroupProps) {
+export function SplitGroup({ total, partA, toneA = "a", toneB = "b", showDivider = true, goneB = false }: SplitGroupProps) {
   const n = Math.max(0, Math.round(total));
   const a = Math.max(0, Math.min(n, Math.round(partA)));
   const b = n - a;
@@ -51,7 +55,7 @@ export function SplitGroup({ total, partA, toneA = "a", toneB = "b", showDivider
     <svg
       viewBox={`0 0 ${width} ${height}`}
       role="img"
-      aria-label={`${n} objects split into a group of ${a} and a group of ${b}`}
+      aria-label={goneB ? `${n} objects: ${a} stay and ${b} went away` : `${n} objects split into a group of ${a} and a group of ${b}`}
       style={{ display: "block", width: "100%", maxWidth: width, height: "auto", fontFamily: diagramFont }}
     >
       {n === 0 && (
@@ -65,6 +69,11 @@ export function SplitGroup({ total, partA, toneA = "a", toneB = "b", showDivider
         const x = PAD + col * CELL + CELL / 2 + extraShift(i);
         const y = PAD + row * CELL + CELL / 2;
         const inA = i < a;
+        if (!inA && goneB) {
+          return (
+            <circle key={i} cx={x} cy={y} r={R} fill={colorB} fillOpacity={0.18} stroke={colorB} strokeWidth={2} strokeDasharray="3 3" />
+          );
+        }
         return <circle key={i} cx={x} cy={y} r={R} fill={inA ? colorA : colorB} stroke={palette.paper} strokeWidth={2} />;
       })}
       {showDivider && a > 0 && b > 0 && n <= cols && (

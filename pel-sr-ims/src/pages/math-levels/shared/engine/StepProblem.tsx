@@ -1,7 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from "react";
 import { autoRead, ReadAloud } from "../tts/ReadAloud";
-import { stopIfPlaying } from "../tts/speechEngine";
-import type { Problem, SentenceBlank, Step, VisualHelp } from "./types";
+import { getState, sayText, stopIfPlaying } from "../tts/speechEngine";
+import { tappedList, type Problem, type SentenceBlank, type Step, type TapCountStep, type VisualHelp } from "./types";
 import { fmt, fracText, gcd, numbersMatch, parseAnswer, rawFraction, verticalMultiplyBreakdown } from "../lib/math";
 import { numberPadProps, useEarlyLearner } from "./audience";
 import { InlineNumberPad } from "../components/NumberPad";
@@ -49,6 +49,7 @@ export const answerText = (s: Step): string => {
     return `${wholeTop} × ${wholeBottom} = ${partials.join(" + ")} = ${finalWhole}`;
   }
   if (s.kind === "custom") return s.resultText;
+  if (s.kind === "tapCount") return `${s.answer} counter${s.answer === 1 ? "" : "s"}`;
   return s.choices[s.correct];
 };
 
@@ -76,6 +77,14 @@ export const check = (s: Step, inputs: string[], opts: { early?: boolean } = {})
     return Number(inputs[0]) === s.correct
       ? { ok: true, msg: "" }
       : { ok: false, msg: opts.early ? EARLY_WRONG_CHOICE : "Not that one. Reread each choice and test it against the picture." };
+  }
+  if (s.kind === "tapCount") {
+    const n = tappedList(inputs[0]).length;
+    if (n === s.answer) return { ok: true, msg: "" };
+    if (n === 0) return { ok: false, msg: `Tap ${s.answer} counter${s.answer === 1 ? "" : "s"}.` };
+    return n < s.answer
+      ? { ok: false, msg: `You have ${n}. You need ${s.answer}. Tap more.` }
+      : { ok: false, msg: `You have ${n}. That's too many. Tap one to put it back.` };
   }
   if (s.kind === "number" && opts.early && !s.money && !s.frac && s.padTo === undefined) {
     const v = parseAnswer(inputs[0]);
@@ -274,7 +283,9 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame }: StepPr
     const hints = all.filter((s) => s.hint).length;
     const reveals = all.filter((s) => s.revealed).length;
     const guessed = all.some((s, k) => problem.steps[k].kind === "choice" && s.wrong > 0);
-    return reveals === 0 && hints <= 1 && !guessed;
+    // Early learners: two wrong tries on any step is trial and error, not a solve by themselves.
+    const triedAndErred = early && all.some((s) => s.wrong >= 2);
+    return reveals === 0 && hints <= 1 && !guessed && !triedAndErred;
   };
 
   useEffect(() => {
@@ -286,6 +297,12 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame }: StepPr
   }, [finished, states, onComplete, problem.bucket]);
 
   const update = (i: number, patch: Partial<StepState>) => setStates((all) => all.map((s, k) => (k === i ? { ...s, ...patch } : s)));
+
+  // A wrong try reported by a custom step itself (it grades its own parts).
+  const wrongTry = (i: number) => {
+    const wrong = states[i].wrong + 1;
+    update(i, { wrong, feedback: "Not a match. Try again.", hint: states[i].hint || wrong >= (early ? 1 : 2) });
+  };
 
   const submit = (i: number, inputs = states[i].inputs) => {
     const step = problem.steps[i];
@@ -371,7 +388,13 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame }: StepPr
                       {step.prompt}
                     </ReadAloud>
                     <div ref={inputRef} data-readaloud-part>
-                      <StepInput step={step} state={st} onChange={(inputs) => update(i, { inputs, feedback: null })} onSubmit={(inputs) => submit(i, inputs)} />
+                      <StepInput
+                        step={step}
+                        state={st}
+                        onChange={(inputs) => update(i, { inputs, feedback: null })}
+                        onSubmit={(inputs) => submit(i, inputs)}
+                        onWrong={() => wrongTry(i)}
+                      />
                     </div>
                     {st.feedback && (
                       <ReadAloud as="p" className="feedback bad" role="alert" autoPlay={false}>
@@ -452,7 +475,20 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame }: StepPr
 /** The number/ratio/choice input widget for one step. Exported for reuse by
  *  the end-of-unit test — see engine/UnitTest.tsx. StepState is also exported
  *  so a caller outside this file can type its own per-question answer state. */
-export function StepInput({ step, state, onChange, onSubmit }: { step: Step; state: StepState; onChange: (v: string[]) => void; onSubmit: (v: string[]) => void }) {
+export function StepInput({
+  step,
+  state,
+  onChange,
+  onSubmit,
+  onWrong,
+}: {
+  step: Step;
+  state: StepState;
+  onChange: (v: string[]) => void;
+  onSubmit: (v: string[]) => void;
+  /** A custom step's wrong try (see CustomStep.render). */
+  onWrong?: () => void;
+}) {
   const early = useEarlyLearner();
   // Early learners type with on-screen number pads (their "Check" key presses Enter).
   const pad = numberPadProps(early, "enter");
@@ -466,17 +502,29 @@ export function StepInput({ step, state, onChange, onSubmit }: { step: Step; sta
         {step.choices.map((c, k) => {
           // Early learners can't re-pick a choice they already got wrong.
           const tried = early && state.tried.includes(k);
+          const pic = step.display?.[k];
           return (
-            <button key={k} className={`choice${tried ? " tried" : ""}`} disabled={tried} aria-disabled={tried} onClick={() => onSubmit([String(k), ""])}>
-              {c}
+            <button
+              key={k}
+              className={`choice${pic ? " choice-pic" : ""}${tried ? " tried" : ""}`}
+              disabled={tried}
+              aria-disabled={tried}
+              aria-label={pic ? c : undefined}
+              data-tts-say={pic ? c : undefined}
+              onClick={() => onSubmit([String(k), ""])}
+            >
+              {pic ?? c}
             </button>
           );
         })}
       </div>
     );
   }
+  if (step.kind === "tapCount") {
+    return <TapCountInput step={step} raw={state.inputs[0]} onChange={(raw) => onChange([raw, ""])} />;
+  }
   if (step.kind === "custom") {
-    return <div className="custom-step">{step.render(() => onSubmit(["done"]))}</div>;
+    return <div className="custom-step">{step.render(() => onSubmit(["done"]), () => onWrong?.())}</div>;
   }
   if (step.kind === "sentence") {
     const renderBlank = (i: 0 | 1) => {
@@ -675,6 +723,36 @@ export function StepInput({ step, state, onChange, onSubmit }: { step: Step; sta
         {step.labels && <small>{step.labels[1]}</small>}
       </label>
       {after && <span className="affix">{after}</span>}
+    </div>
+  );
+}
+
+/**
+ * A pile of counters to tap, for "count out N" (TapCountStep). Rows of 5, big
+ * targets. Each tapped counter fills in and shows its count number, and (with
+ * sound on) the number is said aloud. Tapping a counted one puts it back.
+ */
+function TapCountInput({ step, raw, onChange }: { step: TapCountStep; raw: string; onChange: (raw: string) => void }) {
+  const order = tappedList(raw);
+  const voiceId = useId();
+  const tap = (i: number) => {
+    const next = order.includes(i) ? order.filter((k) => k !== i) : [...order, i];
+    onChange(next.join(","));
+    if (getState().autoRead && !order.includes(i)) sayText(voiceId, String(next.length));
+  };
+  return (
+    <div className={`tap-count q${step.tone ?? "b"}`} role="group" aria-label={`Pile of ${step.total} counters`} data-tts-skip>
+      {Array.from({ length: step.total }, (_, i) => {
+        const pos = order.indexOf(i);
+        return (
+          <button key={i} type="button" className={`tap-counter${pos >= 0 ? " on" : ""}`} aria-pressed={pos >= 0} aria-label={pos >= 0 ? `counter ${pos + 1}` : "counter"} onClick={() => tap(i)}>
+            {pos >= 0 ? pos + 1 : ""}
+          </button>
+        );
+      })}
+      <div className="tap-count-total" aria-live="polite">
+        {order.length === 0 ? "Tap to count." : `You have ${order.length}.`}
+      </div>
     </div>
   );
 }

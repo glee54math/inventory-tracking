@@ -354,7 +354,8 @@ function wordProblem(targetBucket?: string): Problem {
       story: `${ctx.person} had ${start} ${ctx.item}. Then ${ctx.person} ${ctx.verbTake} ${change} ${ctx.item}. How many ${ctx.item} does ${ctx.person} have left?`,
       visual: (_done: number, help?: VisualHelp) => (
         <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
-          <TenFrameGroup value={start} tone="a" splitAt={pointing(help, 1) ? result : undefined} tone2="b" />
+          {/* Help ladder / Show me: the ones given away are crossed out. */}
+          <TenFrameGroup value={start} tone="a" splitAt={pointing(help, 1) ? result : undefined} tone2="b" crossFrom={pointing(help, 1) ? result : undefined} />
         </div>
       ),
       steps: [roleChoice(2), { kind: "number", prompt: `How many ${ctx.item} does ${ctx.person} have left?`, hint: "Start − change = result.", explain: `${start} − ${change} = ${result}.`, answer: result }],
@@ -368,7 +369,7 @@ function wordProblem(targetBucket?: string): Problem {
       story: `${ctx.person} had ${start} ${ctx.item}. ${ctx.person} ${ctx.verbTake} some, and now has ${result} ${ctx.item} left. How many ${ctx.item} did ${ctx.person} ${ctx.verbTakeBase}?`,
       visual: (_done: number, help?: VisualHelp) => (
         <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
-          <TenFrameGroup value={start} tone="a" splitAt={pointing(help, 1) ? result : undefined} tone2="b" />
+          <TenFrameGroup value={start} tone="a" splitAt={pointing(help, 1) ? result : undefined} tone2="b" crossFrom={pointing(help, 1) ? result : undefined} />
           <TenFrameGroup value={result} tone="c" />
         </div>
       ),
@@ -382,7 +383,7 @@ function wordProblem(targetBucket?: string): Problem {
     story: `${ctx.person} ${ctx.verbTake} ${change} ${ctx.item}, and now has ${result} ${ctx.item} left. How many ${ctx.item} did ${ctx.person} have at the start?`,
     visual: (_done: number, help?: VisualHelp) => (
       <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
-        {pointing(help, 1) ? <TenFrameGroup value={start} tone="a" splitAt={result} tone2="b" /> : <TenFrameGroup value={result} tone="c" />}
+        {pointing(help, 1) ? <TenFrameGroup value={start} tone="a" splitAt={result} tone2="b" crossFrom={result} /> : <TenFrameGroup value={result} tone="c" />}
       </div>
     ),
     steps: [

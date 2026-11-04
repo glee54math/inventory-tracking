@@ -361,7 +361,16 @@ function countingProblem(targetBucket?: string): Problem {
       title: "Counting on",
       bucket,
       story: `Find ${a} + ${b} by counting on.`,
-      visual: (_done, help) => <NumberLine min={0} max={20} points={[{ value: a, label: "start", tone: "a" }]} hops={hopsFor(help, a, { 1: a + 1, 2: total })} />,
+      // Step 1 asks WHERE to start, so the "start" tag only appears once that's
+      // answered (or shown) — before then both numbers are just marked.
+      visual: (done, help) => (
+        <NumberLine
+          min={0}
+          max={20}
+          points={done >= 1 ? [{ value: a, label: "start", tone: "a" }] : [{ value: b, label: String(b), tone: "b" }, { value: a, label: String(a), tone: "a" }]}
+          hops={hopsFor(help, a, { 1: a + 1, 2: total })}
+        />
+      ),
       steps: [
         choice({ prompt: `Which number should you start counting from, ${a} or ${b}?`, hint: "Start from the number you already have — don't start over from 1.", explain: `Start at ${a}, the number already given.` }, String(a), [String(b)]),
         { kind: "number", prompt: `What's the first number you say as you count on from ${a}?`, hint: "One more than the start.", explain: `${a} + 1 = ${a + 1}.`, answer: a + 1 },

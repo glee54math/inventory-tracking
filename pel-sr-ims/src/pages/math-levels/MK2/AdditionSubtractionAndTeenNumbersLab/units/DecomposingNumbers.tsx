@@ -316,7 +316,13 @@ function decomposingProblem(targetBucket?: string): Problem {
       title: "Break it apart",
       bucket,
       story: `Break ${total} into two parts. The first part is ${a}.`,
-      visual: () => <SplitGroup total={total} partA={a} toneA="a" toneB="b" />,
+      // Step 2's "Show me" (and the finish) adds the DIFFERENT split underneath.
+      visual: (done) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <SplitGroup total={total} partA={a} toneA="a" toneB="b" />
+          {done >= 2 && <SplitGroup total={total} partA={otherA} toneA="a" toneB="b" />}
+        </div>
+      ),
       steps: [
         { kind: "number", prompt: `If the first part is ${a}, what is the second part?`, hint: "The two parts together make the whole number — count carefully, there are more pairs to keep track of with a bigger number.", explain: `${a} + ${b} = ${total}.`, answer: b },
         { kind: "number", prompt: `Here's a DIFFERENT way: if the first part is ${otherA} instead, what would the second part be?`, hint: "The two parts still need to add up to the same total.", explain: `${otherA} + ${otherB} = ${total}.`, answer: otherB },
@@ -337,7 +343,13 @@ function decomposingProblem(targetBucket?: string): Problem {
       title: "Find a different way",
       bucket,
       story: `Here's one way to break ${total} apart: ${a1} and ${b1}.`,
-      visual: () => <SplitGroup total={total} partA={a1} toneA="a" toneB="b" />,
+      // Step 1's "Show me" (and after) adds the new split underneath the first one.
+      visual: (done) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <SplitGroup total={total} partA={a1} toneA="a" toneB="b" />
+          {done >= 1 && <SplitGroup total={total} partA={a2} toneA="a" toneB="b" />}
+        </div>
+      ),
       steps: [
         { kind: "number", prompt: `Find a DIFFERENT way: if the first part is ${a2}, what's the second part?`, hint: "Make sure the two new parts still add up to the same total, but aren't the same pair as before.", explain: `${a2} + ${b2} = ${total}.`, answer: b2 },
         choice(

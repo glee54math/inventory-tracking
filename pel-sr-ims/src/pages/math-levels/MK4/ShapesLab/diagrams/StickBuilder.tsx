@@ -1,5 +1,6 @@
 import { palette, diagramFont } from "../../../shared/lib/palette";
 import { shapeOutline, type BuildableKind } from "./Shape2D";
+import { useCountAlong } from "./countAlong";
 
 const toneColor = (tone?: "a" | "b" | "c") => (tone === "b" ? palette.b : tone === "c" ? palette.c : palette.a);
 
@@ -12,16 +13,20 @@ export interface StickBuilderProps {
    *  exactly once, order doesn't matter" spirit as MK1's CounterGroup. */
   placed: number[];
   onToggle?: (edgeIndex: number) => void;
+  /** "Show me" demo: light up and number the placed sticks one at a time,
+   *  in step with the spoken count (see countAlong.ts). */
+  countAlong?: boolean;
 }
 
 /** Click-to-place stick-building sandbox: the shape's corners are already
  *  drawn (the "clay balls" holding it together), each side starts as a
  *  dashed gap a stick hasn't been placed in yet. Used by Unit 4's Explore
  *  and Practice (as a CustomStep widget). */
-export function StickBuilder({ kind, size = 68, tone = "a", placed, onToggle }: StickBuilderProps) {
+export function StickBuilder({ kind, size = 68, tone = "a", placed, onToggle, countAlong = false }: StickBuilderProps) {
   const pts = shapeOutline(kind, size);
   const n = pts.length;
   const color = toneColor(tone);
+  const shown = useCountAlong(countAlong, n);
   const interactive = !!onToggle;
   return (
     <svg
@@ -40,7 +45,7 @@ export function StickBuilder({ kind, size = 68, tone = "a", placed, onToggle }: 
               y1={y}
               x2={x2}
               y2={y2}
-              stroke={done ? color : palette.line}
+              stroke={i < shown ? palette.c : done ? color : palette.line}
               strokeWidth={done ? 9 : 4}
               strokeDasharray={done ? undefined : "7 7"}
             />
@@ -51,6 +56,17 @@ export function StickBuilder({ kind, size = 68, tone = "a", placed, onToggle }: 
       {pts.map(([x, y], i) => (
         <circle key={`v${i}`} cx={x} cy={y} r={7} fill={palette.ink} />
       ))}
+      {pts.slice(0, shown).map(([x, y], i) => {
+        const [x2, y2] = pts[(i + 1) % n];
+        const mx = (x + x2) / 2;
+        const my = (y + y2) / 2;
+        const d = Math.hypot(mx - 100, my - 100) || 1;
+        return (
+          <text key={`n${i}`} x={mx + ((mx - 100) / d) * 18} y={my + ((my - 100) / d) * 18 + 6} textAnchor="middle" fontSize={18} fontWeight={700} fill={palette.ink}>
+            {i + 1}
+          </text>
+        );
+      })}
     </svg>
   );
 }

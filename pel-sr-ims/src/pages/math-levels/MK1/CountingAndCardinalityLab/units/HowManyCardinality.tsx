@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
-import { CounterGroup, type Arrangement } from "../diagrams";
+import { useEffect, useId, useState } from "react";
+import { CounterGroup, CountOutCard, TenGroups, countAlongMs, type Arrangement } from "../diagrams";
 import { randInt, pick } from "../../../shared/lib/math";
-import { choice, type Problem } from "../../../shared/engine/types";
+import { choice, pointing, tapCount, type Problem, type Step, type VisualHelp } from "../../../shared/engine/types";
+import { countShowMe, countUp, thereAre } from "./words";
+import { getState, sayText } from "../../../shared/tts/speechEngine";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { howManyCardinalityTest } from "./HowManyCardinalityTest";
@@ -256,6 +258,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [count, setCount] = useState(8);
   const [arrangement, setArrangement] = useState<Arrangement>("scatter");
   const [order, setOrder] = useState<number[]>([]);
+  const voiceId = useId();
 
   const newGroup = (n: number, a: Arrangement) => {
     setCount(n);
@@ -266,6 +269,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const toggle = (i: number) => {
     if (order.includes(i)) return; // each object counted exactly once
     setOrder((o) => [...o, i]);
+    // With sound on, say each number as it's counted.
+    if (getState().autoRead) sayText(voiceId, String(order.length + 1));
   };
 
   const done = order.length === count;
@@ -296,7 +301,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       {(introActive || showCheck) && <CardinalityCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <ReadAloud as="p" className="muted small">Click each counter once, in any order you like, to count it.</ReadAloud>
+      <ReadAloud as="p" className="muted small">Tap each counter once to count it. You can go in any order.</ReadAloud>
       <CounterGroup count={count} arrangement={arrangement} tone="a" seed={count * 9 + 5} countedOrder={order} onToggle={toggle} />
       <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         {order.length === 0 ? "" : done ? `That's ${order.length} in all — the LAST number you said!` : `Counted ${order.length} so far...`}
@@ -328,8 +333,33 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 type Bucket = "lineArray" | "scattered" | "circle" | "mixed20" | "countOut";
 const BUCKETS: Bucket[] = ["lineArray", "scattered", "circle", "mixed20", "countOut"];
 
+/** A "how many?" step with the counting walk-through. */
+const countStep = (n: number, hint: string): Step => ({
+  kind: "number",
+  showMeHoldMs: countAlongMs(n),
+  prompt: "How many counters are there in all?",
+  hint,
+  showMe: countShowMe(n),
+  explain: `${thereAre(n)} The last number you say, ${n}, is how many in all.`,
+  answer: n,
+});
+
+/** The "one more" follow-up step. */
+const oneMoreStep = (n: number): Step => ({
+  kind: "number",
+  prompt: "If one more counter joined the group, how many would there be?",
+  hint: "Say the number you counted. Then say the next number.",
+  showMe: `Say ${n}. Now one more: ${n + 1}.`,
+  explain: `One more than ${n} is ${n + 1}.`,
+  answer: n + 1,
+});
+
 function cardinalityProblem(targetBucket?: string): Problem {
   const bucket = (targetBucket as Bucket | undefined) ?? BUCKETS[randInt(0, BUCKETS.length - 1)];
+  // Every counting picture plays the count-along during step 1's "Show me".
+  const group = (n: number, arrangement: Arrangement, tone: "a" | "b" | "c", seed: number) => (_done: number, help?: VisualHelp) => (
+    <CounterGroup count={n} arrangement={arrangement} tone={tone} seed={seed} countAlong={!!help?.showMe && help.step === 0} />
+  );
 
   if (bucket === "lineArray") {
     const n = randInt(3, 10);
@@ -337,91 +367,110 @@ function cardinalityProblem(targetBucket?: string): Problem {
     return {
       title: "How many in all?",
       bucket,
-      story: "Count the counters. The LAST number you say tells you how many there are in all.",
-      visual: () => <CounterGroup count={n} arrangement={arrangement} tone="a" seed={n * 5 + 1} />,
-      steps: [
-        { kind: "number", prompt: "How many counters are there in all?", hint: "Count each one exactly once, in order.", explain: `There are ${n} counters — the last number you say, ${n}, is the total.`, answer: n },
-        { kind: "number", prompt: "If one more counter joined the group, how many would there be?", hint: "One more than the total is the next counting number.", explain: `One more than ${n} is ${n + 1}.`, answer: n + 1 },
-      ],
-      wrapUp: `There are ${n} counters in all.`,
+      story: "Count the counters. The LAST number you say tells how many there are in all.",
+      visual: group(n, arrangement, "a", n * 5 + 1),
+      steps: [countStep(n, "Touch each counter as you count it. Count each one once."), oneMoreStep(n)],
+      wrapUp: `${thereAre(n)}`,
     };
   }
 
   if (bucket === "scattered") {
     const n = randInt(4, 10);
     return {
-      title: "How many — scattered",
+      title: "How many? They are all mixed up.",
       bucket,
-      story: "These counters are scattered, not lined up. Count carefully — it's easy to count one twice or miss one!",
-      visual: () => <CounterGroup count={n} arrangement="scatter" tone="b" seed={n * 23 + 7} />,
+      story: "These counters are all mixed up. Count carefully, so you don't count one twice or miss one!",
+      visual: group(n, "scatter", "b", n * 23 + 7),
       steps: [
-        { kind: "number", prompt: "How many counters are there in all?", hint: "Point to each counter as you count it, so you don't skip or double-count.", explain: `There are ${n} counters in all.`, answer: n },
+        countStep(n, "Touch each counter as you count it, so you don't skip one or count one twice."),
         choice(
-          { prompt: "If you counted this same group again, starting over, what total would you get?", hint: "The actual amount doesn't change just because you count it again.", explain: `Recounting (correctly) always gives the same total: ${n}.` },
+          { prompt: "If you count the same counters again, what number will you get?", hint: "Nobody added or took away any counters.", showMe: `Nobody added or took any away. So counting again gives ${n} again.`, explain: `Counting again gives the same number: ${n}.` },
           String(n),
           [String(n + 1), String(Math.max(0, n - 1))]
         ),
       ],
-      wrapUp: `There are ${n} counters, no matter how many times you count them.`,
+      wrapUp: `${thereAre(n)} That stays true every time you count them.`,
     };
   }
 
   if (bucket === "circle") {
     const n = randInt(4, 10);
     return {
-      title: "How many — in a circle",
+      title: "How many in a circle?",
       bucket,
-      story: "These counters are arranged in a circle. It's easy to lose track of which one you started with!",
-      visual: () => <CounterGroup count={n} arrangement="circle" tone="c" seed={n * 31 + 2} />,
+      story: "These counters are in a circle. It's easy to forget which one you started with!",
+      visual: group(n, "circle", "c", n * 31 + 2),
       steps: [
-        { kind: "number", prompt: "How many counters are there in all?", hint: "Pick any counter to start with, then go around once without skipping or repeating any.", explain: `There are ${n} counters in all.`, answer: n },
+        countStep(n, "Pick one counter to start. Go around once. Stop when you get back to it."),
         choice(
           {
-            prompt: "Would you get a different total if you had started counting from a different counter in the circle?",
-            hint: "The total only depends on how many objects there are, not where you started.",
-            explain: "No — starting from a different counter never changes the total, as long as you count each one exactly once.",
+            prompt: "If you started counting from a different counter, would you get a different number?",
+            hint: "It's the same counters. Only the starting place changed.",
+            showMe: `It's the same counters, so you still get ${n}.`,
+            explain: "No. Starting from a different counter never changes how many there are, if you count each one once.",
           },
-          "No, the total would be the same",
+          "No, the number would be the same",
           ["Yes, it depends which one you start with"]
         ),
       ],
-      wrapUp: `There are ${n} counters in the circle, no matter where you start counting.`,
+      wrapUp: `${thereAre(n)} It doesn't matter where you start counting.`,
     };
   }
 
   if (bucket === "mixed20") {
     const n = randInt(11, 20);
-    const arrangement = pick(["array", "scatter"] as const);
+    // Lined up in rows, not scattered: K.CC.5 asks for scattered groups only up to 10.
+    const arrangement = pick(["line", "array"] as const);
     return {
-      title: "How many — a bigger group",
+      title: "How many in a bigger group?",
       bucket,
       story: "Count this bigger group carefully.",
-      visual: () => <CounterGroup count={n} arrangement={arrangement} tone="a" seed={n * 41 + 3} />,
-      steps: [
-        { kind: "number", prompt: "How many counters are there in all?", hint: "Count slowly, one at a time.", explain: `There are ${n} counters in all.`, answer: n },
-        { kind: "number", prompt: "If one more counter joined the group, how many would there be?", hint: "One more than the total.", explain: `One more than ${n} is ${n + 1}.`, answer: n + 1 },
-      ],
-      wrapUp: `There are ${n} counters in all.`,
+      visual: group(n, arrangement, "a", n * 41 + 3),
+      steps: [countStep(n, "Count slowly, one at a time. Count the top row first."), oneMoreStep(n)],
+      wrapUp: `${thereAre(n)}`,
     };
   }
 
-  // countOut — the reverse-direction skill: counting a fixed amount OUT of
-  // a larger pile, rather than counting a fixed group that's already there.
-  const total = randInt(11, 20);
-  const take = randInt(2, total - 1);
-  const remaining = total - take;
+  // countOut (K.CC.5: "given a number from 1-20, count out that many
+  // objects"): tap that many counters out of a bigger pile, and stop.
+  const take = randInt(3, 15);
+  const total = Math.min(20, take + randInt(3, 8));
   return {
-    title: "Count out some, see what's left",
+    title: "Count some out",
     bucket,
-    story: `There is a pile of ${total} counters. Count out ${take} of them to give to a friend.`,
-    // Step 1 counts the whole pile; from step 2 on, the `take` counters given
-    // away are crossed out so "how many are left?" has something to count.
-    visual: (done) => <CounterGroup count={total} arrangement="scatter" tone="b" seed={total * 7 + take} removed={done >= 1 ? take : 0} />,
+    story: "Your friend needs some counters.",
+    // Stuck: show that many dots in a ten-frame, so the student can see how many to stop at.
+    // "Show me" stays on its own step: step 1 shows the counters counted out
+    // (no "?" yet; that belongs to step 2), step 2 counts on to the new one.
+    visual: (done, help) => {
+      if (help?.showMe && help.step === 0) return <TenGroups value={take} tone="b" labels />;
+      if (help?.showMe && help.step === 1) return <TenGroups value={take + 1} tone="b" labels countAlong={[take, take + 1]} targetTone="a" />;
+      if (done === 0) return pointing(help, 0) ? <TenGroups value={take} tone="b" labels /> : <CountOutCard n={take} />;
+      return <TenGroups value={take} tone="b" labels target={done < 2 ? take + 1 : undefined} targetTone="a" />;
+    },
     steps: [
-      { kind: "number", prompt: "How many counters are in the pile to start?", hint: "Count the whole pile shown.", explain: `There are ${total} counters in the pile.`, answer: total },
-      { kind: "number", prompt: `After counting out ${take} of them, how many are left in the pile?`, hint: "Start with the total and count backward by how many were taken.", explain: `${total} take away ${take} leaves ${remaining}.`, answer: remaining },
+      tapCount(
+        {
+          prompt: `Tap ${take} counters to give to your friend.`,
+          hint: `Say a number each time you tap. Stop when you say ${take}.`,
+          showMe: `Tap one counter and say 1. Keep going: ${countUp(1, take)}. Stop at ${take}.`,
+          explain: `You counted out ${take}.`,
+        },
+        total,
+        take
+      ),
+      {
+        kind: "number",
+        tone: "a",
+        showMeHoldMs: 2000,
+        prompt: "Now your friend gets one more counter. How many does your friend have now?",
+        hint: "Look at the box with the question mark. That is one more.",
+        showMe: `Say ${take}. Now one more: ${take + 1}.`,
+        explain: `One more than ${take} is ${take + 1}.`,
+        answer: take + 1,
+      },
     ],
-    wrapUp: `${take} counters were taken out of ${total}, leaving ${remaining}.`,
+    wrapUp: `You counted out ${take}. One more makes ${take + 1}.`,
   };
 }
 

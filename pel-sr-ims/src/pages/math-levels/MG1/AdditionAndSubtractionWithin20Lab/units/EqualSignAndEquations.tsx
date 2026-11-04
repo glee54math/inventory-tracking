@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { TenFrameGroup } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
-import { choice, type Problem } from "../../../shared/engine/types";
+import { choice, type Problem, type VisualHelp } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { equalSignAndEquationsTest } from "./EqualSignAndEquationsTest";
@@ -303,7 +303,13 @@ function equalSignUnknownLeftProblem(): Problem {
     title: "Equal sign — operation on both sides",
     bucket: "equalSignUnknownLeft",
     story: `${a} + ${b} = ${c} + ☐`,
-    visual: () => <TenFrameGroup value={total} tone="a" splitAt={a} tone2="b" />,
+    // "Show me" on the blank: the SAME counters, split the other way (c + ☐).
+    visual: (done: number, help?: VisualHelp) =>
+      (help?.showMe && help.step === 1) || done >= 2 ? (
+        <TenFrameGroup value={total} tone="a" splitAt={c} tone2="c" />
+      ) : (
+        <TenFrameGroup value={total} tone="a" splitAt={a} tone2="b" />
+      ),
     steps: [
       choice({ prompt: "What does the = sign mean here?", hint: "Both sides need to add up to the same total, even though there's a sum on both sides.", explain: `Both ${a} + ${b} and ${c} + ☐ must equal the same total, ${total}.` }, "Both sides equal the same amount", ["The answer comes right after ="]),
       { kind: "number", prompt: "What number goes in the blank?", hint: `${a} + ${b} = ${total}. What plus ${c} makes ${total}?`, explain: `${total} − ${c} = ${d}, so ${c} + ${d} = ${total}.`, answer: d },

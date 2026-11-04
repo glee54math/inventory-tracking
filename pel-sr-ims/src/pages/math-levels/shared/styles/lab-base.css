@@ -1223,6 +1223,12 @@ input.align-slot.align-slot-input {
   }
 }
 
+/* A wrong pair in a tap-to-match step (e.g. MK1 WordNumeralMatch). */
+.lab-base .match-shake {
+  animation: labNudge 0.3s 2;
+  border-color: var(--bad) !important;
+}
+
 @keyframes labNudge {
   25% {
     transform: translateX(-4px);
@@ -1596,4 +1602,58 @@ input.align-slot.align-slot-input {
   left: 16px;
   bottom: 84px;
   z-index: 60;
+}
+
+/* ---------- Choice buttons that show a picture (ChoiceStep.display) ---------- */
+.lab-base .choices:has(.choice-pic) {
+  grid-template-columns: repeat(auto-fit, minmax(120px, max-content));
+}
+.lab-base .choice.choice-pic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  min-height: 96px;
+  text-align: center;
+}
+
+/* ---------- "Count out" pile (TapCountStep) ---------- */
+.lab-base .tap-count {
+  --tc: var(--qb);
+  --tc-soft: var(--qb-soft);
+  display: grid;
+  grid-template-columns: repeat(5, 52px);
+  gap: 10px;
+  width: max-content;
+  padding: 12px;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-sm);
+}
+.lab-base .tap-count.qa {
+  --tc: var(--qa);
+  --tc-soft: var(--qa-soft);
+}
+.lab-base .tap-count.qc {
+  --tc: var(--qc);
+  --tc-soft: var(--qc-soft);
+}
+.lab-base .tap-counter {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 3px solid var(--tc);
+  background: var(--tc-soft);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  padding: 0;
+  cursor: pointer;
+}
+.lab-base .tap-counter.on {
+  background: var(--tc);
+}
+.lab-base .tap-count-total {
+  grid-column: 1 / -1;
+  font-weight: 700;
+  font-size: 18px;
 }

@@ -65,6 +65,19 @@ const SYMBOLS: Record<string, string> = {
   "□": "blank",
 };
 
+/** "the 30s" → "the thirties" (voices otherwise say "thirty s"). */
+const DECADES: Record<string, string> = {
+  "10s": "tens",
+  "20s": "twenties",
+  "30s": "thirties",
+  "40s": "forties",
+  "50s": "fifties",
+  "60s": "sixties",
+  "70s": "seventies",
+  "80s": "eighties",
+  "90s": "nineties",
+};
+
 /** Kept as-is so the voice pauses naturally. */
 const PAUSE_PUNCT = new Set([".", ",", "!", "?", ";", ":"]);
 /** Dashes read as a short pause. */
@@ -129,7 +142,7 @@ export function tokenizeForSpeech(text: string): SpeechToken[] {
     else if (g.frac !== undefined) {
       const [n, d] = raw.split("/").map(Number);
       tok = { start, end, spoken: fractionWords(n, d) };
-    } else if (g.num !== undefined) tok = { start, end, spoken: raw };
+    } else if (g.num !== undefined) tok = { start, end, spoken: DECADES[raw] ?? raw };
     else if (g.word !== undefined) tok = { start, end, spoken: normalizeWord(raw) };
     else if (g.blank !== undefined) tok = { start, end, spoken: "blank" };
     else {
@@ -142,7 +155,8 @@ export function tokenizeForSpeech(text: string): SpeechToken[] {
         // "8 - 3" is minus; a dash in prose is a pause.
         const minus = isMathOperand(lastNonSpace, text) && /[\d_?(]/.test(next);
         tok = minus ? { start, end, spoken: "minus" } : { start, end, spoken: ",", punct: true };
-      } else if (ch === "?" && prevIsSpace) tok = { start, end, spoken: "what number" };
+      } else if (ch === "?" && prevIsSpace && /[A-Za-z]/.test(next)) tok = { start, end, spoken: "question mark" };
+      else if (ch === "?" && prevIsSpace) tok = { start, end, spoken: "what number" };
       else if (PAUSE_PUNCT.has(ch)) tok = { start, end, spoken: ch, punct: true };
       else if (DASHES.has(ch)) tok = { start, end, spoken: ",", punct: true };
       else tok = { start, end, spoken: "", punct: true }; // quotes, brackets, emoji, arrows

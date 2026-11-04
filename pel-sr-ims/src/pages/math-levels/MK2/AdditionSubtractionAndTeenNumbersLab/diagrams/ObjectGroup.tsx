@@ -28,12 +28,13 @@ function mulberry32(seed: number) {
   };
 }
 
-export function layoutPositions(count: number, arrangement: Arrangement, seed = 1): { x: number; y: number }[] {
+export function layoutPositions(count: number, arrangement: Arrangement, seed = 1, alignLeft = false): { x: number; y: number }[] {
   if (count <= 0) return [];
   if (arrangement === "line") {
-    const gap = Math.min(30, (WIDTH - PAD * 2) / Math.max(1, count - 1));
+    // alignLeft uses a fixed gap so two stacked lines match up one-to-one.
+    const gap = alignLeft ? (WIDTH - PAD * 2) / 9 : Math.min(30, (WIDTH - PAD * 2) / Math.max(1, count - 1));
     const totalW = gap * (count - 1);
-    const startX = (WIDTH - totalW) / 2;
+    const startX = alignLeft ? PAD : (WIDTH - totalW) / 2;
     return Array.from({ length: count }, (_, i) => ({ x: startX + i * gap, y: HEIGHT / 2 }));
   }
   if (arrangement === "array") {
@@ -88,6 +89,13 @@ export interface ObjectGroupProps {
    *  only meaningful together with `onToggle`, in an Explore sandbox. */
   countedOrder?: number[];
   onToggle?: (index: number) => void;
+  /** "line" only: start at the left edge with a fixed spacing (fits up to 10),
+   *  so two groups stacked one above the other line up object-for-object
+   *  (for comparing). Off by default. */
+  alignLeft?: boolean;
+  /** Ring every object from this index on — e.g. the "extra" objects one
+   *  group has beyond the other. Off by default. */
+  ringFrom?: number;
 }
 
 /** A group of simple objects (dots, or an emoji glyph) laid out as a line, a
@@ -95,15 +103,15 @@ export interface ObjectGroupProps {
  *  many" this lab uses so every addition/subtraction idea is shown with
  *  real objects before any bare numeral or "+"/"−" symbol appears, per this
  *  Kindergarten lab's audience framing. */
-export function ObjectGroup({ count, arrangement = "line", tone, seed = 1, glyph, countedOrder, onToggle }: ObjectGroupProps) {
-  const points = layoutPositions(count, arrangement, seed);
+export function ObjectGroup({ count, arrangement = "line", tone, seed = 1, glyph, countedOrder, onToggle, alignLeft = false, ringFrom }: ObjectGroupProps) {
+  const points = layoutPositions(count, arrangement, seed, alignLeft);
   const color = toneColor(tone);
   const orderOf = (i: number) => (countedOrder ? countedOrder.indexOf(i) : -1);
   const interactive = !!onToggle;
 
   return (
     <svg
-      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+      viewBox={alignLeft && arrangement === "line" ? `0 ${HEIGHT / 2 - 32} ${WIDTH} 64` : `0 0 ${WIDTH} ${HEIGHT}`}
       role="img"
       aria-label={`${count} object${count === 1 ? "" : "s"}${interactive ? ", click one at a time to count them" : ""}`}
       style={{ display: "block", width: "100%", maxWidth: WIDTH, height: "auto", fontFamily: diagramFont }}
@@ -129,6 +137,9 @@ export function ObjectGroup({ count, arrangement = "line", tone, seed = 1, glyph
               <text x={p.x} y={p.y - R - 6} textAnchor="middle" fontSize={13} fontWeight={800} fill={color}>
                 {order + 1}
               </text>
+            )}
+            {ringFrom !== undefined && i >= ringFrom && (
+              <circle cx={p.x} cy={p.y} r={R + 5} fill="none" stroke={palette.c} strokeWidth={3} />
             )}
             {interactive && <circle cx={p.x} cy={p.y} r={R + 8} fill="transparent" />}
           </g>

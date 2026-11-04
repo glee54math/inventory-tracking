@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { SHAPE_LABELS, shapeAttributes, shapeOutline, BUILDABLE_KINDS, type BuildableKind } from "../diagrams/Shape2D";
 import { StickBuilder } from "../diagrams/StickBuilder";
-import { CubeFrameBuilder, CUBE_EDGES, CUBE_VERTICES } from "../diagrams/CubeFrameBuilder";
+import { countAlongMs, countAlongText } from "../diagrams/countAlong";
+import { CubeFrameBuilder, CubeFramePreview, CUBE_EDGES, CUBE_VERTICES } from "../diagrams/CubeFrameBuilder";
 import { ComposeSingle, ComposeOpenStrip, COMPOSE_RECIPES, type ComposeRecipe } from "../diagrams/ComposeShapes";
 import { pick, randInt, shuffle } from "../../../shared/lib/math";
 import { choice, customStep, type Problem } from "../../../shared/engine/types";
@@ -447,14 +448,21 @@ function buildingAndCombiningProblem(targetBucket?: string): Problem {
       title: "Build a shape with sticks",
       bucket,
       story: `Build a ${label} by placing a stick on every side.`,
-      visual: () => <div className="muted small">Use the sticks in the panel on the right to build it.</div>,
+      // Once built, the finished shape stays up so step 2 has sticks to count
+      // (its "Show me" counts them along, one at a time).
+      visual: (done, help) =>
+        done >= 1 ? (
+          <StickBuilder kind={kind} placed={Array.from({ length: n }, (_, i) => i)} tone="a" countAlong={!!help?.showMe && help.step === 1} />
+        ) : (
+          <div className="muted small">Use the sticks in the panel on the right to build it.</div>
+        ),
       steps: [
         customStep(
           { prompt: `Place a stick on every side of this ${label.toLowerCase()}.`, hint: "Click each dashed gap to drop a stick in it, in any order.", explain: `You built a ${label} using ${n} sticks.` },
           (onDone) => <StickBuilderWidget kind={kind} onDone={onDone} />,
           `Built using ${n} sticks`
         ),
-        { kind: "number", prompt: `How many sticks did you need to build this ${label.toLowerCase()}?`, hint: "That's the same as the number of sides it has.", explain: `A ${label.toLowerCase()} has ${n} sides, so it took ${n} sticks.`, answer: n },
+        { kind: "number", showMe: countAlongText(n, "sticks"), showMeHoldMs: countAlongMs(n), prompt: `How many sticks did you need to build this ${label.toLowerCase()}?`, hint: "That's the same as the number of sides it has.", explain: `A ${label.toLowerCase()} has ${n} sides, so it took ${n} sticks.`, answer: n },
       ],
       wrapUp: `You built a ${label} out of ${n} sticks.`,
     };
@@ -465,14 +473,21 @@ function buildingAndCombiningProblem(targetBucket?: string): Problem {
       title: "Build a cube frame",
       bucket,
       story: "Build a cube's wireframe out of clay (corners) and sticks (edges).",
-      visual: () => <div className="muted small">Use the sticks in the panel on the right to build it.</div>,
+      // Once built, the finished frame stays up so step 2 has corners to count
+      // (its "Show me" counts them along, one at a time).
+      visual: (done, help) =>
+        done >= 1 ? (
+          <CubeFramePreview presentEdges={CUBE_EDGES.map((_, i) => i)} tone="b" countCorners={!!help?.showMe && help.step === 1} />
+        ) : (
+          <div className="muted small">Use the sticks in the panel on the right to build it.</div>
+        ),
       steps: [
         customStep(
           { prompt: "Place a stick on every edge of this cube.", hint: "Click each dashed gap to drop a stick in it, in any order.", explain: `You built a cube frame using ${CUBE_EDGES.length} sticks and ${CUBE_VERTICES.length} clay corners.` },
           (onDone) => <CubeFrameWidget onDone={onDone} />,
           `Built using ${CUBE_EDGES.length} sticks`
         ),
-        { kind: "number", prompt: "How many clay corners does a cube frame have?", hint: "Count every dot where sticks meet.", explain: `A cube has ${CUBE_VERTICES.length} corners.`, answer: CUBE_VERTICES.length },
+        { kind: "number", showMe: countAlongText(CUBE_VERTICES.length, "clay corners"), showMeHoldMs: countAlongMs(CUBE_VERTICES.length), prompt: "How many clay corners does a cube frame have?", hint: "Count every dot where sticks meet.", explain: `A cube has ${CUBE_VERTICES.length} corners.`, answer: CUBE_VERTICES.length },
       ],
       wrapUp: `You built a cube frame using ${CUBE_EDGES.length} sticks and ${CUBE_VERTICES.length} clay corners.`,
     };
@@ -488,7 +503,9 @@ function buildingAndCombiningProblem(targetBucket?: string): Problem {
       title: "Compose a shape",
       bucket,
       story: `Put the ${recipe.pieceLabel.toLowerCase()}s together to make one bigger shape.`,
-      visual: () => <div className="muted small">Click a piece in the panel to drop it into place.</div>,
+      // Once composed, the finished shape stays up for step 2 ("Look at the finished outline").
+      visual: (done) =>
+        done >= 1 ? <ComposeSingle recipe={recipe} placed={recipe.slots.length} tone="c" /> : <div className="muted small">Click a piece in the panel to drop it into place.</div>,
       steps: [
         customStep(
           { prompt: `Place every ${recipe.pieceLabel.toLowerCase()} piece into the outline.`, hint: "Click a tray piece to drop it into the next open space.", explain: `Together, the ${recipe.pieceLabel.toLowerCase()}s make a ${recipe.resultLabel}.` },
@@ -507,11 +524,25 @@ function buildingAndCombiningProblem(targetBucket?: string): Problem {
 
   // composeOpenEnded
   const targetLength = randInt(3, 8);
+  // Two different fills of the same strip, for step 2's "Show me".
+  const allSquares = Array.from({ length: targetLength }, () => 1);
+  const withDominoes = [...Array.from({ length: Math.floor(targetLength / 2) }, () => 2), ...(targetLength % 2 ? [1] : [])];
   return {
     title: "Fill the strip — many ways work",
     bucket,
     story: `Fill this strip exactly, using any mix of squares (1 unit) and dominoes (2 units) you like.`,
-    visual: () => <div className="muted small">Use the buttons in the panel to add or remove pieces.</div>,
+    // Step 2's "Show me" (and the finish) draws two different fills of the
+    // same strip — never before then, since a second fill IS step 2's answer.
+    visual: (done, help) => {
+      if (done < 1) return <div className="muted small">Use the buttons in the panel to add or remove pieces.</div>;
+      if (done < 2 && !help?.showMe) return <div className="muted small">Think about the strip you just filled.</div>;
+      return (
+        <div data-readaloud-part>
+          <ComposeOpenStrip targetLength={targetLength} placedLengths={allSquares} tone="b" />
+          <ComposeOpenStrip targetLength={targetLength} placedLengths={withDominoes} tone="b" />
+        </div>
+      );
+    },
     steps: [
       customStep(
         { prompt: `Fill the strip so it's exactly ${targetLength} units long.`, hint: "Add squares and dominoes until the total matches exactly — there's more than one way to do it.", explain: `${targetLength} units filled exactly.` },
@@ -521,6 +552,7 @@ function buildingAndCombiningProblem(targetBucket?: string): Problem {
       choice(
         {
           prompt: "Could a different mix of squares and dominoes have also filled this strip exactly?",
+          showMe: "Look: one strip is filled with all squares. The other uses dominoes. Both fill the strip exactly.",
           hint: "Think of another combination that adds up to the same total.",
           explain: "Yes — there's more than one way to fill the same strip exactly.",
         },

@@ -296,7 +296,8 @@ function makingTenProblem(targetBucket?: string): Problem {
       title: "Find the partner for 10",
       bucket,
       story: `What number goes with ${n} to make exactly 10?`,
-      visual: () => <TenFrame filled={n} tone="a" />,
+      // "Show me" for step 1 fills the empty boxes in the partner color.
+      visual: (done) => <TenFrame filled={n} tone="a" fillB={done >= 1 ? partner : 0} />,
       steps: [
         { kind: "number", prompt: `What number goes with ${n} to make 10?`, hint: "Count the empty boxes left in the ten frame.", explain: `${n} + ${partner} = 10.`, answer: partner },
         choice(
@@ -328,7 +329,14 @@ function makingTenProblem(targetBucket?: string): Problem {
     title: "Does this pair make 10?",
     bucket,
     story: `${p} and ${shownQ}.`,
-    visual: () => <TenFrame filled={Math.min(10, p)} tone="a" fillB={0} />,
+    // Step 1's "Show me" adds the shown number's dots (any past 10 spill outside
+    // the frame); step 2's "Show me" and the finish show the real partner.
+    visual: (done, help) => {
+      if (done >= 2) return <TenFrame filled={p} tone="a" fillB={actualPartner} />;
+      if (help?.showMe && help.step === 0)
+        return <TenFrame filled={p} tone="a" fillB={Math.min(shownQ, actualPartner)} overflow={Math.max(0, shownQ - actualPartner)} />;
+      return <TenFrame filled={Math.min(10, p)} tone="a" fillB={0} />;
+    },
     steps: [
       choice(
         { prompt: `Do ${p} and ${shownQ} make exactly 10?`, hint: "Add them exactly — don't just guess from how close they look.", explain: `${p} + ${shownQ} = ${p + shownQ}${trulyTrue ? ", which is 10." : `, which is NOT 10.`}` },

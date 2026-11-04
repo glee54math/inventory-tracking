@@ -1,6 +1,6 @@
 import type { Unit } from "../../../shared/units/types";
 import { successorShortQuestion, successorLongQuestion, tensNextQuestion, decadeCrossNumberQuestion, decadeAlwaysTrueQuestion } from "./CountingOnAndForwardTest";
-import { writeFromWordTeenQuestion, writeFromPictureLargeQuestion, recognizeLookalikeQuestion, reversedPairQuestion, flipGeneralizationQuestion } from "./WritingAndMatchingNumeralsTest";
+import { writeFromWordTeenQuestion, writeFromPictureLargeQuestion, anyLookalikeQuestion, anyReversedPairQuestion, flipGeneralizationQuestion } from "./WritingAndMatchingNumeralsTest";
 import { scatteredCountQuestion, circleCountQuestion, countOutQuestion, startingPointChoiceQuestion, arrangementNeverChangesCountQuestion } from "./HowManyCardinalityTest";
 import { matchingDiffQuestion, closeDiffQuestion, equalTrapQuestion, numeralBiggerQuestion, objectsVsNumeralsTrueFalseQuestion } from "./ComparingGroupsAndNumeralsTest";
 
@@ -37,8 +37,8 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     // Writing and Matching Numerals
     writeFromWordTeenQuestion,
     writeFromPictureLargeQuestion,
-    recognizeLookalikeQuestion,
-    reversedPairQuestion,
+    anyLookalikeQuestion,
+    anyReversedPairQuestion,
     flipGeneralizationQuestion,
     // How Many? (Cardinality and Counting Objects)
     scatteredCountQuestion,

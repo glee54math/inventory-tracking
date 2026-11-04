@@ -1,6 +1,6 @@
-import { CounterGroup } from "../diagrams";
+import { CounterGroup, CountOutCard } from "../diagrams";
 import { randInt, pick } from "../../../shared/lib/math";
-import { choice, type TestQuestion } from "../../../shared/engine/types";
+import { choice, tapCount, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 
 // ---------- end-of-unit test: How Many? (Cardinality and Counting Objects) ----------
@@ -45,10 +45,10 @@ export const circleCountQuestion = (): TestQuestion[] => {
   ];
 };
 
-/** Count a bigger (11-20) mixed-arrangement group. */
+/** Count a bigger (11-20) group, lined up in rows (K.CC.5 asks for scattered groups only up to 10). */
 export const mixed20CountQuestion = (): TestQuestion[] => {
   const n = randInt(11, 20);
-  const arrangement = pick(["array", "scatter"] as const);
+  const arrangement = pick(["array", "line"] as const);
   return [
     {
       visual: <CounterGroup count={n} arrangement={arrangement} tone="a" seed={n * 41 + 3} />,
@@ -58,22 +58,22 @@ export const mixed20CountQuestion = (): TestQuestion[] => {
   ];
 };
 
-/** Counting OUT a given amount from a larger pile — the reverse-direction skill. */
+/** Count OUT a given number from a bigger pile (K.CC.5) by tapping that many
+ *  counters. "mid": 3-10. "nearExhaustion": 11-18 from a pile of up to 20, so
+ *  the student has to keep going past 10 and still stop at the right number.
+ *  misconception: not stopping at the number (counting the whole pile). */
 export const countOutQuestion = (range: "mid" | "nearExhaustion" = "mid"): TestQuestion[] => {
-  const total = randInt(11, 20);
-  const take = range === "nearExhaustion" ? total - randInt(1, 2) : randInt(2, Math.max(2, total - 3));
-  const remaining = total - take;
+  const take = range === "nearExhaustion" ? randInt(11, 18) : randInt(3, 10);
+  const total = Math.min(20, take + randInt(2, 6));
   return [
     {
-      visual: <CounterGroup count={total} arrangement="scatter" tone="b" seed={total * 7 + take} />,
+      visual: <CountOutCard n={take} />,
       difficulty: range === "nearExhaustion" ? "hard" : "medium",
-      step: {
-        kind: "number",
-        prompt: `There is a pile of ${total} counters. If you count out ${take} of them, how many are left in the pile?`,
-        hint: "Start with the total and count backward by how many were taken.",
-        explain: `${total} take away ${take} leaves ${remaining}.`,
-        answer: remaining,
-      },
+      step: tapCount(
+        { prompt: `Tap ${take} counters to give to your friend.`, hint: `Stop when you say ${take}.`, explain: `You count out ${take}, then stop.` },
+        total,
+        take
+      ),
     },
   ];
 };
@@ -107,11 +107,11 @@ export const startingPointChoiceQuestion = (): TestQuestion[] => {
       difficulty: "hard",
       step: choice(
         {
-          prompt: "If you had started counting this circle of counters from a different one, would the total be different?",
+          prompt: "If you started counting this circle from a different counter, would you get a different number?",
           hint: "The total only depends on how many objects there are.",
           explain: "No — the total stays the same no matter which counter you start from, as long as you count each one exactly once.",
         },
-        "No, the total would be the same",
+        "No, the number would be the same",
         ["Yes, it depends which one you start with"] // misconception: thinking the starting point changes the actual amount
       ),
     },

@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
-import { CounterGroup, type Arrangement } from "../diagrams";
+import { BigDigit, CounterGroup, TenGroups, TwoGroups, countAlongMs, type Arrangement } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { palette, diagramFont } from "../../../shared/lib/palette";
-import { choice, type Problem } from "../../../shared/engine/types";
+import { choice, pointing, type ChoiceStep, type Problem } from "../../../shared/engine/types";
+import { countShowMe, countUp } from "./words";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingGroupsAndNumeralsTest } from "./ComparingGroupsAndNumeralsTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
 import { TapSelect } from "../../../shared/components/TapSelect";
 
-const bigDigit = (d: number | string) => (
-  <span style={{ display: "inline-block", fontSize: 54, fontWeight: 800, fontFamily: "'Courier New', monospace" }}>{d}</span>
-);
+const bigDigit = (d: number | string) => <BigDigit d={d} />;
+
+/** Show a choice's numerals as big digits in the buttons. */
+const withBigDigits = (step: ChoiceStep): ChoiceStep => ({ ...step, display: step.choices.map((c) => <BigDigit key={c} d={c} size={48} />) });
 
 /** Two rows, LEFT-ALIGNED with a fixed gap, so matching pairs really do line
  *  up column-by-column — the "extra," unmatched counters past the shorter
@@ -265,8 +267,8 @@ function CloseVsObviousQuestion({ onComplete }: { onComplete?: () => void }) {
       {checked && allFilled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
-            ? "Correct — 7 is more than 6, but just by 1, so this is a CLOSE comparison. A difference like 3 vs. 9 would be obvious at a glance; 6 vs. 7 needs an actual careful count."
-            : "Not quite — count both groups exactly. A difference of just 1 (like 6 vs. 7) is close, and close differences need careful counting, not a quick glance."}
+            ? "Correct. 7 is more than 6, but only by 1, so they are close. 3 and 9 would be easy to tell apart at a glance. 6 and 7 need careful counting."
+            : "Not quite. Count both groups. When two groups are only 1 apart, like 6 and 7, you need to count carefully. A quick look is not enough."}
         </ReadAloud>
       )}
     </ReadAloud>
@@ -384,14 +386,15 @@ function comparingProblem(targetBucket?: string): Problem {
       visual: () => <MatchingRows countA={a} countB={b} />,
       steps: [
         choice(
-          { prompt: "Which row has MORE?", hint: "Look at which row still has extra (dashed) counters left after the other one runs out.", explain: `The ${moreRow} has more — it has extra counters the ${fewerRow} doesn't have a partner for.` },
+          { prompt: "Which row has MORE?", hint: "Look for counters with no partner. Which row has them?", showMe: `Look for the counters with no partner. The ${moreRow} has them, so it has more.`, explain: `The ${moreRow} has more. It has extra counters the ${fewerRow} doesn't have a partner for.` },
           moreRow,
           [fewerRow]
         ),
         {
           kind: "number",
           prompt: `How many MORE does the ${moreRow} have than the ${fewerRow}?`,
-          hint: "Count the unmatched (dashed) counters.",
+          hint: "Count the counters with no partner.",
+          showMe: `Count the counters with no partner: ${countUp(1, more - fewer)}. That is ${more - fewer} more.`,
           explain: `${more} − ${fewer} = ${more - fewer}.`,
           answer: more - fewer,
         },
@@ -404,21 +407,36 @@ function comparingProblem(targetBucket?: string): Problem {
     const [a, b] = randDistinctPair(1, 10);
     const more = a > b ? "Group A" : "Group B";
     const fewer = a > b ? "Group B" : "Group A";
+    const askMore = Math.random() < 0.5;
     return {
       title: "Count and compare",
       bucket,
-      story: "Count each group, then compare.",
-      visual: () => (
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          <CounterGroup count={a} arrangement="scatter" tone="a" seed={a * 5 + 11} />
-          <CounterGroup count={b} arrangement="scatter" tone="b" seed={b * 5 + 13} />
-        </div>
+      story: "Count each group. Then compare.",
+      // Show me on a count step counts that group aloud. Once both are
+      // counted, each group's number shows under it.
+      visual: (done, help) => (
+        <TwoGroups
+          a={a}
+          b={b}
+          seedA={a * 5 + 11}
+          seedB={b * 5 + 13}
+          countAlong={help?.showMe && help.step === 0 ? "A" : help?.showMe && help.step === 1 ? "B" : undefined}
+          // Not while "Show me" is still counting group B.
+          showCounts={done >= 2 && !(help?.showMe && help.step === 1)}
+        />
       ),
       steps: [
-        choice({ prompt: "Which group has MORE?", hint: "Count each group carefully, then compare the two numbers.", explain: `Group A has ${a}, Group B has ${b}, so ${more} has more.` }, more, [fewer]),
-        choice({ prompt: "Which group has FEWER?", hint: "Fewer means the smaller count.", explain: `${fewer} has fewer.` }, fewer, [more]),
+        { kind: "number", showMeHoldMs: countAlongMs(a), prompt: "How many are in group A?", hint: "Touch each counter in group A as you count it.", showMe: countShowMe(a), explain: `Group A has ${a}.`, answer: a },
+        { kind: "number", showMeHoldMs: countAlongMs(b), prompt: "How many are in group B?", hint: "Touch each counter in group B as you count it.", showMe: countShowMe(b), explain: `Group B has ${b}.`, answer: b },
+        choice(
+          askMore
+            ? { prompt: "Which group has MORE?", hint: "Look at the two numbers. Which one comes later when you count?", showMe: `${Math.max(a, b)} comes after ${Math.min(a, b)} when you count. So ${more} has more.`, explain: `Group A has ${a}. Group B has ${b}. ${more} has more.` }
+            : { prompt: "Which group has FEWER?", hint: "Look at the two numbers. Which one comes first when you count?", showMe: `${Math.min(a, b)} comes before ${Math.max(a, b)} when you count. So ${fewer} has fewer.`, explain: `Group A has ${a}. Group B has ${b}. ${fewer} has fewer.` },
+          askMore ? more : fewer,
+          [askMore ? fewer : more]
+        ),
       ],
-      wrapUp: `Group A has ${a}, Group B has ${b}.`,
+      wrapUp: `Group A has ${a}. Group B has ${b}. ${more} has more.`,
     };
   }
 
@@ -452,8 +470,8 @@ function comparingProblem(targetBucket?: string): Problem {
         </div>
       ),
       steps: [
-        { kind: "number", prompt: "What is the bigger of the two counts?", hint: "Compare the two numbers.", explain: `The bigger count is ${more}.`, answer: more },
-        { kind: "number", prompt: "How many more is that than the smaller count?", hint: "Subtract the smaller from the bigger.", explain: `${more} − ${fewer} = ${diff}.`, answer: diff },
+        { kind: "number", prompt: "What is the bigger of the two counts?", hint: "Which number comes later when you count?", showMe: `${more} comes after ${fewer} when you count. So ${more} is bigger.`, explain: `The bigger count is ${more}.`, answer: more },
+        { kind: "number", prompt: "How many more is that than the smaller count?", hint: "Count up from the smaller number to the bigger one.", showMe: `Start at ${fewer}. Count up to ${more}: ${countUp(fewer + 1, more)}. That is ${diff} more.`, explain: `${more} − ${fewer} = ${diff}.`, answer: diff },
       ],
       wrapUp: diff === 1 ? `${more} and ${fewer} are close — just 1 apart.` : `${more} is clearly more than ${fewer} — a difference of ${diff}.`,
     };
@@ -462,26 +480,30 @@ function comparingProblem(targetBucket?: string): Problem {
   if (bucket === "equalTrap") {
     const n = randInt(3, 10);
     return {
-      title: "Same amount, different look",
+      // Don't say they're equal: deciding that by counting is the question.
+      title: "Grid or spread out?",
       bucket,
-      story: "Both groups below have the same number of counters — they just look different.",
-      visual: () => (
+      story: "One group is in neat rows. The other is spread out. Count both groups to compare them.",
+      visual: (_done, help) => (
         <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          <CounterGroup count={n} arrangement="array" tone="a" seed={n * 2 + 1} />
-          <CounterGroup count={n} arrangement="scatter" tone="b" seed={n * 2 + 200} />
+          {/* Step 1's "Show me" counts both groups side by side, so they reach the same number together. */}
+          <CounterGroup count={n} arrangement="array" tone="a" seed={n * 2 + 1} countAlong={!!help?.showMe && (help.step === 0 || help.step === 1)} />
+          <CounterGroup count={n} arrangement="scatter" tone="b" seed={n * 2 + 200} countAlong={!!help?.showMe && help.step === 0} />
         </div>
       ),
       steps: [
         choice(
           {
             prompt: "Which group has more — the grid group, the scattered group, or are they the same?",
-            hint: "Spreading counters out doesn't add any — count both groups to be sure.",
+            hint: "Spreading counters out doesn't add any. Count both groups to be sure.",
+            showMe: `Count each group. Both have ${n}. So they are the same.`,
+            showMeHoldMs: countAlongMs(n),
             explain: `Both groups have ${n}. Spreading them out only changes how much space they take up, not how many there are.`,
           },
           "They're the same",
           ["The grid group", "The scattered group"]
         ),
-        { kind: "number", prompt: "Count one of the groups. How many are in it?", hint: "Count every counter in either group — they match.", explain: `Each group has ${n}.`, answer: n },
+        { kind: "number", showMeHoldMs: countAlongMs(n), prompt: "Count one of the groups. How many are in it?", hint: "Touch each counter in one group as you count it.", showMe: countShowMe(n), explain: `Each group has ${n}.`, answer: n },
       ],
       wrapUp: `Both groups have ${n}, even though one looks more spread out.`,
     };
@@ -491,20 +513,51 @@ function comparingProblem(targetBucket?: string): Problem {
   const [a, b] = randDistinctPair(1, 10);
   const bigger = Math.max(a, b);
   const smaller = Math.min(a, b);
+  const askBigger = Math.random() < 0.5;
+  const picked = askBigger ? bigger : smaller;
+  const other = askBigger ? smaller : bigger;
   return {
-    title: "Compare the numerals",
+    title: "Compare the numbers",
     bucket,
-    story: `Compare these two numerals: ${a} and ${b}. No objects this time — just the numbers.`,
-    visual: () => (
-      <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-        {bigDigit(a)}
-        <span style={{ fontSize: 30, color: "var(--muted)" }}>vs.</span>
-        {bigDigit(b)}
-      </div>
-    ),
+    story: `Compare ${a} and ${b}. No counters this time, just the numbers.`,
+    // Stuck: show each number as dots in a ten-frame, to see which is more.
+    visual: (_done, help) =>
+      pointing(help, 0) || pointing(help, 1) ? (
+        <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "flex-start" }}>
+          {[a, b].map((n, i) => (
+            <div key={i} style={{ textAlign: "center" }}>
+              {bigDigit(n)}
+              <TenGroups value={n} tone={i === 0 ? "a" : "b"} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{ display: "flex", alignItems: "center", gap: 40 }}>
+          {bigDigit(a)}
+          {bigDigit(b)}
+        </div>
+      ),
     steps: [
-      choice({ prompt: `Which numeral is BIGGER, ${a} or ${b}?`, hint: "A bigger numeral always stands for a bigger amount.", explain: `${bigger} is bigger than ${smaller}.` }, String(bigger), [String(smaller)]),
-      choice({ prompt: `Which numeral is SMALLER, ${a} or ${b}?`, hint: "Smaller means the lesser amount.", explain: `${smaller} is smaller than ${bigger}.` }, String(smaller), [String(bigger)]),
+      withBigDigits(
+        choice(
+          {
+            prompt: `Which number is ${askBigger ? "BIGGER" : "SMALLER"}?`,
+            hint: "Look at the dots under each number. Which has more dots?",
+            showMe: `${smaller} comes before ${bigger} when you count. So ${bigger} is bigger, and ${smaller} is smaller.`,
+            explain: `${bigger} is bigger than ${smaller}.`,
+          },
+          String(picked),
+          [String(other)]
+        )
+      ),
+      {
+        kind: "number",
+        prompt: `Now type the ${askBigger ? "SMALLER" : "BIGGER"} number.`,
+        hint: "It's the other number.",
+        showMe: `The other number is ${other}.`,
+        explain: `${smaller} is smaller than ${bigger}.`,
+        answer: other,
+      },
     ],
     wrapUp: `${bigger} is bigger than ${smaller}.`,
   };

@@ -133,7 +133,8 @@ function wordProblem(targetBucket?: string): Problem {
       title: "A 'take from' story",
       bucket,
       story: `${kid} had ${total} ${item}. ${kid} gave away ${b} of them. How many ${item} does ${kid} have left?`,
-      visual: () => <SplitGroup total={total} partA={a} toneA="a" toneB="b" />,
+      // Once step 1 is shown/answered, the ones given away fade out.
+      visual: (done) => <SplitGroup total={total} partA={a} toneA="a" toneB="b" goneB={done >= 1} />,
       steps: [
         { kind: "number", prompt: `How many ${item} does ${kid} have left?`, hint: "Subtract the amount given away from the starting amount.", explain: `${total} − ${b} = ${a}.`, answer: a },
         choice(
@@ -204,12 +205,20 @@ function wordProblem(targetBucket?: string): Problem {
     title: "A 'compare' story",
     bucket,
     story: `${kid} has ${a} ${item}. ${otherKid} has ${b} ${item}. How many more ${item} does ${biggerKid} have than ${smallerKid}?`,
-    visual: () => (
-      <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-        <ObjectGroup count={a} arrangement="line" tone="a" seed={a * 11 + 3} />
-        <ObjectGroup count={b} arrangement="line" tone="b" seed={b * 11 + 5} />
-      </div>
-    ),
+    // Step 1's "Show me" (and after) lines the two groups up one above the
+    // other and rings the extra ones the bigger group has.
+    visual: (done) =>
+      done >= 1 ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          <ObjectGroup count={a} arrangement="line" tone="a" alignLeft ringFrom={a > b ? b : undefined} />
+          <ObjectGroup count={b} arrangement="line" tone="b" alignLeft ringFrom={b > a ? a : undefined} />
+        </div>
+      ) : (
+        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+          <ObjectGroup count={a} arrangement="line" tone="a" seed={a * 11 + 3} />
+          <ObjectGroup count={b} arrangement="line" tone="b" seed={b * 11 + 5} />
+        </div>
+      ),
     steps: [
       { kind: "number", prompt: `How many more ${item} does ${biggerKid} have than ${smallerKid}?`, hint: "Subtract the smaller amount from the bigger amount.", explain: `${bigger} − ${smaller} = ${diff}.`, answer: diff },
       choice(

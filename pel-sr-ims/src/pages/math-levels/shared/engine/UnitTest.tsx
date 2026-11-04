@@ -2,7 +2,7 @@ import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { autoRead, ReadAloud } from "../tts/ReadAloud";
 import { stopIfPlaying } from "../tts/speechEngine";
 import type { Unit } from "../units/types";
-import type { Step, TestQuestion } from "./types";
+import { tappedList, type Step, type TestQuestion } from "./types";
 import { answerText, check, fresh, StepInput, type StepState } from "./StepProblem";
 
 export interface UnitTestViewProps {
@@ -16,6 +16,10 @@ export interface UnitTestViewProps {
 const studentAnswerText = (step: Step, inputs: string[]): string => {
   if (!inputs[0]) return "(blank)";
   if (step.kind === "choice") return step.choices[Number(inputs[0])] ?? "(blank)";
+  if (step.kind === "tapCount") {
+    const n = tappedList(inputs[0]).length;
+    return `${n} counter${n === 1 ? "" : "s"}`;
+  }
   if (step.kind === "number" || step.kind === "coordinate") return inputs[0];
   if (step.kind === "sentence") {
     if (!inputs[1]) return "(blank)";

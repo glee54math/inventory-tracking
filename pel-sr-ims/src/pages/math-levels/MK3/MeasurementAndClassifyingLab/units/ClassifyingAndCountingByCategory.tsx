@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { SortedBins, type BinItem, type ItemShape } from "../diagrams";
+import { SortedBins, binCountAlongMs, type BinItem, type ItemShape } from "../diagrams";
 import { randInt, shuffle } from "../../../shared/lib/math";
 import { itemColors, palette } from "../../../shared/lib/palette";
 import { choice, type Problem } from "../../../shared/engine/types";
@@ -27,6 +27,13 @@ export function makeShapeItems(counts: [number, number, number]): BinItem[][] {
   const shapes: ItemShape[] = ["circle", "square", "triangle"];
   return counts.map((n, i) => Array.from({ length: n }, () => ({ id: nextId(), shape: shapes[i], color: palette.c })));
 }
+
+/** "1, 2, 3, 4" — every number from 1 to `n`. */
+const countUp = (n: number) => Array.from({ length: n }, (_, i) => i + 1).join(", ");
+
+/** Step 1 of a sort problem is "where does the circled item go?" — once it's
+ *  answered (or its "Show me" is open), draw the item moved into its group. */
+const placed = (done: number, help?: { step: number; showMe: boolean }) => done >= 1 || (!!help?.showMe && help.step === 0);
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -368,16 +375,21 @@ function classifyingProblem(targetBucket?: string): Problem {
       title: "Which group does it belong in?",
       bucket,
       story: "These are sorted by COLOR. One item (circled) hasn't been placed in a group yet.",
-      visual: () => (
-        <SortedBins
-          tray={[target]}
-          bins={[
-            { label: "Red", items: fromBinA ? binA.slice(1) : binA },
-            { label: "Green", items: fromBinA ? binB : binB.slice(1) },
-          ]}
-          highlightId={target.id}
-        />
-      ),
+      visual: (done, help) => {
+        const moved = placed(done, help);
+        const restA = fromBinA ? binA.slice(1) : binA;
+        const restB = fromBinA ? binB : binB.slice(1);
+        return (
+          <SortedBins
+            tray={moved ? [] : [target]}
+            bins={[
+              { label: "Red", items: moved && fromBinA ? [...restA, target] : restA },
+              { label: "Green", items: moved && !fromBinA ? [...restB, target] : restB },
+            ]}
+            highlightId={target.id}
+          />
+        );
+      },
       steps: [
         choice(
           { prompt: "The circled item belongs with which group?", hint: "Look at its color.", explain: `It's ${fromBinA ? "red" : "green"}, so it goes with the ${fromBinA ? "Red" : "Green"} group.` },
@@ -401,7 +413,11 @@ function classifyingProblem(targetBucket?: string): Problem {
       title: "Sort by shape — three groups",
       bucket,
       story: "These are sorted by SHAPE, into three groups this time. One item (circled) hasn't been placed yet.",
-      visual: () => <SortedBins tray={[target]} bins={bins} highlightId={target.id} />,
+      visual: (done, help) => {
+        const moved = placed(done, help);
+        const shown = moved ? bins.map((b, i) => (i === targetGroup ? { ...b, items: [...b.items, target] } : b)) : bins;
+        return <SortedBins tray={moved ? [] : [target]} bins={shown} highlightId={target.id} />;
+      },
       steps: [
         choice(
           { prompt: "Which group does the circled item belong in?", hint: "Look at its shape, not its color — everything here is the same color.", explain: `It's a ${shapeWord}, so it goes with ${SHAPE_LABELS[targetGroup]}.` },
@@ -430,10 +446,39 @@ function classifyingProblem(targetBucket?: string): Problem {
       title: "How many in each group?",
       bucket,
       story: "These are already sorted by color.",
-      visual: () => <SortedBins bins={[{ label: "Red", items: binA }, { label: "Green", items: binB }]} />,
+      // Each group's "(n)" stays hidden until its own step is answered, and
+      // each step's "Show me" counts that group's items one by one.
+      visual: (done, help) => {
+        const counting = help?.showMe ? help.step : undefined;
+        return (
+          <SortedBins
+            bins={[
+              { label: "Red", items: binA, hideCount: done < 1 || counting === 0 },
+              { label: "Green", items: binB, hideCount: done < 2 || counting === 1 },
+            ]}
+            countAlongBin={counting}
+          />
+        );
+      },
       steps: [
-        { kind: "number", prompt: "How many are in the Red group?", hint: "Count each one in that group exactly once.", explain: `There are ${countA} in the Red group.`, answer: countA },
-        { kind: "number", prompt: "How many are in the Green group?", hint: "Count each one in that group exactly once.", explain: `There are ${countB} in the Green group.`, answer: countB },
+        {
+          kind: "number",
+          showMeHoldMs: binCountAlongMs(countA),
+          prompt: "How many are in the Red group?",
+          hint: "Count each one in that group exactly once.",
+          showMe: `Let's count the Red group together: ${countUp(countA)}.`,
+          explain: `There are ${countA} in the Red group.`,
+          answer: countA,
+        },
+        {
+          kind: "number",
+          showMeHoldMs: binCountAlongMs(countB),
+          prompt: "How many are in the Green group?",
+          hint: "Count each one in that group exactly once.",
+          showMe: `Let's count the Green group together: ${countUp(countB)}.`,
+          explain: `There are ${countB} in the Green group.`,
+          answer: countB,
+        },
       ],
       wrapUp: `There are ${countA} in Red and ${countB} in Green.`,
     };
@@ -453,10 +498,17 @@ function classifyingProblem(targetBucket?: string): Problem {
     title: "Which group has more?",
     bucket,
     story: "These are already sorted and counted by color.",
-    visual: () => <SortedBins bins={[{ label: "Red", items: binA }, { label: "Green", items: binB }]} />,
+    visual: (_done, help) => (
+      <SortedBins
+        bins={[{ label: "Red", items: binA }, { label: "Green", items: binB }]}
+        // Step 2's "Show me": ring and number the extras in the bigger group —
+        // the ones with no partner across from them in the other group.
+        extra={help?.showMe && help.step === 1 ? { bin: more === "Red" ? 0 : 1, from: fewerCount } : undefined}
+      />
+    ),
     steps: [
       choice({ prompt: "Which group has MORE?", hint: "Count both groups, then compare.", explain: `Red has ${countA} and Green has ${countB}, so ${more} has more.` }, more, [fewer]),
-      { kind: "number", prompt: `How many MORE does ${more} have than ${fewer}?`, hint: "Subtract the smaller count from the bigger count.", explain: `${moreCount} - ${fewerCount} = ${diff}.`, answer: diff },
+      { kind: "number", prompt: `How many MORE does ${more} have than ${fewer}?`, hint: "Subtract the smaller count from the bigger count.", showMe: `Match each ${fewer} one with a ${more} one. Count the ${more} ones left over: ${countUp(diff)}.`, explain: `${moreCount} - ${fewerCount} = ${diff}.`, answer: diff },
     ],
     wrapUp: `${more} has ${diff} more than ${fewer}.`,
   };

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { ShapeGlyph, ShapeCountable, SHAPE_KINDS, SHAPE_LABELS, shapeAttributes, sidesLookEqual, BUILDABLE_KINDS, type ShapeKind, type BuildableKind } from "../diagrams/Shape2D";
 import { pick, shuffle } from "../../../shared/lib/math";
-import { choice, type Problem } from "../../../shared/engine/types";
+import { choice, type Problem, type VisualHelp } from "../../../shared/engine/types";
+import { countAlongMs, countAlongText } from "../diagrams/countAlong";
 import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { sidesAndCornersTest } from "./SidesAndCornersTest";
@@ -331,6 +332,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 type Bucket = "countSides" | "countCorners" | "equalSidesCompare" | "crossShapeCompare";
 const BUCKETS: Bucket[] = ["countSides", "countCorners", "equalSidesCompare", "crossShapeCompare"];
 
+/** The shape, or — during a counting step's "Show me" — the same shape with
+ *  its sides/corners lighting up and getting numbered one at a time. */
+function countingGlyph(kind: ShapeKind, tone: "a" | "b" | "c", label: string, what?: "sides" | "corners", startAfter = 0) {
+  if (what && kind !== "circle") return <ShapeCountable kind={kind} tone={tone} countAlong={what} countAlongStartAfter={startAfter} />;
+  return <ShapeGlyph kind={kind} tone={tone} label={label} />;
+}
+
+/** Which count ("sides"/"corners") the open "Show me" is demonstrating, if any. */
+const showMeCount = (help: VisualHelp | undefined, steps: ("sides" | "corners" | undefined)[]) => (help?.showMe ? steps[help.step] : undefined);
+
 function sidesAndCornersProblem(targetBucket?: string): Problem {
   const bucket = (targetBucket as Bucket | undefined) ?? pick(BUCKETS);
 
@@ -346,10 +357,10 @@ function sidesAndCornersProblem(targetBucket?: string): Problem {
       title: `Count the ${primary}`,
       bucket,
       story: `Look at this ${label.toLowerCase()}.`,
-      visual: () => <ShapeGlyph kind={kind} tone="a" label="a shape" />,
+      visual: (_done, help) => countingGlyph(kind, "a", "a shape", showMeCount(help, [primary, secondary])),
       steps: [
-        { kind: "number", prompt: `How many ${primary} does this ${label.toLowerCase()} have?`, hint: kind === "circle" ? "A circle's edge is curved, not straight." : `Count each ${primary.slice(0, -1)} one at a time.`, explain: `A ${label.toLowerCase()} has ${primaryCount} ${primary}.`, answer: primaryCount },
-        { kind: "number", prompt: `How many ${secondary} does it have?`, hint: kind === "circle" ? "A circle never meets itself at a sharp point." : `Count each ${secondary.slice(0, -1)} one at a time.`, explain: `A ${label.toLowerCase()} has ${secondaryCount} ${secondary}.`, answer: secondaryCount },
+        { kind: "number", showMe: countAlongText(primaryCount, primary), showMeHoldMs: kind === "circle" ? undefined : countAlongMs(primaryCount), prompt: `How many ${primary} does this ${label.toLowerCase()} have?`, hint: kind === "circle" ? "A circle's edge is curved, not straight." : `Count each ${primary.slice(0, -1)} one at a time.`, explain: `A ${label.toLowerCase()} has ${primaryCount} ${primary}.`, answer: primaryCount },
+        { kind: "number", showMe: countAlongText(secondaryCount, secondary), showMeHoldMs: kind === "circle" ? undefined : countAlongMs(secondaryCount), prompt: `How many ${secondary} does it have?`, hint: kind === "circle" ? "A circle never meets itself at a sharp point." : `Count each ${secondary.slice(0, -1)} one at a time.`, explain: `A ${label.toLowerCase()} has ${secondaryCount} ${secondary}.`, answer: secondaryCount },
       ],
       wrapUp: `A ${label.toLowerCase()} has ${attr.sides} sides and ${attr.corners} corners.`,
     };
@@ -363,14 +374,14 @@ function sidesAndCornersProblem(targetBucket?: string): Problem {
       title: "Are the sides equal?",
       bucket,
       story: `Look at this ${label.toLowerCase()}.`,
-      visual: () => <ShapeGlyph kind={kind} tone="b" label="a shape" />,
+      visual: (_done, help) => countingGlyph(kind, "b", "a shape", showMeCount(help, [undefined, "sides"])),
       steps: [
         choice(
           { prompt: "Do all of its sides look the same length?", hint: "Compare each side's length to the others, not just how many there are.", explain: `A ${label.toLowerCase()}'s sides are ${equal ? "" : "NOT "}all the same length.` },
           equal ? "Yes" : "No",
           [equal ? "No" : "Yes"]
         ),
-        { kind: "number", prompt: `How many sides does this ${label.toLowerCase()} have, total?`, hint: "The number of sides doesn't depend on their length.", explain: `A ${label.toLowerCase()} has ${shapeAttributes(kind).sides} sides, whether or not they're equal.`, answer: shapeAttributes(kind).sides },
+        { kind: "number", showMe: countAlongText(shapeAttributes(kind).sides, "sides"), showMeHoldMs: countAlongMs(shapeAttributes(kind).sides), prompt: `How many sides does this ${label.toLowerCase()} have, total?`, hint: "The number of sides doesn't depend on their length.", explain: `A ${label.toLowerCase()} has ${shapeAttributes(kind).sides} sides, whether or not they're equal.`, answer: shapeAttributes(kind).sides },
       ],
       wrapUp: `A ${label.toLowerCase()}'s sides are ${equal ? "all" : "not all"} the same length.`,
     };
@@ -398,24 +409,35 @@ function sidesAndCornersProblem(targetBucket?: string): Problem {
   const labelB = SHAPE_LABELS[kindB];
   const sameCount = a.sides === b.sides;
   const moreSidesAnswer = sameCount ? "They have the same number of sides" : a.sides > b.sides ? labelA : labelB;
+  // "Show me": count shape A, then shape B (matches the picture's count-along).
+  const countBoth = (noun: "sides" | "corners") => {
+    const one = (label: string, n: number) =>
+      n === 0 ? `The ${label.toLowerCase()} has no ${noun}.` : `Count the ${label.toLowerCase()}: ${Array.from({ length: n }, (_, i) => i + 1).join(", ")}.`;
+    return `${one(labelA, a.sides)} ${one(labelB, b.sides)} That's ${a.sides} and ${b.sides}.`;
+  };
+  const countBothMs = countAlongMs(a.sides + 1 + b.sides);
   return {
     title: "Compare two shapes",
     bucket,
     story: `Here is a ${labelA.toLowerCase()} and a ${labelB.toLowerCase()}.`,
-    visual: () => (
-      <div className="control-row" data-readaloud-part>
-        <ShapeGlyph kind={kindA} tone="a" label="shape A" />
-        <ShapeGlyph kind={kindB} tone="c" label="shape B" />
-      </div>
-    ),
+    visual: (_done, help) => {
+      const what = showMeCount(help, ["sides", "corners"]);
+      return (
+        <div className="control-row" data-readaloud-part>
+          {countingGlyph(kindA, "a", "shape A", what)}
+          {/* shape B starts counting one beat after shape A is finished */}
+          {countingGlyph(kindB, "c", "shape B", what, a.sides + 1)}
+        </div>
+      );
+    },
     steps: [
       choice(
-        { prompt: "Which shape has MORE sides?", hint: "Count each shape's sides separately, then compare the two numbers.", explain: sameCount ? `Both have ${a.sides} sides — that's the same number.` : `${moreSidesAnswer} has more sides (${Math.max(a.sides, b.sides)} vs. ${Math.min(a.sides, b.sides)}).` },
+        { prompt: "Which shape has MORE sides?", showMe: countBoth("sides"), showMeHoldMs: countBothMs, hint: "Count each shape's sides separately, then compare the two numbers.", explain: sameCount ? `Both have ${a.sides} sides — that's the same number.` : `${moreSidesAnswer} has more sides (${Math.max(a.sides, b.sides)} vs. ${Math.min(a.sides, b.sides)}).` },
         moreSidesAnswer,
         shuffle([labelA, labelB, "They have the same number of sides"].filter((c) => c !== moreSidesAnswer)).slice(0, 2)
       ),
       choice(
-        { prompt: "Which shape has MORE corners?", hint: "For these shapes, the number of corners always matches the number of sides.", explain: sameCount ? `Both have ${a.corners} corners — that's the same number.` : `${moreSidesAnswer} has more corners too, since corners match sides for these shapes.` },
+        { prompt: "Which shape has MORE corners?", showMe: countBoth("corners"), showMeHoldMs: countBothMs, hint: "For these shapes, the number of corners always matches the number of sides.", explain: sameCount ? `Both have ${a.corners} corners — that's the same number.` : `${moreSidesAnswer} has more corners too, since corners match sides for these shapes.` },
         moreSidesAnswer.replace("sides", "corners"),
         shuffle([labelA, labelB, "They have the same number of corners"].filter((c) => c !== moreSidesAnswer.replace("sides", "corners"))).slice(0, 2)
       ),

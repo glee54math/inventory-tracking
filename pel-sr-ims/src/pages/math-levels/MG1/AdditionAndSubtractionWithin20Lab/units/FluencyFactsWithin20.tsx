@@ -364,7 +364,8 @@ function factsWithin20Problem(): Problem {
     title: "Fact fluency — within 20",
     bucket: "factsWithin20",
     story: `What is ${start} − ${sub}?`,
-    visual: () => <TenFrameGroup value={start} tone="c" />,
+    // "Show me" (and after): the ones taken away are crossed out.
+    visual: (done: number) => <TenFrameGroup value={start} tone="c" crossFrom={done >= 1 ? result : undefined} />,
     steps: [
       { kind: "number", prompt: `${start} − ${sub} = ?`, hint: "Can you bridge through ten?", explain: `${start} − ${sub} = ${result}.`, answer: result },
       { kind: "number", prompt: `Related fact: ${result} + ${sub} = ?`, hint: "Addition and subtraction facts are connected.", explain: `${result} + ${sub} = ${start}.`, answer: start },

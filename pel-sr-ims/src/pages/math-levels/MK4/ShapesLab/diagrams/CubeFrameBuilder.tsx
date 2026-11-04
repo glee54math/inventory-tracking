@@ -1,4 +1,5 @@
 import { palette, diagramFont } from "../../../shared/lib/palette";
+import { useCountAlong } from "./countAlong";
 
 const toneColor = (tone?: "a" | "b" | "c") => (tone === "b" ? palette.b : tone === "c" ? palette.c : palette.a);
 
@@ -84,8 +85,21 @@ export function CubeFrameBuilder({ tone = "a", placed, onToggle }: CubeFrameBuil
  *  lists which of the 12 fixed CUBE_EDGES indices are drawn as solid sticks;
  *  any index left out is simply not drawn at all (not even dashed), so an
  *  incomplete frame genuinely looks unfinished rather than "not yet clicked." */
-export function CubeFramePreview({ presentEdges, tone = "a" }: { presentEdges: number[]; tone?: "a" | "b" | "c" }) {
+export function CubeFramePreview({
+  presentEdges,
+  tone = "a",
+  countCorners = false,
+}: {
+  presentEdges: number[];
+  tone?: "a" | "b" | "c";
+  /** "Show me" demo: light up and number the clay corners one at a time, in
+   *  step with the spoken count (see countAlong.ts). */
+  countCorners?: boolean;
+}) {
   const color = toneColor(tone);
+  const shown = useCountAlong(countCorners, CUBE_VERTICES.length);
+  const mx = CUBE_VERTICES.reduce((a, p) => a + p[0], 0) / CUBE_VERTICES.length;
+  const my = CUBE_VERTICES.reduce((a, p) => a + p[1], 0) / CUBE_VERTICES.length;
   return (
     <svg
       viewBox="0 0 200 200"
@@ -100,8 +114,16 @@ export function CubeFramePreview({ presentEdges, tone = "a" }: { presentEdges: n
         return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={7} />;
       })}
       {CUBE_VERTICES.map((p, i) => (
-        <circle key={`v${i}`} cx={p[0]} cy={p[1]} r={6} fill={palette.ink} />
+        <circle key={`v${i}`} cx={p[0]} cy={p[1]} r={i < shown ? 10 : 6} fill={i < shown ? palette.c : palette.ink} stroke={i < shown ? palette.ink : undefined} strokeWidth={2} />
       ))}
+      {CUBE_VERTICES.slice(0, shown).map(([x, y], i) => {
+        const d = Math.hypot(x - mx, y - my) || 1;
+        return (
+          <text key={`n${i}`} x={x + ((x - mx) / d) * 20} y={y + ((y - my) / d) * 20 + 6} textAnchor="middle" fontSize={17} fontWeight={700} fill={palette.ink}>
+            {i + 1}
+          </text>
+        );
+      })}
     </svg>
   );
 }

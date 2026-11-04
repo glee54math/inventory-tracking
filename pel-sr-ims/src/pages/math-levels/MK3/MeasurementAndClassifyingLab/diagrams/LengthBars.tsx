@@ -25,6 +25,11 @@ export interface LengthBarSpec {
    * of just comparing right edges (Unit 2's "misaligned" bucket).
    */
   startOffset?: number;
+  /** Write 1, 2, 3, ... on this bar's blocks ("Show me" for counting blocks). */
+  numbered?: boolean;
+  /** Ring and number (1, 2, ...) this bar's blocks from index `extraFrom`
+   *  on — the extra blocks past the other rod ("Show me" for "how many longer"). */
+  extraFrom?: number;
 }
 
 export interface LengthBarsProps {
@@ -38,6 +43,9 @@ export interface LengthBarsProps {
    * (e.g. CounterGroup's countedOrder/onToggle, MK1/CountingAndCardinalityLab).
    */
   onBlocksChange?: (index: number, blocks: number) => void;
+  /** "Show me" for misaligned rods: slide every bar left to the shared start
+   *  line (animated, about 0.9s). The picture's size stays the same. */
+  alignStarts?: boolean;
 }
 
 /** Two or more rods built from equal-size unit blocks, optionally not
@@ -46,7 +54,7 @@ export interface LengthBarsProps {
  * Counting the blocks is itself the "describe the difference" skill
  * (Unit 2's describeDifference bucket), never a measurement in a standard
  * unit. */
-export function LengthBars({ bars, min = 1, max = 12, onBlocksChange }: LengthBarsProps) {
+export function LengthBars({ bars, min = 1, max = 12, onBlocksChange, alignStarts }: LengthBarsProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const maxOffset = Math.max(0, ...bars.map((b) => b.startOffset ?? 0));
@@ -95,14 +103,28 @@ export function LengthBars({ bars, min = 1, max = 12, onBlocksChange }: LengthBa
         const x0 = PAD + startOffset * (BLOCK + BLOCK_GAP);
         const y = PAD + i * ROW_GAP;
         const handleX = x0 + bar.blocks * (BLOCK + BLOCK_GAP) - BLOCK_GAP;
+        const slide = alignStarts ? -startOffset * (BLOCK + BLOCK_GAP) : 0;
         return (
-          <g key={i}>
+          <g key={i} style={{ transform: `translateX(${slide}px)`, transition: "transform 0.9s ease-in-out" }}>
             <text x={x0} y={y - 8} fontSize={13} fontWeight={700} fill={color}>
               {bar.label}
             </text>
-            {Array.from({ length: bar.blocks }, (_, k) => (
-              <rect key={k} x={x0 + k * (BLOCK + BLOCK_GAP)} y={y} width={BLOCK} height={BAR_H} rx={4} fill={color} stroke={palette.paper} strokeWidth={2} />
-            ))}
+            {Array.from({ length: bar.blocks }, (_, k) => {
+              const bx = x0 + k * (BLOCK + BLOCK_GAP);
+              const isExtra = bar.extraFrom !== undefined && k >= bar.extraFrom;
+              const num = isExtra ? k - bar.extraFrom! + 1 : bar.numbered ? k + 1 : 0;
+              return (
+                <g key={k}>
+                  <rect x={bx} y={y} width={BLOCK} height={BAR_H} rx={4} fill={color} stroke={palette.paper} strokeWidth={2} />
+                  {isExtra && <rect x={bx - 1} y={y - 1} width={BLOCK + 2} height={BAR_H + 2} rx={5} fill="none" stroke={palette.ink} strokeWidth={2.5} strokeDasharray="4 3" />}
+                  {num > 0 && (
+                    <text x={bx + BLOCK / 2} y={y + BAR_H / 2 + 5} textAnchor="middle" fontSize={14} fontWeight={800} fill="#fff">
+                      {num}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
             {onBlocksChange && (
               <circle
                 cx={handleX}

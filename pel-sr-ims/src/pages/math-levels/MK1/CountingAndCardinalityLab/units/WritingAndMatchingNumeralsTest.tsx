@@ -1,6 +1,7 @@
-import { CounterGroup } from "../diagrams";
-import { randInt, pick } from "../../../shared/lib/math";
-import { choice, type TestQuestion } from "../../../shared/engine/types";
+import { BigDigit, CounterGroup } from "../diagrams";
+import { randInt, pick, shuffle } from "../../../shared/lib/math";
+import { choice, pictureChoice, type TestQuestion } from "../../../shared/engine/types";
+import { thereAre } from "./words";
 import type { Unit } from "../../../shared/units/types";
 
 // ---------- end-of-unit test: Writing and Matching Numerals ----------
@@ -13,12 +14,6 @@ const NUMBER_WORDS = [
   "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
   "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty",
 ];
-
-const bigDigit = (d: string, mirrored = false) => (
-  <span style={{ display: "inline-block", fontSize: 54, fontWeight: 800, fontFamily: "'Courier New', monospace", transform: mirrored ? "scaleX(-1)" : undefined }}>
-    {d}
-  </span>
-);
 
 /** Numeral production from the number word, small range. */
 export const writeFromWordSmallQuestion = (): TestQuestion[] => {
@@ -56,59 +51,79 @@ export const writeFromPictureSmallQuestion = (): TestQuestion[] => {
   ];
 };
 
-/** Numeral production matching a shown picture-count, larger/scattered range. */
+/** Numeral production matching a shown picture-count, 11-20. Lined up in rows
+ *  of 10, not scattered: K.CC.5 only asks for scattered groups up to 10. */
 export const writeFromPictureLargeQuestion = (): TestQuestion[] => {
   const n = randInt(11, 20);
   return [
     {
-      visual: <CounterGroup count={n} arrangement="scatter" tone="b" seed={n * 11 + 2} />,
+      visual: <CounterGroup count={n} arrangement={pick(["line", "array"] as const)} tone="b" seed={n * 11 + 2} />,
       difficulty: "medium",
-      step: { kind: "number", prompt: "How many counters are there? Write the numeral.", hint: "They're scattered — count carefully, and don't count any twice.", explain: `There are ${n} counters — the numeral is ${n}.`, answer: n },
+      step: { kind: "number", prompt: "How many counters are there? Write the numeral.", hint: "Count carefully. Count each one once.", explain: `There are ${n} counters. The numeral is ${n}.`, answer: n },
     },
   ];
 };
 
 const LOOKALIKE_SETS: [string, string][] = [["6", "9"], ["1", "7"], ["2", "5"]];
 
-/** Select the numeral matching a count, among a visually similar distractor. */
-export const recognizeLookalikeQuestion = (): TestQuestion[] => {
-  const [a, b] = pick(LOOKALIKE_SETS);
+/** Select the numeral matching a count, among a visually similar distractor.
+ *  `sets` lets the test's two look-alike questions draw from different pairs,
+ *  so they can never come out the same. */
+const lookalikeQuestion = (sets: [string, string][], seedSalt: number): TestQuestion[] => {
+  const [a, b] = pick(sets);
   const showA = Math.random() < 0.5;
   const target = showA ? a : b;
   const other = showA ? b : a;
   const n = Number(target);
   return [
     {
-      visual: <CounterGroup count={n} arrangement="scatter" tone="c" seed={n * 19 + 4} />,
+      visual: <CounterGroup count={n} arrangement="scatter" tone="c" seed={n * 19 + seedSalt} />,
       difficulty: "medium",
-      step: choice(
-        { prompt: "Which numeral matches this many counters?", hint: "Count carefully, then match — don't just guess by shape.", explain: `There are ${n} counters, written as the numeral ${target}, not ${other}.` },
-        target,
-        [other] // misconception: confusing visually similar numerals instead of counting
+      step: withBigDigits(
+        choice(
+          { prompt: "Which numeral tells how many counters there are?", hint: "Count carefully, then match.", explain: `${thereAre(n)} We write ${target}, not ${other}.` },
+          target,
+          [other] // misconception: confusing visually similar numerals instead of counting
+        )
       ),
     },
   ];
 };
 
-const MIRROR_SENSITIVE_DIGITS = ["2", "3", "4", "5", "6", "7", "9"];
+/** Show a choice's numerals as big digits in the buttons. */
+const withBigDigits = <T extends { choices: string[]; display?: unknown }>(step: T): T => ({ ...step, display: step.choices.map((c) => <BigDigit key={c} d={c} size={48} />) });
 
-/** Pick the correctly-oriented (non-mirrored) numeral. */
-export const reversedPairQuestion = (): TestQuestion[] => {
-  const digit = pick(MIRROR_SENSITIVE_DIGITS);
-  const correctSide: "Left" | "Right" = Math.random() < 0.5 ? "Left" : "Right";
+/** First look-alike question: the classic 6/9 flip. */
+export const recognizeLookalikeQuestion = (): TestQuestion[] => lookalikeQuestion([LOOKALIKE_SETS[0]], 4);
+
+/** Second look-alike question: 1/7 or 2/5, never the first question's pair. */
+export const recognizeLookalikeQuestion2 = (): TestQuestion[] => lookalikeQuestion(LOOKALIKE_SETS.slice(1), 11);
+
+// Digits that change shape when mirrored, split in two so the test's two
+// "written the right way" questions never show the same digit.
+const MIRROR_DIGITS_A = ["2", "3", "4", "5"];
+const MIRROR_DIGITS_B = ["6", "7", "9"];
+
+/** Pick the correctly-oriented (non-mirrored) numeral. The two numerals are
+ *  the buttons, so no "left/right" words are needed. */
+const reversedQuestion = (digits: string[]): TestQuestion[] => {
+  const digit = pick(digits);
+  // misconception: not recognizing the backwards (mirrored) form
+  const opts = shuffle([
+    { right: true, pic: <BigDigit d={digit} size={56} /> },
+    { right: false, pic: <BigDigit d={digit} size={56} mirrored /> },
+  ]);
   return [
     {
-      visual: (
-        <div style={{ display: "flex", gap: 30, justifyContent: "center" }}>
-          {correctSide === "Left" ? bigDigit(digit) : bigDigit(digit, true)}
-          {correctSide === "Left" ? bigDigit(digit, true) : bigDigit(digit)}
-        </div>
-      ),
+      visual: null,
       difficulty: "hard",
-      step: choice(
-        { prompt: `Which one is the correctly written numeral ${digit} — Left or Right?`, hint: "A mirror image is flipped left-to-right.", explain: `The ${correctSide} one is correct; the other is a mirror image, which is why it looks reversed.` },
-        correctSide,
-        [correctSide === "Left" ? "Right" : "Left"] // misconception: not recognizing the mirrored/reversed form
+      step: pictureChoice(
+        { prompt: `Tap the ${digit} that is written the right way.`, hint: "One of them is backwards.", explain: `The other one is a backwards ${digit}.` },
+        [
+          ["the first one", opts[0].pic],
+          ["the second one", opts[1].pic],
+        ],
+        opts.findIndex((o) => o.right)
       ),
     },
   ];
@@ -123,9 +138,9 @@ export const flipGeneralizationQuestion = (): TestQuestion[] => {
       difficulty: "hard",
       step: choice(
         {
-          prompt: "True or false: every pair of numerals people mix up (like 6 & 9, or 2 & 5) turns into the other one when flipped upside down.",
-          hint: "Try flipping a 6. Now try flipping a 2 — does it really become a 5?",
-          explain: "False — 6 and 9 really are flips of each other, but 2 and 5 (and 1 and 7) are not; they're just visually similar for other reasons.",
+          prompt: "True or false: every pair of numerals people mix up (like 6 and 9, or 2 and 5) turns into the other one when you turn it upside down.",
+          hint: "Turn a 6 upside down. Now turn a 2 upside down. Does it look like 5?",
+          explain: "False. Turn 6 upside down and it looks like 9. But turn 2 upside down and it does not look like 5. 1 and 7 don't turn into each other either.",
         },
         "False",
         ["True"] // misconception: assuming every look-alike pair is a rotational flip
@@ -147,10 +162,12 @@ export const oneMoreNumeralQuestion = (): TestQuestion[] => {
   ];
 };
 
-/** A second recognize-lookalike question drawn from a different pair than
- *  whichever one happened to come up in recognizeLookalikeQuestion, so the
- *  10-question test doesn't risk covering only one of the three pairs. */
-export const recognizeLookalikeQuestion2 = (): TestQuestion[] => recognizeLookalikeQuestion();
+export const reversedPairQuestion = (): TestQuestion[] => reversedQuestion(MIRROR_DIGITS_A);
+export const reversedPairQuestion2 = (): TestQuestion[] => reversedQuestion(MIRROR_DIGITS_B);
+
+/** Full-pool versions for tests that ask each of these only once (ModuleTest). */
+export const anyLookalikeQuestion = (): TestQuestion[] => lookalikeQuestion(LOOKALIKE_SETS, 4);
+export const anyReversedPairQuestion = (): TestQuestion[] => reversedQuestion([...MIRROR_DIGITS_A, ...MIRROR_DIGITS_B]);
 
 export const writingAndMatchingNumeralsTest: Unit["test"] = {
   questions: [
@@ -163,7 +180,7 @@ export const writingAndMatchingNumeralsTest: Unit["test"] = {
     reversedPairQuestion,
     flipGeneralizationQuestion,
     oneMoreNumeralQuestion,
-    reversedPairQuestion,
+    reversedPairQuestion2,
   ],
   passScore: 9,
 };

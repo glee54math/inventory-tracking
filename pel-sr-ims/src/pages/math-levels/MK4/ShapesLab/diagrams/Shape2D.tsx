@@ -1,4 +1,5 @@
 import { palette, diagramFont } from "../../../shared/lib/palette";
+import { useCountAlong } from "./countAlong";
 
 /** The five flat (2D) shapes this whole lab is built around — the fixed
  *  vocabulary set Unit 1 introduces and Units 2-4 keep reusing. */
@@ -122,13 +123,24 @@ export interface ShapeGlyphProps {
   /** Deliberately generic — never names the shape, so sighted vs
    *  screen-reader students face the same recognition task. */
   label?: string;
+  /** "Show me" demo: slowly turn the shape all the way around once (a
+   *  circle, which looks the same turned, grows and shrinks instead) — so
+   *  "it's still the same shape when turned" is something the student SEES. */
+  turnDemo?: boolean;
 }
+
+/** How long ShapeGlyph's turnDemo takes, for Step.showMeHoldMs. */
+export const TURN_DEMO_MS = 2400;
+
+const turnDemoStyle = (anim: string) => ({ transformOrigin: "100px 100px", transformBox: "view-box" as const, animation: `${anim} ${TURN_DEMO_MS}ms ease-in-out 1` });
+const TURN_DEMO_KEYFRAMES =
+  "@keyframes mk4-turn { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes mk4-resize { 0%, 100% { transform: scale(1); } 30% { transform: scale(0.6); } 70% { transform: scale(1.3); } }";
 
 /** A single flat shape, optionally rotated/resized — the concrete visual
  *  every Unit 1 "name the shape" question and Explore's gallery is built on,
  *  so a rotated/resized instance is still unmistakably drawn as the SAME
  *  polygon, never a different one. */
-export function ShapeGlyph({ kind, size = 62, scale = 1, rotation = 0, tone = "a", label = "a shape" }: ShapeGlyphProps) {
+export function ShapeGlyph({ kind, size = 62, scale = 1, rotation = 0, tone = "a", label = "a shape", turnDemo = false }: ShapeGlyphProps) {
   const cx = 100;
   const cy = 100;
   const color = toneColor(tone);
@@ -136,7 +148,10 @@ export function ShapeGlyph({ kind, size = 62, scale = 1, rotation = 0, tone = "a
   if (kind === "circle") {
     return (
       <svg viewBox="0 0 200 200" role="img" aria-label={label} {...common}>
-        <circle cx={cx} cy={cy} r={size * scale} fill={color} stroke={palette.ink} strokeWidth={3} />
+        {turnDemo && <style>{TURN_DEMO_KEYFRAMES}</style>}
+        <g style={turnDemo ? turnDemoStyle("mk4-resize") : undefined}>
+          <circle cx={cx} cy={cy} r={size * scale} fill={color} stroke={palette.ink} strokeWidth={3} />
+        </g>
       </svg>
     );
   }
@@ -144,7 +159,10 @@ export function ShapeGlyph({ kind, size = 62, scale = 1, rotation = 0, tone = "a
   const pointsAttr = pts.map((p) => p.join(",")).join(" ");
   return (
     <svg viewBox="0 0 200 200" role="img" aria-label={label} {...common}>
-      <polygon points={pointsAttr} fill={color} stroke={palette.ink} strokeWidth={3} transform={`rotate(${rotation} ${cx} ${cy})`} />
+      {turnDemo && <style>{TURN_DEMO_KEYFRAMES}</style>}
+      <g style={turnDemo ? turnDemoStyle("mk4-turn") : undefined}>
+        <polygon points={pointsAttr} fill={color} stroke={palette.ink} strokeWidth={3} transform={`rotate(${rotation} ${cx} ${cy})`} />
+      </g>
     </svg>
   );
 }
@@ -162,6 +180,8 @@ export function ShapeCountable({
   countedSides = [],
   onToggleCorner,
   onToggleSide,
+  countAlong,
+  countAlongStartAfter = 0,
 }: {
   kind: BuildableKind;
   size?: number;
@@ -170,17 +190,41 @@ export function ShapeCountable({
   countedSides?: number[];
   onToggleCorner?: (i: number) => void;
   onToggleSide?: (i: number) => void;
+  /** "Show me" demo: light up and number the sides (or corners) one at a
+   *  time, in step with the spoken count (see countAlong.ts). */
+  countAlong?: "sides" | "corners";
+  /** Counting beats to wait before this shape's count-along starts. */
+  countAlongStartAfter?: number;
 }) {
   const cx = 100;
   const cy = 100;
   const color = toneColor(tone);
   const pts = shapeOutline(kind, size, cx, cy);
   const n = pts.length;
+  const shown = useCountAlong(!!countAlong, n, countAlongStartAfter);
+  const upTo = Array.from({ length: shown }, (_, i) => i);
+  const sidesOn = countAlong === "sides" ? upTo : countedSides;
+  const cornersOn = countAlong === "corners" ? upTo : countedCorners;
+  // A number label just outside the shape, pushed away from its center.
+  const outside = (x: number, y: number, by: number): [number, number] => {
+    const d = Math.hypot(x - cx, y - cy) || 1;
+    return [x + ((x - cx) / d) * by, y + ((y - cy) / d) * by];
+  };
+  const labels = upTo.map((i) => {
+    const [x, y] = pts[i];
+    const [x2, y2] = pts[(i + 1) % n];
+    const [lx, ly] = countAlong === "sides" ? outside((x + x2) / 2, (y + y2) / 2, 17) : outside(x, y, 20);
+    return (
+      <text key={`n${i}`} x={lx} y={ly + 6} textAnchor="middle" fontSize={18} fontWeight={700} fill={palette.ink}>
+        {i + 1}
+      </text>
+    );
+  });
   return (
     <svg viewBox="0 0 200 200" role="img" aria-label="a shape with clickable sides and corners" style={{ display: "block", width: "100%", maxWidth: 200, height: "auto", fontFamily: diagramFont }}>
       {pts.map(([x, y], i) => {
         const [x2, y2] = pts[(i + 1) % n];
-        const sideOn = countedSides.includes(i);
+        const sideOn = sidesOn.includes(i);
         return (
           <line
             key={`s${i}`}
@@ -196,7 +240,7 @@ export function ShapeCountable({
         );
       })}
       {pts.map(([x, y], i) => {
-        const cornerOn = countedCorners.includes(i);
+        const cornerOn = cornersOn.includes(i);
         return (
           <circle
             key={`c${i}`}
@@ -209,6 +253,7 @@ export function ShapeCountable({
           />
         );
       })}
+      {labels}
     </svg>
   );
 }

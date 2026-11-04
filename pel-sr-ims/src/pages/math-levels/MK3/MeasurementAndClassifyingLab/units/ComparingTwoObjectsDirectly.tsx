@@ -360,7 +360,11 @@ function comparingProblem(targetBucket?: string): Problem {
       title: "Which rod is longer?",
       bucket,
       story: "Both rods start at the same place (the dashed line).",
-      visual: () => <LengthBars bars={[{ blocks: a, tone: "a", label: "Rod A" }, { blocks: b, tone: "b", label: "Rod B" }]} />,
+      visual: (_done, help) => {
+        // Step 1's "Show me" says how many blocks each rod has: count them on the picture.
+        const numbered = !!help?.showMe && help.step === 0;
+        return <LengthBars bars={[{ blocks: a, tone: "a", label: "Rod A", numbered }, { blocks: b, tone: "b", label: "Rod B", numbered }]} />;
+      },
       steps: [
         choice({ prompt: "Which rod is LONGER?", hint: "Both rods start together, so just compare how far each one reaches.", explain: `Rod A has ${a} blocks and Rod B has ${b} blocks, so Rod ${longer} is longer.` }, `Rod ${longer}`, [`Rod ${shorter}`]),
         choice({ prompt: "Which rod is SHORTER?", hint: "It's the other one.", explain: `Rod ${shorter} is shorter.` }, `Rod ${shorter}`, [`Rod ${longer}`]),
@@ -378,12 +382,20 @@ function comparingProblem(targetBucket?: string): Problem {
       title: "Which rod is actually longer?",
       bucket,
       story: "These rods do NOT start at the same place. Look at where each one starts, not just where it ends.",
-      visual: () => (
-        <LengthBars bars={[{ blocks: a, tone: "a", label: "Rod A", startOffset: 0 }, { blocks: b, tone: "b", label: "Rod B", startOffset: offsetB }]} />
-      ),
+      visual: (_done, help) => {
+        // Step 1's "Show me": slide Rod B back to the start line and number
+        // the blocks, so "line them up, then compare" is actually shown.
+        const demo = !!help?.showMe && help.step === 0;
+        return (
+          <LengthBars
+            alignStarts={demo}
+            bars={[{ blocks: a, tone: "a", label: "Rod A", startOffset: 0, numbered: demo }, { blocks: b, tone: "b", label: "Rod B", startOffset: offsetB, numbered: demo }]}
+          />
+        );
+      },
       steps: [
         choice(
-          { prompt: "Which rod is ACTUALLY longer?", hint: "Rod B doesn't start where Rod A does — compare how many blocks each rod is actually made of.", explain: `Rod A has ${a} blocks and Rod B has ${b} blocks, so Rod ${longer} is actually longer, no matter where either one starts.` },
+          { showMeHoldMs: 1200, prompt: "Which rod is ACTUALLY longer?", hint: "Rod B doesn't start where Rod A does — compare how many blocks each rod is actually made of.", explain: `Rod A has ${a} blocks and Rod B has ${b} blocks, so Rod ${longer} is actually longer, no matter where either one starts.` },
           `Rod ${longer}`,
           [`Rod ${shorter}`]
         ),
@@ -425,13 +437,26 @@ function comparingProblem(targetBucket?: string): Problem {
     title: "How much longer?",
     bucket,
     story: "Both rods start at the same place.",
-    visual: () => <LengthBars bars={[{ blocks: a, tone: "a", label: "Rod A" }, { blocks: b, tone: "b", label: "Rod B" }]} />,
+    visual: (_done, help) => {
+      // Step 2's "Show me": ring and number the longer rod's extra blocks
+      // (the ones past the end of the shorter rod).
+      const extraFrom = help?.showMe && help.step === 1 ? shorterBlocks : undefined;
+      return (
+        <LengthBars
+          bars={[
+            { blocks: a, tone: "a", label: "Rod A", extraFrom: longer === "A" ? extraFrom : undefined },
+            { blocks: b, tone: "b", label: "Rod B", extraFrom: longer === "B" ? extraFrom : undefined },
+          ]}
+        />
+      );
+    },
     steps: [
       choice({ prompt: "Which rod is longer?", hint: "Compare how far each one reaches.", explain: `Rod ${longer} is longer.` }, `Rod ${longer}`, [`Rod ${shorter}`]),
       {
         kind: "number",
         prompt: `How many blocks LONGER is Rod ${longer} than Rod ${shorter}?`,
         hint: "Count how many extra blocks the longer rod has.",
+        showMe: `Look past the end of Rod ${shorter}. Count the extra blocks on Rod ${longer}: ${Array.from({ length: diff }, (_, i) => i + 1).join(", ")}.`,
         explain: `Rod ${longer} has ${longerBlocks} blocks and Rod ${shorter} has ${shorterBlocks} blocks — that's ${diff} more.`,
         answer: diff,
       },

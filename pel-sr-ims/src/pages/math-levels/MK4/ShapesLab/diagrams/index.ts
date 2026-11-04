@@ -4,3 +4,4 @@ export * from "./PositionScene";
 export * from "./StickBuilder";
 export * from "./CubeFrameBuilder";
 export * from "./ComposeShapes";
+export * from "./countAlong";

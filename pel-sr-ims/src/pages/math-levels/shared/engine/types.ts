@@ -157,6 +157,25 @@ export interface ChoiceStep extends BaseStep {
   kind: "choice";
   choices: string[];
   correct: number;
+  /**
+   * Optional pictures to show in the buttons instead of the text, in the
+   * same order as `choices` (e.g. two big numerals, one written backwards).
+   * `choices` is still what the voice says and what the answer chip shows.
+   */
+  display?: ReactNode[];
+}
+
+/**
+ * "Count out" (K.CC.5): the student taps `answer` counters out of a pile of
+ * `total`. Each tapped counter shows its count number. Graded by how many are
+ * tapped, so the student must stop at the right number.
+ * inputs[0] holds the tapped counters' indexes in tap order, e.g. "3,0,7".
+ */
+export interface TapCountStep extends BaseStep {
+  kind: "tapCount";
+  total: number;
+  answer: number;
+  tone?: "a" | "b" | "c";
 }
 
 /** A fill-in-the-blank dropdown inside a SentenceStep — never free-typed. */
@@ -243,14 +262,15 @@ export interface VerticalMultiplyStep extends BaseStep {
  */
 export interface CustomStep extends BaseStep {
   kind: "custom";
-  render: (onDone: () => void) => ReactNode;
+  /** `onWrong` reports a wrong try (feedback, hint, "Show me", clean scoring), like a wrong typed answer. */
+  render: (onDone: () => void, onWrong: () => void) => ReactNode;
   resultText: string;
 }
 
-export type Step = NumberStep | RatioStep | CoordinateStep | ChoiceStep | SentenceStep | FracMultiplyStep | VerticalMultiplyStep | CustomStep;
+export type Step = NumberStep | RatioStep | CoordinateStep | ChoiceStep | TapCountStep | SentenceStep | FracMultiplyStep | VerticalMultiplyStep | CustomStep;
 
 /** Build a CustomStep — see CustomStep's doc comment for when to reach for this. */
-export const customStep = (base: BaseStep, render: (onDone: () => void) => ReactNode, resultText: string): CustomStep => ({ ...base, kind: "custom", render, resultText });
+export const customStep = (base: BaseStep, render: (onDone: () => void, onWrong: () => void) => ReactNode, resultText: string): CustomStep => ({ ...base, kind: "custom", render, resultText });
 
 /** Build a CoordinateStep — see its doc comment for when to reach for this over RatioStep. */
 export const coordinateStep = (base: BaseStep, x: number, y: number): CoordinateStep => ({ ...base, kind: "coordinate", answer: [x, y] });
@@ -329,6 +349,25 @@ export const choice = (
   const all = shuffle([correctText, ...distractors.filter((d) => d !== correctText)]);
   return { ...base, kind: "choice", choices: all, correct: all.indexOf(correctText) };
 };
+
+/**
+ * Build a choice step whose buttons show pictures, e.g. pictureChoice(base,
+ * [["6 written the right way", bigDigit("6")], ["6 written backwards", bigDigit("6", true)]], 0).
+ * Options keep the given order (shuffle them yourself if order shouldn't be fixed).
+ */
+export const pictureChoice = (base: BaseStep, options: [string, ReactNode][], correct: number): ChoiceStep => ({
+  ...base,
+  kind: "choice",
+  choices: options.map((o) => o[0]),
+  display: options.map((o) => o[1]),
+  correct,
+});
+
+/** Build a TapCountStep — see its doc comment. */
+export const tapCount = (base: BaseStep, total: number, answer: number, tone?: TapCountStep["tone"]): TapCountStep => ({ ...base, kind: "tapCount", total, answer, tone });
+
+/** Indexes tapped so far in a TapCountStep's inputs[0]. */
+export const tappedList = (raw: string | undefined): number[] => (raw ? raw.split(",").filter(Boolean).map(Number) : []);
 
 /** Build a select-dropdown SentenceBlank with shuffled options. */
 export const selectBlank = (correctText: string, distractors: string[]): SentenceSelectBlank => {

@@ -148,7 +148,7 @@ export const decadeAlwaysTrueQuestion = (): TestQuestion[] => {
       step: choice(
         {
           prompt: "True or false: every time you count from a number ending in 9 to the very next number, you always land in a brand new ten.",
-          hint: "Check a few: 19→20, 39→40, 59→60. Does it ever fail?",
+          hint: "Check a few: 19 then 20, 39 then 40, 59 then 60. Does it ever fail?",
           explain: "Always true — every ten has exactly ten numbers in it, so the number right after one ending in 9 always starts the next ten.",
         },
         "True",

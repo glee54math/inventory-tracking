@@ -124,7 +124,8 @@ function fastFactsProblem(targetBucket?: string): Problem {
       title: "Fast fact: subtraction",
       bucket,
       story: `What is ${minuend} − ${b}?`,
-      visual: () => <SplitGroup total={minuend} partA={diff} toneA="a" toneB="b" />,
+      // Once step 1 is shown/answered, the part taken away fades out.
+      visual: (done) => <SplitGroup total={minuend} partA={diff} toneA="a" toneB="b" goneB={done >= 1} />,
       steps: [
         { kind: "number", prompt: `What is ${minuend} − ${b}?`, hint: "You should know this fact without counting it out.", explain: `${minuend} − ${b} = ${diff}.`, answer: diff },
         choice(
@@ -144,7 +145,13 @@ function fastFactsProblem(targetBucket?: string): Problem {
       title: "Fast fact: doubles",
       bucket,
       story: `What is ${n} + ${n}?`,
-      visual: () => <SplitGroup total={sum} partA={n} toneA="a" toneB="a" showDivider={false} />,
+      // Step 2 ("one more") adds the extra dot, in a new color, once shown/answered.
+      visual: (done) =>
+        done >= 2 ? (
+          <SplitGroup total={sum + 1} partA={sum} toneA="a" toneB="b" />
+        ) : (
+          <SplitGroup total={sum} partA={n} toneA="a" toneB="a" showDivider={false} />
+        ),
       steps: [
         { kind: "number", prompt: `What is ${n} + ${n}?`, hint: "A doubles fact — both parts are the same.", explain: `${n} + ${n} = ${sum}.`, answer: sum },
         { kind: "number", prompt: `What is one MORE than ${sum} (that is, ${n} + ${n} + 1)?`, hint: "Add one more to the doubles fact you just found.", explain: `${sum} + 1 = ${sum + 1}.`, answer: sum + 1 },

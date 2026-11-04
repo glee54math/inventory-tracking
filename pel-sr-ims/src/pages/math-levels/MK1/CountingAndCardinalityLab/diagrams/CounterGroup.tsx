@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
 import { palette, diagramFont } from "../../../shared/lib/palette";
+import { getState } from "../../../shared/tts/speechEngine";
+import { useTtsState } from "../../../shared/tts/ttsContext";
 
 export type Arrangement = "line" | "array" | "circle" | "scatter";
 
@@ -6,6 +9,7 @@ const WIDTH = 320;
 const HEIGHT = 190;
 const PAD = 26;
 const R = 13;
+const CHUNK_GAP = 16; // extra space between groups of five (line) or ten (array)
 
 const toneColor = (tone?: "a" | "b" | "c") => (tone === "b" ? palette.b : tone === "c" ? palette.c : palette.a);
 
@@ -29,10 +33,37 @@ function mulberry32(seed: number) {
 export function layoutPositions(count: number, arrangement: Arrangement, seed = 1): { x: number; y: number }[] {
   if (count <= 0) return [];
   if (arrangement === "line") {
-    const gap = Math.min(30, (WIDTH - PAD * 2) / Math.max(1, count - 1));
-    const totalW = gap * (count - 1);
-    const startX = (WIDTH - totalW) / 2;
-    return Array.from({ length: count }, (_, i) => ({ x: startX + i * gap, y: HEIGHT / 2 }));
+    // Up to 10 in one line. Past 10, rows of 10 (like a ten-frame row), the
+    // second row starting under the first, so counters never crowd together.
+    // Each row is chunked 5 + 5 with a wider gap, so a student can see "five"
+    // and "ten" at a glance and count on from there instead of from 1.
+    const perRow = Math.min(count, 10);
+    const rows = Math.ceil(count / 10);
+    const chunk = perRow > 5 ? CHUNK_GAP : 0;
+    const gap = perRow > 1 ? Math.min(30, (WIDTH - PAD * 2 - chunk) / (perRow - 1)) : 0;
+    const startX = (WIDTH - gap * (perRow - 1) - chunk) / 2;
+    const rowGap = 44;
+    const startY = HEIGHT / 2 - (rowGap * (rows - 1)) / 2;
+    return Array.from({ length: count }, (_, i) => ({
+      x: startX + (i % 10) * gap + (i % 10 >= 5 ? chunk : 0),
+      y: startY + Math.floor(i / 10) * rowGap,
+    }));
+  }
+  if (arrangement === "array" && count > 5) {
+    // Rows of 5 (like a ten-frame), with an extra gap after every two rows,
+    // so each ten reads as a block and each row as a five.
+    const cols = 5;
+    const rows = Math.ceil(count / cols);
+    const tenBreaks = Math.floor((rows - 1) / 2);
+    const gapX = 38;
+    const gapY = Math.min(38, (HEIGHT - PAD * 2 - tenBreaks * CHUNK_GAP) / Math.max(1, rows - 1));
+    const totalH = gapY * (rows - 1) + tenBreaks * CHUNK_GAP;
+    const startY = (HEIGHT - totalH) / 2;
+    const startX = (WIDTH - gapX * (cols - 1)) / 2;
+    return Array.from({ length: count }, (_, i) => {
+      const r = Math.floor(i / cols);
+      return { x: startX + (i % cols) * gapX, y: startY + r * gapY + Math.floor(r / 2) * CHUNK_GAP };
+    });
   }
   if (arrangement === "array") {
     const cols = Math.ceil(Math.sqrt(count));
@@ -53,12 +84,26 @@ export function layoutPositions(count: number, arrangement: Arrangement, seed = 
     return pts;
   }
   if (arrangement === "circle") {
+    // A round circle for small groups; an oval using the full width for bigger
+    // ones, with counters spaced evenly along it so none overlap.
     const cx = WIDTH / 2;
     const cy = HEIGHT / 2;
-    const r = Math.min(WIDTH, HEIGHT) / 2 - PAD - 6;
+    const ry = HEIGHT / 2 - PAD - 6;
+    const rx = count <= 10 ? ry : WIDTH / 2 - PAD - 6;
+    const N = 720;
+    const pts: { x: number; y: number }[] = [];
+    const cum: number[] = [0];
+    for (let k = 0; k <= N; k++) {
+      const a = (2 * Math.PI * k) / N - Math.PI / 2;
+      pts.push({ x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a) });
+      if (k > 0) cum.push(cum[k - 1] + Math.hypot(pts[k].x - pts[k - 1].x, pts[k].y - pts[k - 1].y));
+    }
+    const total = cum[N];
+    let k = 0;
     return Array.from({ length: count }, (_, i) => {
-      const a = (2 * Math.PI * i) / count - Math.PI / 2;
-      return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+      const target = (total * i) / count;
+      while (k < N && cum[k] < target) k++;
+      return pts[k];
     });
   }
   // scatter: rejection-sample so objects don't overlap, with a fallback once
@@ -96,6 +141,13 @@ export interface CounterGroupProps {
    */
   countedOrder?: number[];
   onToggle?: (index: number) => void;
+  /**
+   * "Show me" for counting: number the counters one at a time, about one per
+   * `countAlongMs`, in an easy order (left to right, top row first; around
+   * the circle). The newest one gets a ring. Static display only.
+   */
+  countAlong?: boolean;
+  countAlongMs?: number;
   /** How many counters (the last ones in layout order) have been taken away —
    *  drawn faded with an X so "how many are left?" has something to count.
    *  Static display only; defaults to 0 (none taken). */
@@ -107,8 +159,44 @@ export interface CounterGroupProps {
  *  stand-in for "how many" this whole lab uses instead of a bare numeral,
  *  per the K audience framing (no number should ever appear with nothing to
  *  count). Optionally click-to-count interactive for Explore. */
-export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyph, countedOrder, onToggle, removed = 0 }: CounterGroupProps) {
+/** The order to count in during countAlong: rows top to bottom, left to right (scatter sorted into bands). */
+function countingOrder(points: { x: number; y: number }[], arrangement: Arrangement): number[] {
+  const idx = points.map((_, i) => i);
+  if (arrangement !== "scatter") return idx;
+  return idx.sort((a, b) => Math.floor(points[a].y / 46) - Math.floor(points[b].y / 46) || points[a].x - points[b].x);
+}
+
+// Count-along pace, matched to the read-aloud voice so the numbers on the
+// dots keep step with what's being said ("Let's count together: 1, 2, 3...").
+const STEP_MS = { slow: 1300, normal: 1000, fast: 800 } as const;
+// Wait for "Let's count together:" before the first dot gets its number.
+const LEAD_IN_MS = 1200;
+
+/** Milliseconds per counted number at the student's current read-aloud speed. */
+export const countStepMs = () => STEP_MS[getState().speed];
+
+/** Milliseconds a countAlong of `count` counters takes, for Step.showMeHoldMs. */
+export const countAlongMs = (count: number, perMs = countStepMs()) => LEAD_IN_MS + count * perMs;
+
+export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyph, countedOrder: clickedOrder, onToggle, removed = 0, countAlong, countAlongMs }: CounterGroupProps) {
+  const speed = useTtsState().speed;
+  const perMs = countAlongMs ?? STEP_MS[speed];
   const points = layoutPositions(count, arrangement, seed);
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    if (!countAlong) return;
+    setShown(0);
+    let iv: number | undefined;
+    const lead = window.setTimeout(() => {
+      setShown(1);
+      iv = window.setInterval(() => setShown((k) => (k >= count ? k : k + 1)), perMs);
+    }, LEAD_IN_MS);
+    return () => {
+      window.clearTimeout(lead);
+      window.clearInterval(iv);
+    };
+  }, [countAlong, count, perMs]);
+  const countedOrder = countAlong && !onToggle ? countingOrder(points, arrangement).slice(0, shown) : clickedOrder;
   const color = toneColor(tone);
   const orderOf = (i: number) => (countedOrder ? countedOrder.indexOf(i) : -1);
   const interactive = !!onToggle;
@@ -145,7 +233,8 @@ export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyp
                 cx={p.x}
                 cy={p.y}
                 r={R}
-                fill={counted || !countedOrder ? color : palette.grid}
+                fill={color}
+                opacity={counted || !countedOrder ? 1 : 0.4}
                 stroke={palette.paper}
                 strokeWidth={2}
               />
@@ -158,10 +247,17 @@ export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyp
                 strokeLinecap="round"
               />
             )}
-            {countedOrder && counted && (
+            {countedOrder && counted && (countAlong && !glyph ? (
+              <text x={p.x} y={p.y + 4.5} textAnchor="middle" fontSize={order >= 9 ? 11 : 13} fontWeight={800} fill="#fff">
+                {order + 1}
+              </text>
+            ) : (
               <text x={p.x} y={p.y - R - 6} textAnchor="middle" fontSize={13} fontWeight={800} fill={color}>
                 {order + 1}
               </text>
+            ))}
+            {countAlong && counted && order === countedOrder!.length - 1 && (
+              <circle cx={p.x} cy={p.y} r={R + 4} fill="none" stroke={palette.ink} strokeWidth={2.5} />
             )}
             {interactive && (
               <circle cx={p.x} cy={p.y} r={R + 8} fill="transparent" />

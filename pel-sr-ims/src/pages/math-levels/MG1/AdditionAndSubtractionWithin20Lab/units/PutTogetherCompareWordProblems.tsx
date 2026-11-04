@@ -400,7 +400,12 @@ function wordProblem(targetBucket?: string): Problem {
       title: "Put Together — how many ways?",
       bucket,
       story: `${ctx.person} has ${total} ${ctx.item}. Some are ${ctx.partA} and some are ${ctx.partB}.`,
-      visual: () => <TenFrameGroup value={total} tone="c" />,
+      // Help ladder / Show me on steps 2-3: color THAT step's split, so the
+      // picture shows the one way being asked about (not the other one).
+      visual: (done: number, help?: VisualHelp) => {
+        const splitAt = pointing(help, 1) ? redGiven : pointing(help, 2) || done >= 3 ? altRed : undefined;
+        return splitAt === undefined ? <TenFrameGroup value={total} tone="c" /> : <TenFrameGroup value={total} tone="a" splitAt={splitAt} tone2="b" />;
+      },
       steps: [
         choice(
           { prompt: `How many different ways could the ${total} ${ctx.item} split into ${ctx.partA} and ${ctx.partB}?`, hint: "Try a few splits yourself — does only one work?", explain: `More than one way works — any split of ${total} into two parts is valid.` },

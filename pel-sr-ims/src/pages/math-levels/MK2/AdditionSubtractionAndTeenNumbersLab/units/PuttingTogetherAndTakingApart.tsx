@@ -338,7 +338,8 @@ function puttingTogetherProblem(targetBucket?: string): Problem {
       title: "Putting groups together",
       bucket,
       story: `There are ${a} ${scene.noun}. ${b} more ${scene.noun} ${scene.verb}.`,
-      visual: () => <SplitGroup total={total} partA={a} toneA="a" toneB="b" />,
+      // Step 2's "Show me" fades the joiners so only the starting group stands out.
+      visual: (_done, help) => <SplitGroup total={total} partA={a} toneA="a" toneB="b" goneB={!!help?.showMe && help.step === 1} />,
       steps: [
         { kind: "number", prompt: `How many ${scene.noun} are there now, all together?`, hint: "Count every object in the picture, both colors.", explain: `${a} + ${b} = ${total}.`, answer: total },
         { kind: "number", prompt: `Before the ${b} more joined, how many ${scene.noun} were there?`, hint: "Look back at just the first group's color.", explain: `There were ${a} to start, before ${b} more joined.`, answer: a },
@@ -356,7 +357,8 @@ function puttingTogetherProblem(targetBucket?: string): Problem {
       title: "Taking a group apart",
       bucket,
       story: `There are ${total} ${scene.noun}. ${b} of them ${scene.verb}.`,
-      visual: () => <SplitGroup total={total} partA={a} toneA="a" toneB="b" showDivider />,
+      // Once step 1 is shown/answered, the part that went away fades out.
+      visual: (done) => <SplitGroup total={total} partA={a} toneA="a" toneB="b" showDivider goneB={done >= 1} />,
       steps: [
         { kind: "number", prompt: `How many ${scene.noun} are left?`, hint: "Count only the color that's still there.", explain: `${total} − ${b} = ${a}.`, answer: a },
         { kind: "number", prompt: `How many ${scene.noun} were there before any ${scene.verb}?`, hint: "Add the part that's left back to the part that went away.", explain: `${a} + ${b} = ${total}, so there were ${total} to start.`, answer: total },
@@ -376,7 +378,9 @@ function puttingTogetherProblem(targetBucket?: string): Problem {
       story: joining
         ? `Hold up ${a} fingers on one hand and ${b} fingers on the other hand.`
         : `Hold up ${total} fingers. Put ${b} of them down.`,
-      visual: () => <Fingers count={joining ? total : a} tone="c" />,
+      // Step 2 ("one more finger") shows that extra finger going up once it's
+      // shown/answered (Fingers draws at most 10).
+      visual: (done) => <Fingers count={(joining ? total : a) + (done >= 2 ? 1 : 0)} tone="c" />,
       steps: [
         { kind: "number", prompt: joining ? "How many fingers are up in all?" : "How many fingers are still up?", hint: "Count every raised finger on both hands.", explain: joining ? `${a} + ${b} = ${total}.` : `${total} − ${b} = ${a}.`, answer: joining ? total : a },
         { kind: "number", prompt: "If one more finger went up, how many would be raised then?", hint: "One more than your last answer.", explain: `One more than ${joining ? total : a} is ${(joining ? total : a) + 1}.`, answer: (joining ? total : a) + 1 },
@@ -415,7 +419,7 @@ function puttingTogetherProblem(targetBucket?: string): Problem {
     title: "Write the number sentence",
     bucket,
     story: `${total} fish are in a pond. ${b} of them swim away.`,
-    visual: () => <SplitGroup total={total} partA={a} toneA="a" toneB="b" />,
+    visual: (done) => <SplitGroup total={total} partA={a} toneA="a" toneB="b" goneB={done >= 1} />,
     steps: [
       { kind: "number", prompt: "How many fish are left in the pond?", hint: "Count only the fish still there.", explain: `${total} − ${b} = ${a}.`, answer: a },
       choice(

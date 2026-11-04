@@ -21,7 +21,7 @@ const FRAME_H = 2 * CELL + GAP + PAD * 2;
  * SAME picture that shows "how many" also shows "which part is which,"
  * instead of a plain undifferentiated count.
  */
-function TenFrame({ filled, tone, splitAt, tone2, highlightEmpty }: { filled: number; tone?: Tone; splitAt?: number; tone2?: Tone; highlightEmpty?: boolean }) {
+function TenFrame({ filled, tone, splitAt, tone2, highlightEmpty, crossFrom }: { filled: number; tone?: Tone; splitAt?: number; tone2?: Tone; highlightEmpty?: boolean; crossFrom?: number }) {
   const f = Math.max(0, Math.min(10, Math.round(filled)));
   const color = toneColor(tone);
   const color2 = toneColor(tone2 ?? tone);
@@ -38,20 +38,29 @@ function TenFrame({ filled, tone, splitAt, tone2, highlightEmpty }: { filled: nu
         const isFilled = i < f;
         const isSplit = splitAt !== undefined && isFilled && i >= splitAt;
         const lit = highlightEmpty && !isFilled;
+        const crossed = crossFrom !== undefined && isFilled && i >= crossFrom;
         return (
-          <rect
-            key={i}
-            x={x}
-            y={y}
-            width={CELL}
-            height={CELL}
-            rx={6}
-            fill={isFilled ? (isSplit ? color2 : color) : "none"}
-            stroke={palette.line}
-            strokeWidth={1.5}
-            // Help ladder: light up the empty boxes ("how many more to make 10?").
-            style={lit ? { fill: palette.aSoft, stroke: palette.a, strokeWidth: 3, strokeDasharray: "5 3" } : undefined}
-          />
+          <g key={i}>
+            <rect
+              x={x}
+              y={y}
+              width={CELL}
+              height={CELL}
+              rx={6}
+              fill={isFilled ? (isSplit ? color2 : color) : "none"}
+              stroke={palette.line}
+              strokeWidth={1.5}
+              // Help ladder: light up the empty boxes ("how many more to make 10?").
+              style={lit ? { fill: palette.aSoft, stroke: palette.a, strokeWidth: 3, strokeDasharray: "5 3" } : crossed ? { opacity: 0.45 } : undefined}
+            />
+            {/* Taken away: faded and crossed out, so "take away" is something you can see. */}
+            {crossed && (
+              <path
+                d={`M ${x + 7} ${y + 7} L ${x + CELL - 7} ${y + CELL - 7} M ${x + CELL - 7} ${y + 7} L ${x + 7} ${y + CELL - 7}`}
+                style={{ stroke: palette.ink, strokeWidth: 3.5, strokeLinecap: "round" }}
+              />
+            )}
+          </g>
         );
       })}
     </svg>
@@ -76,6 +85,12 @@ export interface TenFrameGroupProps {
   tone2?: Tone;
   /** Light up the first frame's empty boxes — the help ladder's "count the empty boxes" pointer. */
   highlightEmpty?: boolean;
+  /**
+   * Cross out (fade + X) the filled cells from this index on (0-based,
+   * across both frames like `splitAt`) — the "take away" picture for
+   * subtraction. Omit to cross out nothing.
+   */
+  crossFrom?: number;
 }
 
 /**
@@ -86,7 +101,7 @@ export interface TenFrameGroupProps {
  * for every unit's diagrams: plain counts, make-ten decomposition, and
  * put-together/compare part-shading.
  */
-export function TenFrameGroup({ value, tone, splitAt, tone2, highlightEmpty }: TenFrameGroupProps) {
+export function TenFrameGroup({ value, tone, splitAt, tone2, highlightEmpty, crossFrom }: TenFrameGroupProps) {
   const v = Math.max(0, Math.min(20, Math.round(value)));
   const firstCount = Math.min(10, v);
   const secondCount = Math.max(0, v - 10);
@@ -98,8 +113,8 @@ export function TenFrameGroup({ value, tone, splitAt, tone2, highlightEmpty }: T
       role="img"
       aria-label={`${v} shown on ten frame${v > 10 ? "s" : ""}`}
     >
-      <TenFrame filled={firstCount} tone={tone} splitAt={splitFirst} tone2={tone2} highlightEmpty={highlightEmpty} />
-      {v > 10 && <TenFrame filled={secondCount} tone={tone} splitAt={splitSecond} tone2={tone2} />}
+      <TenFrame filled={firstCount} tone={tone} splitAt={splitFirst} tone2={tone2} highlightEmpty={highlightEmpty} crossFrom={crossFrom} />
+      {v > 10 && <TenFrame filled={secondCount} tone={tone} splitAt={splitSecond} tone2={tone2} crossFrom={crossFrom !== undefined ? Math.max(0, crossFrom - 10) : undefined} />}
     </div>
   );
 }

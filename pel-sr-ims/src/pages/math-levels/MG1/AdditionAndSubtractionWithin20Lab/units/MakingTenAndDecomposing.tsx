@@ -30,10 +30,10 @@ function Bond({ whole, parts }: { whole: number | null; parts: [BondPart, BondPa
 }
 
 /** A ten-frame with its number underneath — the picture first, the numeral as its name. */
-function Frame({ value, tone, splitAt, tone2, highlightEmpty }: { value: number; tone: Tone; splitAt?: number; tone2?: Tone; highlightEmpty?: boolean }) {
+function Frame({ value, tone, splitAt, tone2, highlightEmpty, crossFrom }: { value: number; tone: Tone; splitAt?: number; tone2?: Tone; highlightEmpty?: boolean; crossFrom?: number }) {
   return (
     <div>
-      <TenFrameGroup value={value} tone={tone} splitAt={splitAt} tone2={tone2} highlightEmpty={highlightEmpty} />
+      <TenFrameGroup value={value} tone={tone} splitAt={splitAt} tone2={tone2} highlightEmpty={highlightEmpty} crossFrom={crossFrom} />
       <ReadAloud as="p" style={{ textAlign: "center", fontSize: "1.5rem", fontWeight: 700, margin: "4px 0 0" }}>{value}</ReadAloud>
     </div>
   );
@@ -385,15 +385,26 @@ function makeTenAdditionProblem(a: number, b: number, bucket: Bucket): Problem {
     title: "Making ten",
     bucket,
     story: `Find ${a} + ${b} using make-ten.`,
-    visual: (done: number, help?: VisualHelp) => (
-      <div className="control-row" style={pictureRow} data-readaloud-part>
-        {/* Help ladder: light up the empty boxes for "how many more to make 10?" */}
-        <Frame value={a} tone="a" highlightEmpty={pointing(help, 0)} />
-        <Sign>+</Sign>
-        <Frame value={b} tone="b" splitAt={done >= 1 ? addToA : undefined} tone2="c" />
-        <Bond whole={b} parts={[{ value: done >= 1 ? addToA : null, tone: "b" }, { value: done >= 2 ? remainder : null, tone: "c" }]} />
-      </div>
-    ),
+    visual: (done: number, help?: VisualHelp) =>
+      // Step 3's "Show me" (and the finished picture): the ten is MADE. The
+      // first frame is full (a, plus the part of b moved over to fill it) and
+      // the leftover sits on its own, so "10 + leftover" is what you see.
+      done >= 3 ? (
+        <div className="control-row" style={pictureRow} data-readaloud-part>
+          <Frame value={10} tone="a" splitAt={a} tone2="b" />
+          <Sign>+</Sign>
+          <Frame value={remainder} tone="c" />
+          <Bond whole={b} parts={[{ value: addToA, tone: "b" }, { value: remainder, tone: "c" }]} />
+        </div>
+      ) : (
+        <div className="control-row" style={pictureRow} data-readaloud-part>
+          {/* Help ladder: light up the empty boxes for "how many more to make 10?" */}
+          <Frame value={a} tone="a" highlightEmpty={pointing(help, 0)} />
+          <Sign>+</Sign>
+          <Frame value={b} tone="b" splitAt={done >= 1 ? addToA : undefined} tone2="c" />
+          <Bond whole={b} parts={[{ value: done >= 1 ? addToA : null, tone: "b" }, { value: done >= 2 ? remainder : null, tone: "c" }]} />
+        </div>
+      ),
     steps: [
       { kind: "number", prompt: `How many more do you need to add to ${a} to make 10?`, hint: "Count the empty boxes in the first ten-frame.", showMe: `${a} fills ${a} boxes. ${gap} boxes are empty.`, explain: `${a} + ${gap} = 10.`, answer: gap },
       { kind: "number", prompt: `If you take ${gap} from ${b} to help make ten, how many are left over?`, hint: `${b} − ${gap} = ?`, explain: `${b} − ${addToA} = ${remainder} left over.`, answer: remainder },
@@ -418,7 +429,11 @@ function subtractBridgeProblem(): Problem {
     visual: (done: number, help?: VisualHelp) => (
       <div className="control-row" style={pictureRow} data-readaloud-part>
         {/* Help ladder: color the ones past 10 when the student is stuck on step 1. */}
-        <Frame value={start} tone="c" splitAt={done >= 1 || pointing(help, 0) ? ten : undefined} tone2="b" />
+        {/* Taking away, shown: once the jump down to 10 is found (or shown),
+            the ones past 10 are crossed out; step 3's "Show me" and the
+            finished picture cross out the leftover too, so what's left is
+            the answer. */}
+        <Frame value={start} tone="c" splitAt={done >= 1 || pointing(help, 0) ? ten : undefined} tone2="b" crossFrom={done >= 3 ? total : done >= 1 ? ten : undefined} />
         <Bond whole={sub} parts={[{ value: done >= 1 ? toTen : null, tone: "b" }, { value: done >= 2 ? remainder : null, tone: "a" }]} />
       </div>
     ),
