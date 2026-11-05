@@ -176,7 +176,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {!introActive && <CfuToggle open={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      {(introActive || showCheck) && <FixedCheck title="Check for Understanding: factor pairs" questions={CHECK} onComplete={onIntroDone} />}
 
       <div className="control-row">
         <Slider label="Number" value={n} min={1} max={100} onChange={changeN} />
@@ -219,6 +218,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           <FactorRectangle rows={latest[0]} cols={latest[1]} width={300} height={Math.max(30, Math.min(160, (300 / latest[1]) * latest[0]))} />
         </div>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <FixedCheck title="Check for Understanding: factor pairs" questions={CHECK} onComplete={onIntroDone} />}
     </div>
   );
 }

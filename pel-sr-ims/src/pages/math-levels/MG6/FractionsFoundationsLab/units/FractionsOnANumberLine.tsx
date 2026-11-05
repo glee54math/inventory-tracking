@@ -126,7 +126,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <FractionNumberLineCheck onComplete={onIntroDone} />}
       <p>A fraction isn't just part of a shape — it's a point on the number line, exactly like a whole number. Drag the dot and watch its name change.</p>
       <Segmented label="Split each whole into" value={String(den)} onChange={(v) => setDen(Number(v))} options={DENOMS.map((d) => ({ id: String(d), label: `${d} parts` }))} />
       <div className="control-row">
@@ -134,6 +133,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       <NumberLine min={0} max={2} minorTicksPerUnit={den} snapDenominator={den} points={[{ value, label: `${snapped}/${den}`, tone: "a", onChange: setValue }]} />
       <p className="muted small">Drag the dot past 1 — the same equal-size parts keep going, so a fraction like {den + 1}/{den} is just one more part past a whole.</p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <FractionNumberLineCheck onComplete={onIntroDone} />}
     </div>
   );
 }

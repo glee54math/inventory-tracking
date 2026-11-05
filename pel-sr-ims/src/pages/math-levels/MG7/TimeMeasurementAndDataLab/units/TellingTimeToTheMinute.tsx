@@ -294,7 +294,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <TimeCheckForUnderstanding onComplete={onIntroDone} />}
 
       <p className="muted small">Drag the long minute hand all the way around. Watch each small tick change the minute by exactly 1.</p>
       <Clock time={time} onChange={(t) => setTime(t)} tone="a" />
@@ -304,6 +303,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           ? " — watch how the short hour hand sits almost on top of a number near the top or bottom of the hour, but the hour itself only changes right as the minute hand crosses 12."
           : " — notice the short hour hand creeps a little further around as the minute hand moves."}
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <TimeCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -68,7 +68,6 @@ function Explore() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <CfuToggle open={showCheck} onToggle={() => setShowCheck((v) => !v)} />
-      {showCheck && <CheckForUnderstanding title="Check for understanding: money words, writing cents, and money left over." questions={CFU} />}
       <div className="control-row">
         <Stepper label="price each ($)" value={price} min={0.25} max={9.75} step={0.25} onChange={setPrice} tone="a" />
         <Stepper label="how many" value={qty} min={1} max={9} onChange={setQty} tone="b" />
@@ -92,6 +91,8 @@ function Explore() {
           </Says>
         </div>
       </div>
+      {/* Below the picture, so students explore first, then check. */}
+      {showCheck && <CheckForUnderstanding title="Check for understanding: money words, writing cents, and money left over." questions={CFU} />}
     </div>
   );
 }

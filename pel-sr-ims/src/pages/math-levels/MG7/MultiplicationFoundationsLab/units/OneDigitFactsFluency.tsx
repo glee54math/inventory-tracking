@@ -167,7 +167,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <FactsFluencyCheck onComplete={onIntroDone} />}
       <Segmented
         label="Fact family"
         value={category}
@@ -238,6 +237,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </p>
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <FactsFluencyCheck onComplete={onIntroDone} />}
     </div>
   );
 }

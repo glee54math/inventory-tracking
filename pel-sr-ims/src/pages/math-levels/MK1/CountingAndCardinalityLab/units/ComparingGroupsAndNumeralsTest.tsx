@@ -1,7 +1,8 @@
-import { BigDigit, CounterGroup, TwoGroups } from "../diagrams";
+import { BigDigit, TwoGroups } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { palette, diagramFont } from "../../../shared/lib/palette";
 import { choice, type ChoiceStep, type TestQuestion } from "../../../shared/engine/types";
+import { withGroupChoices } from "./groupWords";
 
 /** Show a choice's numerals as big digits in the buttons. */
 const withBigDigits = (step: ChoiceStep): ChoiceStep => ({ ...step, display: step.choices.map((c) => <BigDigit key={c} d={c} size={48} />) });
@@ -80,7 +81,7 @@ export const matchingMoreQuestion = (): TestQuestion[] => {
       visual: <MatchingRows countA={a} countB={b} />,
       difficulty: "easy",
       step: choice(
-        { prompt: "Which row has MORE?", hint: "Look for counters with no partner.", explain: `The ${moreRow} has more.` },
+        { prompt: "Which row has MORE?", hint: "Look for the dotted circles.", explain: `The ${moreRow} has more.` },
         moreRow,
         [fewerRow] // misconception: misreading which row ran out first
       ),
@@ -102,7 +103,7 @@ export const matchingDiffQuestion = (): TestQuestion[] => {
       step: {
         kind: "number",
         prompt: `How many MORE does the ${moreRow} have than the ${fewerRow}?`,
-        hint: "Count the counters with no partner.",
+        hint: "Count the dotted circles.",
         explain: `${more} − ${fewer} = ${more - fewer}.`,
         answer: more - fewer,
       },
@@ -119,10 +120,12 @@ export const countCompareMoreQuestion = (): TestQuestion[] => {
     {
       visual: <TwoGroups a={a} b={b} seedA={a * 5 + 11} seedB={b * 5 + 13} />,
       difficulty: "easy",
-      step: choice(
-        { prompt: "Which group has MORE?", hint: "Count each group, then compare the two numbers.", explain: `Group A has ${a}, Group B has ${b}.` },
-        more,
-        [fewer] // misconception: picking the group that visually looks bigger instead of counting
+      step: withGroupChoices(
+        choice(
+          { prompt: "Which group has MORE?", hint: "Count each group, then compare the two numbers.", explain: `Group A has ${a}, Group B has ${b}.` },
+          more,
+          [fewer] // misconception: picking the group that visually looks bigger instead of counting
+        )
       ),
     },
   ];
@@ -137,10 +140,12 @@ export const countCompareFewerQuestion = (): TestQuestion[] => {
     {
       visual: <TwoGroups a={a} b={b} arrA="array" arrB="array" seedA={a * 7 + 1} seedB={b * 7 + 2} />,
       difficulty: "easy",
-      step: choice(
-        { prompt: "Which group has FEWER?", hint: "Fewer means the smaller count.", explain: `Group A has ${a}, Group B has ${b}.` },
-        fewer,
-        [more] // misconception: confusing "fewer" with "more" (opposite vocabulary term)
+      step: withGroupChoices(
+        choice(
+          { prompt: "Which group has FEWER?", hint: "Fewer means the smaller count.", explain: `Group A has ${a}, Group B has ${b}.` },
+          fewer,
+          [more] // misconception: confusing "fewer" with "more" (opposite vocabulary term)
+        )
       ),
     },
   ];
@@ -154,10 +159,7 @@ export const closeDiffQuestion = (): TestQuestion[] => {
   return [
     {
       visual: (
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          <CounterGroup count={a} arrangement="line" tone="a" seed={a * 3 + 1} />
-          <CounterGroup count={b} arrangement="line" tone="b" seed={b * 3 + 2} />
-        </div>
+        <TwoGroups a={a} b={b} arrA="line" arrB="line" seedA={a * 3 + 1} seedB={b * 3 + 2} />
       ),
       difficulty: "hard",
       step: { kind: "number", prompt: "Count both groups. Type the bigger number.", hint: "These two are close. Count carefully.", explain: `${bigger} is one more than ${small}, so ${bigger} is bigger.`, answer: bigger },
@@ -173,10 +175,7 @@ export const obviousDiffQuestion = (): TestQuestion[] => {
   return [
     {
       visual: (
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          <CounterGroup count={a} arrangement="line" tone="a" seed={a * 4 + 3} />
-          <CounterGroup count={b} arrangement="line" tone="b" seed={b * 4 + 4} />
-        </div>
+        <TwoGroups a={a} b={b} arrA="line" arrB="line" seedA={a * 4 + 3} seedB={b * 4 + 4} />
       ),
       difficulty: "easy",
       step: { kind: "number", prompt: "Count both groups. Type the bigger number.", hint: "One group has a lot more than the other.", explain: `${bigger} is bigger than ${small}.`, answer: bigger },
@@ -190,21 +189,18 @@ export const equalTrapQuestion = (): TestQuestion[] => {
   return [
     {
       visual: (
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          <CounterGroup count={n} arrangement="array" tone="a" seed={n * 2 + 1} />
-          <CounterGroup count={n} arrangement="scatter" tone="b" seed={n * 2 + 200} />
-        </div>
+        <TwoGroups a={n} b={n} arrA="array" arrB="scatter" seedA={n * 2 + 1} seedB={n * 2 + 200} names={["Grid", "Scattered"]} />
       ),
       difficulty: "hard",
-      step: choice(
+      step: withGroupChoices(choice(
         {
           prompt: "Which group has more — the grid group, the scattered group, or are they the same?",
           hint: "Spreading counters out doesn't add any.",
           explain: `Both groups have ${n} — spreading them out only changes how much space they take up, not the count.`,
         },
         "They're the same",
-        ["The grid group", "The scattered group"] // misconception: judging "more" by visual spread/density instead of actual count
-      ),
+        ["Grid group", "Scattered group"] // misconception: judging "more" by visual spread/density instead of actual count
+      )),
     },
   ];
 };

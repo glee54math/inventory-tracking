@@ -205,7 +205,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Check for Understanding
         </button>
       )}
-      {(introActive || showCheck) && <AngleAdditionCheck onComplete={onIntroDone} />}
       <p>
         When angles sit side by side — same vertex, sharing a ray, no overlap — their measures <b>add up</b> to the whole angle, just like lengths do. Drag the rays
         with dots and watch the equation.
@@ -243,6 +242,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           {rays.length === 4 ? "Fill a straight line" : "Make a square corner"}
         </button>
       </div>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <AngleAdditionCheck onComplete={onIntroDone} />}
     </div>
   );
 }

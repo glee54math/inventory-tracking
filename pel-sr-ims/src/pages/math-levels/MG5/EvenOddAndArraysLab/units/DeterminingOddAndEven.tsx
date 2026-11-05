@@ -272,7 +272,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <OddEvenCheckForUnderstanding onComplete={onIntroDone} />}
 
       <PairCounters count={count} arrangement={arrangement} tone="a" seed={seed} showPairs={showPairs} />
       <ReadAloud as="p" className="muted small">
@@ -282,6 +281,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             : `${count - 1} objects paired up, but 1 is left without a partner — ${count} is ODD.`
           : `Try pairing up all ${count} objects in your head, then click "Show pairs" to check. Changing the arrangement never changes whether ${count} is odd or even.`}
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <OddEvenCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -234,7 +234,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <ClassifyingCheck onComplete={onIntroDone} />}
       <Segmented
         label="What to explore"
         value={showCube ? "cube" : "flat"}
@@ -279,6 +278,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </ReadAloud>
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ClassifyingCheck onComplete={onIntroDone} />}
     </div>
   );
 }

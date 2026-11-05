@@ -228,7 +228,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <ComparingCheckForUnderstanding onComplete={onIntroDone} />}
 
       <div style={{ fontWeight: 800, fontSize: 28, display: "flex", gap: 10, alignItems: "center" }}>
         <span style={{ color: "var(--qa)" }}>{a}</span>
@@ -241,6 +240,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           ? "Both numbers land in the SAME row — their tens digit is tied, so look at which column (ones digit) is further right."
           : "The two numbers land in DIFFERENT rows — whichever row is further down has the bigger tens digit, which already decides the comparison, no matter what the ones digits are."}
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ComparingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -142,13 +142,14 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Check for Understanding
         </button>
       )}
-      {(introActive || showCheck) && (
-        <FixedCFU title="Check for understanding: who has 'times as many'?" questions={CFU_QUESTIONS} onComplete={onIntroDone} />
-      )}
       <p style={{ margin: 0 }}>
         <b>"Times as many"</b> means the bigger amount is made of equal copies of the smaller amount. Change the numbers and watch the bars.
       </p>
       <ComparisonExplore />
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && (
+        <FixedCFU title="Check for understanding: who has 'times as many'?" questions={CFU_QUESTIONS} onComplete={onIntroDone} />
+      )}
     </div>
   );
 }

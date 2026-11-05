@@ -315,7 +315,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <ComparingCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ReadAloud as="p" className="muted small">Drag the circle at the end of each rod to change how long it is.</ReadAloud>
       <LengthBars
@@ -338,6 +337,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         {heavier ? `The ${heavier} side is heavier.` : "Both sides balance evenly."}
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ComparingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

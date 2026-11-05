@@ -277,7 +277,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <AddingCheckForUnderstanding onComplete={onIntroDone} />}
 
       {stage === "start" && (
         <>
@@ -319,6 +318,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           ? "Adding the ones can make MORE than 9 loose ones — that's always exactly enough to bundle one brand new ten, which gets added onto the tens digit."
           : "Here the ones fit under 10, so no bundling is needed — just add the ones and keep the tens digit as it was."}
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <AddingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

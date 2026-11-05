@@ -248,7 +248,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <FluencyCheckForUnderstanding onComplete={onIntroDone} />}
 
       {mode !== "three" ? (
         <>
@@ -286,6 +285,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </ReadAloud>
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <FluencyCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -250,7 +250,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <EqualAddendsCheckForUnderstanding onComplete={onIntroDone} />}
 
       {isEven ? (
         <>
@@ -268,6 +267,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </ReadAloud>
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <EqualAddendsCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

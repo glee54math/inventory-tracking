@@ -320,7 +320,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <PositiveNegativePreCheck context={context} onComplete={onIntroDone} />}
       <Segmented label="Situation" value={context} onChange={setContext} options={CONTEXT_KEYS.map((k) => ({ id: k, label: SITUATION_LABELS[k] }))} />
       <div className="control-row">
         <Stepper label="Value" value={value} min={-cfg.range} max={cfg.range} step={1} onChange={setValue} tone="a" />
@@ -331,6 +330,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         {cfg.unit} means {phrase}. Try dragging the dot (or the value above) through 0 — notice how the meaning flips from one side to the
         other, and what 0 itself stands for: {cfg.zeroMeaning}.
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <PositiveNegativePreCheck context={context} onComplete={onIntroDone} />}
     </div>
   );
 }

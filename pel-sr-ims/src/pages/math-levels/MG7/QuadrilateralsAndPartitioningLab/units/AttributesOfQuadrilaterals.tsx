@@ -296,7 +296,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <AttributesCheck onComplete={onIntroDone} />}
       <Segmented label="Shape" value={kind} onChange={setKind} options={QUADS.map((k) => ({ id: k, label: QUAD_NAMES[k][0].toUpperCase() + QUAD_NAMES[k].slice(1) }))} />
       <div className="control-row">
         <Stepper label="Turn" value={rotation} min={0} max={345} step={15} onChange={setRotation} tone="b" />
@@ -319,6 +318,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         A {QUAD_NAMES[kind]} always has: <b>{SHAPE_DESCRIPTION[kind]}</b>. Try turning it — it stays a {QUAD_NAMES[kind]} no matter which way it's rotated.
       </p>
       <SortGallery />
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <AttributesCheck onComplete={onIntroDone} />}
     </div>
   );
 }

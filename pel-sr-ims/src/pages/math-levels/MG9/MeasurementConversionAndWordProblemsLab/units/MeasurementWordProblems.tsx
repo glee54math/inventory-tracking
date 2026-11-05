@@ -84,7 +84,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {!introActive && <CfuToggle open={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      {(introActive || showCheck) && <CheckForUnderstanding title="Check for understanding: same unit first, then add." questions={CFU} onComplete={onIntroDone} />}
 
       <div className="control-row">
         <label className="select">
@@ -152,6 +151,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         </QA>{" "}
         = {fmt(A * c.f)} {c.smalls}. Then {fmt(A * c.f)} + <QB>{safeB}</QB> = <b>{fmt(total)}</b> {c.smalls}. Same unit first, THEN add.
       </Says>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <CheckForUnderstanding title="Check for understanding: same unit first, then add." questions={CFU} onComplete={onIntroDone} />}
     </div>
   );
 }

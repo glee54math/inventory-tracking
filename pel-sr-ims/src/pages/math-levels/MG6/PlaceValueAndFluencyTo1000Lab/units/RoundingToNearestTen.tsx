@@ -222,7 +222,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <RoundingTenGate onComplete={onIntroDone} />}
       <div className="control-row">
         <Stepper label="Number" value={value} min={0} max={999} step={1} onChange={setValue} tone="a" />
       </div>
@@ -239,6 +238,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         {value} is {Math.abs(value - lower)} away from {lower}, and {Math.abs(upper - value)} away from {upper}.{" "}
         {isMid ? `Exactly halfway — by the rounding rule, ${value} rounds UP to ${rounded}.` : `So ${value} rounds to ${rounded}.`}
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <RoundingTenGate onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -274,7 +274,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <IdentifyingCheckForUnderstanding onComplete={onIntroDone} />}
       <p className="muted small">
         {exprA.display} and {exprB.display} ARE equivalent — distributing {a} correctly keeps every value the same:
       </p>
@@ -287,6 +286,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         Change a and b above — the first table always stays equal at every row, but the second table disagrees as soon as x changes, since the
         two expressions are genuinely different.
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <IdentifyingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

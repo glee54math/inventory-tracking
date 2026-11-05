@@ -284,7 +284,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <ExponentsCheckForUnderstanding onComplete={onIntroDone} />}
       <div style={{ fontSize: 28, fontWeight: 700 }}>
         {base}
         <sup>{exponent}</sup> = {value}
@@ -305,6 +304,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           ? `1 multiplied by itself any number of times is still 1.`
           : `${base}${exponent === 2 ? "²" : exponent === 3 ? "³" : "ⁿ"} means ${repeatedMultString(base, exponent)} = ${value} — the base repeated as a factor, NOT ${base} × ${exponent} (= ${base * exponent}).`}
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ExponentsCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

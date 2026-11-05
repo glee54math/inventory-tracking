@@ -267,7 +267,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <WritingReadingCheckForUnderstanding onComplete={onIntroDone} />}
 
       {mode === "wordToExpr" ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -324,6 +323,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </p>
         </div>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <WritingReadingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

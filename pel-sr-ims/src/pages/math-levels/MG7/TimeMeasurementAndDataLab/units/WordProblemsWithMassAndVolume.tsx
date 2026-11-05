@@ -243,7 +243,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Check for Understanding
         </button>
       )}
-      {(introActive || showCheck) && <WordProblemsCheckForUnderstanding onComplete={onIntroDone} />}
 
       <p className="muted small">{n} jugs, each holding {each} liters — an equal-groups story, the setup for a multiply (total) or divide (share) question.</p>
       <IconRow glyph="🧃" count={n} label={`${n} jugs`} />
@@ -255,6 +254,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         {n} jugs × {each} liters each = {n * each} liters in all. Flip it around: {n * each} liters shared equally among {n} jugs is {each} liters
         each.
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <WordProblemsCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -226,7 +226,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Check for Understanding
         </button>
       )}
-      {(introActive || showCheck) && <TenthsCheck onComplete={onIntroDone} />}
       <p>
         A whole square can be cut into 10 strips (<b>tenths</b>) or 100 tiny squares (<b>hundredths</b>). Every tenth strip is exactly 10 hundredths.
       </p>
@@ -295,6 +294,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </p>
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <TenthsCheck onComplete={onIntroDone} />}
     </div>
   );
 }

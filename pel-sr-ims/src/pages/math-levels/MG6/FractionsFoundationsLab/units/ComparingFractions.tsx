@@ -230,7 +230,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <ComparingCheck onComplete={onIntroDone} />}
       <p>Two fractions of the SAME-size whole can be compared by looking at the pieces — as long as they share a top number or a bottom number.</p>
       <Segmented
         label="Compare"
@@ -272,6 +271,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           ? "Same bottom number means same-size pieces — more pieces shaded is more."
           : "Same top number means the same COUNT of pieces — but a whole cut into more parts has smaller pieces, so the bigger bottom number makes the smaller fraction."}
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ComparingCheck onComplete={onIntroDone} />}
     </div>
   );
 }

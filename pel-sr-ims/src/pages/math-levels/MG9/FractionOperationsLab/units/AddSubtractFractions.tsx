@@ -293,13 +293,14 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {!introActive && <CfuToggle on={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      {(introActive || showCheck) && <AddSubtractCheck onComplete={onIntroDone} />}
       <p>Same-size pieces can be added and taken away just by counting them — the denominator (the piece size) never changes.</p>
       <div className="control-row">
         <Segmented label="Numbers" value={mode} onChange={reset(setMode)} options={[{ id: "frac", label: "Fractions" }, { id: "mixed", label: "Mixed numbers" }]} />
         <Segmented label="Operation" value={op} onChange={reset(setOp)} options={[{ id: "add", label: "Add +" }, { id: "sub", label: "Subtract −" }]} />
       </div>
       {body}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <AddSubtractCheck onComplete={onIntroDone} />}
     </div>
   );
 }

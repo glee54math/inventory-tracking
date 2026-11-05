@@ -228,7 +228,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Check for Understanding
         </button>
       )}
-      {(introActive || showCheck) && <WhatIsAnAngleCheck onComplete={onIntroDone} />}
       <p>
         An angle is two rays that share a starting point (the <b>vertex</b>). Its size is <b>how far one ray is turned from the other</b>. Drag the
         blue ray's dot to turn it.
@@ -280,6 +279,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         Angle words you'll use: an angle smaller than a quarter turn (less than 90°) is <b>acute</b>; exactly a quarter turn (90°, a square corner) is a{" "}
         <b>right angle</b>; between 90° and 180° is <b>obtuse</b>; a half turn (180°) makes a <b>straight angle</b>.
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <WhatIsAnAngleCheck onComplete={onIntroDone} />}
     </div>
   );
 }

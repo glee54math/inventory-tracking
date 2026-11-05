@@ -209,7 +209,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Check for Understanding
         </button>
       )}
-      {(introActive || showCheck) && <TimeCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ReadAloud as="p" className="muted small">Drag the thick hour hand slowly around the clock face and watch both hands move together.</ReadAloud>
       <ClockG2 time={time} onChange={setTime} tone="a" />
@@ -217,6 +216,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         This clock shows <b>{clockLabelG2(time)}</b> — the minute hand sits on the {time.minute}-minute mark, and the hour hand has crept {Math.round((time.minute / 60) * 100)}% of the way toward the next hour.
       </ReadAloud>
       <ReadAloud as="p" className="muted small">Drag past :50 slowly — notice the hour hand gets VERY close to the next number but the hour doesn't change until it actually gets there.</ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <TimeCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -150,7 +150,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {!introActive && <CfuToggle on={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      {(introActive || showCheck) && <WordProblemsCheck onComplete={onIntroDone} />}
       <p>
         The story's words tell you the operation: "in all" / "altogether" → <b>add</b>; "left" / "how much more" / "how much longer" → <b>subtract</b>.
       </p>
@@ -192,6 +191,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </p>
         </div>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <WordProblemsCheck onComplete={onIntroDone} />}
     </div>
   );
 }

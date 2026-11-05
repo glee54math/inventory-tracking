@@ -252,7 +252,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <TeenNumbersCheckForUnderstanding onComplete={onIntroDone} />}
 
       <TenAndOnes tens={1} ones={ones} tenTone="a" onesTone="b" />
       <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
@@ -262,6 +261,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         Written as a number sentence: 10 + {ones} = {teen}. The "1" in {teen} always means that whole ten-group, never just one single object — and
         every number from 11 to 19 is built exactly the same way.
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <TeenNumbersCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

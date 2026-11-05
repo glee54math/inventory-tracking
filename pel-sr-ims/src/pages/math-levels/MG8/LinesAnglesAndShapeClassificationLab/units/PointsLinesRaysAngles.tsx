@@ -247,9 +247,10 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div className="lasc-stack">
       {!introActive && <CfuToggle open={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      {(introActive || showCheck) && <PointsCheck onComplete={onIntroDone} />}
       <FigureBuilder />
       <AngleExplorer />
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <PointsCheck onComplete={onIntroDone} />}
     </div>
   );
 }

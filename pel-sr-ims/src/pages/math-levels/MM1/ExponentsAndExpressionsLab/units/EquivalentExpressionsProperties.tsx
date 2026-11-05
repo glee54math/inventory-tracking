@@ -246,7 +246,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <PropertiesCheckForUnderstanding onComplete={onIntroDone} />}
       <div style={{ fontSize: 22, fontWeight: 700 }}>
         {a}(x+{b}) = {a}x + {ab}
       </div>
@@ -258,6 +257,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       <div style={{ fontSize: 18 }}>
         Going the other direction (factoring): {ab} + {ac} = {a}({b}+{c}) — pulling {a} back out as the greatest common factor.
       </div>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <PropertiesCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -200,7 +200,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <WordProblemCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ReadAloud as="p">
         Build your own story: start with some, then {action === "add" ? "add more" : "take some away"}.
@@ -252,6 +251,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           : `${start} − ${change} = ${result}. The amount shrank — this is a "Take From" story.`}{" "}
         A story can ask for the start, the change, or the result — read carefully to see which one is missing.
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <WordProblemCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

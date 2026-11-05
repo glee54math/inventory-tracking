@@ -213,7 +213,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Check for Understanding
         </button>
       )}
-      {(introActive || showCheck) && <NotationCheck onComplete={onIntroDone} />}
       <p>
         A decimal is another way to write tenths and hundredths. The first digit after the point counts <QA>tenths</QA> (strips); the second counts <QC>hundredths</QC> (tiny squares).
       </p>
@@ -243,6 +242,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       <p className="muted small">
         Try tenths = 0 and hundredths = 7: that&apos;s 0.07, and the 0 is what keeps the 7 in the hundredths place. Then try tenths = 7, hundredths = 0 — 0.70 is the same as 0.7.
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <NotationCheck onComplete={onIntroDone} />}
     </div>
   );
 }

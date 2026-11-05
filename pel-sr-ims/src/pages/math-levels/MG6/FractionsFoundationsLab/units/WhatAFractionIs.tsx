@@ -175,7 +175,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <WhatIsAFractionCheck onComplete={onIntroDone} />}
       <p>
         A fraction names an amount by splitting a whole into <b>equal-size</b> parts, then counting how many of those parts you have. Try different
         splits and shading below.
@@ -197,6 +196,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           <p className="muted small">Compare the width of each part above — they're not the same, so this picture can't be named as a fraction the normal way.</p>
         </div>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <WhatIsAFractionCheck onComplete={onIntroDone} />}
     </div>
   );
 }

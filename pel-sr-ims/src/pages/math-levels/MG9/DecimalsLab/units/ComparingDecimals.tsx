@@ -209,7 +209,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Check for Understanding
         </button>
       )}
-      {(introActive || showCheck) && <ComparingCheck onComplete={onIntroDone} />}
       <Segmented
         label="Mode"
         value={mode}
@@ -260,6 +259,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </p>
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ComparingCheck onComplete={onIntroDone} />}
     </div>
   );
 }

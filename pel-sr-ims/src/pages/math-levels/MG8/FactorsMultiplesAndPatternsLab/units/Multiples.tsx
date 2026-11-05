@@ -81,7 +81,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {!introActive && <CfuToggle open={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      {(introActive || showCheck) && <FixedCheck title="Check for Understanding: factors vs. multiples" questions={CHECK} onComplete={onIntroDone} />}
 
       <div className="control-row">
         <Stepper label="Multiples of" value={k} min={2} max={10} onChange={setK} tone="a" />
@@ -107,6 +106,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         )}
       </p>
       {k >= 7 && k <= 9 && <p className="muted small">The {k}s don't line up in neat columns like 2, 5, and 10 do — that's why they're harder to remember. Dividing always works.</p>}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <FixedCheck title="Check for Understanding: factors vs. multiples" questions={CHECK} onComplete={onIntroDone} />}
     </div>
   );
 }

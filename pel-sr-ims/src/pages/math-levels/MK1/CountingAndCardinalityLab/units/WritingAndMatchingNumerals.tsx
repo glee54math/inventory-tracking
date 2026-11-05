@@ -286,7 +286,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <NumeralCheckForUnderstanding onComplete={onIntroDone} />}
 
       <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
         <CounterGroup count={value} arrangement={arrangement} tone="a" seed={value * 7 + 3} />
@@ -311,6 +310,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         </div>
         {flipped && <p className="muted small">{pair.note}</p>}
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <NumeralCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

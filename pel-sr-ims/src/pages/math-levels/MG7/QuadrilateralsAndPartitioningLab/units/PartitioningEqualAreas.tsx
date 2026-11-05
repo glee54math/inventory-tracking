@@ -228,7 +228,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <PartitioningCheck onComplete={onIntroDone} />}
       <h3 style={{ margin: 0 }}>Cut it yourself</h3>
       <div className="control-row">
         <Stepper label="Pieces" value={b} min={2} max={6} onChange={setB} tone="a" />
@@ -249,6 +248,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         Blue: {counts[0]} unit squares · Orange: {counts[1]} unit squares. {mode === "same" ? "Two matching halves — " : "Different shapes, but they cover the same number of squares — "}
         so each part is <Frac n={1} d={2} /> of the whole either way. Equal AREA is what counts, not equal shape.
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <PartitioningCheck onComplete={onIntroDone} />}
     </div>
   );
 }

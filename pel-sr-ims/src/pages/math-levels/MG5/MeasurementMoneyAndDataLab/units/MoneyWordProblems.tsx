@@ -213,7 +213,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <MoneyCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ReadAloud as="p" className="muted small">Click a coin or bill below to add it to your purse. Watch the total — it adds up VALUE, not just how many you clicked.</ReadAloud>
       <CoinPicker onAdd={(id) => setPurse((p) => [...p, id])} kinds={COIN_TYPES.filter((c) => c.kind === "coin").map((c) => c.id)} />
@@ -222,6 +221,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
       <CoinRow ids={purse} onRemove={(i) => setPurse((p) => p.filter((_, k) => k !== i))} />
       <ReadAloud as="p" className="muted small">Click a coin in your purse to remove it.</ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <MoneyCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

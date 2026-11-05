@@ -200,7 +200,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <ExplainingCheckForUnderstanding onComplete={onIntroDone} />}
 
       {mode === "trade" ? (
         <>
@@ -223,6 +222,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           <ReadAloud as="p" className="muted small">34 + 22: each column's digits add to less than 10, so you can add ones-to-ones and tens-to-tens separately with no carrying — that's WHY the column method works here.</ReadAloud>
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ExplainingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

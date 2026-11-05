@@ -269,7 +269,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <MeasuringCheckForUnderstanding onComplete={onIntroDone} />}
 
       {tool === "container" ? (
         <>
@@ -285,6 +284,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         </>
       )}
       <p className="muted small">Switch tools and move the stepper — notice the needle or fill line always lands exactly on a tick mark.</p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <MeasuringCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

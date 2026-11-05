@@ -303,7 +303,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <DescribingCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ReadAloud as="p" className="muted small">Click an object to see how it can be described.</ReadAloud>
       <div className="control-row" role="listbox" aria-label="Pick an object" data-readaloud-part>
@@ -331,6 +330,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           "{revealedWord}" describes {WORDS.find((w) => w.word === revealedWord)!.attr}.
         </ReadAloud>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <DescribingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

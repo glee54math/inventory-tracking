@@ -200,7 +200,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <WhatMultiplicationMeansCheck onComplete={onIntroDone} />}
       <Segmented label="Picture" value={mode} onChange={setMode} options={[{ id: "groups", label: "Equal Groups" }, { id: "array", label: "Array" }]} />
       {mode === "groups" ? (
         <>
@@ -225,6 +224,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </p>
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <WhatMultiplicationMeansCheck onComplete={onIntroDone} />}
     </div>
   );
 }

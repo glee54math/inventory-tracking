@@ -331,7 +331,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <MakeTenCheckForUnderstanding onComplete={onIntroDone} />}
 
       {mode === "add" ? (
         <>
@@ -368,6 +367,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </div>
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <MakeTenCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

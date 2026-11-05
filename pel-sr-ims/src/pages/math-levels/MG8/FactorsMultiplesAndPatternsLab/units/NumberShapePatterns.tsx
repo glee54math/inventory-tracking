@@ -121,7 +121,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {!introActive && <CfuToggle open={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      {(introActive || showCheck) && <FixedCheck title="Check for Understanding: rules, terms, and hidden features" questions={CHECK} onComplete={onIntroDone} />}
 
       <Segmented label="Pattern type" value={mode} onChange={setMode} options={[{ id: "number", label: "Number pattern" }, { id: "shape", label: "Shape pattern" }]} />
 
@@ -174,6 +173,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </p>
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <FixedCheck title="Check for Understanding: rules, terms, and hidden features" questions={CHECK} onComplete={onIntroDone} />}
     </div>
   );
 }

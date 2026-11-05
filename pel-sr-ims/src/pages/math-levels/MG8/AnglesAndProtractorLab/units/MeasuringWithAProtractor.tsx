@@ -178,7 +178,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Check for Understanding
         </button>
       )}
-      {(introActive || showCheck) && <ProtractorCheck onComplete={onIntroDone} />}
       <p>
         A protractor has <b>two scales</b>. The <span className="ap-blue">blue inner scale</span> starts at 0 on the right; the{" "}
         <span className="ap-orange">orange outer scale</span> starts at 0 on the left. Drag over the protractor to turn the purple ray.
@@ -228,6 +227,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </div>
         )}
       </div>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ProtractorCheck onComplete={onIntroDone} />}
     </div>
   );
 }

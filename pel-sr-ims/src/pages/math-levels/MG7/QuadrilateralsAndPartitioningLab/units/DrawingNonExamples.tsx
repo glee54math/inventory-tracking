@@ -221,12 +221,13 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <DrawingCheck onComplete={onIntroDone} />}
       <p className="muted small">
         This shape starts as a square, which is a rectangle AND a rhombus. Drag its corners and watch the checklist change. Can you make a quadrilateral that's
         none of the three named kinds? What about one with a pair of parallel sides that still isn't a rectangle?
       </p>
       <QuadBuilder requirement={EXPLORE_REQ} />
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <DrawingCheck onComplete={onIntroDone} />}
     </div>
   );
 }

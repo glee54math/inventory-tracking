@@ -151,8 +151,9 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <FixedCFU title="Quick check: two meanings, one equation." questions={CFU_QUESTIONS} onComplete={onIntroDone} />}
       <SituationExplore />
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <FixedCFU title="Quick check: two meanings, one equation." questions={CFU_QUESTIONS} onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -260,7 +260,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <DecomposingCheckForUnderstanding onComplete={onIntroDone} />}
 
       <SplitGroup total={total} partA={partA} toneA="a" toneB="b" />
       <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
@@ -270,6 +269,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         Move the "First part" slider to see every way to break {total} apart — {total} has {total + 1} different pairs (counting 0 and {total} themselves), not just one.
         {partA === partB && partA * 2 === total ? ` Right now both parts are EQUAL (${partA} and ${partB}) — that's still a valid way!` : ""}
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <DecomposingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

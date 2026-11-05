@@ -262,7 +262,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <CountingCheckForUnderstanding onComplete={onIntroDone} />}
 
       <div style={{ fontWeight: 800, fontSize: 28 }}>{current}</div>
       {crossedHundred && <p className="feedback good">You just crossed into the hundreds — a brand new digit appeared!</p>}
@@ -274,6 +273,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         right — and when you run off the end of a row, you wrap to the start of the next one. That's exactly what happens at 99 → 100, too — it's just the
         same wrap, one more time.
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <CountingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -228,7 +228,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <TenMoreTenLessCheckForUnderstanding onComplete={onIntroDone} />}
 
       <div style={{ fontWeight: 800, fontSize: 24 }}>
         {start} {tensMove >= 0 ? "+" : "-"} {Math.abs(tensMove) * 10} = {result >= 1 && result <= 120 ? result : "?"}
@@ -238,6 +237,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         Moving by tens always lands you in the SAME column (the ones digit never changes) — just a different row, straight up or straight down. That's true
         even when the tens digit drops all the way to 0.
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <TenMoreTenLessCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -324,7 +324,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <ComparingCheckForUnderstanding onComplete={onIntroDone} />}
       <NumberLine
         min={-RANGE}
         max={RANGE}
@@ -338,6 +337,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           |{b}| = {Math.abs(b)} — absolute value is just the distance from 0, always zero or positive.
         </p>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ComparingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

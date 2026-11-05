@@ -266,7 +266,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <GraphsCheckForUnderstanding onComplete={onIntroDone} />}
 
       <div className="control-row">
         {theme.cats.map((c, i) => (
@@ -290,6 +289,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       <p className="feedback good" style={{ minHeight: 24 }}>
         {theme.cats.map((c, i) => `${c.label}: ${counts[i] / 2} icons × ${k} = ${values[i]}`).join(" · ")}
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <GraphsCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -154,7 +154,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <PatternsCheck onComplete={onIntroDone} />}
       <Segmented
         label="Pattern"
         value={mode}
@@ -212,6 +211,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </p>
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <PatternsCheck onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -254,7 +254,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <TensAndOnesCheckForUnderstanding onComplete={onIntroDone} />}
 
       <BaseTenBlocks tens={tens} ones={ones} tenTone="a" oneTone="b" />
 
@@ -272,6 +271,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         Build the blocks FIRST, then peek at the number sentence — the sentence is just a shorter way to write what the tens-sticks and ones-cubes already
         show you.
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <TensAndOnesCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

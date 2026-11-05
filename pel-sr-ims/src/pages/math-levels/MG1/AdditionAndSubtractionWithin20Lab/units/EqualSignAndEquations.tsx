@@ -234,7 +234,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <EqualSignCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ReadAloud as="p" className="muted small">The = sign is like a balance scale: both sides must weigh the same. Try to make it balance.</ReadAloud>
       <div className="control-row" data-readaloud-part>
@@ -263,6 +262,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       <ReadAloud as="p" className={`feedback ${balanced ? "good" : "bad"}`}>
         {balanced ? `Balanced! ${leftA} + ${leftB} = ${rightA} + ${rightB} — both sides equal ${leftTotal}.` : `Not balanced — ${leftTotal} ≠ ${rightTotal}. Adjust the numbers until both sides match.`}
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <EqualSignCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

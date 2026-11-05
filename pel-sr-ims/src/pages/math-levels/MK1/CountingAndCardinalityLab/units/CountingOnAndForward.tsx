@@ -292,7 +292,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <CountingCheckForUnderstanding onComplete={onIntroDone} />}
 
       <div className="control-row" style={{ alignItems: "center" }} data-readaloud-part>
         <button className="btn primary" onClick={sayNext} disabled={current >= 100}>
@@ -325,6 +324,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           : `You've counted up to ${current} — that's ${Math.floor(current / 10)} group${Math.floor(current / 10) === 1 ? "" : "s"} of ten and ${current % 10} more.`}{" "}
         Notice how every ten dots makes a new bundle — crossing from a number ending in 9 into the next ten (like 29 then 30) always starts a fresh bundle.
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <CountingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -256,7 +256,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <DataCheckForUnderstanding onComplete={onIntroDone} />}
 
       {!showChart ? (
         <>
@@ -295,6 +294,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <DataCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

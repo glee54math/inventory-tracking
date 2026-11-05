@@ -343,13 +343,14 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <ClassifyingCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ReadAloud as="p" className="muted small">Click an item, then click the group it belongs in.</ReadAloud>
       <SortedBins tray={tray} bins={bins} selectedId={selected} onItemClick={onItemClick} onBinClick={onBinClick} />
       <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         {tray.length === 0 ? "Every item is sorted! Check the counts under each group." : `${tray.length} left to sort.`}
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ClassifyingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

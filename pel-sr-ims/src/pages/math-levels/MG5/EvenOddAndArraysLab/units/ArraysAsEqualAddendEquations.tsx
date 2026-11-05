@@ -273,13 +273,14 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <ArrayEquationsCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ArrayGrid rows={rows} cols={cols} tone="a" groupBy={groupBy} />
       <ReadAloud as="p" className="muted small">
         Adding by {groupBy === "row" ? "rows" : "columns"}: {equation} = {rows * cols}. The repeated number ({addend}) is the SIZE of each group;
         it repeats {count} times because that's how MANY groups there are.
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ArrayEquationsCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -258,8 +258,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <ReadAloud as="p" className="feedback good">This is still a {SHAPE_LABELS[kind]} — turning or resizing it never makes it a different shape!</ReadAloud>
       </div>
 
-      {(introActive || showCheck) && <NamingCheckForUnderstanding onComplete={onIntroDone} />}
-
       <div>
         <ReadAloud as="p" className="muted small">Now place the ball somewhere around the box, and see which position word fits.</ReadAloud>
         <div className="control-row" data-readaloud-part>
@@ -272,6 +270,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <ReadAloud as="p" className="feedback good">The ball is {RELATION_LABELS[relation].toLowerCase()} the box.</ReadAloud>
         <ReadAloud as="p" className="muted small">"Beside" and "next to" mean the same thing — both describe objects side-by-side, with nothing hidden.</ReadAloud>
       </div>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <NamingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -189,7 +189,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <EquivalentFractionsCheck onComplete={onIntroDone} />}
       <p>Two fractions are equivalent when they name the exact same point on the number line — even written with totally different numbers.</p>
       <Segmented
         label="Pair"
@@ -207,6 +206,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           ? `${n1}/${d1} and ${n2}/${d2} land on the exact same point — they're equivalent.`
           : `${n1}/${d1} and ${n2}/${d2} land on DIFFERENT points — even though both look like simple fractions, they're NOT equivalent.`}
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <EquivalentFractionsCheck onComplete={onIntroDone} />}
     </div>
   );
 }

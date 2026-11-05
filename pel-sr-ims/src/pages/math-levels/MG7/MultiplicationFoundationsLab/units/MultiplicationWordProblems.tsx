@@ -168,7 +168,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <WordProblemsCheck onComplete={onIntroDone} />}
       <p>Word problems hide multiplication inside everyday language. Four kinds show up again and again:</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <p>
@@ -187,6 +186,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       <p className="muted small">
         In every case, look for the "groups" word (rows, bags, times as many, each) and the "size" word (plants per row, apples per bag, how many Maya has) — then multiply.
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <WordProblemsCheck onComplete={onIntroDone} />}
     </div>
   );
 }

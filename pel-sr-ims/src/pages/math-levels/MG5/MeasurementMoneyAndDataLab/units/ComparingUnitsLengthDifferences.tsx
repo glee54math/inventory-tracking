@@ -232,7 +232,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <ComparingCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ReadAloud as="p" className="muted small">
         This is the SAME {obj.name.toLowerCase()} both times — only the unit changes. Switch between inches and centimeters and watch the count.
@@ -247,6 +246,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           ? `Measured in inches, it's ${inchLength} — inches are a bigger unit, so it takes fewer of them.`
           : `Measured in centimeters, it's ${cmLength} — centimeters are a smaller unit, so it takes more of them, even though the ${obj.name.toLowerCase()} is exactly the same.`}
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ComparingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

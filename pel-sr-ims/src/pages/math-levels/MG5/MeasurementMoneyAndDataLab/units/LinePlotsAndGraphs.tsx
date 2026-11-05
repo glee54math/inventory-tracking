@@ -251,7 +251,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <DataCheckForUnderstanding onComplete={onIntroDone} />}
 
       {mode === "plot" ? (
         <>
@@ -279,6 +278,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           {graphMode === "picture" ? <PictureGraph categories={categories} /> : <BarGraph categories={categories} />}
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <DataCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

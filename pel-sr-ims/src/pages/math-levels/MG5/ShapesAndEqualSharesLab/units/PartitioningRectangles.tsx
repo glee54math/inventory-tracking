@@ -205,7 +205,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <PartitioningCheck onComplete={onIntroDone} />}
       <div className="control-row" data-readaloud-part>
         <Stepper label="Rows" value={rows} min={2} max={6} step={1} onChange={setRows} tone="a" />
         <Stepper label="Columns" value={cols} min={2} max={6} step={1} onChange={setCols} tone="b" />
@@ -217,6 +216,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           ? `This rectangle is split into ${rows} equal rows and ${cols} equal columns. Add each row's ${cols} squares: ${repeatedAdd(cols, rows)} = ${total} squares total.`
           : `This grid LOOKS partitioned, but the pieces aren't actually the same size — so we can't count it as a clean ${rows}-row by ${cols}-column grid of equal squares.`}
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <PartitioningCheck onComplete={onIntroDone} />}
     </div>
   );
 }

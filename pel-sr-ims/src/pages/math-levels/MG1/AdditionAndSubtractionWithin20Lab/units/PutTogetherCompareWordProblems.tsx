@@ -290,7 +290,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <PutTogetherCompareCheckForUnderstanding onComplete={onIntroDone} />}
 
       <div>
         <ReadAloud as="p" className="muted small">Put together: two parts make a whole.</ReadAloud>
@@ -328,6 +327,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           {diff} more" or "{diff} fewer" depends only on which amount you're talking about, not on the math.
         </ReadAloud>
       </div>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <PutTogetherCompareCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

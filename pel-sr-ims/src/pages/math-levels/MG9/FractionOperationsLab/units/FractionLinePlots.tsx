@@ -181,7 +181,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {!introActive && <CfuToggle on={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      {(introActive || showCheck) && <LinePlotCheck onComplete={onIntroDone} />}
       <p>
         A line plot is a number line with a dot for every measurement. Click above a tick to add a measurement there.
       </p>
@@ -231,6 +230,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       ) : (
         <p className="muted small">No dots yet — click above a tick (not 0) to add one.</p>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <LinePlotCheck onComplete={onIntroDone} />}
     </div>
   );
 }

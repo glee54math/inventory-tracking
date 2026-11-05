@@ -241,7 +241,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <LinePlotCheckForUnderstanding onComplete={onIntroDone} />}
 
       <InchRuler maxInches={4} lengthQuarter={len} glyph="🖍️" tone="a" />
       <LinePlot minWhole={2} maxWhole={4} data={data} tone="b" />
@@ -249,6 +248,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         This crayon is {inchText(len)} inches. The plot has {data.length} measurement{data.length === 1 ? "" : "s"}
         {data.length > 0 ? `; ${countAt(data, len)} of them at ${inchText(len)}".` : "."}
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <LinePlotCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

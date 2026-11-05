@@ -258,7 +258,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <MeasuringCheckForUnderstanding onComplete={onIntroDone} />}
 
       <UnitRuler length={length} mode={mode} miscount={2} tone="a" />
       <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
@@ -269,6 +268,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           : `These overlapping tiles show ${tilesShown} of them, but the ribbon is still really ${length} units long — the overlaps covered the same ground more than once.`}
       </ReadAloud>
       <ReadAloud as="p" className="muted small">Switch between "No gaps or overlaps," "With gaps," and "Overlapping" to see how the tile count changes even though the ribbon itself never does.</ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <MeasuringCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -232,7 +232,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <LengthCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ReadAloud as="p" className="muted small">
         Drag the {obj.glyph} {obj.name} along the ruler. Watch what happens to the start and end marks — the LENGTH stays the same no matter where it sits.
@@ -244,6 +243,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       <ReadAloud as="p" className="muted small">
         Notice the end mark changes as you drag, but {reading.end} − {reading.start} always comes out to {reading.length} — that's the real length.
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <LengthCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

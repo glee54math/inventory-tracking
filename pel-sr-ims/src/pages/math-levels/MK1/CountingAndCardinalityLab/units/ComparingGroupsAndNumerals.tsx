@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { BigDigit, CounterGroup, TenGroups, TwoGroups, countAlongMs, type Arrangement } from "../diagrams";
+import { BigDigit, TenGroups, TwoGroups, countAlongMs, countStepMs, LEAD_IN_MS, type Arrangement } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { palette, diagramFont } from "../../../shared/lib/palette";
 import { choice, pointing, type ChoiceStep, type Problem } from "../../../shared/engine/types";
 import { countShowMe, countUp } from "./words";
-import { Segmented, Stepper } from "../../../shared/engine/controls";
+import { GROUP_WORDS, colorGroups } from "./groupWords";
+import { QA, QB, Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingGroupsAndNumeralsTest } from "./ComparingGroupsAndNumeralsTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
@@ -13,6 +14,19 @@ import { TapSelect } from "../../../shared/components/TapSelect";
 const bigDigit = (d: number | string) => <BigDigit d={d} />;
 
 /** Show a choice's numerals as big digits in the buttons. */
+
+/** Run a practice problem's words through colorGroups (choice buttons too). */
+const withGroupColors = (p: Problem): Problem => ({
+  ...p,
+  story: colorGroups(p.story),
+  wrapUp: colorGroups(p.wrapUp),
+  steps: p.steps.map((s) => {
+    const words = { ...s, prompt: colorGroups(s.prompt), hint: colorGroups(s.hint), explain: colorGroups(s.explain), showMe: colorGroups(s.showMe) };
+    if (s.kind === "choice" && !s.display && s.choices.some((c) => GROUP_WORDS.test(c))) return { ...words, kind: "choice" as const, display: s.choices.map((c, i) => <span key={i}>{colorGroups(c)}</span>) }; // one span, so the words stay together in the button
+    return words;
+  }) as Problem["steps"],
+});
+
 const withBigDigits = (step: ChoiceStep): ChoiceStep => ({ ...step, display: step.choices.map((c) => <BigDigit key={c} d={c} size={48} />) });
 
 /** Two rows, LEFT-ALIGNED with a fixed gap, so matching pairs really do line
@@ -22,7 +36,25 @@ const withBigDigits = (step: ChoiceStep): ChoiceStep => ({ ...step, display: ste
  *  (nothing else in the lab needs fixed-gap left-aligned rows — CounterGroup's
  *  own arrangements all center/space relative to count, which is exactly
  *  wrong for a side-by-side matching comparison). */
-function MatchingRows({ countA, countB }: { countA: number; countB: number }) {
+/** `countExtras`: "Show me" for "how many more?" — the dotted circles fill in
+ *  and get numbered 1, 2, 3... one at a time, at the read-aloud pace. */
+function MatchingRows({ countA, countB, countExtras }: { countA: number; countB: number; countExtras?: boolean }) {
+  const [counted, setCounted] = useState(0);
+  const extras = Math.abs(countA - countB);
+  useEffect(() => {
+    setCounted(0);
+    if (!countExtras) return;
+    const perMs = countStepMs();
+    let iv: number | undefined;
+    const lead = window.setTimeout(() => {
+      setCounted(1);
+      iv = window.setInterval(() => setCounted((k) => (k >= extras ? k : k + 1)), perMs);
+    }, LEAD_IN_MS);
+    return () => {
+      window.clearTimeout(lead);
+      window.clearInterval(iv);
+    };
+  }, [countExtras, extras]);
   const GAP = 30;
   const R = 13;
   const PAD = 20;
@@ -40,17 +72,25 @@ function MatchingRows({ countA, countB }: { countA: number; countB: number }) {
           </text>
           {Array.from({ length: count }, (_, i) => {
             const matched = i < Math.min(countA, countB);
+            const k = i - Math.min(countA, countB) + 1; // 1, 2, 3... along the dotted circles
+            const lit = !matched && countExtras && k <= counted;
             return (
-              <circle
-                key={i}
-                cx={PAD + R + i * GAP}
-                cy={rowY[row]}
-                r={R}
-                fill={matched ? colors[row] : "none"}
-                stroke={matched ? palette.paper : colors[row]}
-                strokeWidth={matched ? 2 : 3}
-                strokeDasharray={matched ? undefined : "4 3"}
-              />
+              <g key={i}>
+                <circle
+                  cx={PAD + R + i * GAP}
+                  cy={rowY[row]}
+                  r={R}
+                  fill={matched ? colors[row] : lit ? (row === 0 ? palette.aSoft : palette.bSoft) : "none"}
+                  stroke={matched ? palette.paper : colors[row]}
+                  strokeWidth={matched ? 2 : 3}
+                  strokeDasharray={matched || lit ? undefined : "4 3"}
+                />
+                {lit && (
+                  <text x={PAD + R + i * GAP} y={rowY[row]} textAnchor="middle" dominantBaseline="central" fontSize={14} fontWeight={800} fill={colors[row]}>
+                    {k}
+                  </text>
+                )}
+              </g>
             );
           })}
         </g>
@@ -85,10 +125,7 @@ function SpaceVsCountQuestion({ onComplete }: { onComplete?: () => void }) {
       <p>
         <b>1.</b> Both groups below have exactly 6 counters — one is spread out, one is bunched up close together.
       </p>
-      <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-        <CounterGroup count={6} arrangement="array" tone="a" seed={6} />
-        <CounterGroup count={6} arrangement="scatter" tone="b" seed={606} />
-      </div>
+      <TwoGroups a={6} b={6} arrA="array" arrB="scatter" seedA={6} seedB={606} />
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Which group has more counters?{" "}
@@ -143,27 +180,35 @@ function MoreFewerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   return (
     <ReadAloud className="align-stack-wrap">
       <p>
-        <b>2.</b> Group A has 7 counters. Group B has 4 counters.
+        <b>2.</b> <QA>Group A</QA> has 7 counters. <QB>Group B</QB> has 4 counters.
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
-          Which group has MORE counters?{" "}
+          Which group has <b>MORE</b> counters?{" "}
           <TapSelect value={morePick} onChange={(e) => setMorePick(e.target.value)} style={fieldOk(moreOk, checked)}>
             <option value="" disabled>
               choose
             </option>
-            <option value="A">Group A</option>
-            <option value="B">Group B</option>
+            <option value="A">
+              <QA>Group A</QA>
+            </option>
+            <option value="B">
+              <QB>Group B</QB>
+            </option>
           </TapSelect>
         </label>
         <label>
-          Which group has FEWER counters?{" "}
+          Which group has <b>FEWER</b> counters?{" "}
           <TapSelect value={fewerPick} onChange={(e) => setFewerPick(e.target.value)} style={fieldOk(fewerOk, checked)}>
             <option value="" disabled>
               choose
             </option>
-            <option value="A">Group A</option>
-            <option value="B">Group B</option>
+            <option value="A">
+              <QA>Group A</QA>
+            </option>
+            <option value="B">
+              <QB>Group B</QB>
+            </option>
           </TapSelect>
         </label>
         <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
@@ -173,7 +218,7 @@ function MoreFewerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
       {checked && allFilled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
-            ? '"More than" means a bigger amount — Group A (7) has more. "Fewer than" means a smaller amount — Group B (4) has fewer.'
+            ? colorGroups('"More than" means a bigger amount — Group A (7) has more. "Fewer than" means a smaller amount — Group B (4) has fewer.')
             : 'Not quite — "more" means a bigger count, "fewer" means a smaller count. Compare 7 and 4 again.'}
         </ReadAloud>
       )}
@@ -227,7 +272,7 @@ function CloseVsObviousQuestion({ onComplete }: { onComplete?: () => void }) {
   const [typePick, setTypePick] = useState("");
   const [checked, setChecked] = useState(false);
   const allFilled = [morePick, typePick].every((v) => String(v).trim() !== "");
-  const moreOk = morePick === "7";
+  const moreOk = morePick === "10";
   const typeOk = typePick === "close";
   const ok = moreOk && typeOk;
   useEffect(() => {
@@ -237,8 +282,10 @@ function CloseVsObviousQuestion({ onComplete }: { onComplete?: () => void }) {
   return (
     <ReadAloud className="align-stack-wrap">
       <p>
-        <b>4.</b> Group A has 6 counters. Group B has 7 counters.
+        <b>4.</b> <QA>Group A</QA> has 9 counters. <QB>Group B</QB> has 10 counters.
       </p>
+      {/* Both spread out and only 1 apart: hard to tell at a glance, which is the point. */}
+      <TwoGroups a={9} b={10} arrA="scatter" arrB="scatter" seedA={91} seedB={103} />
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
           Which group has more?{" "}
@@ -246,8 +293,12 @@ function CloseVsObviousQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="" disabled>
               choose
             </option>
-            <option value="6">Group A (6)</option>
-            <option value="7">Group B (7)</option>
+            <option value="9">
+              <QA>Group A</QA> (9)
+            </option>
+            <option value="10">
+              <QB>Group B</QB> (10)
+            </option>
           </TapSelect>
         </label>
         <label>
@@ -267,8 +318,8 @@ function CloseVsObviousQuestion({ onComplete }: { onComplete?: () => void }) {
       {checked && allFilled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
-            ? "Correct. 7 is more than 6, but only by 1, so they are close. 3 and 9 would be easy to tell apart at a glance. 6 and 7 need careful counting."
-            : "Not quite. Count both groups. When two groups are only 1 apart, like 6 and 7, you need to count carefully. A quick look is not enough."}
+            ? "Correct. 10 is more than 9, but only by 1, so they are close. 3 and 10 would be easy to tell apart at a glance. 9 and 10 need careful counting."
+            : "Not quite. Count both groups. When two groups are only 1 apart, like 9 and 10, you need to count carefully. A quick look is not enough."}
         </ReadAloud>
       )}
     </ReadAloud>
@@ -329,14 +380,11 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <Stepper label="Group B" value={b} min={0} max={10} step={1} onChange={setB} tone="b" />
         <Segmented label="B's look" value={arrB} onChange={setArrB} options={[{ id: "line", label: "Line" }, { id: "array", label: "Grid" }, { id: "scatter", label: "Scattered" }]} />
       </div>
-      {(introActive || showCheck) && <ComparingCheckForUnderstanding onComplete={onIntroDone} />}
 
-      <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-        <CounterGroup count={a} arrangement={arrA} tone="a" seed={a * 9 + 1} />
-        <CounterGroup count={b} arrangement={arrB} tone="b" seed={b * 9 + 2} />
-      </div>
+      {/* Each group in its own labeled box, so "Group A" and "Group B" point at something. */}
+      <TwoGroups a={a} b={b} arrA={arrA} arrB={arrB} seedA={a * 9 + 1} seedB={b * 9 + 2} />
       <ReadAloud as="p" className="muted small">
-        Group A has {a}, Group B has {b} — Group A has <b>{verdict}</b> Group B. "More than" means a bigger amount; "fewer than" means a smaller
+        <QA>Group A</QA> has {a}, <QB>Group B</QB> has {b} — <QA>Group A</QA> has <b>{verdict}</b> <QB>Group B</QB>. "More than" means a bigger amount; "fewer than" means a smaller
         amount; "the same as" means equal amounts. Try spreading one group out or bunching it up — the comparison never changes, because the
         COUNT didn't change.
       </ReadAloud>
@@ -352,6 +400,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         </div>
         <p className="muted small">Comparing the numerals {a} and {b} is the exact same idea as comparing {a} objects to {b} objects.</p>
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ComparingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }
@@ -371,6 +421,10 @@ const randDistinctPair = (min: number, max: number): [number, number] => {
 };
 
 function comparingProblem(targetBucket?: string): Problem {
+  return withGroupColors(buildComparingProblem(targetBucket));
+}
+
+function buildComparingProblem(targetBucket?: string): Problem {
   const bucket = (targetBucket as Bucket | undefined) ?? BUCKETS[randInt(0, BUCKETS.length - 1)];
 
   if (bucket === "matching") {
@@ -383,18 +437,20 @@ function comparingProblem(targetBucket?: string): Problem {
       title: "Line them up",
       bucket,
       story: "Line up the two rows. Whichever row runs out first has fewer.",
-      visual: () => <MatchingRows countA={a} countB={b} />,
+      // Step 2's "Show me" counts the dotted circles along.
+      visual: (_done, help) => <MatchingRows countA={a} countB={b} countExtras={!!help?.showMe && help.step === 1} />,
       steps: [
         choice(
-          { prompt: "Which row has MORE?", hint: "Look for counters with no partner. Which row has them?", showMe: `Look for the counters with no partner. The ${moreRow} has them, so it has more.`, explain: `The ${moreRow} has more. It has extra counters the ${fewerRow} doesn't have a partner for.` },
+          { prompt: "Which row has MORE?", hint: "Look for the dotted circles. Which row has them?", showMe: `Look for the dotted circles. The ${moreRow} has them, so it has more.`, explain: `The ${moreRow} has more. It has dotted circles left over.` },
           moreRow,
           [fewerRow]
         ),
         {
           kind: "number",
           prompt: `How many MORE does the ${moreRow} have than the ${fewerRow}?`,
-          hint: "Count the counters with no partner.",
-          showMe: `Count the counters with no partner: ${countUp(1, more - fewer)}. That is ${more - fewer} more.`,
+          hint: "Count the dotted circles.",
+          showMeHoldMs: countAlongMs(more - fewer),
+          showMe: `Count the dotted circles: ${countUp(1, more - fewer)}. That is ${more - fewer} more.`,
           explain: `${more} − ${fewer} = ${more - fewer}.`,
           answer: more - fewer,
         },
@@ -462,16 +518,23 @@ function comparingProblem(targetBucket?: string): Problem {
     return {
       title: "Which has more?",
       bucket,
-      story: `One group has ${a}. The other has ${b}.`,
-      visual: () => (
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          <CounterGroup count={a} arrangement="line" tone="a" seed={a * 3 + 1} />
-          <CounterGroup count={b} arrangement="line" tone="b" seed={b * 3 + 2} />
-        </div>
+      story: `Group A has ${a}. Group B has ${b}.`,
+      // Step 2's "Show me": cross out one from each group at a time, then
+      // count what's left in the bigger group (no subtracting needed).
+      visual: (_done, help) => (
+        <TwoGroups a={a} b={b} arrA="line" arrB="line" seedA={a * 3 + 1} seedB={b * 3 + 2} cancelOut={!!help?.showMe && help.step === 1} />
       ),
       steps: [
         { kind: "number", prompt: "What is the bigger of the two counts?", hint: "Which number comes later when you count?", showMe: `${more} comes after ${fewer} when you count. So ${more} is bigger.`, explain: `The bigger count is ${more}.`, answer: more },
-        { kind: "number", prompt: "How many more is that than the smaller count?", hint: "Count up from the smaller number to the bigger one.", showMe: `Start at ${fewer}. Count up to ${more}: ${countUp(fewer + 1, more)}. That is ${diff} more.`, explain: `${more} − ${fewer} = ${diff}.`, answer: diff },
+        {
+          kind: "number",
+          showMeHoldMs: countAlongMs(more + 1), // pairs + a pause + the leftovers
+          prompt: "How many more is that than the smaller count?",
+          hint: "Cross out one from each group until one group runs out. Count the ones left.",
+          showMe: `Cross out one from each group: ${countUp(1, fewer)}. Now count the ones left: ${countUp(1, diff)}. That is ${diff} more.`,
+          explain: `${more} is ${diff} more than ${fewer}.`,
+          answer: diff,
+        },
       ],
       wrapUp: diff === 1 ? `${more} and ${fewer} are close — just 1 apart.` : `${more} is clearly more than ${fewer} — a difference of ${diff}.`,
     };
@@ -485,11 +548,17 @@ function comparingProblem(targetBucket?: string): Problem {
       bucket,
       story: "One group is in neat rows. The other is spread out. Count both groups to compare them.",
       visual: (_done, help) => (
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          {/* Step 1's "Show me" counts both groups side by side, so they reach the same number together. */}
-          <CounterGroup count={n} arrangement="array" tone="a" seed={n * 2 + 1} countAlong={!!help?.showMe && (help.step === 0 || help.step === 1)} />
-          <CounterGroup count={n} arrangement="scatter" tone="b" seed={n * 2 + 200} countAlong={!!help?.showMe && help.step === 0} />
-        </div>
+        // Step 1's "Show me" counts both groups side by side, so they reach the same number together.
+        <TwoGroups
+          a={n}
+          b={n}
+          arrA="array"
+          arrB="scatter"
+          seedA={n * 2 + 1}
+          seedB={n * 2 + 200}
+          names={["Grid", "Scattered"]}
+          countAlong={help?.showMe && help.step === 0 ? "both" : help?.showMe && help.step === 1 ? "A" : undefined}
+        />
       ),
       steps: [
         choice(
@@ -501,7 +570,7 @@ function comparingProblem(targetBucket?: string): Problem {
             explain: `Both groups have ${n}. Spreading them out only changes how much space they take up, not how many there are.`,
           },
           "They're the same",
-          ["The grid group", "The scattered group"]
+          ["Grid group", "Scattered group"]
         ),
         { kind: "number", showMeHoldMs: countAlongMs(n), prompt: "Count one of the groups. How many are in it?", hint: "Touch each counter in one group as you count it.", showMe: countShowMe(n), explain: `Each group has ${n}.`, answer: n },
       ],

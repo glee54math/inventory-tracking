@@ -336,9 +336,10 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <ComposingShapesCheck onComplete={onIntroDone} />}
       <ComposeSandbox />
       <SolidSandbox />
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ComposingShapesCheck onComplete={onIntroDone} />}
     </div>
   );
 }

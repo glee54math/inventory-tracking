@@ -208,7 +208,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <Within1000CheckForUnderstanding onComplete={onIntroDone} />}
 
       {op === "add" ? (
         <>
@@ -240,6 +239,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </ReadAloud>
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <Within1000CheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

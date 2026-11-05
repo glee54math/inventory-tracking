@@ -429,7 +429,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <AddSubGate onComplete={onIntroDone} />}
       <div className="control-row">
         <label className="select">
           <span className="stepper-label">Operation</span>
@@ -464,6 +463,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           ? `${a} + ${b} = ${a + b}. Look at the blocks above — when one place has 10 or more, it bundles into the next place up.`
           : `${a} − ${b} = ${Math.max(0, a - b)}. Look at the blocks above — when a place doesn't have enough, it borrows a bundle from the next place up.`}
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <AddSubGate onComplete={onIntroDone} />}
     </div>
   );
 }

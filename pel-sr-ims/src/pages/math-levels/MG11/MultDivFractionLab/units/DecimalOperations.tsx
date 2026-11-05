@@ -916,31 +916,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           {showDrill ? "Hide the" : "Show the"} {op === "add" || op === "subtract" ? "lining-up drill" : "step-by-step guide"}
         </button>
       )}
-      {/* Mandatory (and always shown) when the parent says the gate is
-          currently due — first visit, or every reintroEverySolved problems
-          after that; see Unit.requiresIntro on the decimalOperations export.
-          Once satisfied, it's optional — shown only if the student opened it
-          with the toggle above. key={op} forces a full remount (not just a
-          prop update) when switching between Add and Subtract, so every
-          stage of the drill — which digits are typed, how far the student
-          has progressed — resets instead of carrying over a now-irrelevant
-          addition answer into subtraction. */}
-      {(introActive || showDrill) && (op === "add" || op === "subtract") && (
-        <AlignDecimalsDrill key={op} operation={op} onComplete={onIntroDone} prefilled={!introActive} />
-      )}
-      {/* Multiply's step-by-step guide is never shown MANDATORILY (that only
-          ever covers whichever of add/subtract is active by default) — it's
-          always just the optional toggle above. But finishing it still
-          satisfies the same gate add/subtract's drill does: a student who
-          goes straight to Multiply and completes it has just as validly
-          proven they can do the required activity, and Practice unlocking
-          only for whoever happened to click Add or Subtract first — while
-          Multiply shows every sign of being "the activity" too, down to its
-          own Check-my-work buttons and completion feedback — was confusing,
-          not intentional gatekeeping. */}
-      {showDrill && op === "multiply" && <MultiplyDecimalsDrill key={op} onComplete={onIntroDone} prefilled={!introActive} />}
-      {/* Same non-mandatory-but-still-gate-satisfying treatment as Multiply. */}
-      {showDrill && op === "divide" && <DivideDecimalsDrill key={op} onComplete={onIntroDone} prefilled={!introActive} />}
       {op === "divide" ? (
         shiftedBottom === 0 ? (
           <p className="muted small">Enter a non-zero second number to divide by.</p>
@@ -967,6 +942,32 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           <input className="answer" style={{ width: 80 }} value={bottomText} onChange={(e) => setBottomText(e.target.value)} />
         </label>
       </div>
+      {/* Below the picture, so students explore first, then check. */}
+      {/* Mandatory (and always shown) when the parent says the gate is
+          currently due — first visit, or every reintroEverySolved problems
+          after that; see Unit.requiresIntro on the decimalOperations export.
+          Once satisfied, it's optional — shown only if the student opened it
+          with the toggle above. key={op} forces a full remount (not just a
+          prop update) when switching between Add and Subtract, so every
+          stage of the drill — which digits are typed, how far the student
+          has progressed — resets instead of carrying over a now-irrelevant
+          addition answer into subtraction. */}
+      {(introActive || showDrill) && (op === "add" || op === "subtract") && (
+        <AlignDecimalsDrill key={op} operation={op} onComplete={onIntroDone} prefilled={!introActive} />
+      )}
+      {/* Multiply's step-by-step guide is never shown MANDATORILY (that only
+          ever covers whichever of add/subtract is active by default) — it's
+          always just the optional toggle above. But finishing it still
+          satisfies the same gate add/subtract's drill does: a student who
+          goes straight to Multiply and completes it has just as validly
+          proven they can do the required activity, and Practice unlocking
+          only for whoever happened to click Add or Subtract first — while
+          Multiply shows every sign of being "the activity" too, down to its
+          own Check-my-work buttons and completion feedback — was confusing,
+          not intentional gatekeeping. */}
+      {showDrill && op === "multiply" && <MultiplyDecimalsDrill key={op} onComplete={onIntroDone} prefilled={!introActive} />}
+      {/* Same non-mandatory-but-still-gate-satisfying treatment as Multiply. */}
+      {showDrill && op === "divide" && <DivideDecimalsDrill key={op} onComplete={onIntroDone} prefilled={!introActive} />}
     </div>
   );
 }

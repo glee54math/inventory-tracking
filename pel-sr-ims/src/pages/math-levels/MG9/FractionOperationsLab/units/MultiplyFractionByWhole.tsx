@@ -123,7 +123,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {!introActive && <CfuToggle on={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      {(introActive || showCheck) && <MultiplyCheck onComplete={onIntroDone} />}
       <p>
         <Frac n={aa} d={d} /> is {aa} copies of <Frac n={1} d={d} />. So {n} × <Frac n={aa} d={d} /> is {n} copies of that — {n} × {aa} = {p} copies of{" "}
         <Frac n={1} d={d} />.
@@ -146,6 +145,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         {p >= d && <> = {mixedText(p, d)}</>}
         {p >= d && p % d === 0 && <span className="muted small"> — a whole number!</span>}
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <MultiplyCheck onComplete={onIntroDone} />}
     </div>
   );
 }

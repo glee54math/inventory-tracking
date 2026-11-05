@@ -381,7 +381,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           { id: "2", label: "Parentheses & More" },
         ]}
       />
-      {(introActive || showCheck) && <EvaluatingCheckForUnderstanding part={part} onComplete={onIntroDone} />}
       {part === "1" ? (
         <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", alignItems: "baseline", rowGap: 10, columnGap: 14, fontSize: 20, fontWeight: 700 }}>
           <div style={{ gridColumn: "1 / -1" }}>
@@ -442,6 +441,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           ? "Change a, b, or c above and watch every step update — the exponent is always evaluated first, then multiplication, then addition, no matter what numbers you pick."
           : "Change a, b, c, or d above and watch every step update — parentheses are always simplified first, then the exponent, then multiplication, then subtraction."}
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <EvaluatingCheckForUnderstanding part={part} onComplete={onIntroDone} />}
     </div>
   );
 }

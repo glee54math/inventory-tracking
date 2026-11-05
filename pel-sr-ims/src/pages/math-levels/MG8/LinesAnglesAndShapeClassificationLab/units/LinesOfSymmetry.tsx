@@ -115,7 +115,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div className="lasc-stack">
       {!introActive && <CfuToggle open={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      {(introActive || showCheck) && <SymmetryCheck onComplete={onIntroDone} />}
       <div className="lasc-card">
         <h3 className="lasc-h">Fold it and see</h3>
         <p className="muted small">
@@ -128,6 +127,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           A <b>circle</b> is special: EVERY line through its center is a line of symmetry — it has more than you could ever count.
         </p>
       </div>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <SymmetryCheck onComplete={onIntroDone} />}
     </div>
   );
 }

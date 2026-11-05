@@ -177,7 +177,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <WholeNumberFractionsCheck onComplete={onIntroDone} />}
       <p>
         Some fractions are secretly whole numbers in disguise — when the numerator is an exact multiple of the denominator, every part gets used up
         in complete wholes, with nothing left over.
@@ -191,6 +190,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       <p className="muted small">
         {numerator}/{den} = {whole} — every one of the {whole} whole{whole === 1 ? "" : "s"} is fully shaded, nothing left over.
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <WholeNumberFractionsCheck onComplete={onIntroDone} />}
     </div>
   );
 }

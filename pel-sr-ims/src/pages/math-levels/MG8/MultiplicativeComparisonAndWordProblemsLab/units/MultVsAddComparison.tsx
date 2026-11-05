@@ -123,10 +123,11 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Check for Understanding
         </button>
       )}
+      <SideBySideExplore />
+      {/* Below the picture, so students explore first, then check. */}
       {(introActive || showCheck) && (
         <FixedCFU title="Check for understanding: times as many, or more than?" questions={CFU_QUESTIONS} onComplete={onIntroDone} />
       )}
-      <SideBySideExplore />
     </div>
   );
 }

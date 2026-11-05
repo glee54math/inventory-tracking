@@ -92,7 +92,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {!introActive && <CfuToggle open={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      {(introActive || showCheck) && <CheckForUnderstanding title="Check for understanding: which unit is bigger, and do you multiply or divide?" questions={CFU} onComplete={onIntroDone} />}
 
       <div className="control-row">
         <label className="select">
@@ -138,6 +137,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           <Says>Each row of the table goes up by {fmt(c.f)} — the same as multiplying the left number by {fmt(c.f)}.</Says>
         </div>
       </div>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <CheckForUnderstanding title="Check for understanding: which unit is bigger, and do you multiply or divide?" questions={CFU} onComplete={onIntroDone} />}
     </div>
   );
 }

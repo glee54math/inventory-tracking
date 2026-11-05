@@ -211,7 +211,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <FourAddendsCheckForUnderstanding onComplete={onIntroDone} />}
 
       <div className="control-row" data-readaloud-part>
         {addends.map((v, i) => (
@@ -223,6 +222,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         Ones column: {breakdown.digitsByOperand.map((d) => d[0]).join(" + ")} = {breakdown.digitsByOperand.reduce((s, d) => s + d[0], 0)} → write {breakdown.resultDigits[0]}, carry {breakdown.carry[0]}.{" "}
         {breakdown.carry[0] > 1 ? "Notice the carry here is MORE than 1 — that only happens with three or four addends." : "With just two addends, the carry here can never be more than 1."}
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <FourAddendsCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

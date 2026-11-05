@@ -293,8 +293,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         </ReadAloud>
       </div>
 
-      {(introActive || showCheck) && <BuildingCheckForUnderstanding onComplete={onIntroDone} />}
-
       <div>
         <ReadAloud as="p" className="muted small">Now build a cube out of clay (corners, already placed) and sticks (edges) — click each dashed gap.</ReadAloud>
         <div className="control-row" data-readaloud-part>
@@ -356,6 +354,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </>
         )}
       </div>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <BuildingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

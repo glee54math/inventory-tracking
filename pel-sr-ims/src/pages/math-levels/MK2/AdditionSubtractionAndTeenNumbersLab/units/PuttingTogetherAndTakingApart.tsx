@@ -278,7 +278,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <PuttingTogetherCheckForUnderstanding onComplete={onIntroDone} />}
 
       <div className="control-row" data-readaloud-part>
         <Stepper label={mode === "join" ? "First group" : "Whole group"} value={a} min={0} max={10} step={1} onChange={setA} tone="a" />
@@ -304,6 +303,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <Fingers count={total} tone="c" />
         <p className="muted small">{a} fingers and {b} fingers makes {total} fingers in all — fingers work exactly like any other group of objects.</p>
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <PuttingTogetherCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

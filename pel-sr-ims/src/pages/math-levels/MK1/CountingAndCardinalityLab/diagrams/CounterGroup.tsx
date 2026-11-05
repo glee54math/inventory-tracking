@@ -152,6 +152,12 @@ export interface CounterGroupProps {
    *  drawn faded with an X so "how many are left?" has something to count.
    *  Static display only; defaults to 0 (none taken). */
   removed?: number;
+  /** Cross out the first N counters (layout order) with a slash and fade them,
+   *  e.g. pairs cancelled against another group. Static display only. */
+  slashFirst?: number;
+  /** Number counters `from`, `from + 1`, ... as 1, 2, ... (`shown` of them), with
+   *  a ring on the newest — counting what's left after `slashFirst`. */
+  numbered?: { from: number; shown: number };
 }
 
 /** A group of simple counters (dots, or an emoji glyph) laid out as a line,
@@ -170,7 +176,7 @@ function countingOrder(points: { x: number; y: number }[], arrangement: Arrangem
 // dots keep step with what's being said ("Let's count together: 1, 2, 3...").
 const STEP_MS = { slow: 1300, normal: 1000, fast: 800 } as const;
 // Wait for "Let's count together:" before the first dot gets its number.
-const LEAD_IN_MS = 1200;
+export const LEAD_IN_MS = 1200;
 
 /** Milliseconds per counted number at the student's current read-aloud speed. */
 export const countStepMs = () => STEP_MS[getState().speed];
@@ -178,7 +184,7 @@ export const countStepMs = () => STEP_MS[getState().speed];
 /** Milliseconds a countAlong of `count` counters takes, for Step.showMeHoldMs. */
 export const countAlongMs = (count: number, perMs = countStepMs()) => LEAD_IN_MS + count * perMs;
 
-export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyph, countedOrder: clickedOrder, onToggle, removed = 0, countAlong, countAlongMs }: CounterGroupProps) {
+export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyph, countedOrder: clickedOrder, onToggle, removed = 0, countAlong, countAlongMs, slashFirst = 0, numbered }: CounterGroupProps) {
   const speed = useTtsState().speed;
   const perMs = countAlongMs ?? STEP_MS[speed];
   const points = layoutPositions(count, arrangement, seed);
@@ -217,12 +223,14 @@ export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyp
         const order = orderOf(i);
         const counted = order >= 0;
         const taken = i >= count - removed;
+        const slashed = i < slashFirst;
+        const num = numbered && i >= numbered.from && i < numbered.from + numbered.shown ? i - numbered.from + 1 : 0;
         return (
           <g
             key={i}
             style={interactive ? { cursor: "pointer" } : undefined}
             onClick={interactive ? () => onToggle!(i) : undefined}
-            opacity={taken ? 0.3 : undefined}
+            opacity={taken || slashed ? 0.3 : undefined}
           >
             {glyph ? (
               <text x={p.x} y={p.y + R * 0.7} textAnchor="middle" fontSize={R * 2.1} opacity={counted || !countedOrder ? 1 : 0.35}>
@@ -246,6 +254,17 @@ export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyp
                 strokeWidth={3}
                 strokeLinecap="round"
               />
+            )}
+            {slashed && (
+              <path d={`M ${p.x + R + 2} ${p.y - R - 2} L ${p.x - R - 2} ${p.y + R + 2}`} stroke={palette.ink} strokeWidth={3.5} strokeLinecap="round" />
+            )}
+            {num > 0 && (
+              <>
+                <text x={p.x} y={p.y + 4.5} textAnchor="middle" fontSize={13} fontWeight={800} fill="#fff">
+                  {num}
+                </text>
+                {num === numbered!.shown && <circle cx={p.x} cy={p.y} r={R + 4} fill="none" stroke={palette.ink} strokeWidth={2.5} />}
+              </>
             )}
             {countedOrder && counted && (countAlong && !glyph ? (
               <text x={p.x} y={p.y + 4.5} textAnchor="middle" fontSize={order >= 9 ? 11 : 13} fontWeight={800} fill="#fff">

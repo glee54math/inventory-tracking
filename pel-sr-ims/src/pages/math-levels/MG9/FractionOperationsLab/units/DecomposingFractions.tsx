@@ -162,7 +162,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {!introActive && <CfuToggle on={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      {(introActive || showCheck) && <DecomposingCheck onComplete={onIntroDone} />}
 
       <p>
         A fraction is a bunch of same-size pieces. <b>Decomposing</b> means splitting those pieces into groups — and writing the fraction as a sum. Click a
@@ -217,6 +216,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </ul>
         </div>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <DecomposingCheck onComplete={onIntroDone} />}
     </div>
   );
 }

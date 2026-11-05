@@ -248,7 +248,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <EqualSharesCheck onComplete={onIntroDone} />}
       <Segmented label="Shape" value={shape} onChange={setShape} options={SHAPES.map((s) => ({ id: s, label: s === "circle" ? "Circle" : "Rectangle" }))} />
       <div className="control-row" data-readaloud-part>
         <Segmented label="Pieces" value={pieceCount} onChange={setPieceCount} options={[{ id: "2", label: "2 (halves)" }, { id: "3", label: "3 (thirds)" }, { id: "4", label: "4 (fourths)" }]} />
@@ -274,6 +273,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           : `This ${shape} has ${meta.pieceCount} pieces, but they're NOT the same size — so we can't call them ${shareName}.`}
         {shape === "rectangle" && equal === "equal" && pieceCount === "2" && " Try switching between the straight cut and the diagonal cut — both give 2 EQUAL halves, just shaped differently."}
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <EqualSharesCheck onComplete={onIntroDone} />}
     </div>
   );
 }

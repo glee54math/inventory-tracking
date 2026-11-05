@@ -276,8 +276,9 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </ReadAloud>
         </div>
       </div>
-      {(introActive || showCheck) && <FlatOrSolidCheckForUnderstanding onComplete={onIntroDone} />}
       <ReadAloud as="p" className="muted small">A circle and a sphere can look almost the same size on a screen — the real difference is whether you could actually pick it up and hold real space in your hands.</ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <FlatOrSolidCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

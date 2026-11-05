@@ -263,7 +263,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <ArrayTotalsCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ArrayGrid rows={rows} cols={cols} tone="a" groupBy={groupBy} />
       <ReadAloud as="p" className="muted small">
@@ -271,6 +270,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         {groupBy === "col" && `Adding by columns: ${rows} + ${rows}${cols > 2 ? " + ..." : cols === 2 ? "" : ""} (${cols} columns of ${rows}) = ${rows * cols}.`}
         {groupBy === "none" && `This array has ${rows} rows and ${cols} columns — ${rows * cols} objects total. Try "Rows" or "Columns" above to see how adding by each one works.`}
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ArrayTotalsCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

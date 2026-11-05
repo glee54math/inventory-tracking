@@ -284,7 +284,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <LengthCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ReadAloud as="p" className="muted small">Drag the handle (⠿) on each row to put the three objects in order, shortest to longest, top to bottom.</ReadAloud>
       <LengthBars items={items} draggableReorder onReorder={setOrder} />
@@ -304,6 +303,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         Try dragging again after clicking "New objects" a few times — the actual lengths change, but they always start lined up at the same left edge
         here, which is what makes comparing them fair just by looking.
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <LengthCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

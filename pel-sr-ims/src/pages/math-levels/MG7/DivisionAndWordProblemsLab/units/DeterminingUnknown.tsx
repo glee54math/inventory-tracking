@@ -88,8 +88,9 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <FixedCFU title="Quick check: the unknown can be anywhere." questions={CFU_QUESTIONS} onComplete={onIntroDone} />}
       <EquationExplore />
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <FixedCFU title="Quick check: the unknown can be anywhere." questions={CFU_QUESTIONS} onComplete={onIntroDone} />}
     </div>
   );
 }

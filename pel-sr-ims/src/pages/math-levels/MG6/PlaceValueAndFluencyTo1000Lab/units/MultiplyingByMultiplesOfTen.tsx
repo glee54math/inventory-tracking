@@ -205,7 +205,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         </button>
       </div>
       {showFacts && <FactsRefresher />}
-      {(introActive || showCheck) && <Mult10Gate onComplete={onIntroDone} />}
       <div className="control-row">
         <Stepper label="Groups" value={groups} min={1} max={9} onChange={setGroups} tone="a" />
         <Stepper label="Tens in each group" value={tensEach} min={1} max={9} onChange={setTensEach} tone="b" />
@@ -218,6 +217,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         </b>
         .
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <Mult10Gate onComplete={onIntroDone} />}
     </div>
   );
 }

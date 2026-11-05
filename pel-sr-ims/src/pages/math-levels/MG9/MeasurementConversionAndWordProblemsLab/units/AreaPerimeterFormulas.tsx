@@ -83,7 +83,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {!introActive && <CfuToggle open={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      {(introActive || showCheck) && <CheckForUnderstanding title="Check for understanding: which formula, and how do you undo it?" questions={CFU} onComplete={onIntroDone} />}
       <p className="muted small" style={{ margin: 0 }}>
         Remember from grade 3: area counts the unit squares that cover the inside; perimeter is the distance around the outside.
       </p>
@@ -133,6 +132,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </Says>
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <CheckForUnderstanding title="Check for understanding: which formula, and how do you undo it?" questions={CFU} onComplete={onIntroDone} />}
     </div>
   );
 }

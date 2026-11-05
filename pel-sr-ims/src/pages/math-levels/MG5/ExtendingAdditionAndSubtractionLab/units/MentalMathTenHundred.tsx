@@ -192,13 +192,14 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <MentalMathCheckForUnderstanding onComplete={onIntroDone} />}
 
       <PlaceValueBoxes shift={shift} showAfter />
       <ReadAloud as="p" className="muted small">
         {n} {delta > 0 ? "+" : "−"} {Math.abs(delta)} = {shift.result}.{" "}
         {shift.rippled ? "Notice this rippled into another digit, not just the one you'd expect." : "Only the one digit you'd expect changed here."}
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <MentalMathCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

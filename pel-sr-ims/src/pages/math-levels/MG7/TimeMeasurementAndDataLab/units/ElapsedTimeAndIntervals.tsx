@@ -236,7 +236,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <ElapsedCheckForUnderstanding onComplete={onIntroDone} />}
 
       <div className="control-row">
         <Clock time={start} tone="a" />
@@ -246,6 +245,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         Start at <b>{clockLabel(start)}</b>, add <b>{addMin}</b> minutes, and you land on <b>{clockLabel(end)}</b>.
         {crossed ? " Notice the hour changed partway through — the minutes rolled past 60 and carried into a new hour." : " The hour stayed the same this time."}
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <ElapsedCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

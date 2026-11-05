@@ -275,7 +275,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Check for Understanding
         </button>
       )}
-      {(introActive || showCheck) && <TimeCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ReadAloud as="p" className="muted small">Drag the thick hour hand all the way around the clock face.</ReadAloud>
       <Clock time={time} onChange={setTime} tone="a" />
@@ -287,6 +286,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         Drag slowly past each half-hour position and watch the hour hand creep toward the next number without ever quite reaching it — that's the
         half-past position.
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <TimeCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

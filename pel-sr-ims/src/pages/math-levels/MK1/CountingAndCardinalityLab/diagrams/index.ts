@@ -1,4 +1,4 @@
-export { CounterGroup, layoutPositions, countAlongMs } from "./CounterGroup";
+export { CounterGroup, layoutPositions, countAlongMs, countStepMs, LEAD_IN_MS } from "./CounterGroup";
 export type { CounterGroupProps, Arrangement } from "./CounterGroup";
 export { TenGroups } from "./TenGroups";
 export type { TenGroupsProps } from "./TenGroups";

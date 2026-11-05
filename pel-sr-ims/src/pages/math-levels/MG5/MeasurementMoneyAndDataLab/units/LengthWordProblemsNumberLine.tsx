@@ -212,13 +212,14 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <LengthWordProblemsCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ReadAloud as="p" className="muted small">Drag the steppers to set a starting point and a jump. Watch the arc land exactly on start + jump.</ReadAloud>
       <NumberLineMD max={100} tickStep={10} jumps={[{ from: start, to: Math.max(0, Math.min(100, result)) }]} tone="a" />
       <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
         {jump >= 0 ? `${start} + ${jump} = ${result}` : `${start} + (${jump}) = ${result}`} — the arc shows the jump landing right on the answer.
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <LengthWordProblemsCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

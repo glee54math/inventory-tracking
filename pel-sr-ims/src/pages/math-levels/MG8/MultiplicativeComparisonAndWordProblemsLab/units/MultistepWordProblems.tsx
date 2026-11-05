@@ -164,8 +164,9 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Check for Understanding
         </button>
       )}
-      {(introActive || showCheck) && <FixedCFU title="Check for understanding: read the WHOLE story first." questions={CFU_QUESTIONS} onComplete={onIntroDone} />}
       <StoryBuilder />
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <FixedCFU title="Check for understanding: read the WHOLE story first." questions={CFU_QUESTIONS} onComplete={onIntroDone} />}
     </div>
   );
 }

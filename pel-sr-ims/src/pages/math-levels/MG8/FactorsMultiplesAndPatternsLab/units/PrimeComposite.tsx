@@ -76,7 +76,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {!introActive && <CfuToggle open={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      {(introActive || showCheck) && <FixedCheck title="Check for Understanding: prime or composite?" questions={CHECK} onComplete={onIntroDone} />}
 
       <h3 style={{ margin: 0 }}>Check one number</h3>
       <div className="control-row">
@@ -115,6 +114,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       <p className="says">
         Worth remembering: the primes up to 20 are <b>{PRIMES_TO_20.join(", ")}</b>.
       </p>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <FixedCheck title="Check for Understanding: prime or composite?" questions={CHECK} onComplete={onIntroDone} />}
     </div>
   );
 }

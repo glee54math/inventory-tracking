@@ -261,7 +261,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <MakingTenCheckForUnderstanding onComplete={onIntroDone} />}
 
       <TenFrame filled={n} tone="a" fillB={revealed ? partner : 0} fillBTone="b" />
       <button className="btn primary" style={{ width: "fit-content" }} onClick={() => setRevealed((r) => !r)}>
@@ -274,6 +273,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         Try every starting number from 1 to 9 — notice each one has exactly ONE partner. The goal is to eventually just KNOW the partner instantly,
         without counting up from 1 each time.
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <MakingTenCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -81,7 +81,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div className="lasc-stack">
       {!introActive && <CfuToggle open={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      {(introActive || showCheck) && <QuadsCheck onComplete={onIntroDone} />}
       <div className="lasc-card">
         <h3 className="lasc-h">Drag the corners — watch the family tree</h3>
         <p className="muted small">
@@ -90,6 +89,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         </p>
         <QuadSorter />
       </div>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <QuadsCheck onComplete={onIntroDone} />}
     </div>
   );
 }

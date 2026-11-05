@@ -299,7 +299,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <CardinalityCheckForUnderstanding onComplete={onIntroDone} />}
 
       <ReadAloud as="p" className="muted small">Tap each counter once to count it. You can go in any order.</ReadAloud>
       <CounterGroup count={count} arrangement={arrangement} tone="a" seed={count * 9 + 5} countedOrder={order} onToggle={toggle} />
@@ -322,6 +321,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         Try the same number of counters in a different arrangement (a circle is the trickiest — it's easy to lose track of where you started!). No
         matter the arrangement, counting correctly always gives the same total.
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <CardinalityCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

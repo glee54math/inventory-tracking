@@ -280,7 +280,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      {(introActive || showCheck) && <CountingCheckForUnderstanding onComplete={onIntroDone} />}
 
       <div className="control-row" style={{ alignItems: "center" }} data-readaloud-part>
         <button
@@ -315,6 +314,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
       <NumberLine min={0} max={20} points={[{ value: start, label: "start", tone: "c" }, ...(current !== start ? [{ value: current, label: "now", tone: "a" as const }] : [])]} />
       <TenFrameGroup value={current} tone="a" />
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <CountingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }

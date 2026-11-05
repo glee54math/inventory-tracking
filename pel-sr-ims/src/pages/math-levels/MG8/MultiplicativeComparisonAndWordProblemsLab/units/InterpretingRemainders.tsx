@@ -126,8 +126,9 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Check for Understanding
         </button>
       )}
-      {(introActive || showCheck) && <FixedCFU title="Check for understanding: the question decides what the remainder means." questions={CFU_QUESTIONS} onComplete={onIntroDone} />}
       <RemainderExplore />
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <FixedCFU title="Check for understanding: the question decides what the remainder means." questions={CFU_QUESTIONS} onComplete={onIntroDone} />}
     </div>
   );
 }

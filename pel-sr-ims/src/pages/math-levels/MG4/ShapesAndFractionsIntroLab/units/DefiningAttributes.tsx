@@ -236,7 +236,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Quick Check
         </button>
       )}
-      {(introActive || showCheck) && <DefiningAttributesCheck onComplete={onIntroDone} />}
       <Segmented label="Shape" value={kind} onChange={setKind} options={CATEGORIES.map((k) => ({ id: k, label: SHAPE_NAMES[k][0].toUpperCase() + SHAPE_NAMES[k].slice(1) }))} />
       <div className="control-row" data-readaloud-part>
         <Stepper label="Size" value={size} min={24} max={60} step={6} onChange={setSize} tone="a" />
@@ -267,6 +266,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         A {SHAPE_NAMES[kind]} always has: <b>{DEFINING_ATTRIBUTE[kind]}</b>. Try dragging the Size and Turn controls, and tapping a different color — notice the shape
         stays a {SHAPE_NAMES[kind]} the whole time. Size, color, and which way it's turned never change what shape something is.
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <DefiningAttributesCheck onComplete={onIntroDone} />}
     </div>
   );
 }

@@ -291,8 +291,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         </ReadAloud>
       </div>
 
-      {(introActive || showCheck) && <SidesAndCornersCheckForUnderstanding onComplete={onIntroDone} />}
-
       <div>
         <ReadAloud as="p" className="muted small">Now compare two different shapes side by side.</ReadAloud>
         <div className="control-row" data-readaloud-part>
@@ -321,6 +319,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
               : `${SHAPE_LABELS[kindB]} has MORE sides than ${SHAPE_LABELS[kindA]}.`}
         </ReadAloud>
       </div>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <SidesAndCornersCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }
