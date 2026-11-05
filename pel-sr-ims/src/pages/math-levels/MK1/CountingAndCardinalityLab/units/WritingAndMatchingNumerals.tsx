@@ -418,7 +418,8 @@ function numeralProblem(targetBucket?: string): Problem {
       // The picture shows what the question gives: the word. When the student
       // is stuck, it shows that many dots in ten-frames to count.
       visual: (done, help) => {
-        if (done === 0) return pointing(help, 0) ? <TenGroups value={n} tone="a" labels /> : <span style={{ fontSize: 44, fontWeight: 800 }}>"{word}"</span>;
+        // No count labels until "Show me": the student counts the dots, not copies a number.
+        if (done === 0) return pointing(help, 0) ? <TenGroups value={n} tone="a" labels={!!help?.showMe} /> : <span style={{ fontSize: 44, fontWeight: 800 }}>"{word}"</span>;
         return <TenGroups value={n} tone="a" labels target={pointing(help, 1) || done >= 2 ? n + 1 : undefined} targetTone="b" />;
       },
       steps: [
@@ -439,13 +440,34 @@ function numeralProblem(targetBucket?: string): Problem {
       title: "How many? Write it.",
       bucket,
       story: "Count the counters. Then write the numeral for how many there are.",
-      visual: (_done, help) => <CounterGroup count={n} arrangement={arrangement} tone="b" seed={n * 13 + 5} countAlong={!!help?.showMe && help.step === 0} />,
+      // Step 1: tap to count. Step 2: a blinking X on the counter that goes
+      // away (or a "?" spot for one more, when there are none), shown done
+      // during "Show me" and once answered.
+      // ("Show me" draws with its step done, so step 1's "Show me" must not
+      // show step 2's X yet: only count along.)
+      visual: (done, help) => {
+        const onStep2 = done >= 1 && !(help?.showMe && help.step === 0);
+        return (
+          <CounterGroup
+            count={n}
+            arrangement={arrangement}
+            tone="b"
+            seed={n * 13 + 5}
+            countAlong={!!help?.showMe && help.step === 0}
+            tapToCount={done === 0}
+            oneFewer={fewer && onStep2 ? { tone: "a", faded: done >= 2 } : undefined}
+            oneMore={!fewer && onStep2 ? { tone: "a", filled: done >= 2 } : undefined}
+          />
+        );
+      },
       steps: [
         { kind: "number", showMeHoldMs: countAlongMs(n), prompt: "How many counters are there? Write the numeral.", hint: "Touch each counter as you count it. Count each one once.", showMe: countShowMe(n), explain: `${thereAre(n)} The numeral is ${n}.`, answer: n },
         {
           kind: "number",
+          tone: "a", // matches the X / "?" in the picture
+          showMeHoldMs: 2000,
           prompt: `Now write the numeral for one ${fewer ? "FEWER" : "MORE"} than that.`,
-          hint: fewer ? "Count back one number." : "Count forward one number.",
+          hint: fewer ? "The counter with the X goes away. Count the ones left." : "Look at the circle with the question mark. That is one more.",
           showMe: fewer ? `Say ${n}. Count back one: ${neighbor}.` : `Say ${n}. Count forward one: ${neighbor}.`,
           explain: `One ${fewer ? "fewer" : "more"} than ${n} is ${neighbor}.`,
           answer: neighbor,

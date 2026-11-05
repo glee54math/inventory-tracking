@@ -200,6 +200,13 @@ export interface StepProblemProps {
   onNext?: () => void;
   /** Early learners: a new problem of the SAME kind, offered after a solve that needed help. */
   onRetrySame?: () => void;
+  /**
+   * Called once, the first time this problem stops counting as clean (a
+   * reveal, "Show me", a second hint, a wrong pick...), even if the student
+   * never finishes it. Lets the lab shell require "Try one like it" even if
+   * the student leaves Practice and comes back.
+   */
+  onHelped?: () => void;
 }
 
 /**
@@ -211,7 +218,7 @@ export interface StepProblemProps {
  *   with "Try one like it". Everyone else: the hint opens on the second wrong
  *   try and "Show answer" appears on the third.
  */
-export function StepProblem({ problem, onComplete, onNext, onRetrySame }: StepProblemProps) {
+export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped }: StepProblemProps) {
   const early = useEarlyLearner();
   const [current, setCurrent] = useState(0);
   const [states, setStates] = useState<StepState[]>(() => problem.steps.map(fresh));
@@ -295,6 +302,15 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame }: StepPr
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finished, states, onComplete, problem.bucket]);
+
+  const helpedReported = useRef(false);
+  const cleanNow = isClean(states);
+  useEffect(() => {
+    if (!cleanNow && !helpedReported.current) {
+      helpedReported.current = true;
+      onHelped?.();
+    }
+  }, [cleanNow, onHelped]);
 
   const update = (i: number, patch: Partial<StepState>) => setStates((all) => all.map((s, k) => (k === i ? { ...s, ...patch } : s)));
 

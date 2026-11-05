@@ -348,8 +348,10 @@ const countStep = (n: number, hint: string): Step => ({
 /** The "one more" follow-up step. */
 const oneMoreStep = (n: number): Step => ({
   kind: "number",
+  tone: "b", // matches the "?" spot in the picture
+  showMeHoldMs: 2000,
   prompt: "If one more counter joined the group, how many would there be?",
-  hint: "Say the number you counted. Then say the next number.",
+  hint: `Look at the circle with the question mark. Say ${n}, then say the next number.`,
   showMe: `Say ${n}. Now one more: ${n + 1}.`,
   explain: `One more than ${n} is ${n + 1}.`,
   answer: n + 1,
@@ -357,9 +359,20 @@ const oneMoreStep = (n: number): Step => ({
 
 function cardinalityProblem(targetBucket?: string): Problem {
   const bucket = (targetBucket as Bucket | undefined) ?? BUCKETS[randInt(0, BUCKETS.length - 1)];
-  // Every counting picture plays the count-along during step 1's "Show me".
-  const group = (n: number, arrangement: Arrangement, tone: "a" | "b" | "c", seed: number) => (_done: number, help?: VisualHelp) => (
-    <CounterGroup count={n} arrangement={arrangement} tone={tone} seed={seed} countAlong={!!help?.showMe && help.step === 0} />
+  // Every counting picture plays the count-along during step 1's "Show me",
+  // and its counters can be tapped to count them during step 1. With
+  // `oneMore`, step 2 shows a "?" spot for the counter that joins, filled in
+  // during "Show me" and once it's answered.
+  const group = (n: number, arrangement: Arrangement, tone: "a" | "b" | "c", seed: number, oneMore = false) => (done: number, help?: VisualHelp) => (
+    <CounterGroup
+      count={n}
+      arrangement={arrangement}
+      tone={tone}
+      seed={seed}
+      countAlong={!!help?.showMe && help.step === 0}
+      tapToCount={done === 0}
+      oneMore={oneMore && done >= 1 && !(help?.showMe && help.step === 0) ? { tone: "b", filled: done >= 2 } : undefined}
+    />
   );
 
   if (bucket === "lineArray") {
@@ -369,7 +382,7 @@ function cardinalityProblem(targetBucket?: string): Problem {
       title: "How many in all?",
       bucket,
       story: "Count the counters. The LAST number you say tells how many there are in all.",
-      visual: group(n, arrangement, "a", n * 5 + 1),
+      visual: group(n, arrangement, "a", n * 5 + 1, true),
       steps: [countStep(n, "Touch each counter as you count it. Count each one once."), oneMoreStep(n)],
       wrapUp: `${thereAre(n)}`,
     };
@@ -426,7 +439,7 @@ function cardinalityProblem(targetBucket?: string): Problem {
       title: "How many in a bigger group?",
       bucket,
       story: "Count this bigger group carefully.",
-      visual: group(n, arrangement, "a", n * 41 + 3),
+      visual: group(n, arrangement, "a", n * 41 + 3, true),
       steps: [countStep(n, "Count slowly, one at a time. Count the top row first."), oneMoreStep(n)],
       wrapUp: `${thereAre(n)}`,
     };

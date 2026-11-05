@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { palette, diagramFont } from "../../../shared/lib/palette";
-import { getState } from "../../../shared/tts/speechEngine";
+import { getState, sayText } from "../../../shared/tts/speechEngine";
 import { useTtsState } from "../../../shared/tts/ttsContext";
 
 export type Arrangement = "line" | "array" | "circle" | "scatter";
@@ -12,6 +12,7 @@ const R = 13;
 const CHUNK_GAP = 16; // extra space between groups of five (line) or ten (array)
 
 const toneColor = (tone?: "a" | "b" | "c") => (tone === "b" ? palette.b : tone === "c" ? palette.c : palette.a);
+const toneSoft = (tone?: "a" | "b" | "c") => (tone === "b" ? palette.bSoft : tone === "c" ? palette.cSoft : palette.aSoft);
 
 /** Deterministic PRNG (mulberry32) — scatter layouts must stay put across
  *  re-renders (clicking one counter shouldn't jiggle every other counter's
@@ -158,6 +159,24 @@ export interface CounterGroupProps {
   /** Number counters `from`, `from + 1`, ... as 1, 2, ... (`shown` of them), with
    *  a ring on the newest — counting what's left after `slashFirst`. */
   numbered?: { from: number; shown: number };
+  /**
+   * Practice pictures: the student can tap each counter to count it, and a
+   * number appears over it (said aloud when auto-read is on). Taps are kept
+   * only in this picture; they don't answer anything.
+   */
+  tapToCount?: boolean;
+  /**
+   * "One more": a dashed "?" spot where one more counter would go, in this
+   * tone. `filled` turns it into a solid counter with its number (count + 1),
+   * for "Show me" and the finished problem.
+   */
+  oneMore?: { tone: "a" | "b" | "c"; filled?: boolean };
+  /**
+   * "One fewer": a blinking X, in this tone, on the last counter in counting
+   * order. `faded` fades that counter out instead (it's gone), for "Show me"
+   * and the finished problem.
+   */
+  oneFewer?: { tone: "a" | "b" | "c"; faded?: boolean };
 }
 
 /** A group of simple counters (dots, or an emoji glyph) laid out as a line,
@@ -184,10 +203,44 @@ export const countStepMs = () => STEP_MS[getState().speed];
 /** Milliseconds a countAlong of `count` counters takes, for Step.showMeHoldMs. */
 export const countAlongMs = (count: number, perMs = countStepMs()) => LEAD_IN_MS + count * perMs;
 
-export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyph, countedOrder: clickedOrder, onToggle, removed = 0, countAlong, countAlongMs, slashFirst = 0, numbered }: CounterGroupProps) {
+export function CounterGroup({
+  count,
+  arrangement = "line",
+  tone,
+  seed = 1,
+  glyph,
+  countedOrder: clickedOrderProp,
+  onToggle: onToggleProp,
+  removed = 0,
+  countAlong,
+  countAlongMs,
+  slashFirst = 0,
+  numbered,
+  tapToCount,
+  oneMore,
+  oneFewer,
+}: CounterGroupProps) {
   const speed = useTtsState().speed;
   const perMs = countAlongMs ?? STEP_MS[speed];
-  const points = layoutPositions(count, arrangement, seed);
+  // With "one more", lay out one extra spot. (A scatter keeps every existing
+  // counter where it was; the extra spot is just the next one placed.)
+  const allPoints = layoutPositions(count + (oneMore ? 1 : 0), arrangement, seed);
+  const points = allPoints.slice(0, count);
+  const extra = oneMore ? allPoints[count] : undefined;
+  const lastCounted = oneFewer && count > 0 ? countingOrder(points, arrangement)[count - 1] : -1;
+
+  // tapToCount: the picture keeps its own taps.
+  const voiceId = useId();
+  const [taps, setTaps] = useState<number[]>([]);
+  useEffect(() => setTaps([]), [count, arrangement, seed]);
+  const tapOne = (i: number) => {
+    if (taps.includes(i)) return; // each counter counted once
+    setTaps((t) => [...t, i]);
+    if (getState().autoRead) sayText(voiceId, String(taps.length + 1));
+  };
+  const onToggle = onToggleProp ?? (tapToCount && !countAlong ? tapOne : undefined);
+  const clickedOrder = tapToCount && !onToggleProp && !countAlong ? taps : clickedOrderProp;
+
   const [shown, setShown] = useState(0);
   useEffect(() => {
     if (!countAlong) return;
@@ -214,7 +267,7 @@ export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyp
       aria-label={`${count} counter${count === 1 ? "" : "s"}${interactive ? ", click one at a time to count them" : ""}`}
       style={{ display: "block", width: "100%", maxWidth: WIDTH, height: "auto", fontFamily: diagramFont }}
     >
-      {count === 0 && (
+      {count === 0 && !extra && (
         <text x={WIDTH / 2} y={HEIGHT / 2 + 5} textAnchor="middle" fontSize={14} fill={palette.muted}>
           (none)
         </text>
@@ -230,7 +283,7 @@ export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyp
             key={i}
             style={interactive ? { cursor: "pointer" } : undefined}
             onClick={interactive ? () => onToggle!(i) : undefined}
-            opacity={taken || slashed ? 0.3 : undefined}
+            opacity={taken || slashed || (i === lastCounted && oneFewer?.faded) ? 0.3 : undefined}
           >
             {glyph ? (
               <text x={p.x} y={p.y + R * 0.7} textAnchor="middle" fontSize={R * 2.1} opacity={counted || !countedOrder ? 1 : 0.35}>
@@ -278,12 +331,34 @@ export function CounterGroup({ count, arrangement = "line", tone, seed = 1, glyp
             {countAlong && counted && order === countedOrder!.length - 1 && (
               <circle cx={p.x} cy={p.y} r={R + 4} fill="none" stroke={palette.ink} strokeWidth={2.5} />
             )}
+            {i === lastCounted && (
+              <g className={oneFewer!.faded ? undefined : "diagram-blink"} style={{ stroke: toneColor(oneFewer!.tone), strokeWidth: 4, strokeLinecap: "round" }}>
+                <line x1={p.x - R + 2} y1={p.y - R + 2} x2={p.x + R - 2} y2={p.y + R - 2} />
+                <line x1={p.x + R - 2} y1={p.y - R + 2} x2={p.x - R + 2} y2={p.y + R - 2} />
+              </g>
+            )}
             {interactive && (
               <circle cx={p.x} cy={p.y} r={R + 8} fill="transparent" />
             )}
           </g>
         );
       })}
+      {extra &&
+        (oneMore!.filled ? (
+          <g className="diagram-pop">
+            <circle cx={extra.x} cy={extra.y} r={R + 2} fill={toneColor(oneMore!.tone)} stroke={palette.paper} strokeWidth={2} />
+            <text x={extra.x} y={extra.y + 4.5} textAnchor="middle" fontSize={count + 1 >= 10 ? 11 : 13} fontWeight={800} fill="#fff">
+              {count + 1}
+            </text>
+          </g>
+        ) : (
+          <g>
+            <circle cx={extra.x} cy={extra.y} r={R} fill={toneSoft(oneMore!.tone)} stroke={toneColor(oneMore!.tone)} strokeWidth={3} strokeDasharray="4 3" />
+            <text x={extra.x} y={extra.y + 5} textAnchor="middle" fontSize={15} fontWeight={800} fill={toneColor(oneMore!.tone)}>
+              ?
+            </text>
+          </g>
+        ))}
     </svg>
   );
 }

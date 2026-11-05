@@ -189,6 +189,26 @@ function UnitView({
     setSeed((s) => s + 1);
   }, []);
 
+  // After help (Show me, a wrong pick...), the student owes one problem of the
+  // same type solved on their own. Until then "New problem" gives the same
+  // type, the type switch is locked, and leaving Practice and coming back
+  // never brings back the helped problem with empty boxes.
+  const [owesRetry, setOwesRetry] = useState(false);
+  // The draw on screen once it is finished or helped, so it isn't shown again fresh.
+  const usedTokenRef = useRef<string | null>(null);
+  const handleHelped = useCallback(() => {
+    setOwesRetry(true);
+    usedTokenRef.current = drawRef.current?.token ?? null;
+  }, []);
+  const newProblem = () => (owesRetry ? retrySame() : setSeed((s) => s + 1));
+  const openPractice = () => {
+    if (tab !== "practice" && usedTokenRef.current !== null && usedTokenRef.current === drawRef.current?.token) {
+      usedTokenRef.current = null;
+      newProblem();
+    }
+    setTab("practice");
+  };
+
   const mastered = isMastered(unit, progress);
   // Grandfather in anyone who already has practice history from before this unit
   // had a required intro — only ever gate a student who's never touched Practice.
@@ -232,7 +252,7 @@ function UnitView({
           <button role="tab" aria-selected={tab === "explore"} className={tab === "explore" ? "on" : ""} onClick={() => setTab("explore")}>
             Explore
           </button>
-          <button role="tab" aria-selected={tab === "practice"} className={tab === "practice" ? "on" : ""} disabled={!introSatisfied} onClick={() => setTab("practice")}>
+          <button role="tab" aria-selected={tab === "practice"} className={tab === "practice" ? "on" : ""} disabled={!introSatisfied} onClick={openPractice}>
             Practice
           </button>
           {unit.test && (
@@ -249,7 +269,7 @@ function UnitView({
           {introSatisfied && !cfuJustPassed ? <unit.Explore /> : <unit.Explore onIntroDone={handleIntroDone} />}
           <div className="panel-foot" data-readaloud-part>
             {introSatisfied ? (
-              <button className="btn primary" onClick={() => setTab("practice")}>
+              <button className="btn primary" onClick={openPractice}>
                 Try practice problems
               </button>
             ) : (
@@ -267,10 +287,11 @@ function UnitView({
               label="Problem type"
               value={typeIdx === "mix" ? "mix" : String(typeIdx)}
               onChange={(id) => setTypeIdx(id === "mix" ? "mix" : Number(id))}
+              disabled={owesRetry}
               options={[{ id: "mix", label: "Mixed" }, ...unit.problems.map((p, i) => ({ id: String(i), label: p.label }))]}
             />
-            <button className="btn ghost" onClick={() => setSeed((s) => s + 1)}>
-              New problem
+            <button className="btn ghost" onClick={newProblem}>
+              {owesRetry ? "Try one like it" : "New problem"}
             </button>
           </div>
           {typeIdx !== "mix" && (
@@ -281,7 +302,12 @@ function UnitView({
           <StepProblem
             key={`${unit.id}-${seed}-${String(typeIdx)}`}
             problem={problem}
-            onComplete={(clean, bucket) => onSolved(clean && typeIdx === "mix", bucket)}
+            onComplete={(clean, bucket) => {
+              usedTokenRef.current = drawRef.current?.token ?? null;
+              if (clean) setOwesRetry(false);
+              onSolved(clean && typeIdx === "mix", bucket);
+            }}
+            onHelped={handleHelped}
             onNext={() => setSeed((s) => s + 1)}
             onRetrySame={retrySame}
           />

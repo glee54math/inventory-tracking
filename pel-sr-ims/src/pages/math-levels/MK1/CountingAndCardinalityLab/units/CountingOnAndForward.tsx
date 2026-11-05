@@ -252,17 +252,19 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [mode, setMode] = useState<"ones" | "tens">("ones");
   const [current, setCurrent] = useState(1);
   const [trail, setTrail] = useState<number[]>([1]);
+  const [start, setStart] = useState(1);
 
   const step = mode === "tens" ? 10 : 1;
   const voiceId = useId();
   const sayNext = () => {
-    const next = Math.min(100, current + step);
+    const next = current + step; // the button grays out instead of jumping past 100
     // The button's job is to say the number, so it speaks even if auto-read is off.
     sayText(voiceId, String(next));
     setCurrent(next);
     setTrail((t) => [...t.slice(-4), next]);
   };
   const resetTo = (n: number) => {
+    setStart(n);
     setCurrent(n);
     setTrail([n]);
   };
@@ -280,7 +282,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           }}
           options={[{ id: "ones", label: "Ones" }, { id: "tens", label: "Tens" }]}
         />
-        <Stepper label="Start at" value={current} min={0} max={95} step={1} onChange={resetTo} tone="a" />
+        <Stepper label="Start at" value={start} min={0} max={95} step={1} onChange={resetTo} tone="a" />
         {!introActive && (
           <button
             type="button"
@@ -294,7 +296,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
 
       <div className="control-row" style={{ alignItems: "center" }} data-readaloud-part>
-        <button className="btn primary" onClick={sayNext} disabled={current >= 100}>
+        <button className="btn primary" onClick={sayNext} disabled={current + step > 100}>
           Say the next number
         </button>
         <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>

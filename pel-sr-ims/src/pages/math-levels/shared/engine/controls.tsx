@@ -99,7 +99,20 @@ export function Slider({ label, value, min, max, step = 1, onChange, display }: 
  * are measured off the actual selected button's DOM rect rather than assumed
  * from a fraction of the container (which only works for equal-width items).
  */
-export function Segmented<T extends string>({ options, value, onChange, label }: { options: { id: T; label: string }[]; value: T; onChange: (v: T) => void; label: string }) {
+export function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+  label,
+  disabled,
+}: {
+  options: { id: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+  label: string;
+  /** Gray out every option except the selected one. */
+  disabled?: boolean;
+}) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
 
@@ -118,7 +131,7 @@ export function Segmented<T extends string>({ options, value, onChange, label }:
     <div className="segmented" role="radiogroup" aria-label={label} ref={trackRef} data-readaloud-part>
       {indicator && <span className="segmented-indicator" style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }} aria-hidden="true" />}
       {options.map((o) => (
-        <button key={o.id} role="radio" aria-checked={o.id === value} className={o.id === value ? "on" : ""} onClick={() => onChange(o.id)}>
+        <button key={o.id} role="radio" aria-checked={o.id === value} className={o.id === value ? "on" : ""} disabled={disabled && o.id !== value} onClick={() => onChange(o.id)}>
           {o.label}
         </button>
       ))}
