@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { CounterGroup, CountOutCard, TenGroups, countAlongMs, type Arrangement } from "../diagrams";
 import { randInt, pick } from "../../../shared/lib/math";
 import { choice, pointing, tapCount, type Problem, type Step, type VisualHelp } from "../../../shared/engine/types";
@@ -8,7 +8,7 @@ import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { howManyCardinalityTest } from "./HowManyCardinalityTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
+import { CheckSequence, TypeCheck, type CheckMode } from "./KCheck";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -18,233 +18,101 @@ import { TapSelect } from "../../../shared/components/TapSelect";
 // as much about cardinality (what the new total IS) as it is about
 // sequencing, per this lab's own plan notes.
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+// Kindergarten-sized, one question at a time (see KCheck.tsx). Ideas
+// checked: the last number said is how many; moving counters doesn't change
+// how many; a circle counted once around; one more is the next number.
 
-/** Vocabulary: what the LAST number counted actually tells you. */
-function LastNumberVocabQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [meaningPick, setMeaningPick] = useState("");
-  const [totalPick, setTotalPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [meaningPick, totalPick].every((v) => String(v).trim() !== "");
-  const meaningOk = meaningPick === "total";
-  const totalOk = totalPick === "5";
-  const ok = meaningOk && totalOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> You count 5 blocks out loud: "1, 2, 3, 4, 5."
-      </p>
-      <CounterGroup count={5} arrangement="line" tone="a" seed={5} />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What does the LAST number you said ("5") tell you?{" "}
-          <TapSelect value={meaningPick} onChange={(e) => setMeaningPick(e.target.value)} style={fieldOk(meaningOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="total">It's the total — how many blocks there are in all</option>
-            <option value="label">It's just the name of the last block you touched</option>
-          </TapSelect>
-        </label>
-        <label>
-          So how many blocks are there in all?{" "}
-          <TapSelect value={totalPick} onChange={(e) => setTotalPick(e.target.value)} style={fieldOk(totalOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? 'Correct — the last number you say ("5") isn\'t just a label for the last block — it tells you the TOTAL count of every block in the group.'
-            : "Not quite — the last number you count isn't just about the last object you touched. It tells you how many objects there are altogether."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Conflation: does recounting restart the amount, or does it stay the same? */
-function RecountQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [recountPick, setRecountPick] = useState("");
-  const [everDifferentPick, setEverDifferentPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [recountPick, everDifferentPick].every((v) => String(v).trim() !== "");
-  const recountOk = recountPick === "6";
-  const everDifferentOk = everDifferentPick === "false";
-  const ok = recountOk && everDifferentOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> You count a group of toys and get 6. Nobody added or removed any toys. You count the SAME group again, starting over from 1.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What total will you get the second time?{" "}
-          <TapSelect value={recountPick} onChange={(e) => setRecountPick(e.target.value)} style={fieldOk(recountOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-          </TapSelect>
-        </label>
-        <label>
-          True or false: recounting a group that hasn't changed can give a different total.{" "}
-          <TapSelect value={everDifferentPick} onChange={(e) => setEverDifferentPick(e.target.value)} style={fieldOk(everDifferentOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="true">True</option>
-            <option value="false">False</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — counting again doesn't start the amount over at 0; the group still has 6 toys, so counting it correctly always gives 6 again."
-            : "Not quite — the toys themselves didn't change, so counting them again (correctly) always gives the exact same total: 6."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Generalization / true-false: does the STARTING OBJECT matter to the total? */
-function StartingPointQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "true";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> Counters are arranged in a circle — it's easy to lose track of which one you started with.
-      </p>
-      <CounterGroup count={6} arrangement="circle" tone="b" seed={6} />
-      <p>True or false: no matter which counter you start counting from, you'll always get the same total — as long as you count each one exactly once.</p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — the total only depends on how many objects there are, never on which one you happened to start with. The tricky part in a circle is just remembering where you started, so you don't count it twice."
-            : "Not quite — try it: start from a different counter in the circle and count around. As long as you count each one exactly once, the total is always the same."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** K.CC.4c, folded into this unit's CFU: each successive number is exactly
- *  one larger — tied directly to an actual counted group, not asked in the
- *  abstract. */
-function OneMoreQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [totalPick, setTotalPick] = useState("");
-  const [oneMorePick, setOneMorePick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [totalPick, oneMorePick].every((v) => String(v).trim() !== "");
-  const totalOk = totalPick === "7";
-  const oneMoreOk = oneMorePick === "8";
-  const ok = totalOk && oneMoreOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> Count the counters.
-      </p>
-      <CounterGroup count={7} arrangement="array" tone="c" seed={7} />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          How many are there?{" "}
-          <TapSelect value={totalPick} onChange={(e) => setTotalPick(e.target.value)} style={fieldOk(totalOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-          </TapSelect>
-        </label>
-        <label>
-          If ONE MORE counter joined the group, how many would there be now?{" "}
-          <TapSelect value={oneMorePick} onChange={(e) => setOneMorePick(e.target.value)} style={fieldOk(oneMoreOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — there are 7, and one more counter would make 8. Every time you add exactly one more object, the new total is always exactly one bigger — never two, never the same."
-            : "Not quite — count the group first, then think about what number comes right after that total when you count forward just one more step."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+const cfuCount = (n: number, arrangement: Arrangement, tone: "a" | "b" | "c", seed: number) => (m: CheckMode) => (
+  <CounterGroup count={n} arrangement={arrangement} tone={tone} seed={seed} tapToCount={m === "ask" || m === "wrong"} countAlong={m === "show"} />
+);
 
 function CardinalityCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ lastNumber: false, recount: false, startingPoint: false, oneMore: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure counting a group makes sense before you try practice problems.</ReadAloud>
-      <LastNumberVocabQuestion onComplete={mark("lastNumber")} />
-      <RecountQuestion onComplete={mark("recount")} />
-      <StartingPointQuestion onComplete={mark("startingPoint")} />
-      <OneMoreQuestion onComplete={mark("oneMore")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => (
+          <TypeCheck
+            n={1}
+            prompt="How many in all?"
+            answer={5}
+            tone="a"
+            picture={cfuCount(5, "line", "a", 5)}
+            nudge="Not yet. Tap each one as you count."
+            showText={`Watch and listen: ${countUp(1, 5)}. The last number is 5.`}
+            praise="Yes! The last number you say tells how many."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="How many?"
+            answer={6}
+            tone="a"
+            picture={cfuCount(6, "line", "b", 6)}
+            nudge="Not yet. Tap each one as you count."
+            showText={`Watch and listen: ${countUp(1, 6)}.`}
+            praise="Yes! 6."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="We moved them! How many now?"
+            answer={6}
+            tone="a"
+            picture={cfuCount(6, "scatter", "b", 66)}
+            nudge="Nobody added any or took any away. Count again."
+            why={{ 7: "Nobody added any. Count again.", 5: "Nobody took any away. Count again." }}
+            showText={`Watch and listen: ${countUp(1, 6)}. Still 6.`}
+            praise="Yes! Still 6. Moving them does not change how many."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={3}
+            prompt="Count around the circle. How many?"
+            answer={8}
+            tone="c"
+            picture={cfuCount(8, "circle", "c", 8)}
+            nudge="Tap one to start. Go around once."
+            why={{ 9: "You counted one twice. Stop where you started.", 10: "You counted some twice. Stop where you started." }}
+            showText={`Watch and listen: ${countUp(1, 8)}.`}
+            praise="Yes! 8. Start anywhere. It is still 8."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={4}
+            prompt="How many?"
+            answer={7}
+            tone="a"
+            picture={cfuCount(7, "array", "a", 7)}
+            nudge="Not yet. Tap each one as you count."
+            showText={`Watch and listen: ${countUp(1, 7)}.`}
+            praise="Yes! 7."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={4}
+            prompt="One more joins. How many now?"
+            answer={8}
+            tone="b"
+            picture={(m) => <CounterGroup count={7} arrangement="array" tone="a" seed={7} oneMore={{ tone: "b", filled: m === "show" || m === "done" }} />}
+            nudge="Look at the circle with the question mark. Say 7. Then say the next number."
+            showText="Watch: 7, and one more makes 8."
+            praise="Yes! One more than 7 is 8."
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 

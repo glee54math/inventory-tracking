@@ -8,8 +8,8 @@ import { GROUP_WORDS, colorGroups } from "./groupWords";
 import { QA, QB, Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingGroupsAndNumeralsTest } from "./ComparingGroupsAndNumeralsTest";
+import { CheckSequence, PickCheck, TypeCheck, type CheckMode } from "./KCheck";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
 
 const bigDigit = (d: number | string) => <BigDigit d={d} />;
 
@@ -103,245 +103,121 @@ function MatchingRows({ countA, countB, countExtras }: { countA: number; countB:
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
 // ============================================================================
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+// Kindergarten-sized, one question at a time (see KCheck.tsx). Ideas
+// checked: spreading out doesn't make more; MORE / FEWER; comparing two
+// numerals with no counters; a close comparison (9 vs 10) by counting.
 
-/** THE mandatory target per this unit's plan: "takes up more space = more
- *  objects" is an extremely common misconception at this age and must be
- *  checked directly, not assumed away. */
-function SpaceVsCountQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [morePick, setMorePick] = useState("");
-  const [changesPick, setChangesPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [morePick, changesPick].every((v) => String(v).trim() !== "");
-  const moreOk = morePick === "equal";
-  const changesOk = changesPick === "false";
-  const ok = moreOk && changesOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> Both groups below have exactly 6 counters — one is spread out, one is bunched up close together.
-      </p>
-      <TwoGroups a={6} b={6} arrA="array" arrB="scatter" seedA={6} seedB={606} />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Which group has more counters?{" "}
-          <TapSelect value={morePick} onChange={(e) => setMorePick(e.target.value)} style={fieldOk(moreOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="bunched">The bunched-up group</option>
-            <option value="spread">The spread-out group</option>
-            <option value="equal">They have the same amount</option>
-          </TapSelect>
-        </label>
-        <label>
-          True or false: spreading counters out so they take up more space makes the total bigger.{" "}
-          <TapSelect value={changesPick} onChange={(e) => setChangesPick(e.target.value)} style={fieldOk(changesOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="true">True</option>
-            <option value="false">False</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — both groups have exactly 6. Spreading counters out (or squeezing them together) changes how much SPACE they take up, but never changes how MANY there are."
-            : "Not quite — count each group one at a time. They both have 6, even though the spread-out one looks bigger at a glance."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Vocabulary: "more than" and "fewer than," defined together on the same
- *  pair of groups so neither can be answered by pattern-matching the other. */
-function MoreFewerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [morePick, setMorePick] = useState("");
-  const [fewerPick, setFewerPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [morePick, fewerPick].every((v) => String(v).trim() !== "");
-  const moreOk = morePick === "A";
-  const fewerOk = fewerPick === "B";
-  const ok = moreOk && fewerOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> <QA>Group A</QA> has 7 counters. <QB>Group B</QB> has 4 counters.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Which group has <b>MORE</b> counters?{" "}
-          <TapSelect value={morePick} onChange={(e) => setMorePick(e.target.value)} style={fieldOk(moreOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="A">
-              <QA>Group A</QA>
-            </option>
-            <option value="B">
-              <QB>Group B</QB>
-            </option>
-          </TapSelect>
-        </label>
-        <label>
-          Which group has <b>FEWER</b> counters?{" "}
-          <TapSelect value={fewerPick} onChange={(e) => setFewerPick(e.target.value)} style={fieldOk(fewerOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="A">
-              <QA>Group A</QA>
-            </option>
-            <option value="B">
-              <QB>Group B</QB>
-            </option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? colorGroups('"More than" means a bigger amount — Group A (7) has more. "Fewer than" means a smaller amount — Group B (4) has fewer.')
-            : 'Not quite — "more" means a bigger count, "fewer" means a smaller count. Compare 7 and 4 again.'}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Conflation: comparing OBJECTS and comparing NUMERALS feel like different
- *  tasks to a first-timer, but they're the same idea of "bigger." */
-function ObjectsVsNumeralsQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "false";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> You can compare two groups of objects by counting them, OR compare two written numerals (like 6 and 9) with no objects shown at
-        all.
-      </p>
-      <p>True or false: comparing numerals uses a completely different idea of "bigger" than comparing groups of objects.</p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "False — it's the exact same idea either way. 9 is bigger than 6 because nine OBJECTS would be more than six objects. The numeral just stands in for the count."
-            : "Not quite — a numeral is just a written stand-in for a count. Comparing 6 and 9 means exactly the same thing as comparing 6 objects to 9 objects."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Multi-part: close differences take more careful counting than obvious ones. */
-function CloseVsObviousQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [morePick, setMorePick] = useState("");
-  const [typePick, setTypePick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [morePick, typePick].every((v) => String(v).trim() !== "");
-  const moreOk = morePick === "10";
-  const typeOk = typePick === "close";
-  const ok = moreOk && typeOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> <QA>Group A</QA> has 9 counters. <QB>Group B</QB> has 10 counters.
-      </p>
-      {/* Both spread out and only 1 apart: hard to tell at a glance, which is the point. */}
-      <TwoGroups a={9} b={10} arrA="scatter" arrB="scatter" seedA={91} seedB={103} />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Which group has more?{" "}
-          <TapSelect value={morePick} onChange={(e) => setMorePick(e.target.value)} style={fieldOk(moreOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="9">
-              <QA>Group A</QA> (9)
-            </option>
-            <option value="10">
-              <QB>Group B</QB> (10)
-            </option>
-          </TapSelect>
-        </label>
-        <label>
-          Is this an easy difference to spot at a glance, or a close one that needs careful counting?{" "}
-          <TapSelect value={typePick} onChange={(e) => setTypePick(e.target.value)} style={fieldOk(typeOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="easy">Easy to spot at a glance</option>
-            <option value="close">Close — needs careful counting</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct. 10 is more than 9, but only by 1, so they are close. 3 and 10 would be easy to tell apart at a glance. 9 and 10 need careful counting."
-            : "Not quite. Count both groups. When two groups are only 1 apart, like 9 and 10, you need to count carefully. A quick look is not enough."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+const groupBtn = (text: string) => ({ id: text, label: <span>{colorGroups(text)}</span> });
 
 function ComparingCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ space: false, vocab: false, objVsNum: false, closeVsObvious: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
+  const close = (m: CheckMode, along?: "A" | "B") => (
+    <TwoGroups a={9} b={10} arrA="scatter" arrB="scatter" seedA={91} seedB={103} countAlong={m === "show" ? along : undefined} />
+  );
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure comparing makes sense before you try practice problems.</ReadAloud>
-      <SpaceVsCountQuestion onComplete={mark("space")} />
-      <MoreFewerVocabQuestion onComplete={mark("vocab")} />
-      <ObjectsVsNumeralsQuestion onComplete={mark("objVsNum")} />
-      <CloseVsObviousQuestion onComplete={mark("closeVsObvious")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => (
+          <PickCheck
+            n={1}
+            prompt={colorGroups("Which group has MORE?")}
+            picture={<TwoGroups a={6} b={6} arrA="array" arrB="scatter" seedA={6} seedB={606} names={["Grid", "Scattered"]} />}
+            showPicture={<TwoGroups a={6} b={6} arrA="array" arrB="scatter" seedA={6} seedB={606} names={["Grid", "Scattered"]} countAlong="both" />}
+            showText="Watch and listen. Both groups have 6."
+            options={[groupBtn("Grid group"), groupBtn("Scattered group"), { id: "same", label: "The same" }]}
+            answer="same"
+            why={{ "Grid group": "Lined up does not mean more. Count each group.", "Scattered group": "Spread out does not mean more. Count each group." }}
+            praise="Yes! Both have 6. Spreading out does not make more."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt={colorGroups("How many in Group B?")}
+            answer={4}
+            tone="b"
+            picture={(m) => <TwoGroups a={7} b={4} arrA="line" arrB="line" seedA={7} seedB={4} countAlong={m === "show" ? "B" : undefined} />}
+            nudge="Not yet. Count the dots in Group B."
+            showText={`Watch and listen: ${countUp(1, 4)}.`}
+            praise="Yes! Group B has 4."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={2}
+            prompt={colorGroups("Which group has FEWER?")}
+            picture={<TwoGroups a={7} b={4} arrA="line" arrB="line" seedA={7} seedB={4} />}
+            showPicture={<TwoGroups a={7} b={4} arrA="line" arrB="line" seedA={7} seedB={4} cancelOut />}
+            showText="Watch: cross out one from each group. Group B runs out first."
+            options={[groupBtn("Group A"), groupBtn("Group B")]}
+            answer="Group B"
+            why={{ "Group A": "Group A has 7. That is more. Look for the group with less." }}
+            praise="Yes! Group B has FEWER."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={3}
+            prompt="Which number is bigger?"
+            showPicture={
+              <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "flex-end" }}>
+                <TenGroups value={6} tone="a" labels />
+                <TenGroups value={9} tone="b" labels />
+              </div>
+            }
+            showText="Look at the dots. 9 has more dots than 6."
+            options={["6", "9"].map((d) => ({ id: d, label: <BigDigit d={d} size={44} /> }))}
+            answer="9"
+            why={{ "6": "Count up: 6, 7, 8, 9. 9 comes later. Later is bigger." }}
+            praise="Yes! 9 is bigger than 6."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={4}
+            prompt={colorGroups("How many in Group A?")}
+            answer={9}
+            tone="a"
+            picture={(m) => close(m, "A")}
+            nudge="Not yet. Count the dots in Group A."
+            showText={`Watch and listen: ${countUp(1, 9)}.`}
+            praise="Yes! Group A has 9."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={4}
+            prompt={colorGroups("How many in Group B?")}
+            answer={10}
+            tone="b"
+            picture={(m) => close(m, "B")}
+            nudge="Not yet. Count the dots in Group B."
+            showText={`Watch and listen: ${countUp(1, 10)}.`}
+            praise="Yes! Group B has 10."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={4}
+            prompt={colorGroups("Which group has MORE?")}
+            picture={close("ask")}
+            showPicture={<TwoGroups a={9} b={10} arrA="scatter" arrB="scatter" seedA={91} seedB={103} showCounts />}
+            showText="Group A has 9. Group B has 10. Count on: 9, 10. 10 is more."
+            options={[groupBtn("Group A"), groupBtn("Group B")]}
+            answer="Group B"
+            why={{ "Group A": "Group A has 9. Group B has 10. Which comes later when you count?" }}
+            praise="Yes! 10 is more than 9. They are close, so we count."
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 
