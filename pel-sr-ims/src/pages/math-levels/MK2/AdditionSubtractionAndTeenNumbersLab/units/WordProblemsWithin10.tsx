@@ -6,18 +6,104 @@ import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { wordProblemsWithin10Test } from "./WordProblemsWithin10Test";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
+
+// ============================================================================
+// CHECK FOR UNDERSTANDING — gates Practice
+// ============================================================================
+// Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
+// Each story is short and read aloud, with a picture of what it gives.
+// Ideas checked: a group gets more (add to); some go away (take from — the
+// answer is fewer); two groups already together (put together); comparing
+// two groups by lining them up.
+
+function WordProblemsCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
+  return (
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => (
+          <TypeCheck
+            n={1}
+            prompt="Jen has 3 stickers. She gets 2 more. How many does she have now?"
+            answer={5}
+            tone="a"
+            picture={() => <SplitGroup total={5} partA={3} toneA="a" toneB="b" />}
+            nudge="The blue ones are what she had. The orange ones are new. Count them all."
+            showText="Watch and listen: 1, 2, 3, 4, 5."
+            praise="Yes! 3 + 2 = 5 stickers."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="Sam had 6 crackers. He ate 2. How many are left?"
+            answer={4}
+            tone="a"
+            picture={(m) => <SplitGroup total={6} partA={4} toneA="a" toneB={m === "ask" ? "a" : "b"} showDivider={m !== "ask"} goneB={m !== "ask"} />}
+            nudge="He ate 2, so 2 are gone. Count the ones left."
+            why={{ 8: "He ate some. That leaves fewer, not more.", 6: "He ate 2. Those are gone." }}
+            showText="Watch: 2 are eaten. The ones left are 1, 2, 3, 4."
+            praise="Yes! 6 − 2 = 4 crackers."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={3}
+            prompt="A jar has 4 red marbles and 3 blue marbles. How many marbles in the jar?"
+            answer={7}
+            tone="a"
+            picture={() => <SplitGroup total={7} partA={4} toneA="b" toneB="a" showDivider={false} />}
+            nudge="Count every marble in the jar, both colors."
+            why={{ 4: "That is just one color. Count both colors.", 3: "That is just one color. Count both colors." }}
+            showText="Watch and listen: 1, 2, 3, 4, 5, 6, 7."
+            praise="Yes! 4 + 3 = 7 marbles."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={4}
+            prompt="Mia has 5 apples. Theo has 3 apples. Who has more?"
+            picture={
+              <div style={{ display: "grid", gap: 6 }}>
+                <ObjectGroup count={5} arrangement="line" tone="a" alignLeft />
+                <ObjectGroup count={3} arrangement="line" tone="b" alignLeft />
+              </div>
+            }
+            showPicture={
+              <div style={{ display: "grid", gap: 6 }}>
+                <ObjectGroup count={5} arrangement="line" tone="a" alignLeft ringFrom={3} />
+                <ObjectGroup count={3} arrangement="line" tone="b" alignLeft />
+              </div>
+            }
+            showText="Look: line them up. Mia's row has extras. Mia has more."
+            options={[
+              { id: "mia", label: <span style={{ color: "var(--qa)", fontWeight: 800 }}>Mia</span> },
+              { id: "theo", label: <span style={{ color: "var(--qb)", fontWeight: 800 }}>Theo</span> },
+            ]}
+            answer="mia"
+            why={{ theo: "Line them up. Whose row is longer?" }}
+            praise="Yes! Mia has more apples."
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
+  );
+}
 
 // ============================================================================
 // EXPLORE
 // ============================================================================
-// No Check-for-Understanding gate here (per this unit's plan) — Unit 1
-// already gated the core add/subtract concepts; this unit is varied word-
-// problem PRACTICE on ideas already proven, not a new concept, so Explore is
-// a free-play sandbox with no required walkthrough.
 
 type Scenario = "addTo" | "takeFrom" | "together" | "missingPart" | "compare";
 
-function Explore() {
+function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
+  const introActive = !!onIntroDone;
+  const [showCheck, setShowCheck] = useState(false);
   const [scenario, setScenario] = useState<Scenario>("addTo");
   const [a, setA] = useState(4);
   const [b, setB] = useState(3);
@@ -38,6 +124,16 @@ function Explore() {
             { id: "compare", label: "Compare" },
           ]}
         />
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Check for Understanding
+          </button>
+        )}
       </div>
       <div className="control-row" data-readaloud-part>
         <Stepper label={scenario === "compare" ? "Group A" : scenario === "missingPart" ? "Total" : "First amount"} value={a} min={1} max={10} step={1} onChange={setA} tone="a" />
@@ -84,6 +180,8 @@ function Explore() {
           </ReadAloud>
         </>
       )}
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <WordProblemsCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }
@@ -244,6 +342,7 @@ export const wordProblemsWithin10: Unit = {
     </>
   ),
   Explore,
+  requiresIntro: true,
   problems: [{ label: "Word Problems", make: wordProblem, buckets: BUCKETS }],
   requiredBuckets: BUCKETS,
   test: wordProblemsWithin10Test,

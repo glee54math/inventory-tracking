@@ -6,17 +6,92 @@ import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { fastFactsWithin5Test } from "./FastFactsWithin5Test";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { CheckSequence, TypeCheck } from "../../../shared/components/KCheck";
+
+// ============================================================================
+// CHECK FOR UNDERSTANDING — gates Practice
+// ============================================================================
+// Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
+// A fast fact is shown on its own (no dots to count); a wrong try brings the
+// dots in, so a student who doesn't know it yet still has a way to it.
+// Ideas checked: adding, taking away (fewer, not more), a double, a missing
+// part of 5.
+
+const factCard = (text: string) => <div style={{ fontSize: 44, fontWeight: 800, letterSpacing: 1 }}>{text}</div>;
+
+function FastFactsCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
+  return (
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => (
+          <TypeCheck
+            n={1}
+            prompt="3 + 1 = ?"
+            answer={4}
+            tone="a"
+            picture={(m) => (m === "ask" ? factCard("3 + 1 = ?") : <SplitGroup total={4} partA={3} toneA="a" toneB="b" />)}
+            nudge="Look at the dots. 3, and 1 more."
+            showText="Watch and listen: 3, and 1 more makes 4."
+            praise="Yes! 3 + 1 = 4."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="5 − 2 = ?"
+            answer={3}
+            tone="a"
+            picture={(m) => (m === "ask" ? factCard("5 − 2 = ?") : <SplitGroup total={5} partA={3} toneA="a" toneB="b" goneB />)}
+            nudge="Look at the dots. 2 go away. Count the ones left."
+            why={{ 7: "Minus means take away. That makes fewer, not more." }}
+            showText="Watch and listen: 2 go away. 1, 2, 3 are left."
+            praise="Yes! 5 − 2 = 3."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={3}
+            prompt="2 + 2 = ?"
+            answer={4}
+            tone="a"
+            picture={(m) => (m === "ask" ? factCard("2 + 2 = ?") : <SplitGroup total={4} partA={2} toneA="a" toneB="b" />)}
+            nudge="Look at the dots. 2 and 2."
+            showText="Watch and listen: 1, 2, 3, 4. Double 2 is 4."
+            praise="Yes! 2 + 2 = 4. That is a double."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={4}
+            prompt="1 + ? = 5"
+            answer={4}
+            tone="b"
+            picture={(m) => (m === "ask" ? factCard("1 + ? = 5") : <SplitGroup total={5} partA={1} toneA="a" toneB="b" />)}
+            nudge="Look at the dots. 5 in all. 1 is blue. How many are orange?"
+            why={{ 6: "The answer is 5 in all, so the missing part is less than 5." }}
+            showText="Watch and listen: 5 in all. 1 is blue. The orange ones are 1, 2, 3, 4."
+            praise="Yes! 1 + 4 = 5."
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
+  );
+}
 
 // ============================================================================
 // EXPLORE
 // ============================================================================
-// No Check-for-Understanding gate (per this unit's plan) — this is fluency
-// PRACTICE on concepts already gated in Unit 1 (modeling add/subtract) and
-// Unit 3 (decomposing), not a new concept.
 
 type Mode = "add" | "sub" | "doubles" | "missing";
 
-function Explore() {
+function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
+  const introActive = !!onIntroDone;
+  const [showCheck, setShowCheck] = useState(false);
   const [mode, setMode] = useState<Mode>("add");
   const [a, setA] = useState(2);
   const [b, setB] = useState(2);
@@ -39,6 +114,16 @@ function Explore() {
             { id: "missing", label: "Missing addend" },
           ]}
         />
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Check for Understanding
+          </button>
+        )}
       </div>
       {mode !== "doubles" && (
         <div className="control-row" data-readaloud-part>
@@ -80,6 +165,8 @@ function Explore() {
         Every fact here has an answer of 5 or less. The goal of this unit is SPEED — recognizing the answer instantly, the same way you already know
         your age without counting it out on your fingers.
       </ReadAloud>
+      {/* Below the picture, so students explore first, then check. */}
+      {(introActive || showCheck) && <FastFactsCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }
@@ -193,19 +280,10 @@ export const fastFactsWithin5: Unit = {
     </>
   ),
   Explore,
-  // No required intro: this is fluency practice directly on concepts already
-  // gated in Unit 1 (modeling add/subtract) and Unit 3 (decomposing), with no
-  // new concept of its own. The plan calls for periodic re-checking since
-  // K.OA.5's "fluently" specifically means memorized/automatic recall, not
-  // re-derivation — but Unit.reintroEverySolved is only meaningful alongside
-  // requiresIntro: true (see shared/units/types.ts's own doc comment; when
-  // requiresIntro is false, UnitView's introSatisfied short-circuits to
-  // always-true, so reintroEverySolved would be silently inert dead code,
-  // not actually re-gate anything). Rather than set a field that does
-  // nothing, this was left off — enabling real periodic re-checking without
-  // an initial required gate would need an engine change to UnitView's
-  // gating logic, out of scope for this lab's own folder. Documented as an
-  // autonomous decision in the build report.
+  // The Check for Understanding gates Practice, and comes back every 20
+  // solves: K.OA.5's "fluently" means facts known by heart, which can fade.
+  requiresIntro: true,
+  reintroEverySolved: 20,
   problems: [{ label: "Fast Facts", make: fastFactsProblem, buckets: BUCKETS }],
   requiredBuckets: BUCKETS,
   test: fastFactsWithin5Test,

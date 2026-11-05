@@ -210,14 +210,13 @@ function UnitView({
   };
 
   const mastered = isMastered(unit, progress);
-  // Grandfather in anyone who already has practice history from before this unit
-  // had a required intro — only ever gate a student who's never touched Practice.
-  // (Not a live concern for a brand-new lab with no prior history, but kept for
-  // consistency with every other lab's UnitView.) reintroEverySolved (optional)
-  // adds periodic re-gating on top of that.
+  // Practice opens only after the student passes this unit's Check for
+  // Understanding (user requirement: the CFU gates Practice for everyone,
+  // including students with practice history from before the check).
+  // reintroEverySolved (optional) adds periodic re-checks on top of that.
   const solvedSinceIntro = (progress?.solved ?? 0) - (progress?.introDoneAtSolved ?? 0);
   const introNeedsRefresh = !!unit.reintroEverySolved && !!progress?.introDone && solvedSinceIntro >= unit.reintroEverySolved;
-  const introSatisfied = !unit.requiresIntro || ((!!progress?.introDone || (progress?.solved ?? 0) > 0) && !introNeedsRefresh);
+  const introSatisfied = !unit.requiresIntro || (!!progress?.introDone && !introNeedsRefresh);
 
   // Once the Check for Understanding is passed, keep it open (with its
   // feedback) until the student leaves the Explore tab, instead of letting

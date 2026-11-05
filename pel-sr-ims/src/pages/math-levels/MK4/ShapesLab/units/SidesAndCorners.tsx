@@ -324,7 +324,7 @@ export const sidesAndCorners: Unit = {
     </>
   ),
   Explore,
-  requiresIntro: false,
+  requiresIntro: true,
   preview: Preview,
   problems: [{ label: "Sides & Corners", make: sidesAndCornersProblem, buckets: BUCKETS }],
   requiredBuckets: BUCKETS,
