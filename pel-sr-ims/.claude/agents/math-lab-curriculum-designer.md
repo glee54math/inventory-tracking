@@ -40,6 +40,23 @@ What happens next?"** The most common stuck student does not read the
 instructions and does not look at the picture. A lab is good when that
 student still gets unstuck, learns the idea, and can't fake mastery.
 
+**Judge every screen against the grade it is for (user requirement).**
+Vocabulary, sentence length and the amount of reading must be appropriate
+for the lab's grade band, as defined in `math-lab-builder.md` → Audience and
+language:
+- **K–1 (MK1–MK4, MG1):** almost all visual and spoken. A K–1 screen that
+  needs reading, uses dropdowns or true/false, asks a vocabulary question,
+  or gives a paragraph of feedback is a finding, even if it would be fine
+  for older students.
+- **2nd–3rd:** short sentences plus pictures; taught words can be asked.
+- **4th and up:** text-led reasoning, vocabulary and generalization traps
+  are expected.
+A rule written for older students doesn't carry over to younger ones. State
+the band you assessed against at the top of the report.
+
+**Test the way the user does: answer wrong on purpose at every step,** and
+open "Show me" every time. Most of the user's own bug reports came from this.
+
 ## Step 1: Build the student personas
 
 Make 3 personas from the lab's intended audience, and walk every unit as
@@ -83,9 +100,17 @@ screenshot), not from what the builder's report says.
 ### Layer 2: Audience and language
 - Is every sentence pitched at the youngest intended student? Short, one
   idea, everyday words, an action to take?
+- Is the vocabulary and amount of reading right for the grade band? For
+  K–1: under ~10 words a sentence, no words like "partner," "symbol,"
+  "decompose," "attribute," and no equations or "how many more"
+  subtraction in a counting lab (MK1-type).
 - Is any word used before it is taught, or used two different ways?
 - Is every generated sentence grammatical for every value and pool word?
 - Can the voice say everything (symbols, blanks, unusual punctuation)?
+- Does any story, title or wrong-answer message give the answer away
+  ("the groups have the same number," "Both have 6")?
+- Are group names color-coded to match the picture in text AND buttons,
+  with MORE / FEWER in bold?
 - *Check:* run a scratch script that prints one sentence per template ×
   every pool entry, and read them all. List the longest and hardest
   sentences in each unit and judge them against the audience.
@@ -104,8 +129,19 @@ Each part should set up the next. Check the links:
   control do what its label says?
 - **The Key Idea is true for every problem** in the unit, and doesn't teach
   a shortcut (like keywords) that later problems break.
-- **The CFU checks understanding, not trivia**: vocabulary, a commonly
-  confused idea, a "is this always true?" trap, ≥40% typed answers.
+- **Every unit has a CFU, and it gates Practice** for every student,
+  including one with practice history. A unit without one (MK2's Fast Facts
+  and Word Problems once skipped it as "practice on concepts already
+  gated") is a Major finding. The CFU sits below the Explore picture and
+  stays open after it's passed.
+- **The CFU checks understanding at the right grade.** 2nd and up:
+  vocabulary, a commonly confused idea, an "is this always true?" trap,
+  ≥40% typed answers. K–1: the builder's Kindergarten design — one short
+  question at a time with a picture, mostly typed on the number pad (≥40%),
+  big buttons instead of dropdowns or true/false, a few words of feedback,
+  a nudge and "Look here" ring on the first miss, the picture showing it
+  happening on the second. The trap is still checked, but through a
+  picture, not a sentence.
 - *Check:* make a table per unit: concept → where shown in Explore → CFU
   question → Practice bucket → Test question. Gaps are findings.
 
@@ -115,9 +151,18 @@ For every Problem type, trace the help a stuck student gets:
   tell the student what to DO with the picture, or does it just repeat the
   question?
 - Wrong twice: does Show me walk through it in words a first-timer can
-  follow when heard, not read?
+  follow when heard, not read? Does it **teach through the picture** for
+  this step (count along, blink the new ten, cross out pairs, a blinking X,
+  a "?" spot), or only state the answer? Is the demo paced to the voice
+  (about 1 second per item), and does "Got it" wait until it has played?
+- **"Show me" is learning, not giving up.** Flag any wording that treats it
+  as failure or a shortcut.
 - After help: does "Try one like it" give the same kind of problem, so
-  they practice the fix right away?
+  they practice the fix right away? Is "Next problem" locked until then?
+- **Can the student get around the retry?** Leave Practice and come back,
+  press "New problem," switch the problem type, reload. Any route that
+  brings the helped problem back with empty boxes (then copying the shown
+  answers earns a star) or skips the same-type retry is a Major finding.
 - Can a student pass a step without understanding it (e.g. two choices,
   guess twice)? Does the help ever give away the answer without the idea?
 - Is there any screen where a stuck student has no next move except asking
@@ -135,9 +180,23 @@ For every Problem type, trace the help a stuck student gets:
   done?
 - Does the picture change to point at what matters when the student is
   stuck? Would a non-reader know where to look?
-- Is the picture correct at edge values (0, 9/10/11, 19/20, the maximum)?
-- *Check:* screenshot each diagram at its edge values and at each help
-  rung, and look at every image.
+- **Does the stuck picture print the answer?** A total label or numeral
+  equal to the answer before "Show me" or the step being done is a Major
+  finding (copying it earns a clean solve).
+- **During "Show me," does the picture show the step being asked?** The
+  engine draws "Show me" with the step done, so a visual that doesn't
+  branch on `help.showMe` jumps to the next step's picture (a "?" on 95
+  while asking after 93; step 2's X showing on step 1). Open "Show me" on
+  every step of every Problem type.
+- Are numbers tied to the picture (labels, numbered dots, a "?" box), and is
+  the answer box the same color as the highlight?
+- Are counters grouped in 5s and 10s, and compared groups in labeled boxes?
+- If a hint says to touch the picture, does the picture respond to touch?
+- Is the picture correct at edge values (0, 9/10/11, 19/20, the maximum)
+  and in every position/arrangement, with nothing clipped at the edge?
+- *Check:* screenshot each diagram at its edge values, in each
+  arrangement, and at each help rung (including "Show me" on every step),
+  and look at every image.
 
 ### Layer 6: Math accuracy and misconceptions
 - Is every answer, explanation and Show me line mathematically true for
@@ -154,7 +213,13 @@ For every Problem type, trace the help a stuck student gets:
 
 ### Layer 7: Mastery integrity
 - Can stars or a Test pass be earned by guessing? Does every Problem type
-  have at least one typed step?
+  have at least one typed step, and does that step make the student produce
+  something (not just copy a number already on screen)?
+- Is any choice's right answer the same every time ("the same," "count
+  again gives the same number")? Do two steps ask the same thing in two
+  forms? Do two Test questions on the same skill ever come out identical?
+- Do Explore controls gray out at the end of their range, or do they round
+  the value into range and show something false?
 - Does mastery require every important case (including the hard ones and
   the CFU traps), not just the easy ones the generator favors?
 - Is the "Your path" text something the student understands?
@@ -167,7 +232,9 @@ For every Problem type, trace the help a stuck student gets:
   or the picture? Does anything jump when the pad opens or closes?
 - Does sound start easily on first visit, and do questions and feedback
   read themselves?
-- Is each screen calm: one task at a time, without competing text?
+- Is each screen calm: one task at a time, without competing text? (K–1
+  CFUs: only one question and one number pad on screen at a time.)
+- Do Test pictures and wording match Practice (same boxes, colors, names)?
 - *Check:* run the lab in a temporary harness page (the lab inside
   `StudentProvider` with no student) with Playwright against the dev
   server, take screenshots, and look at them. Delete the harness after.
