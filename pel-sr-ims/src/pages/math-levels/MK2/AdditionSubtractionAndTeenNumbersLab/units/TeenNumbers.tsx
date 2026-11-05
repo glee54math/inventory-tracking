@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { TenAndOnes } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
@@ -6,7 +6,7 @@ import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { teenNumbersTest } from "./TeenNumbersTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
+import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
 
 const NUMBER_WORDS: Record<number, string> = {
   11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen", 15: "fifteen",
@@ -19,211 +19,65 @@ const NUMBER_WORDS: Record<number, string> = {
 // Named misconception (per the plan): treating the "1" in a teen numeral as
 // just another single digit, rather than a full ten-group.
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+// Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
+// Ideas checked: a teen number is one ten and some ones; the ten is written
+// first (14, not 41).
 
-/** Vocabulary: what each digit of a teen numeral actually stands for. */
-function DigitMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [tensPick, setTensPick] = useState("");
-  const [onesPick, setOnesPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [tensPick, onesPick].every((v) => String(v).trim() !== "");
-  const tensOk = tensPick === "ten";
-  const onesOk = onesPick === "four";
-  const ok = tensOk && onesOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> Look at the number 14.
-      </p>
-      <TenAndOnes tens={1} ones={4} />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          In 14, the "1" stands for:{" "}
-          <TapSelect value={tensPick} onChange={(e) => setTensPick(e.target.value)} style={fieldOk(tensOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="one">one single object</option>
-            <option value="ten">a whole group of ten</option>
-          </TapSelect>
-        </label>
-        <label>
-          In 14, the "4" stands for:{" "}
-          <TapSelect value={onesPick} onChange={(e) => setOnesPick(e.target.value)} style={fieldOk(onesOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="four">four extra ones</option>
-            <option value="fourTens">four tens</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — in 14, the '1' stands for a whole group of TEN, not a single object, and the '4' stands for 4 extra ones."
-            : "Not quite — the '1' in a teen number is never just one single object; it stands for one whole group of ten. The second digit is the extra ones."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Conflation: does "sixteen" mean 16 separate ones, or a ten-group plus 6? */
-function TeenStructureQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "tenPlusSix";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> Think about the number "sixteen."
-      </p>
-      <p>Is "sixteen" best thought of as 16 separate single ones with no groups at all, or as ONE group of ten plus 6 more ones?</p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="sixteenOnes">16 separate single ones</option>
-          <option value="tenPlusSix">One group of ten plus 6 more ones</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — both describe the same total amount, but 'one group of ten plus 6 more ones' is the structure that actually matches how 16 is written and built."
-            : 'Not quite — 16 objects really are the same amount either way, but "sixteen" is built from ONE bundled ten-group plus 6 more ones, not just a pile of 16 loose ones.'}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Generalization: does this "ten plus more" structure hold for every teen number? */
-function EveryTeenQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "true";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or false: every number from 11 to 19 is made of exactly one group of ten, plus some extra ones.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — 11 (ten + 1) all the way through 19 (ten + 9) are all built the exact same way: one ten-group, plus some extra ones."
-            : "Not quite — check a few: 11 is ten plus 1, 15 is ten plus 5, 19 is ten plus 9. This pattern holds for every one of them."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Multi-part production: build a teen number AND record it as an equation,
- *  including the digit-swap trap this skill is especially prone to. */
-function BuildAndRecordQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [numberPick, setNumberPick] = useState("");
-  const [eqPick, setEqPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [numberPick, eqPick].every((v) => String(v).trim() !== "");
-  const numberOk = numberPick === "13";
-  const eqOk = eqPick === "10+3=13";
-  const ok = numberOk && eqOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> 10 objects are bundled into one ten-group. 3 more ones are added.
-      </p>
-      <TenAndOnes tens={1} ones={3} />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What teen number is this?{" "}
-          <TapSelect value={numberPick} onChange={(e) => setNumberPick(e.target.value)} style={fieldOk(numberOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="13">13</option>
-            <option value="31">31</option>
-          </TapSelect>
-        </label>
-        <label>
-          Which equation records this?{" "}
-          <TapSelect value={eqPick} onChange={(e) => setEqPick(e.target.value)} style={fieldOk(eqOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="10+3=13">10 + 3 = 13</option>
-            <option value="10+3=31">10 + 3 = 31</option>
-            <option value="13-10=3">13 − 10 = 3</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — one ten-group plus 3 more ones is 13, recorded as 10 + 3 = 13. Watch out for 31 — that's the digits written backwards!"
-            : 'Not quite — 10 + 3 = 13, NOT 31. Writing the digits backwards ("31" instead of "13") is a really common mix-up with teen numbers.'}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+const teenQuestion = (n: number, ones: number, done: () => void) => (
+  <TypeCheck
+    n={n}
+    prompt={`One ten and ${ones} ones. What number is it?`}
+    answer={10 + ones}
+    tone="a"
+    picture={() => <TenAndOnes tens={1} ones={ones} />}
+    nudge="Start at 10 for the full ten. Count on the ones."
+    why={{ [ones * 10 + 1]: "That is backwards. Write the ten first, then the ones.", [ones]: "Don't forget the ten! Start at 10." }}
+    showText={`Watch and listen: 10, ${Array.from({ length: ones }, (_, i) => 11 + i).join(", ")}.`}
+    praise={`Yes! ${10 + ones} is ten and ${ones} more.`}
+    onComplete={done}
+  />
+);
 
 function TeenNumbersCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ digits: false, structure: false, every: false, buildRecord: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure teen numbers make sense before you try practice problems.</ReadAloud>
-      <DigitMeaningQuestion onComplete={mark("digits")} />
-      <TeenStructureQuestion onComplete={mark("structure")} />
-      <EveryTeenQuestion onComplete={mark("every")} />
-      <BuildAndRecordQuestion onComplete={mark("buildRecord")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => teenQuestion(1, 4, done),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="16 is one ten and how many ones?"
+            answer={6}
+            tone="b"
+            picture={() => <TenAndOnes tens={1} ones={6} />}
+            nudge="The full ten is 10. Count the ones outside it."
+            why={{ 16: "That is all of them. Count just the ones outside the ten." }}
+            showText="Watch and listen: the ones are 1, 2, 3, 4, 5, 6."
+            praise="Yes! 16 is ten and 6."
+            onComplete={done}
+          />
+        ),
+        (done) => teenQuestion(3, 9, done),
+        (done) => (
+          <PickCheck
+            n={4}
+            prompt="One ten and 3 ones. Which number is it?"
+            picture={<TenAndOnes tens={1} ones={3} />}
+            showPicture={<TenAndOnes tens={1} ones={3} />}
+            showText="Count: 10, 11, 12, 13. The ten comes first."
+            options={[
+              { id: "31", label: "31" },
+              { id: "13", label: "13" },
+            ]}
+            answer="13"
+            why={{ "31": "That is backwards. Write the ten first, then the ones." }}
+            praise="Yes! 13 is ten and 3."
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 

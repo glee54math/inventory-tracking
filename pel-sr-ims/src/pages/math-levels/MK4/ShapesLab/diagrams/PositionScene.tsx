@@ -44,11 +44,13 @@ export interface PositionSceneProps {
  */
 export function PositionScene({ relation, side = "right" }: PositionSceneProps) {
   const W = 220;
-  const H = 190;
+  const H = 212;
   const boxCx = W / 2;
-  const boxCy = 100;
+  const boxCy = 106;
   const boxHalf = 30;
-  const gap = 46;
+  // Clear space between box and ball, small enough that the ball always
+  // stays inside the picture (above, below and beside).
+  const gap = 20;
 
   let ballCx = boxCx;
   let ballCy = boxCy;
@@ -84,7 +86,7 @@ export function PositionScene({ relation, side = "right" }: PositionSceneProps) 
       style={{ display: "block", width: "100%", maxWidth: W, height: "auto", fontFamily: diagramFont }}
     >
       {/* a faint ground line gives above/below a visual anchor */}
-      <line x1={10} y1={160} x2={W - 10} y2={160} stroke={palette.line} strokeWidth={2} />
+      <line x1={10} y1={H - 4} x2={W - 10} y2={H - 4} stroke={palette.line} strokeWidth={2} />
       {ballBehind && Ball}
       {Box}
       {!ballBehind && Ball}

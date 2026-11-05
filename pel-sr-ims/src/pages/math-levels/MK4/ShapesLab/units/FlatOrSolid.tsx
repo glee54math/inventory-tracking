@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ShapeGlyph, SHAPE_KINDS, SHAPE_LABELS, type ShapeKind } from "../diagrams/Shape2D";
 import { SolidGlyph, SOLID_KINDS, SOLID_LABELS, type SolidKind } from "../diagrams/Solid3D";
 import { pick, shuffle } from "../../../shared/lib/math";
@@ -7,7 +7,7 @@ import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { flatOrSolidTest } from "./FlatOrSolidTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
+import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -17,221 +17,146 @@ import { TapSelect } from "../../../shared/components/TapSelect";
 // can you pick it up and hold real space in your hands, or is it just a
 // drawing with no depth.
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+// Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
+// Ideas checked: flat vs solid (circle vs sphere); round does not mean
+// solid; counting flat and solid shapes in a mix; naming a solid.
 
-/** Vocabulary: flat (2D) vs solid (3D), stated plainly. */
-function FlatSolidVocabQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [flatPick, setFlatPick] = useState("");
-  const [solidPick, setSolidPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [flatPick, solidPick].every((v) => String(v).trim() !== "");
-  const flatOk = flatPick === "2d";
-  const solidOk = solidPick === "3d";
-  const ok = flatOk && solidOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> Think about a drawing on paper, versus a block you can pick up.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          A flat shape, like a drawing, is called...{" "}
-          <TapSelect value={flatPick} onChange={(e) => setFlatPick(e.target.value)} style={fieldOk(flatOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="2d">2D (flat)</option>
-            <option value="3d">3D (solid)</option>
-          </TapSelect>
-        </label>
-        <label>
-          A shape you can pick up and hold, like a block, is called...{" "}
-          <TapSelect value={solidPick} onChange={(e) => setSolidPick(e.target.value)} style={fieldOk(solidOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="2d">2D (flat)</option>
-            <option value="3d">3D (solid)</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — flat is 2D, solid (something with real depth you could hold) is 3D." : "Not quite — 2D means flat, like a drawing. 3D means solid, with real depth you could actually pick up."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Conflation: circle vs. sphere, both terms in the same question. */
-function CircleSphereConflationQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [holdPick, setHoldPick] = useState("");
-  const [flatPick, setFlatPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [holdPick, flatPick].every((v) => String(v).trim() !== "");
-  const holdOk = holdPick === "sphere";
-  const flatOk = flatPick === "circle";
-  const ok = holdOk && flatOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> Here are a circle and a sphere. They can look alike in a picture!
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <ShapeGlyph kind="circle" tone="a" label="a flat round shape" />
-        <SolidGlyph kind="sphere" tone="b" label="a solid round shape" />
-      </div>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Which one could you actually pick up and hold, like a ball?{" "}
-          <TapSelect value={holdPick} onChange={(e) => setHoldPick(e.target.value)} style={fieldOk(holdOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="circle">The circle</option>
-            <option value="sphere">The sphere</option>
-          </TapSelect>
-        </label>
-        <label>
-          Which one is flat, like a drawing?{" "}
-          <TapSelect value={flatPick} onChange={(e) => setFlatPick(e.target.value)} style={fieldOk(flatOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="circle">The circle</option>
-            <option value="sphere">The sphere</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — a sphere (like a ball) is solid and takes up real space; a circle is just a flat, round drawing."
-            : "Not quite — a sphere is solid (you can hold it, like a ball). A circle is flat, like a round drawing with no depth."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Generalization / true-false trap: looks alone don't decide flat vs. solid. */
-function LooksCanTrickYouTrapQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "false";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or false: any round shape you see in a picture must be solid (3D), since round things like balls are solid.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — a round shape can still be flat (a circle). What matters is whether it has real depth you could hold, not just whether it looks round."
-            : "Not quite — a circle is round AND flat. Being round doesn't automatically mean something is solid."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Production + classification together: name the solid, then classify it. */
-function NameAndClassifyQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [namePick, setNamePick] = useState("");
-  const [classPick, setClassPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [namePick, classPick].every((v) => String(v).trim() !== "");
-  const nameOk = namePick === "cylinder";
-  const classOk = classPick === "3d";
-  const ok = nameOk && classOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> Look at this solid shape.
-      </p>
-      <SolidGlyph kind="cylinder" tone="c" label="a solid shape" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What is the name of this solid shape?{" "}
-          <TapSelect value={namePick} onChange={(e) => setNamePick(e.target.value)} style={fieldOk(nameOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="cube">Cube</option>
-            <option value="cylinder">Cylinder</option>
-            <option value="cone">Cone</option>
-          </TapSelect>
-        </label>
-        <label>
-          Is a cylinder flat or solid?{" "}
-          <TapSelect value={classPick} onChange={(e) => setClassPick(e.target.value)} style={fieldOk(classOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="2d">Flat (2D)</option>
-            <option value="3d">Solid (3D)</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — that's a cylinder, and it's solid (3D) — it has real depth, like a can." : "Not quite — look at the two round ends and the curved side: that's the shape of a cylinder, like a soup can, and it's solid (3D)."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+const MIXED_ROW = (
+  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+    <div style={{ width: 84 }}>
+      <SolidGlyph kind="cube" tone="b" label="shape 1" />
+    </div>
+    <div style={{ width: 84 }}>
+      <ShapeGlyph kind="circle" tone="a" label="shape 2" />
+    </div>
+    <div style={{ width: 84 }}>
+      <SolidGlyph kind="cone" tone="b" label="shape 3" />
+    </div>
+    <div style={{ width: 84 }}>
+      <ShapeGlyph kind="square" tone="a" label="shape 4" />
+    </div>
+    <div style={{ width: 84 }}>
+      <SolidGlyph kind="cylinder" tone="b" label="shape 5" />
+    </div>
+  </div>
+);
 
 function FlatOrSolidCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ vocab: false, circleSphere: false, trap: false, nameClassify: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure flat vs. solid isn't just about how round or square something looks, before you try practice problems.</ReadAloud>
-      <FlatSolidVocabQuestion onComplete={mark("vocab")} />
-      <CircleSphereConflationQuestion onComplete={mark("circleSphere")} />
-      <LooksCanTrickYouTrapQuestion onComplete={mark("trap")} />
-      <NameAndClassifyQuestion onComplete={mark("nameClassify")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => (
+          <PickCheck
+            n={1}
+            prompt="Which one can you pick up and hold?"
+            picture={
+              <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
+                <div style={{ width: 110 }}>
+                  <ShapeGlyph kind="circle" tone="a" label="a flat round shape" />
+                </div>
+                <div style={{ width: 110 }}>
+                  <SolidGlyph kind="sphere" tone="b" label="a solid round shape" />
+                </div>
+              </div>
+            }
+            showPicture={
+              <div style={{ width: 110 }}>
+                <SolidGlyph kind="sphere" tone="b" label="a solid round shape" />
+              </div>
+            }
+            showText="A sphere is solid, like a ball. A circle is flat, like a drawing."
+            options={[
+              { id: "circle", label: "Circle" },
+              { id: "sphere", label: "Sphere" },
+            ]}
+            answer="sphere"
+            why={{ circle: "A circle is flat, like a drawing on paper. Can you pick up a drawing?" }}
+            praise="Yes! A sphere is solid, like a ball."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="How many solid shapes?"
+            answer={3}
+            tone="b"
+            picture={() => MIXED_ROW}
+            nudge="Solid shapes look like blocks you can hold. Count only those."
+            why={{ 5: "Some are flat. Count only the solid ones.", 2: "Look again. The cone and the can are solid too." }}
+            showText="Count the solid ones: the cube, the cone, and the cylinder. 1, 2, 3."
+            praise="Yes! 3 solid shapes."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="How many flat shapes?"
+            answer={2}
+            tone="a"
+            picture={() => MIXED_ROW}
+            nudge="Flat shapes are like drawings. Count only those."
+            why={{ 5: "Some are solid. Count only the flat ones.", 3: "That is the solid ones. Count the flat ones." }}
+            showText="Count the flat ones: the circle and the square. 1, 2."
+            praise="Yes! 2 flat shapes."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={3}
+            prompt="This circle is round. Is it flat or solid?"
+            picture={
+              <div style={{ width: 120 }}>
+                <ShapeGlyph kind="circle" tone="a" label="a round shape" />
+              </div>
+            }
+            showPicture={
+              <div style={{ width: 120 }}>
+                <ShapeGlyph kind="circle" tone="a" label="a round shape" />
+              </div>
+            }
+            showText="A circle is round, but flat, like a drawing. Round does not mean solid."
+            options={[
+              { id: "flat", label: "Flat" },
+              { id: "solid", label: "Solid" },
+            ]}
+            answer="flat"
+            why={{ solid: "Round does not mean solid. A circle is flat, like paper." }}
+            praise="Yes! A circle is flat."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={4}
+            prompt="What is this solid shape?"
+            picture={
+              <div style={{ width: 120 }}>
+                <SolidGlyph kind="cylinder" tone="c" label="a solid shape" />
+              </div>
+            }
+            showPicture={
+              <div style={{ width: 120 }}>
+                <SolidGlyph kind="cylinder" tone="c" label="a solid shape" />
+              </div>
+            }
+            showText="It has two round ends and a curved side, like a can. It is a cylinder."
+            options={[
+              { id: "cube", label: "Cube" },
+              { id: "cylinder", label: "Cylinder" },
+              { id: "cone", label: "Cone" },
+            ]}
+            answer="cylinder"
+            why={{ cube: "A cube has flat square sides. Does this?", cone: "A cone has a point on top. Does this?" }}
+            praise="Yes! A cylinder, like a can."
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 

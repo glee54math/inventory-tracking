@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { TenFrame } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
@@ -6,7 +6,7 @@ import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { makingTenTest } from "./MakingTenTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
+import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -15,212 +15,51 @@ import { TapSelect } from "../../../shared/components/TapSelect";
 // of recognizing/recalling the ten-complement. Question 2 surfaces that
 // directly.
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+// Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
+// Ideas checked: a number's partner for 10 fills the empty boxes; checking a
+// pair really makes 10 instead of "looks close".
 
-/** Vocabulary: "partner for 10." */
-function PartnerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [namePick, setNamePick] = useState("");
-  const [valuePick, setValuePick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [namePick, valuePick].every((v) => String(v).trim() !== "");
-  const nameOk = namePick === "partner";
-  const valueOk = valuePick === "4";
-  const ok = nameOk && valueOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> 6 and 4 add up to exactly 10.
-      </p>
-      <TenFrame filled={6} tone="a" fillB={4} fillBTone="b" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          The number that joins 6 to make exactly 10 is called 6's ________ for 10.{" "}
-          <TapSelect value={namePick} onChange={(e) => setNamePick(e.target.value)} style={fieldOk(nameOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="partner">partner</option>
-            <option value="opposite">opposite</option>
-            <option value="double">double</option>
-          </TapSelect>
-        </label>
-        <label>
-          What is 6's partner for 10?{" "}
-          <TapSelect value={valuePick} onChange={(e) => setValuePick(e.target.value)} style={fieldOk(valueOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — 4 is called 6's partner for 10, since 6 + 4 = 10." : "Not quite — the number that joins another to make exactly 10 is its partner for 10. For 6, that's 4, since 6 + 4 = 10."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** THE named misconception: counting up from 1 vs. instant recall. */
-function CountingUpVsRecallQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "recall";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> You need 7's partner for 10.
-      </p>
-      <p>
-        Which is the better way to find it: COUNTING UP from 1 every time (1, 2, 3, 4, 5, 6, 7, 8, 9, 10 — then counting how many steps that was), or
-        just KNOWING that 7 + 3 = 10 right away?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="counting">Counting up from 1 every time</option>
-          <option value="recall">Just knowing it (recall)</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — the goal is to just KNOW each partner for 10 right away, without recounting from 1 every single time. That's what makes it a fast fact."
-            : "Not quite — counting up from 1 every time works, but it's slow. The goal is to eventually just KNOW each partner for 10 instantly, the way you'd know your own name."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Generalization: does every number 1-9 have exactly one partner for 10? */
-function EveryNumberHasOneQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "true";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or false: every number from 1 to 9 has exactly one partner that makes 10 with it.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — 1's partner is 9, 2's is 8, 3's is 7, 4's is 6, 5's is 5, and so on. Every number from 1 to 9 has exactly one partner for 10."
-            : "Not quite — check a few: 1+9=10, 2+8=10, 3+7=10. Every number from 1 to 9 pairs with exactly one other number to make 10."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Reverse-direction verify, with BOTH a true and a false pair so neither
- *  can be answered by always picking the same option. */
-function VerifyPairQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [truePick, setTruePick] = useState("");
-  const [falsePick, setFalsePick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [truePick, falsePick].every((v) => String(v).trim() !== "");
-  const trueOk = truePick === "true";
-  const falseOk = falsePick === "false";
-  const ok = trueOk && falseOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> Check these two pairs.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          6 and 4 — do these make 10?{" "}
-          <TapSelect value={truePick} onChange={(e) => setTruePick(e.target.value)} style={fieldOk(trueOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="true">True</option>
-            <option value="false">False</option>
-          </TapSelect>
-        </label>
-        <label>
-          5 and 4 — do these make 10?{" "}
-          <TapSelect value={falsePick} onChange={(e) => setFalsePick(e.target.value)} style={fieldOk(falseOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="true">True</option>
-            <option value="false">False</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — 6 + 4 = 10 is true, but 5 + 4 = 9, not 10, so that one is false. Always check the actual sum, not just whether the numbers 'look close.'"
-            : "Not quite — add each pair exactly: 6 + 4 = 10 (true), but 5 + 4 = 9 (false, not 10). Close isn't the same as exact."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+const partnerQuestion = (n: number, start: number, done: () => void) => (
+  <TypeCheck
+    n={n}
+    prompt={`${start} and how many make 10?`}
+    answer={10 - start}
+    tone="b"
+    picture={(m) => <TenFrame filled={start} tone="a" fillB={m === "show" || m === "done" ? 10 - start : 0} fillBTone="b" />}
+    nudge="Count the empty boxes."
+    showText={`Watch: the empty boxes fill in. ${start} and ${10 - start} make 10.`}
+    praise={`Yes! ${start} and ${10 - start} make 10.`}
+    onComplete={done}
+  />
+);
 
 function MakingTenCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ vocab: false, strategy: false, everyNumber: false, verify: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure partners for 10 make sense before you try practice problems.</ReadAloud>
-      <PartnerVocabQuestion onComplete={mark("vocab")} />
-      <CountingUpVsRecallQuestion onComplete={mark("strategy")} />
-      <EveryNumberHasOneQuestion onComplete={mark("everyNumber")} />
-      <VerifyPairQuestion onComplete={mark("verify")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => partnerQuestion(1, 6, done),
+        (done) => partnerQuestion(2, 7, done),
+        (done) => partnerQuestion(3, 2, done),
+        (done) => (
+          <PickCheck
+            n={4}
+            prompt="Do 5 and 4 make 10?"
+            picture={<TenFrame filled={5} tone="a" fillB={4} fillBTone="b" />}
+            showPicture={<TenFrame filled={5} tone="a" fillB={4} fillBTone="b" />}
+            showText="Look: one box is still empty. 5 and 4 make 9."
+            options={[
+              { id: "yes", label: "Yes" },
+              { id: "no", label: "No" },
+            ]}
+            answer="no"
+            why={{ yes: "Look again. Is every box full?" }}
+            praise="Right! One box is empty. 5 and 4 make 9."
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 

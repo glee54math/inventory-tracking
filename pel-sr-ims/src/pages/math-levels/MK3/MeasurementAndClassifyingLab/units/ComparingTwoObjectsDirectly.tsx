@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { LengthBars, BalanceScale } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
@@ -6,7 +6,7 @@ import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingTest } from "./ComparingTwoObjectsDirectlyTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
+import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
 
 // ============================================================================
 // SHARED HELPERS — distinct-pair generators, duplicated (not imported) in
@@ -55,227 +55,109 @@ export function weightPair(nearTieChance = 0.5): [number, number] {
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
 // ============================================================================
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+// Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
+// Ideas checked: which rod is longer, and how many blocks stick out; rods
+// that don't start together (count, don't look at the ends); the heavy side
+// of a balance goes down.
 
-/** Vocabulary: "describe the difference" means a quantity, not just a winner. */
-function DifferenceLanguageQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [longerPick, setLongerPick] = useState("");
-  const [byPick, setByPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [longerPick, byPick].every((v) => String(v).trim() !== "");
-  const longerOk = longerPick === "A";
-  const byOk = byPick === "3";
-  const ok = longerOk && byOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> Rod A has 7 blocks. Rod B has 4 blocks. Both start at the same place.
-      </p>
-      <LengthBars bars={[{ blocks: 7, tone: "a", label: "Rod A" }, { blocks: 4, tone: "b", label: "Rod B" }]} />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Which rod is longer?{" "}
-          <TapSelect value={longerPick} onChange={(e) => setLongerPick(e.target.value)} style={fieldOk(longerOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="A">Rod A</option>
-            <option value="B">Rod B</option>
-          </TapSelect>
-        </label>
-        <label>
-          Rod A is longer than Rod B by how many blocks?{" "}
-          <TapSelect value={byPick} onChange={(e) => setByPick(e.target.value)} style={fieldOk(byOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="7">7</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — Rod A is longer, and it's longer BY 3 blocks (7 take away 4), not by its whole 7-block length."
-            : "Not quite — \"by how many\" means the DIFFERENCE between the two rods, not either rod's whole length."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Common conflation: whose END is farther right is NOT the same question as who's longer. */
-function MisalignedTrapQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [endPick, setEndPick] = useState("");
-  const [longerPick, setLongerPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [endPick, longerPick].every((v) => String(v).trim() !== "");
-  const endOk = endPick === "B";
-  const longerOk = longerPick === "A";
-  const ok = endOk && longerOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> Rod A has 7 blocks and starts at the dashed line. Rod B has 4 blocks but starts further to the right.
-      </p>
-      <LengthBars bars={[{ blocks: 7, tone: "a", label: "Rod A", startOffset: 0 }, { blocks: 4, tone: "b", label: "Rod B", startOffset: 5 }]} />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Which rod's END reaches farther to the right?{" "}
-          <TapSelect value={endPick} onChange={(e) => setEndPick(e.target.value)} style={fieldOk(endOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="A">Rod A</option>
-            <option value="B">Rod B</option>
-          </TapSelect>
-        </label>
-        <label>
-          Which rod is ACTUALLY longer?{" "}
-          <TapSelect value={longerPick} onChange={(e) => setLongerPick(e.target.value)} style={fieldOk(longerOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="A">Rod A</option>
-            <option value="B">Rod B</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — Rod B's end reaches farther right, but Rod A (7 blocks) is actually longer than Rod B (4 blocks). Where a rod STARTS matters."
-            : "Not quite — look at where each rod starts, not just where it ends. Rod B starts much further right, so its end can look farther along even though it's the shorter rod."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Generalization / true-false: a fair comparison needs a shared starting point. */
-function CommonStartQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "true";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or false: to compare two rods fairly by looking at their ends, they must start at the same point.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — if two rods don't start together, comparing their ends alone can trick you (remember Rod A and Rod B above)."
-            : "Not quite — think back to the last question. Rod B's end reached farther right, but it wasn't the longer rod, because it didn't start at the same place as Rod A."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Multi-part + vocabulary: the balance scale's own "tip" language. */
-function BalanceVocabQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [heavierPick, setHeavierPick] = useState("");
-  const [tipPick, setTipPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [heavierPick, tipPick].every((v) => String(v).trim() !== "");
-  const heavierOk = heavierPick === "Left";
-  const tipOk = tipPick === "down";
-  const ok = heavierOk && tipOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> Look at the balance scale.
-      </p>
-      <BalanceScale left={6} right={3} leftTone="a" rightTone="b" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Which side is heavier?{" "}
-          <TapSelect value={heavierPick} onChange={(e) => setHeavierPick(e.target.value)} style={fieldOk(heavierOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="Left">Left</option>
-            <option value="Right">Right</option>
-          </TapSelect>
-        </label>
-        <label>
-          A heavier side makes the balance tip which way?{" "}
-          <TapSelect value={tipPick} onChange={(e) => setTipPick(e.target.value)} style={fieldOk(tipOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="up">up</option>
-            <option value="down">down</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — the Left side is heavier, and the heavier side always tips DOWN (the lighter side tips up)."
-            : "Not quite — the side with more weight on it always sinks DOWN, not up."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+const rodBtn = (name: "Rod A" | "Rod B") => ({ id: name, label: <span style={{ color: name === "Rod A" ? "var(--qa)" : "var(--qb)", fontWeight: 800 }}>{name}</span> });
 
 function ComparingCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ diffLanguage: false, misaligned: false, commonStart: false, balanceVocab: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
+  const lined = (extra = false, numberB = false) => (
+    <LengthBars
+      bars={[
+        { blocks: 7, tone: "a", label: "Rod A", extraFrom: extra ? 4 : undefined },
+        { blocks: 4, tone: "b", label: "Rod B", numbered: numberB },
+      ]}
+    />
+  );
+  const offset = (align = false, numbered = false) => (
+    <LengthBars
+      alignStarts={align}
+      bars={[
+        { blocks: 7, tone: "a", label: "Rod A", startOffset: 0, numbered },
+        { blocks: 4, tone: "b", label: "Rod B", startOffset: 5, numbered },
+      ]}
+    />
+  );
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure comparing two objects fairly makes sense before you try practice problems.</ReadAloud>
-      <DifferenceLanguageQuestion onComplete={mark("diffLanguage")} />
-      <MisalignedTrapQuestion onComplete={mark("misaligned")} />
-      <CommonStartQuestion onComplete={mark("commonStart")} />
-      <BalanceVocabQuestion onComplete={mark("balanceVocab")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => (
+          <PickCheck
+            n={1}
+            prompt="Which rod is longer?"
+            picture={lined()}
+            showPicture={lined(true)}
+            showText="Look: Rod A sticks out past Rod B. Rod A is longer."
+            options={[rodBtn("Rod A"), rodBtn("Rod B")]}
+            answer="Rod A"
+            why={{ "Rod B": "Look at the ends. Which rod sticks out farther?" }}
+            praise="Yes! Rod A is longer."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={1}
+            prompt="How many blocks of Rod A stick out past Rod B?"
+            answer={3}
+            tone="a"
+            picture={(m) => lined(m === "show" || m === "done")}
+            nudge="Look past the end of Rod B. Count only those blocks."
+            why={{ 7: "That is all of Rod A. Count only the blocks past Rod B.", 4: "That is Rod B. Count the blocks past its end." }}
+            showText="Watch and listen: the extra blocks are 1, 2, 3."
+            praise="Yes! Rod A is 3 blocks longer."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={2}
+            prompt="These rods start in different places. Which rod is longer?"
+            picture={offset()}
+            showPicture={offset(true)}
+            showText="Watch: slide them to start together. Rod A is longer."
+            options={[rodBtn("Rod A"), rodBtn("Rod B")]}
+            answer="Rod A"
+            why={{ "Rod B": "Rod B starts later, so its end is farther. Count the blocks!" }}
+            praise="Yes! Rod A has more blocks, so it is longer."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="How many blocks long is Rod B?"
+            answer={4}
+            tone="b"
+            picture={(m) => offset(false, m === "show" || m === "done")}
+            nudge="Count each block in Rod B once."
+            showText="Watch and listen: Rod B has 1, 2, 3, 4."
+            praise="Yes! Rod B is only 4 blocks. Count blocks, not where the end is."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={3}
+            prompt="Which side is heavier?"
+            picture={<BalanceScale left={6} right={3} leftTone="a" rightTone="b" />}
+            showPicture={<BalanceScale left={6} right={3} leftTone="a" rightTone="b" />}
+            showText="Look: the heavy side goes down. The left side is down."
+            options={[
+              { id: "Left", label: "Left" },
+              { id: "Right", label: "Right" },
+            ]}
+            answer="Left"
+            why={{ Right: "The right side went up. The heavy side goes down." }}
+            praise="Yes! The heavy side goes down."
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 

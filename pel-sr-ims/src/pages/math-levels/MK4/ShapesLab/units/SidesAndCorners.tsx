@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ShapeGlyph, ShapeCountable, SHAPE_KINDS, SHAPE_LABELS, shapeAttributes, sidesLookEqual, BUILDABLE_KINDS, type ShapeKind, type BuildableKind } from "../diagrams/Shape2D";
 import { pick, shuffle } from "../../../shared/lib/math";
 import { choice, type Problem, type VisualHelp } from "../../../shared/engine/types";
@@ -7,235 +7,96 @@ import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { sidesAndCornersTest } from "./SidesAndCornersTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
+import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
 // ============================================================================
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+// Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
+// Ideas checked: counting sides and corners; a circle has 0 of each; a
+// square and a rectangle have the same number of sides even though they
+// look different.
 
-/** Vocabulary: side vs. corner. */
-function SideCornerVocabQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [sidePick, setSidePick] = useState("");
-  const [cornerPick, setCornerPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [sidePick, cornerPick].every((v) => String(v).trim() !== "");
-  const sideOk = sidePick === "side";
-  const cornerOk = cornerPick === "corner";
-  const ok = sideOk && cornerOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
+const countQuestion = (n: number, kind: BuildableKind, what: "sides" | "corners", done: () => void) => {
+  const total = shapeAttributes(kind)[what];
   return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> Look at this square.
-      </p>
-      <ShapeGlyph kind="square" tone="a" label="a shape" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What do we call one of the straight lines on its edge?{" "}
-          <TapSelect value={sidePick} onChange={(e) => setSidePick(e.target.value)} style={fieldOk(sideOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="side">A side</option>
-            <option value="corner">A corner</option>
-          </TapSelect>
-        </label>
-        <label>
-          What do we call the point where two of those lines meet?{" "}
-          <TapSelect value={cornerPick} onChange={(e) => setCornerPick(e.target.value)} style={fieldOk(cornerOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="side">A side</option>
-            <option value="corner">A corner</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — a side is a straight edge, a corner is where two sides meet." : "Not quite — a SIDE is one straight line of the shape's edge; a CORNER is the point where two sides meet."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
+    <TypeCheck
+      n={n}
+      prompt={`How many ${what} does this ${kind} have?`}
+      answer={total}
+      tone="a"
+      picture={(m) => <ShapeCountable kind={kind} tone="a" countAlong={m === "show" || m === "done" ? what : undefined} />}
+      nudge={what === "sides" ? "Put your finger on one straight side. Count each side once." : "Point to each corner, where two sides meet. Count each once."}
+      showText={`Watch and listen: ${Array.from({ length: total }, (_, i) => i + 1).join(", ")}.`}
+      praise={`Yes! A ${kind} has ${total} ${what}.`}
+      onComplete={done}
+    />
   );
-}
-
-/** Conflation: a circle has zero of EITHER — commonly missed since "the
- *  outside line" can feel like "a side" to a first-time learner. */
-function CircleZeroConflationQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [sidesPick, setSidesPick] = useState("");
-  const [cornersPick, setCornersPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [sidesPick, cornersPick].every((v) => String(v).trim() !== "");
-  const sidesOk = sidesPick === "no";
-  const cornersOk = cornersPick === "no";
-  const ok = sidesOk && cornersOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> Look at this circle.
-      </p>
-      <ShapeGlyph kind="circle" tone="b" label="a round shape" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Does a circle have any STRAIGHT sides?{" "}
-          <TapSelect value={sidesPick} onChange={(e) => setSidesPick(e.target.value)} style={fieldOk(sidesOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </TapSelect>
-        </label>
-        <label>
-          Does a circle have any CORNERS?{" "}
-          <TapSelect value={cornersPick} onChange={(e) => setCornersPick(e.target.value)} style={fieldOk(cornersOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — a circle's edge is one curved line with no straight parts and no corners, so it has 0 sides and 0 corners."
-            : "Not quite — a circle's outline is curved, not straight, and it never meets itself at a sharp point — so it has 0 sides AND 0 corners."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Generalization / true-false trap: side COUNT vs. side LENGTH are different things. */
-function SameCountTrapQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "true";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> Here is a square and a rectangle that is NOT a square.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <ShapeGlyph kind="square" tone="a" label="a shape" />
-        <ShapeGlyph kind="rectangle" tone="c" label="a different shape" />
-      </div>
-      <p>True or false: even though their sides are different lengths, they both have the same NUMBER of sides (4).</p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — how LONG the sides are is different from how MANY sides there are. Both shapes have exactly 4 sides, even though they look different."
-            : "Not quite — count the sides on each one: a square has 4, and this rectangle also has 4. Looking different doesn't change the COUNT, just the lengths."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Multi-part: equal-length sides vs. equal side COUNT, contrasted directly. */
-function EqualLengthVsEqualCountQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [equalPick, setEqualPick] = useState("");
-  const [countPick, setCountPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [equalPick, countPick].every((v) => String(v).trim() !== "");
-  const equalOk = equalPick === "square";
-  const countOk = countPick === "yes";
-  const ok = equalOk && countOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> Here is a square and a rectangle that is NOT a square.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <ShapeGlyph kind="square" tone="a" label="a shape" />
-        <ShapeGlyph kind="rectangle" tone="c" label="a different shape" />
-      </div>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Which one has all 4 sides the SAME length?{" "}
-          <TapSelect value={equalPick} onChange={(e) => setEqualPick(e.target.value)} style={fieldOk(equalOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="square">The square</option>
-            <option value="rectangle">The rectangle</option>
-          </TapSelect>
-        </label>
-        <label>
-          Do they both have the same NUMBER of sides?{" "}
-          <TapSelect value={countPick} onChange={(e) => setCountPick(e.target.value)} style={fieldOk(countOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — the square's sides are all equal in LENGTH, but both shapes still have the same NUMBER of sides (4). Length and count are two different things to check."
-            : "Not quite — only the square has 4 equal-length sides. But both shapes still have 4 sides total, no matter their lengths."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+};
 
 function SidesAndCornersCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ vocab: false, circleZero: false, sameCountTrap: false, equalLengthVsCount: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: sides and corners before you try practice problems.</ReadAloud>
-      <SideCornerVocabQuestion onComplete={mark("vocab")} />
-      <CircleZeroConflationQuestion onComplete={mark("circleZero")} />
-      <SameCountTrapQuestion onComplete={mark("sameCountTrap")} />
-      <EqualLengthVsEqualCountQuestion onComplete={mark("equalLengthVsCount")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => countQuestion(1, "square", "sides", done),
+        (done) => countQuestion(2, "triangle", "corners", done),
+        (done) => (
+          <TypeCheck
+            n={3}
+            prompt="How many corners does a circle have?"
+            answer={0}
+            tone="a"
+            picture={() => (
+              <div style={{ width: 130 }}>
+                <ShapeGlyph kind="circle" tone="b" label="a round shape" />
+              </div>
+            )}
+            nudge="A corner is a point where two straight sides meet. Can you find one?"
+            why={{ 1: "A circle is round all the way. There is no point to touch." }}
+            showText="Run your finger around the circle. It never turns a corner. 0 corners."
+            praise="Yes! A circle has 0 corners and 0 sides."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={4}
+            prompt="Do the square and the rectangle have the same number of sides?"
+            picture={
+              <div style={{ display: "flex", gap: 12 }}>
+                <div style={{ width: 150 }}>
+                  <ShapeCountable kind="square" tone="a" />
+                </div>
+                <div style={{ width: 150 }}>
+                  <ShapeCountable kind="rectangle" tone="c" />
+                </div>
+              </div>
+            }
+            showPicture={
+              <div style={{ display: "flex", gap: 12 }}>
+                <div style={{ width: 150 }}>
+                  <ShapeCountable kind="square" tone="a" countAlong="sides" />
+                </div>
+                <div style={{ width: 150 }}>
+                  <ShapeCountable kind="rectangle" tone="c" countAlong="sides" countAlongStartAfter={5} />
+                </div>
+              </div>
+            }
+            showText="Count the square: 1, 2, 3, 4. Count the rectangle: 1, 2, 3, 4. Both have 4."
+            options={[
+              { id: "yes", label: "Yes" },
+              { id: "no", label: "No" },
+            ]}
+            answer="yes"
+            why={{ no: "The sides are different lengths, but count them. How many does each have?" }}
+            praise="Yes! Both have 4 sides. The rectangle's sides are just longer."
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 

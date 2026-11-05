@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import { ObjectGlyph, WordCard } from "../diagrams";
+import { useState } from "react";
+import { BalanceScale, LengthBars, ObjectGlyph, WordCard } from "../diagrams";
 import { pick } from "../../../shared/lib/math";
 import { choice, sentence, selectBlank, type Problem } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 import { describingTest } from "./DescribingHowObjectsAreMeasuredTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
+import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
 
 // ============================================================================
 // SHARED DATA — object pool + describing-word pool. Duplicated (not
@@ -50,230 +50,93 @@ export const WORDS: { word: string; attr: "length" | "weight" }[] = [
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
 // ============================================================================
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+// Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
+// Ideas checked: words for weight and length; looking bigger is not the
+// same as being heavier; one object has a length AND a weight.
 
-/** Vocabulary: two describing words picked to be easy to conflate (heavy vs
- *  tall, light vs long) rather than two words that are obviously opposite. */
-function VocabWordsQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [weightPick, setWeightPick] = useState("");
-  const [lengthPick, setLengthPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [weightPick, lengthPick].every((v) => String(v).trim() !== "");
-  const weightOk = weightPick === "heavy";
-  const lengthOk = lengthPick === "long";
-  const ok = weightOk && lengthOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> Two of these words tell you about weight, and two tell you about length.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Which word tells you about WEIGHT, not length?{" "}
-          <TapSelect value={weightPick} onChange={(e) => setWeightPick(e.target.value)} style={fieldOk(weightOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="tall">tall</option>
-            <option value="heavy">heavy</option>
-          </TapSelect>
-        </label>
-        <label>
-          Which word tells you about LENGTH, not weight?{" "}
-          <TapSelect value={lengthPick} onChange={(e) => setLengthPick(e.target.value)} style={fieldOk(lengthOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="light">light</option>
-            <option value="long">long</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? '"Heavy" is about weight, and "long" is about length — even though "tall" and "light" sound like they could also fit, "tall" is really about length and "light" is really about weight.'
-            : "Not quite — read each word carefully. \"Tall\" and \"long\" both describe length; \"heavy\" and \"light\" both describe weight."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Common conflation: bigger-looking does NOT mean heavier. Both the "big"
- *  idea and the "heavy" idea live in the same question, on purpose. */
-function SizeVsWeightQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [biggerPick, setBiggerPick] = useState("");
-  const [heavierPick, setHeavierPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [biggerPick, heavierPick].every((v) => String(v).trim() !== "");
-  const biggerOk = biggerPick === "balloon";
-  const heavierOk = heavierPick === "rock";
-  const ok = biggerOk && heavierOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> Look at a big balloon and a small rock.
-      </p>
-      <div className="control-row" style={{ gap: 28 }}>
-        <ObjectGlyph glyph={"🎈"} name="balloon" big />
-        <ObjectGlyph glyph={"🪨"} name="rock" />
-      </div>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Which one takes up MORE space (looks bigger)?{" "}
-          <TapSelect value={biggerPick} onChange={(e) => setBiggerPick(e.target.value)} style={fieldOk(biggerOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="balloon">balloon</option>
-            <option value="rock">rock</option>
-          </TapSelect>
-        </label>
-        <label>
-          Which one is HEAVIER?{" "}
-          <TapSelect value={heavierPick} onChange={(e) => setHeavierPick(e.target.value)} style={fieldOk(heavierOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="balloon">balloon</option>
-            <option value="rock">rock</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — the balloon looks bigger, but the rock is heavier. Looking bigger and being heavier are two different things."
-            : "Not quite — look again. The balloon takes up more space, but a small rock can still be heavier than it."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Generalization / true-false trap, directly following from Q2's example. */
-function BiggerAlwaysHeavierQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "false";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or false: an object that looks bigger is always heavier than an object that looks smaller.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — false. Remember the balloon and the rock: the balloon looks bigger but the rock is heavier. Size and weight don't always match."
-            : "Not quite — think back to the balloon and the rock. The balloon looked bigger, but it wasn't the heavier one."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Holding two independent attributes of ONE object at the same time. */
-function TwoAttributesQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [lengthPick, setLengthPick] = useState("");
-  const [weightPick, setWeightPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [lengthPick, weightPick].every((v) => String(v).trim() !== "");
-  const lengthOk = lengthPick === "long";
-  const weightOk = weightPick === "heavy";
-  const ok = lengthOk && weightOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> Look at the train.
-      </p>
-      <ObjectGlyph glyph={"🚂"} name="train" big />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Is the train long or short?{" "}
-          <TapSelect value={lengthPick} onChange={(e) => setLengthPick(e.target.value)} style={fieldOk(lengthOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="long">long</option>
-            <option value="short">short</option>
-          </TapSelect>
-        </label>
-        <label>
-          Is the train heavy or light?{" "}
-          <TapSelect value={weightPick} onChange={(e) => setWeightPick(e.target.value)} style={fieldOk(weightOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="heavy">heavy</option>
-            <option value="light">light</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — the train is BOTH long AND heavy. One object can have more than one measurable attribute at the same time."
-            : "Not quite — a train is long (think how far it stretches) and heavy (think how hard it would be to lift)."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+const wordBtn = (w: string) => ({ id: w, label: w });
 
 function DescribingCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ vocab: false, sizeVsWeight: false, trap: false, twoAttr: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure these describing words make sense before you try practice problems.</ReadAloud>
-      <VocabWordsQuestion onComplete={mark("vocab")} />
-      <SizeVsWeightQuestion onComplete={mark("sizeVsWeight")} />
-      <BiggerAlwaysHeavierQuestion onComplete={mark("trap")} />
-      <TwoAttributesQuestion onComplete={mark("twoAttr")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => (
+          <PickCheck
+            n={1}
+            prompt="Which word tells how heavy something is?"
+            picture={<BalanceScale left={6} right={2} leftLabel="Heavy" rightLabel="Light" />}
+            showPicture={<BalanceScale left={6} right={2} leftLabel="Heavy" rightLabel="Light" />}
+            showText="The heavy side goes down. Heavy tells about weight."
+            options={["tall", "heavy", "long"].map(wordBtn)}
+            answer="heavy"
+            why={{ tall: "Tall tells how high something is.", long: "Long tells how far it is from end to end." }}
+            praise="Yes! Heavy tells about weight."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={2}
+            prompt="A big balloon and a small rock. Which one is heavier?"
+            picture={
+              <div style={{ display: "flex", gap: 12, alignItems: "flex-end" }}>
+                <ObjectGlyph glyph={"🎈"} name="balloon" big />
+                <ObjectGlyph glyph={"🪨"} name="rock" />
+              </div>
+            }
+            showPicture={<BalanceScale left={1} right={6} leftLabel="Balloon" rightLabel="Rock" />}
+            showText="Watch: on the scale, the rock goes down. The rock is heavier."
+            options={["balloon", "rock"].map(wordBtn)}
+            answer="rock"
+            why={{ balloon: "The balloon is big, but it is full of air. Big does not mean heavy." }}
+            praise="Yes! The rock is small, but it is heavier."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="How many blocks are on the heavy side?"
+            answer={6}
+            tone="b"
+            picture={() => <BalanceScale left={1} right={6} leftLabel="Balloon" rightLabel="Rock" />}
+            nudge="Find the side that went down. Count its blocks."
+            why={{ 1: "That is the light side. Count the side that went down." }}
+            showText="Watch and listen: the rock side has 1, 2, 3, 4, 5, 6."
+            praise="Yes! The rock side has 6."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={3}
+            prompt="How long is the train? Count the blocks."
+            answer={7}
+            tone="a"
+            picture={(m) => <LengthBars bars={[{ blocks: 7, tone: "a", label: "Train", numbered: m === "show" || m === "done" }]} />}
+            nudge="Count each block once."
+            showText="Watch and listen: 1, 2, 3, 4, 5, 6, 7."
+            praise="Yes! The train is 7 blocks long."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={4}
+            prompt="The train is long. What else is it?"
+            picture={<ObjectGlyph glyph={"🚂"} name="train" big />}
+            showPicture={<BalanceScale left={2} right={8} leftLabel="Toy" rightLabel="Train" />}
+            showText="Look: the train goes way down. A train is heavy."
+            options={["heavy", "light"].map(wordBtn)}
+            answer="heavy"
+            why={{ light: "Could you lift a train? It is not light." }}
+            praise="Yes! A train is long AND heavy."
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { SHAPE_LABELS, shapeAttributes, shapeOutline, BUILDABLE_KINDS, type BuildableKind } from "../diagrams/Shape2D";
+import { SHAPE_LABELS, ShapeCountable, shapeAttributes, shapeOutline, BUILDABLE_KINDS, type BuildableKind } from "../diagrams/Shape2D";
 import { StickBuilder } from "../diagrams/StickBuilder";
 import { countAlongMs, countAlongText } from "../diagrams/countAlong";
 import { CubeFrameBuilder, CubeFramePreview, CUBE_EDGES, CUBE_VERTICES } from "../diagrams/CubeFrameBuilder";
@@ -10,7 +10,7 @@ import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { buildingAndCombiningShapesTest } from "./BuildingAndCombiningShapesTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
+import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -19,216 +19,96 @@ import { TapSelect } from "../../../shared/components/TapSelect";
 // named misconception is believing there's only ONE "obvious" way pieces
 // can combine — the open-ended strip task directly disproves that.
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+// Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
+// Ideas checked: sticks are a shape's sides; small shapes join to make a
+// bigger shape; a cube frame's clay balls are its corners.
 
-/** Vocabulary: joined-end-to-end sticks show the shape's sides; count them for a triangle. */
-function StickVocabQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [wordPick, setWordPick] = useState("");
-  const [countPick, setCountPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [wordPick, countPick].every((v) => String(v).trim() !== "");
-  const wordOk = wordPick === "sides";
-  const countOk = countPick === "3";
-  const ok = wordOk && countOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> Sticks are joined end-to-end, with no gaps and no crossing.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Joined this way, the sticks can show a shape's...{" "}
-          <TapSelect value={wordPick} onChange={(e) => setWordPick(e.target.value)} style={fieldOk(wordOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="sides">Sides</option>
-            <option value="colors">Colors</option>
-          </TapSelect>
-        </label>
-        <label>
-          How many sticks do you need to build a triangle?{" "}
-          <TapSelect value={countPick} onChange={(e) => setCountPick(e.target.value)} style={fieldOk(countOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — joined end-to-end, sticks show a shape's SIDES, and a triangle needs exactly 3 of them." : "Not quite — sticks joined end-to-end with no gaps show a shape's SIDES. A triangle has 3 sides, so it needs 3 sticks."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Conflation: both possible shape names live in the same question. */
-function TwoTrianglesConflationQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [resultPick, setResultPick] = useState("");
-  const [otherWayPick, setOtherWayPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [resultPick, otherWayPick].every((v) => String(v).trim() !== "");
-  const resultOk = resultPick === "square";
-  const otherWayOk = otherWayPick === "yes";
-  const ok = resultOk && otherWayOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> Two triangles are joined together, edge-to-edge.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Joined one way, the two triangles can make a...{" "}
-          <TapSelect value={resultPick} onChange={(e) => setResultPick(e.target.value)} style={fieldOk(resultOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="square">Square</option>
-            <option value="hexagon">Hexagon</option>
-          </TapSelect>
-        </label>
-        <label>
-          Could the SAME two triangles also make a different shape, joined a different way?{" "}
-          <TapSelect value={otherWayPick} onChange={(e) => setOtherWayPick(e.target.value)} style={fieldOk(otherWayOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — joined along their longest edge, two matching triangles make a square. Joined a different way, they could make a bigger triangle or a different shape entirely."
-            : "Not quite — two matching right triangles joined along their longest edge make a SQUARE. The same two pieces could ALSO make a different shape if joined another way."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Generalization / true-false trap: the named misconception, stated directly. */
-function OneWayTrapQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "false";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or false: there is only ONE correct way to put smaller pieces together to build a bigger shape.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — often there are MANY different ways to fill the same space with pieces, not just one 'obvious' way."
-            : "Not quite — try filling the same strip with different combinations of pieces below. More than one combination can fill it exactly."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Multi-part: applying Unit 3's side/corner vocabulary to a 3D build. */
-function DotsAndSticksQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [dotsPick, setDotsPick] = useState("");
-  const [sticksPick, setSticksPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [dotsPick, sticksPick].every((v) => String(v).trim() !== "");
-  const dotsOk = dotsPick === "corners";
-  const sticksOk = sticksPick === "sides";
-  const ok = dotsOk && sticksOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> Here is a cube frame made of clay balls and sticks.
-      </p>
-      <CubeFrameBuilder tone="c" placed={CUBE_EDGES.map((_, i) => i)} />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What do the clay-ball DOTS represent?{" "}
-          <TapSelect value={dotsPick} onChange={(e) => setDotsPick(e.target.value)} style={fieldOk(dotsOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="corners">Corners</option>
-            <option value="sides">Sides</option>
-          </TapSelect>
-        </label>
-        <label>
-          What do the STICKS represent?{" "}
-          <TapSelect value={sticksPick} onChange={(e) => setSticksPick(e.target.value)} style={fieldOk(sticksOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="corners">Corners</option>
-            <option value="sides">Sides</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — the dots (clay) are the cube's corners, and the sticks are its sides (edges)." : "Not quite — the dots of clay are where corners go, and the sticks are the straight sides (edges) connecting them."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+const recipe = (id: string) => COMPOSE_RECIPES.find((r) => r.id === id)!;
 
 function BuildingCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ vocab: false, twoTriangles: false, oneWayTrap: false, dotsAndSticks: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
+  const toSquare = recipe("trianglesToSquare");
+  const toRectangle = recipe("squaresToRectangle");
+  const allEdges = CUBE_EDGES.map((_, i) => i);
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: building and combining shapes before you try practice problems.</ReadAloud>
-      <StickVocabQuestion onComplete={mark("vocab")} />
-      <TwoTrianglesConflationQuestion onComplete={mark("twoTriangles")} />
-      <OneWayTrapQuestion onComplete={mark("oneWayTrap")} />
-      <DotsAndSticksQuestion onComplete={mark("dotsAndSticks")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => (
+          <TypeCheck
+            n={1}
+            prompt="How many sticks do you need to make a triangle?"
+            answer={3}
+            tone="a"
+            picture={(m) => <ShapeCountable kind="triangle" tone="a" countAlong={m === "show" || m === "done" ? "sides" : undefined} />}
+            nudge="Each stick is one side. Count the sides."
+            showText="Watch and listen: one stick for each side. 1, 2, 3."
+            praise="Yes! 3 sticks, one for each side."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={2}
+            prompt="Two triangles join together. What shape do they make?"
+            picture={<ComposeSingle recipe={toSquare} placed={toSquare.slots.length} tone="a" />}
+            showPicture={<ShapeCountable kind="square" tone="a" countAlong="sides" />}
+            showText="Count the sides of the new shape: 1, 2, 3, 4. 4 sides the same. It is a square."
+            options={[
+              { id: "square", label: "Square" },
+              { id: "triangle", label: "Triangle" },
+              { id: "circle", label: "Circle" },
+            ]}
+            answer="square"
+            why={{ triangle: "Look at the outside of the new shape. How many sides does it have?", circle: "A circle is round. Is the new shape round?" }}
+            praise="Yes! Two triangles make a square."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={3}
+            prompt="How many squares make this rectangle?"
+            answer={toRectangle.slots.length}
+            tone="a"
+            picture={() => <ComposeSingle recipe={toRectangle} placed={toRectangle.slots.length} tone="a" />}
+            nudge="Count each small square inside the rectangle."
+            showText={`Watch and listen: ${Array.from({ length: toRectangle.slots.length }, (_, i) => i + 1).join(", ")}.`}
+            praise={`Yes! ${toRectangle.slots.length} squares make the rectangle.`}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={4}
+            prompt="How many clay balls does this cube have?"
+            answer={CUBE_VERTICES.length}
+            tone="c"
+            picture={(m) => <CubeFramePreview presentEdges={allEdges} tone="c" countCorners={m === "show" || m === "done"} />}
+            nudge="Count each clay ball once. Some are in the back."
+            showText={`Watch and listen: ${Array.from({ length: CUBE_VERTICES.length }, (_, i) => i + 1).join(", ")}.`}
+            praise={`Yes! ${CUBE_VERTICES.length} clay balls.`}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={4}
+            prompt="The clay balls are the cube's..."
+            picture={<CubeFramePreview presentEdges={allEdges} tone="c" />}
+            showPicture={<CubeFramePreview presentEdges={allEdges} tone="c" countCorners />}
+            showText="Look: each clay ball is where sticks meet. That is a corner."
+            options={[
+              { id: "corners", label: "Corners" },
+              { id: "sides", label: "Sides" },
+            ]}
+            answer="corners"
+            why={{ sides: "The sticks are the sides. Where do the sticks meet?" }}
+            praise="Yes! The clay balls are the corners. The sticks are the sides."
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 

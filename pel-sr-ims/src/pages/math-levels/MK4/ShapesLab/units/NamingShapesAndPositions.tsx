@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ShapeGlyph, SHAPE_KINDS, SHAPE_LABELS, TURN_DEMO_MS, type ShapeKind } from "../diagrams/Shape2D";
 import { PositionScene, RELATIONS, RELATION_LABELS, RELATION_RECIPROCAL, type Relation } from "../diagrams/PositionScene";
 import { pick, shuffle } from "../../../shared/lib/math";
@@ -7,7 +7,7 @@ import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { namingShapesAndPositionsTest } from "./NamingShapesAndPositionsTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
+import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -16,196 +16,108 @@ import { TapSelect } from "../../../shared/components/TapSelect";
 // orientation or size) is the headline misconception here — a tilted square
 // is NOT a different shape called a "diamond."
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+// Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
+// Ideas checked: turning a shape doesn't change it; big, small and turned
+// shapes keep their name; position words (in front of, below).
 
-/** Vocabulary: a turned square is not a different shape called "a diamond." */
-function DiamondVocabQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [pick1, setPick1] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = pick1 === "square";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> Look at this shape.
-      </p>
-      <ShapeGlyph kind="square" rotation={45} tone="a" label="a tilted shape" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What shape is this, really?{" "}
-          <TapSelect value={pick1} onChange={(e) => setPick1(e.target.value)} style={fieldOk(ok, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="diamond">A diamond — turning it made it a new shape</option>
-            <option value="square">Still a square — turning it never changes what shape it is</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
+const shapeRow = (items: { kind: ShapeKind; scale?: number; rotation?: number }[]) => (
+  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+    {items.map((it, i) => (
+      <div key={i} style={{ width: 84 }}>
+        <ShapeGlyph kind={it.kind} scale={it.scale} rotation={it.rotation} tone="a" label={`shape ${i + 1}`} />
       </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? 'Correct — "diamond" is just a nickname some people use, but this is still a SQUARE. Turning a shape never changes what shape it is.'
-            : "Not quite — count the sides: 4 equal sides and 4 corners, same as any other square. Turning it only changes which way it's facing."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Conflation: resizing a shape doesn't change what shape it is either. */
-function ResizeConflationQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "true";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> Here is a big triangle and a tiny triangle.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <ShapeGlyph kind="triangle" scale={1.3} tone="b" label="a big shape" />
-        <ShapeGlyph kind="triangle" scale={0.45} tone="c" label="a tiny shape" />
-      </div>
-      <p>True or false: they are both triangles, even though one is much bigger than the other.</p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — size never changes what shape something is. A tiny triangle and a giant triangle are both still triangles."
-            : "Not quite — look at the corners and sides on each one. Both have exactly 3 sides and 3 corners, so both are triangles, no matter the size."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Generalization / true-false trap: the core K.G.2 claim, stated directly. */
-function TurningTrapQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "false";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or false: if you turn (rotate) a shape around, it becomes a different shape than it was before.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — turning a shape only changes which way it's facing. It's still the exact same shape."
-            : "Not quite — turning a shape (even all the way to look tilted or upside down) never changes how many sides or corners it has, so it's never a different shape."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Vocabulary precision: "beside" (no overlap) vs "in front of" (overlapping). Both
- *  words live in the same question, per this unit's conflation-pair requirement. */
-function BesideVsInFrontQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [hiddenPick, setHiddenPick] = useState("");
-  const [wordPick, setWordPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [hiddenPick, wordPick].every((v) => String(v).trim() !== "");
-  const hiddenOk = hiddenPick === "yes";
-  const wordOk = wordPick === "inFrontOf";
-  const ok = hiddenOk && wordOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> The cat is sitting so that part of the box is hidden behind it.
-      </p>
-      <PositionScene relation="inFrontOf" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Is any part of the box hidden from view?{" "}
-          <TapSelect value={hiddenPick} onChange={(e) => setHiddenPick(e.target.value)} style={fieldOk(hiddenOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </TapSelect>
-        </label>
-        <label>
-          So is the cat BESIDE the box, or IN FRONT OF the box?{" "}
-          <TapSelect value={wordPick} onChange={(e) => setWordPick(e.target.value)} style={fieldOk(wordOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="beside">Beside</option>
-            <option value="inFrontOf">In front of</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? '"Beside" means next to, with nothing hidden — nothing overlaps. Here the box is partly hidden, so the cat is IN FRONT OF it, not beside it.'
-            : 'When one object blocks part of another, that\'s "in front of" (or "behind" for the hidden one) — "beside" is for objects side-by-side with nothing hidden.'}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+    ))}
+  </div>
+);
+const TRIANGLE_ROW = shapeRow([{ kind: "triangle", scale: 1.3 }, { kind: "circle" }, { kind: "triangle", scale: 0.5 }, { kind: "square" }, { kind: "triangle", rotation: 180 }]);
+const SQUARE_ROW = shapeRow([{ kind: "square" }, { kind: "rectangle" }, { kind: "square", rotation: 45, scale: 0.6 }, { kind: "triangle" }, { kind: "square", scale: 1.2 }]);
 
 function NamingCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ diamond: false, resize: false, turning: false, besideVsFront: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure turning or resizing a shape never changes what it is, before you try practice problems.</ReadAloud>
-      <DiamondVocabQuestion onComplete={mark("diamond")} />
-      <ResizeConflationQuestion onComplete={mark("resize")} />
-      <TurningTrapQuestion onComplete={mark("turning")} />
-      <BesideVsInFrontQuestion onComplete={mark("besideVsFront")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => (
+          <PickCheck
+            n={1}
+            prompt="This square got turned. What shape is it now?"
+            picture={<ShapeGlyph kind="square" rotation={45} tone="a" label="a turned shape" />}
+            showPicture={<ShapeGlyph kind="square" rotation={45} tone="a" label="a turned shape" turnDemo />}
+            showText="Watch it turn back. It is still a square."
+            options={[
+              { id: "square", label: "Square" },
+              { id: "new", label: "A new shape" },
+            ]}
+            answer="square"
+            why={{ new: "Turning does not change the shape. Count its sides and corners." }}
+            praise="Yes! Turning does not change the shape. It is still a square."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="How many triangles?"
+            answer={3}
+            tone="a"
+            picture={() => TRIANGLE_ROW}
+            nudge="Big ones, small ones and turned ones are triangles too."
+            why={{ 1: "Little ones and turned ones are triangles too.", 2: "Look for a turned one, too." }}
+            showText="Count every shape with 3 sides: big, small, and upside down. 1, 2, 3."
+            praise="Yes! 3 triangles. Big, small, or turned, a triangle is a triangle."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={3}
+            prompt="How many squares?"
+            answer={3}
+            tone="a"
+            picture={() => SQUARE_ROW}
+            nudge="A square has 4 sides that are all the same. Small and turned ones count too."
+            why={{ 4: "The long one is a rectangle, not a square.", 2: "Look for a small turned one, too." }}
+            showText="Count the squares: the first one, the small turned one, and the big one. 1, 2, 3."
+            praise="Yes! 3 squares."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={4}
+            prompt="Where is the ball?"
+            picture={<PositionScene relation="inFrontOf" />}
+            showPicture={<PositionScene relation="inFrontOf" />}
+            showText="Look: the ball hides part of the box. The ball is in front of the box."
+            options={[
+              { id: "beside", label: "Beside the box" },
+              { id: "inFrontOf", label: "In front of the box" },
+            ]}
+            answer="inFrontOf"
+            why={{ beside: "Part of the box is hidden. Is the ball next to it, or in front?" }}
+            praise="Yes! The ball is in front of the box."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={4}
+            prompt="Now where is the ball?"
+            picture={<PositionScene relation="below" />}
+            showPicture={<PositionScene relation="below" />}
+            showText="Look: the ball is under the box. The ball is below the box."
+            options={[
+              { id: "above", label: "Above" },
+              { id: "below", label: "Below" },
+            ]}
+            answer="below"
+            why={{ above: "Above means on top. Is the ball on top of the box?" }}
+            praise="Yes! The ball is below the box."
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 

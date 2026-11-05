@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SplitGroup, Fingers } from "../diagrams";
 import { randInt, pick } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
@@ -6,7 +6,7 @@ import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { puttingTogetherAndTakingApartTest } from "./PuttingTogetherAndTakingApartTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
+import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -16,233 +16,91 @@ import { TapSelect } from "../../../shared/components/TapSelect";
 // addition/subtraction as concepts at all, so the CFU specifically targets
 // confusing which operation matches which action wording.
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
-
-/** Vocabulary: what the + and = symbols actually mean, not just "what's the
- *  answer" — a rote drill never asks this directly. */
-function SymbolMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [plusPick, setPlusPick] = useState("");
-  const [equalPick, setEqualPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [plusPick, equalPick].every((v) => String(v).trim() !== "");
-  const plusOk = plusPick === "together";
-  const equalOk = equalPick === "same";
-  const ok = plusOk && equalOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> Look at the number sentence: 3 + 2 = 5.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What does the + symbol tell you to do?{" "}
-          <TapSelect value={plusPick} onChange={(e) => setPlusPick(e.target.value)} style={fieldOk(plusOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="together">Put groups together</option>
-            <option value="apart">Take a group apart</option>
-            <option value="compare">Compare two groups</option>
-          </TapSelect>
-        </label>
-        <label>
-          What does the = symbol mean?{" "}
-          <TapSelect value={equalPick} onChange={(e) => setEqualPick(e.target.value)} style={fieldOk(equalOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="same">Is the same amount as</option>
-            <option value="bigger">Is bigger than</option>
-            <option value="question">A question mark</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — the + symbol means putting groups together, and the = symbol means both sides have the same amount."
-            : "Not quite — the + symbol always means putting groups together, and = means both sides are the same amount, not a question or a comparison."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Conflation: the SAME numbers, two different action words, two different
- *  operations — forces picking the operation from the wording, not the
- *  numbers, so neither question can be pattern-matched from the other. */
-function ActionWordingQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [givenPick, setGivenPick] = useState("");
-  const [takenPick, setTakenPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [givenPick, takenPick].every((v) => String(v).trim() !== "");
-  const givenOk = givenPick === "add";
-  const takenOk = takenPick === "sub";
-  const ok = givenOk && takenOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> Mia has 5 apples.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Story A: 2 MORE apples are given to Mia. Is story A adding or subtracting?{" "}
-          <TapSelect value={givenPick} onChange={(e) => setGivenPick(e.target.value)} style={fieldOk(givenOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="add">Adding</option>
-            <option value="sub">Subtracting</option>
-          </TapSelect>
-        </label>
-        <label>
-          Story B: 2 apples are TAKEN AWAY from Mia. Is story B adding or subtracting?{" "}
-          <TapSelect value={takenPick} onChange={(e) => setTakenPick(e.target.value)} style={fieldOk(takenOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="add">Adding</option>
-            <option value="sub">Subtracting</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? 'Correct — the number "2" was the same in both stories, but "given to" means a group joins (adding), and "taken away" means a group leaves (subtracting). The ACTION word tells you the operation, not the number.'
-            : 'Not quite — look at the action words, not the numbers. "Given to" means something JOINS the group (adding). "Taken away" means something LEAVES the group (subtracting).'}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Generalization / false trap: does taking away ever make a group bigger? */
-function TakeAwayDirectionQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "false";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or false: when you take objects away from a group, the group can sometimes end up BIGGER than it started.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — false! Taking objects away always leaves the same amount or fewer, never more. Only joining a group together can make it bigger."
-            : "Not quite — try it with real objects: take any number away from a group. The group never grows from taking away — it only grows from objects joining it."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Multi-part production: the fingers modality PLUS writing the matching
- *  equation — ties this unit's two newer ideas (no-picture representation,
- *  and symbolic translation) into one question. */
-function FingersEquationQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [totalPick, setTotalPick] = useState("");
-  const [eqPick, setEqPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [totalPick, eqPick].every((v) => String(v).trim() !== "");
-  const totalOk = totalPick === "4";
-  const eqOk = eqPick === "3+1=4";
-  const ok = totalOk && eqOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> Hold up 3 fingers on one hand, and 1 finger on the other hand.
-      </p>
-      <Fingers count={4} tone="a" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          How many fingers are up in all?{" "}
-          <TapSelect value={totalPick} onChange={(e) => setTotalPick(e.target.value)} style={fieldOk(totalOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </TapSelect>
-        </label>
-        <label>
-          Which number sentence matches?{" "}
-          <TapSelect value={eqPick} onChange={(e) => setEqPick(e.target.value)} style={fieldOk(eqOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="3+1=4">3 + 1 = 4</option>
-            <option value="4+1=3">4 + 1 = 3</option>
-            <option value="3-1=4">3 − 1 = 4</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — 3 fingers and 1 finger join to make 4 in all, written as 3 + 1 = 4."
-            : "Not quite — count every raised finger on both hands first, then write the joining (+) sentence with that total on the right of the = sign."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+// Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
+// Ideas checked: putting together makes more (3 + 2 = 5); taking away leaves
+// fewer (5 − 2 = 3); matching fingers to a number sentence.
 
 function PuttingTogetherCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ symbols: false, wording: false, direction: false, fingersEq: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure joining and taking apart make sense before you try practice problems.</ReadAloud>
-      <SymbolMeaningQuestion onComplete={mark("symbols")} />
-      <ActionWordingQuestion onComplete={mark("wording")} />
-      <TakeAwayDirectionQuestion onComplete={mark("direction")} />
-      <FingersEquationQuestion onComplete={mark("fingersEq")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => (
+          <TypeCheck
+            n={1}
+            prompt="Put 3 and 2 together. How many in all?"
+            answer={5}
+            tone="a"
+            picture={() => <SplitGroup total={5} partA={3} toneA="a" toneB="b" />}
+            nudge="Count all the dots, blue and orange."
+            showText="Watch and listen: 1, 2, 3, 4, 5."
+            praise="Yes! 3 + 2 = 5."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="Mia has 5 apples. She gives 2 away. How many are left?"
+            answer={3}
+            tone="a"
+            picture={() => <SplitGroup total={5} partA={3} toneA="a" toneB="b" goneB />}
+            nudge="The faded ones went away. Count the ones left."
+            why={{ 5: "2 went away. Count only the ones left.", 7: "She gave some away. That makes fewer, not more." }}
+            showText="Watch and listen: the ones left are 1, 2, 3."
+            praise="Yes! 5 − 2 = 3."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={3}
+            prompt="You take some away. Do you have more, or fewer?"
+            picture={<SplitGroup total={6} partA={4} toneA="a" toneB="b" goneB />}
+            showPicture={<SplitGroup total={6} partA={4} toneA="a" toneB="b" goneB />}
+            showText="Look: the faded ones went away. There are fewer left."
+            options={[
+              { id: "more", label: "More" },
+              { id: "fewer", label: "Fewer" },
+            ]}
+            answer="fewer"
+            why={{ more: "Some went away. Is the group bigger or smaller now?" }}
+            praise="Yes! Taking away leaves fewer."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={4}
+            prompt="3 fingers and 1 finger. How many fingers?"
+            answer={4}
+            tone="a"
+            picture={() => <Fingers count={4} tone="a" />}
+            nudge="Count every finger that is up."
+            showText="Watch and listen: 1, 2, 3, 4."
+            praise="Yes! 4 fingers."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={4}
+            prompt="Which one matches the fingers?"
+            picture={<Fingers count={4} tone="a" />}
+            showPicture={<Fingers count={4} tone="a" />}
+            showText="We put 3 and 1 together. Together is plus: 3 + 1 = 4."
+            options={[
+              { id: "3+1=4", label: "3 + 1 = 4" },
+              { id: "3-1=4", label: "3 − 1 = 4" },
+            ]}
+            answer="3+1=4"
+            why={{ "3-1=4": "Minus means take away. We put the fingers together." }}
+            praise="Yes! 3 + 1 = 4."
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 

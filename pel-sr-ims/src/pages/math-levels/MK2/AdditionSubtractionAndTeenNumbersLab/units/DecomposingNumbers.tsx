@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SplitGroup } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
@@ -6,7 +6,7 @@ import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { decomposingNumbersTest } from "./DecomposingNumbersTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
+import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -15,210 +15,79 @@ import { TapSelect } from "../../../shared/components/TapSelect";
 // exactly ONE decomposition and stopping there. Every question below ties
 // back to that directly.
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
-
-/** Vocabulary: "decompose" and "parts," tied to an actual split. */
-function DecomposeVocabQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [verbPick, setVerbPick] = useState("");
-  const [namePick, setNamePick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [verbPick, namePick].every((v) => String(v).trim() !== "");
-  const verbOk = verbPick === "decomposing";
-  const nameOk = namePick === "parts";
-  const ok = verbOk && nameOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> Breaking 7 into 4 and 3.
-      </p>
-      <SplitGroup total={7} partA={4} toneA="a" toneB="b" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Breaking a number into smaller pieces like this is called ________ it.{" "}
-          <TapSelect value={verbPick} onChange={(e) => setVerbPick(e.target.value)} style={fieldOk(verbOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="decomposing">decomposing</option>
-            <option value="comparing">comparing</option>
-            <option value="counting">counting</option>
-          </TapSelect>
-        </label>
-        <label>
-          4 and 3 are both called the two ________.{" "}
-          <TapSelect value={namePick} onChange={(e) => setNamePick(e.target.value)} style={fieldOk(nameOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="parts">parts</option>
-            <option value="digits">digits</option>
-            <option value="numerals">numerals</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — breaking 7 into 4 and 3 is called decomposing it, and 4 and 3 are the two parts." : "Not quite — breaking a number into pieces is called decomposing it, and the pieces are called parts, not digits or numerals."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** THE core misconception, asked directly: does 6 have more than one decomposition? */
-function MoreThanOneWayQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "true";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> 6 can be broken into 4 and 2.
-      </p>
-      <SplitGroup total={6} partA={4} toneA="a" toneB="b" />
-      <p>True or false: 6 can ALSO be broken into 3 and 3 — a different pair that still makes 6.</p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — 6 = 4 + 2, AND 6 = 3 + 3, AND 6 = 5 + 1, AND 6 = 6 + 0. A number can be broken apart in more than one way."
-            : "Not quite — check it: 3 + 3 really does equal 6, same as 4 + 2 does. Both are valid ways to break 6 apart."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Generalization / false trap: is there ever only ONE way? */
-function OnlyOneWayTrapQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "false";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or false: every number can be broken into two parts in only ONE way.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — false! For example, 5 can be 4 + 1, OR 3 + 2. Stopping after finding just one way misses all the others."
-            : "Not quite — try 5: it can be broken into 4 + 1, but also 3 + 2. That's already two different ways, so 'only one way' isn't right."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** The equal-parts special case students sometimes treat as impossible. */
-function EqualPartsQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [canPick, setCanPick] = useState("");
-  const [partsPick, setPartsPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [canPick, partsPick].every((v) => String(v).trim() !== "");
-  const canOk = canPick === "true";
-  const partsOk = partsPick === "4";
-  const ok = canOk && partsOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> Think about the number 8.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          True or false: 8 can be broken into two EQUAL parts.{" "}
-          <TapSelect value={canPick} onChange={(e) => setCanPick(e.target.value)} style={fieldOk(canOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="true">True</option>
-            <option value="false">False</option>
-          </TapSelect>
-        </label>
-        <label>
-          If so, each equal part would be:{" "}
-          <TapSelect value={partsPick} onChange={(e) => setPartsPick(e.target.value)} style={fieldOk(partsOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — 8 = 4 + 4, two EQUAL parts. Equal parts are still a valid decomposition, just like any other pair."
-            : "Not quite — 8 = 4 + 4 works, and both parts are the same size (4 and 4). Equal parts are allowed."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+// Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
+// Ideas checked: a number splits into two parts; there is more than one way;
+// two equal parts are a way too.
 
 function DecomposingCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ vocab: false, moreThanOne: false, onlyOneTrap: false, equalParts: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure breaking numbers apart makes sense before you try practice problems.</ReadAloud>
-      <DecomposeVocabQuestion onComplete={mark("vocab")} />
-      <MoreThanOneWayQuestion onComplete={mark("moreThanOne")} />
-      <OnlyOneWayTrapQuestion onComplete={mark("onlyOneTrap")} />
-      <EqualPartsQuestion onComplete={mark("equalParts")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => (
+          <TypeCheck
+            n={1}
+            prompt="7 is 4 and how many more?"
+            answer={3}
+            tone="b"
+            picture={() => <SplitGroup total={7} partA={4} toneA="a" toneB="b" />}
+            nudge="Count the orange dots."
+            showText="Watch and listen: the orange dots are 1, 2, 3."
+            praise="Yes! 7 is 4 and 3."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="6 is 4 and 2. Here is another way. 6 is 3 and how many?"
+            answer={3}
+            tone="b"
+            picture={() => (
+              <div style={{ display: "grid", gap: 8 }}>
+                <SplitGroup total={6} partA={4} toneA="a" toneB="b" />
+                <SplitGroup total={6} partA={3} toneA="a" toneB="b" />
+              </div>
+            )}
+            nudge="Look at the bottom row. Count the orange dots."
+            showText="Watch and listen: in the bottom row, the orange dots are 1, 2, 3."
+            praise="Yes! 6 is 3 and 3, too. There is more than one way."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={3}
+            prompt="5 is 4 and 1. Is there another way to make 5?"
+            picture={<SplitGroup total={5} partA={4} toneA="a" toneB="b" />}
+            showPicture={<SplitGroup total={5} partA={3} toneA="a" toneB="b" />}
+            showText="Look: move one dot over. 3 and 2 makes 5, too."
+            options={[
+              { id: "yes", label: "Yes" },
+              { id: "no", label: "No" },
+            ]}
+            answer="yes"
+            why={{ no: "Try moving one blue dot to the orange side. Is it still 5?" }}
+            praise="Yes! 5 is 4 and 1. 5 is also 3 and 2."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={4}
+            prompt="Split 8 into two parts that are the same. How many in each part?"
+            answer={4}
+            tone="b"
+            picture={(m) => (m === "show" || m === "done" ? <SplitGroup total={8} partA={4} toneA="a" toneB="b" /> : <SplitGroup total={8} partA={8} toneA="a" toneB="b" showDivider={false} />)}
+            nudge="Make two groups with the same number of dots."
+            why={{ 8: "That is all of them. Split them into two groups." }}
+            showText="Watch: 4 blue and 4 orange. Both parts have 4."
+            praise="Yes! 8 is 4 and 4."
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 

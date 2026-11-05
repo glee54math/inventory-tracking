@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SortedBins, binCountAlongMs, type BinItem, type ItemShape } from "../diagrams";
 import { randInt, shuffle } from "../../../shared/lib/math";
 import { itemColors, palette } from "../../../shared/lib/palette";
@@ -7,7 +7,7 @@ import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { classifyingTest } from "./ClassifyingAndCountingByCategoryTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
+import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
 
 // ============================================================================
 // SHARED HELPERS — item builders, duplicated (not imported) in
@@ -39,224 +39,136 @@ const placed = (done: number, help?: { step: number; showMe: boolean }) => done 
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
 // ============================================================================
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+// Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
+// Ideas checked: sort by one attribute (color) and keep to it, even when a
+// shape tempts you; count each group; which group has fewer; sort by shape.
 
-/** Vocabulary: "category" and "attribute" aren't words a rote counting drill ever asks for. */
-function SortingVocabQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [groupPick, setGroupPick] = useState("");
-  const [attrPick, setAttrPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [groupPick, attrPick].every((v) => String(v).trim() !== "");
-  const groupOk = groupPick === "category";
-  const attrOk = attrPick === "attribute";
-  const ok = groupOk && attrOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> When you sort objects into groups by one feature, like color, each group has a name.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Each group is called a ___?{" "}
-          <TapSelect value={groupPick} onChange={(e) => setGroupPick(e.target.value)} style={fieldOk(groupOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="category">category</option>
-            <option value="number">number</option>
-          </TapSelect>
-        </label>
-        <label>
-          The feature you sort by (like color or shape) is called the sorting ___?{" "}
-          <TapSelect value={attrPick} onChange={(e) => setAttrPick(e.target.value)} style={fieldOk(attrOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="attribute">attribute</option>
-            <option value="answer">answer</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — a category is one of the groups, and the attribute is the feature you're sorting by." : "Not quite — a category is a GROUP; the attribute is the FEATURE you sorted by to make the groups."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Common conflation: switching sorting attribute partway through, without noticing. */
-function SwitchedAttributeQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [correctPick, setCorrectPick] = useState("");
-  const [shouldMatterPick, setShouldMatterPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [correctPick, shouldMatterPick].every((v) => String(v).trim() !== "");
-  const correctOk = correctPick === "no";
-  const shouldMatterOk = shouldMatterPick === "color";
-  const ok = correctOk && shouldMatterOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> A student is sorting objects by COLOR. The first two objects go in the Red group because they're red. Then the student puts a blue square in the Red group too, because it's a square shape.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Was the blue square sorted correctly for a COLOR sort?{" "}
-          <TapSelect value={correctPick} onChange={(e) => setCorrectPick(e.target.value)} style={fieldOk(correctOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </TapSelect>
-        </label>
-        <label>
-          When sorting by color, what should decide which group an object goes in?{" "}
-          <TapSelect value={shouldMatterPick} onChange={(e) => setShouldMatterPick(e.target.value)} style={fieldOk(shouldMatterOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="color">Its color</option>
-            <option value="shape">Its shape</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — no, that was sorted wrong. A blue square doesn't belong with red objects just because it's a square. Once you pick color as the attribute, every object must be sorted by COLOR, not shape."
-            : "Not quite — the group was started as a COLOR sort (red objects). A blue square is the wrong color, even though its shape matches something else."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Generalization / true-false trap: the sorting attribute must stay consistent. */
-function ConsistentAttributeQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "true";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or false: once you start sorting by one attribute (like color), you should keep using that SAME attribute for every object.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — switching attributes partway through (like the blue square above) makes the groups stop meaning anything."
-            : "Not quite — remember the blue square. Switching from color to shape partway through breaks the sort."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Multi-part synthesis: counting AND comparing categories together. */
-function CountAndCompareQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [fewerPick, setFewerPick] = useState("");
-  const [byPick, setByPick] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [fewerPick, byPick].every((v) => String(v).trim() !== "");
-  const fewerOk = fewerPick === "Green";
-  const byOk = byPick === "2";
-  const ok = fewerOk && byOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  const binA: BinItem[] = Array.from({ length: 6 }, () => ({ id: nextId(), shape: "circle", color: itemColors.red.main }));
-  const binB: BinItem[] = Array.from({ length: 4 }, () => ({ id: nextId(), shape: "circle", color: itemColors.green.main }));
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> These are already sorted and counted by color.
-      </p>
-      <SortedBins bins={[{ label: "Red", items: binA }, { label: "Green", items: binB }]} />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Which group has FEWER?{" "}
-          <TapSelect value={fewerPick} onChange={(e) => setFewerPick(e.target.value)} style={fieldOk(fewerOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="Red">Red</option>
-            <option value="Green">Green</option>
-          </TapSelect>
-        </label>
-        <label>
-          How many fewer?{" "}
-          <TapSelect value={byPick} onChange={(e) => setByPick(e.target.value)} style={fieldOk(byOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="2">2</option>
-            <option value="4">4</option>
-            <option value="6">6</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — Green has fewer (4 vs 6), and 6 - 4 = 2 fewer." : "Not quite — count each group (Red has 6, Green has 4), then subtract to find how many fewer."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+// Fixed ids, so the pictures stay put between renders.
+const cfuItems = (prefix: string, n: number, shape: ItemShape, color: string): BinItem[] =>
+  Array.from({ length: n }, (_, i) => ({ id: `cfu-${prefix}-${i}`, shape, color }));
+const CFU_RED = [...cfuItems("rc", 1, "circle", itemColors.red.main), ...cfuItems("rs", 1, "square", itemColors.red.main)];
+const CFU_YELLOW = cfuItems("yc", 2, "circle", itemColors.yellow.main);
+const CFU_TRAY: BinItem = { id: "cfu-ys", shape: "square", color: itemColors.yellow.main };
+const CFU_COUNT_RED = cfuItems("cr", 6, "circle", itemColors.red.main);
+const CFU_COUNT_GREEN = cfuItems("cg", 4, "circle", itemColors.green.main);
+const CFU_CIRCLES = [...cfuItems("sc1", 1, "circle", itemColors.green.main), ...cfuItems("sc2", 1, "circle", itemColors.yellow.main)];
+const CFU_SQUARES = [...cfuItems("ss1", 1, "square", itemColors.red.main), ...cfuItems("ss2", 1, "square", itemColors.green.main)];
+const CFU_TRAY2: BinItem = { id: "cfu-rc2", shape: "circle", color: itemColors.red.main };
 
 function ClassifyingCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ vocab: false, switched: false, consistent: false, countCompare: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
+  const byColor = (placed: boolean) => (
+    <SortedBins
+      bins={[
+        { label: "Red", items: CFU_RED },
+        { label: "Yellow", items: placed ? [...CFU_YELLOW, CFU_TRAY] : CFU_YELLOW },
+      ]}
+      tray={placed ? undefined : [CFU_TRAY]}
+      highlightId={CFU_TRAY.id}
+    />
+  );
+  const counted = (countAlongBin?: number, extra?: { bin: number; from: number }) => (
+    <SortedBins
+      bins={[
+        { label: "Red", items: CFU_COUNT_RED, hideCount: true },
+        { label: "Green", items: CFU_COUNT_GREEN, hideCount: true },
+      ]}
+      countAlongBin={countAlongBin}
+      extra={extra}
+    />
+  );
+  const byShape = (placed: boolean) => (
+    <SortedBins
+      bins={[
+        { label: "Circles", items: placed ? [...CFU_CIRCLES, CFU_TRAY2] : CFU_CIRCLES },
+        { label: "Squares", items: CFU_SQUARES },
+      ]}
+      tray={placed ? undefined : [CFU_TRAY2]}
+      highlightId={CFU_TRAY2.id}
+    />
+  );
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure sorting, counting, and comparing categories makes sense before you try practice problems.</ReadAloud>
-      <SortingVocabQuestion onComplete={mark("vocab")} />
-      <SwitchedAttributeQuestion onComplete={mark("switched")} />
-      <ConsistentAttributeQuestion onComplete={mark("consistent")} />
-      <CountAndCompareQuestion onComplete={mark("countCompare")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => (
+          <PickCheck
+            n={1}
+            prompt="We sort by color. Where does the yellow square go?"
+            picture={byColor(false)}
+            showPicture={byColor(true)}
+            showText="We sort by color. It is yellow, so it goes with yellow."
+            options={[
+              { id: "red", label: "Red group" },
+              { id: "yellow", label: "Yellow group" },
+            ]}
+            answer="yellow"
+            why={{ red: "We sort by color, not shape. What color is it?" }}
+            praise="Yes! It is yellow, so it goes with yellow."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="How many are in the Red group?"
+            answer={6}
+            tone="a"
+            picture={(m) => counted(m === "show" ? 0 : undefined)}
+            nudge="Count each red one once."
+            showText="Watch and listen: 1, 2, 3, 4, 5, 6."
+            praise="Yes! Red has 6."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="How many are in the Green group?"
+            answer={4}
+            tone="b"
+            picture={(m) => counted(m === "show" ? 1 : undefined)}
+            nudge="Count each green one once."
+            showText="Watch and listen: 1, 2, 3, 4."
+            praise="Yes! Green has 4."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={3}
+            prompt="Which group has FEWER?"
+            picture={counted()}
+            showPicture={counted(undefined, { bin: 0, from: 4 })}
+            showText="Look: Red has 2 extra. Green runs out first, so Green has fewer."
+            options={[
+              { id: "Red", label: "Red" },
+              { id: "Green", label: "Green" },
+            ]}
+            answer="Green"
+            why={{ Red: "Red has 6. Green has 4. Which is less?" }}
+            praise="Yes! Green has fewer."
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={4}
+            prompt="Now we sort by shape. Where does the red circle go?"
+            picture={byShape(false)}
+            showPicture={byShape(true)}
+            showText="We sort by shape now. It is a circle, so it goes with the circles."
+            options={[
+              { id: "circles", label: "Circles" },
+              { id: "squares", label: "Squares" },
+            ]}
+            answer="circles"
+            why={{ squares: "We sort by shape now. Is it a square?" }}
+            praise="Yes! It is a circle."
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 
