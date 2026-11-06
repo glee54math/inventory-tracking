@@ -63,6 +63,12 @@ Conventions drift. Before writing code, re-verify against the actual repo:
   third silent copy. If your need is genuinely a one-off, keep it local; this
   codebase's convention is "promote on the second real consumer," never
   "promote speculatively because it might be reused someday."
+- Read the lab's grade file in `.claude/reference/english-for-math/` (and
+  the next-younger grade's) before writing any student text. Its sentence
+  limits, grammar, words-by-grade and word-problem types are what the
+  `math-lab-english-checker` will check against. Run
+  `node scripts/english-check.cjs --grade {grade} <your files>` before
+  you report.
 - For a K–1 lab (MK1–MK4, MG1, or any lab the plan marks "early learner"),
   also read `shared/engine/audience.tsx`, `shared/components/NumberPad.tsx`,
   `shared/components/TapSelect.tsx`, and the `VisualHelp`/`pointing` part of
@@ -124,6 +130,13 @@ busy teacher nearby. Most can't read yet, so the lab must work by ear:
   group in `--qb`; bold MORE / FEWER. Keep each button label in ONE span so
   its words don't wrap apart. Reference: `colorGroups`/`withGroupChoices` in
   `MK1/CountingAndCardinalityLab/units/groupWords.tsx`.
+- **Color words in a story name the colors on screen** (user requirement).
+  If the text says "red marbles," the picture shows red. Check each lab's
+  `--qa` / `--qb` (MK2: blue / orange; MG1: green / orange) and name the
+  groups in the order they're drawn. A Kindergartner trusts the picture, so
+  "4 red" over orange dots reads as a different, wrong question. MK2 Word
+  Problems and MG1 once had "red/blue" stories over blue/orange and
+  green/orange pictures.
 - **A wrong-answer message must not state the answer** ("Count each group"
   is a nudge; "Both have 6" gives it away).
 
@@ -725,7 +738,8 @@ show up in a loaded browser.
 
 **Static checks:**
 
-1. `npx tsc --noEmit -p .`
+1. `npx tsc --noEmit -p tsconfig.app.json` (`-p .` checks nothing: the
+   root `tsconfig.json` has `"files": []`)
 2. `npx eslint <every file you touched or created>` — zero errors required;
    a `react-refresh/only-export-components` warning on files mixing an
    exported `Unit`/config object with local components is pre-existing
