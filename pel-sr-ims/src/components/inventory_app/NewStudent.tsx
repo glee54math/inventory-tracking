@@ -6,8 +6,14 @@
         lastName: string;
         father: string;
         mother: string;
+        dateOfBirth: string;
+        school: string;
+        motherPhone: string;
+        fatherPhone: string;
+        motherEmail: string;
+        fatherEmail: string;
         subjects_startDate_Map: Record<string, Date>;
-        hwkAssigned: string[]; // This will probably be changed 
+        hwkAssigned: string[]; // This will probably be changed
 */
 import type { Student } from "../../utils/types";
 import { addNewStudentToDatabase } from "../../utils/inventoryService";
@@ -23,6 +29,12 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
     const [lastName, setLastName] = useState("");
     const [father, setFather] = useState("");
     const [mother, setMother] = useState("");
+    const [dateOfBirth, setDateOfBirth] = useState("");
+    const [school, setSchool] = useState("");
+    const [motherPhone, setMotherPhone] = useState("");
+    const [fatherPhone, setFatherPhone] = useState("");
+    const [motherEmail, setMotherEmail] = useState("");
+    const [fatherEmail, setFatherEmail] = useState("");
     const [subjectsChecked, setSubjectsChecked] = useState<string[]>([]);
     const [subjects_startDate_Map, setSubjects_startDate_Map] = useState<Record<string, string>>({});   // subject: Date as string.
 
@@ -31,6 +43,12 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
         setLastName("");
         setFather("");
         setMother("");
+        setDateOfBirth("");
+        setSchool("");
+        setMotherPhone("");
+        setFatherPhone("");
+        setMotherEmail("");
+        setFatherEmail("");
         setSubjectsChecked([]);
         setSubjects_startDate_Map({});
     }
@@ -56,7 +74,11 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
 
         // adds new student to database
         const newStudent: Student = {
-            firstName, lastName, father, mother ,subjects_startDate_Map
+            firstName, lastName, father, mother,
+            dateOfBirth, school,
+            motherPhone, fatherPhone,
+            motherEmail, fatherEmail,
+            subjects_startDate_Map
         };
 
         try {
@@ -117,11 +139,71 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
 
                 {/* Father's Name */}
                 <label htmlFor="fathersName">Father's Name: </label>
-                <input 
-                    type="text" 
-                    id="fathersName" 
+                <input
+                    type="text"
+                    id="fathersName"
                     value={father}
                     onChange={(e) => setFather(e.target.value)}
+                    className="border rounded"
+                />
+
+                {/* Date of Birth */}
+                <label htmlFor="dateOfBirth">Date of Birth: </label>
+                <input
+                    type="date"
+                    id="dateOfBirth"
+                    value={dateOfBirth}
+                    onChange={(e) => setDateOfBirth(e.target.value)}
+                    className="border rounded"
+                />
+
+                {/* School */}
+                <label htmlFor="school">School: </label>
+                <input
+                    type="text"
+                    id="school"
+                    value={school}
+                    onChange={(e) => setSchool(e.target.value)}
+                    className="border rounded"
+                />
+
+                {/* Mother's Phone Number */}
+                <label htmlFor="mothersPhone">Mother's Phone Number: </label>
+                <input
+                    type="tel"
+                    id="mothersPhone"
+                    value={motherPhone}
+                    onChange={(e) => setMotherPhone(e.target.value)}
+                    className="border rounded"
+                />
+
+                {/* Father's Phone Number */}
+                <label htmlFor="fathersPhone">Father's Phone Number: </label>
+                <input
+                    type="tel"
+                    id="fathersPhone"
+                    value={fatherPhone}
+                    onChange={(e) => setFatherPhone(e.target.value)}
+                    className="border rounded"
+                />
+
+                {/* Mother's Email */}
+                <label htmlFor="mothersEmail">Mother's Email: </label>
+                <input
+                    type="email"
+                    id="mothersEmail"
+                    value={motherEmail}
+                    onChange={(e) => setMotherEmail(e.target.value)}
+                    className="border rounded"
+                />
+
+                {/* Father's Email */}
+                <label htmlFor="fathersEmail">Father's Email: </label>
+                <input
+                    type="email"
+                    id="fathersEmail"
+                    value={fatherEmail}
+                    onChange={(e) => setFatherEmail(e.target.value)}
                     className="border rounded"
                 />
 

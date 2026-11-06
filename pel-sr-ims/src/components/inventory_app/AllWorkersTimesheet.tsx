@@ -7,6 +7,8 @@ import { db } from "../../utils/firebase";
 import { updateTimesheetEntry } from "../../utils/timesheetService";
 import type { TimesheetEntry } from "../../utils/types";
 import TimesheetTable from "./TimesheetTable";
+import MonthlyHoursReportModal from "./MonthlyHoursReportModal";
+import MarkChecksSentModal from "./MarkChecksSentModal";
 
 interface WorkerTimesheetRecord {
   firstName: string;
@@ -25,7 +27,12 @@ function toEntry(raw: any): TimesheetEntry {
 
 export default function AllWorkersTimesheet() {
   const [records, setRecords] = useState<WorkerTimesheetRecord[]>([]);
-  const [collapsedWorkers, setCollapsedWorkers] = useState<Set<string>>(new Set());
+  // Tracks which workers are expanded. Starts empty so every worker loads collapsed
+  // by default; expanding one reveals its current (or last worked) month via
+  // TimesheetTable's own "collapse everything but the latest month" behavior.
+  const [expandedWorkers, setExpandedWorkers] = useState<Set<string>>(new Set());
+  const [showReport, setShowReport] = useState(false);
+  const [showMarkChecksSent, setShowMarkChecksSent] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "timesheets"), (snapshot) => {
@@ -49,7 +56,7 @@ export default function AllWorkersTimesheet() {
   }, []);
 
   const toggleWorker = (key: string) => {
-    setCollapsedWorkers((prev) => {
+    setExpandedWorkers((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -61,13 +68,33 @@ export default function AllWorkersTimesheet() {
     <div className="w-full mt-6 border-t pt-4">
       <h2 className="font-bold mb-3 text-center w-full">All Workers</h2>
 
+      <div className="flex gap-2 justify-center mb-4">
+        <button
+          onClick={() => setShowReport(true)}
+          className="px-3 py-1.5 !bg-blue-200 hover:!bg-blue-300 rounded text-sm font-semibold"
+        >
+          Monthly Hours Report
+        </button>
+        <button
+          onClick={() => setShowMarkChecksSent(true)}
+          className="px-3 py-1.5 !bg-green-200 hover:!bg-green-300 rounded text-sm font-semibold"
+        >
+          Mark Checks Sent
+        </button>
+      </div>
+
+      {showReport && <MonthlyHoursReportModal records={records} onClose={() => setShowReport(false)} />}
+      {showMarkChecksSent && (
+        <MarkChecksSentModal workers={records} onClose={() => setShowMarkChecksSent(false)} />
+      )}
+
       {records.length === 0 && (
         <p className="text-center text-gray-500 text-sm">No worker timesheets yet.</p>
       )}
 
       {records.map((record) => {
         const key = `${record.firstName}_${record.lastName}`;
-        const collapsed = collapsedWorkers.has(key);
+        const collapsed = !expandedWorkers.has(key);
 
         return (
           <div key={key} className="mb-4 border rounded">
