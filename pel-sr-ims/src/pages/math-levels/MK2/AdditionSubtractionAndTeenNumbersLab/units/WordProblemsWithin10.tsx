@@ -52,7 +52,7 @@ function WordProblemsCheckForUnderstanding({ onComplete }: { onComplete?: () => 
         (done) => (
           <TypeCheck
             n={3}
-            prompt="A jar has 4 red marbles and 3 blue marbles. How many marbles in the jar?"
+            prompt="A jar has 4 orange marbles and 3 blue marbles. How many marbles in the jar?"
             answer={7}
             tone="a"
             picture={() => <SplitGroup total={7} partA={4} toneA="b" toneB="a" showDivider={false} />}
@@ -156,14 +156,14 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       )}
       {scenario === "together" && (
         <>
-          <ReadAloud as="p">Jen has {a} red marbles and {b} blue marbles, all together in one jar. How many marbles in the jar?</ReadAloud>
+          <ReadAloud as="p">Jen has {a} blue marbles and {b} orange marbles, all together in one jar. How many marbles in the jar?</ReadAloud>
           <SplitGroup total={a + b} partA={a} toneA="a" toneB="b" showDivider={false} />
           <ReadAloud as="p" className="muted small">{a} + {b} = {a + b}. A "put together" story describes two groups that coexist from the start — nothing joins or leaves; you're just finding their combined total.</ReadAloud>
         </>
       )}
       {scenario === "missingPart" && (
         <>
-          <ReadAloud as="p">There are {a} crayons in a box. {b} of them are red, and the rest are blue. How many are blue?</ReadAloud>
+          <ReadAloud as="p">There are {a} crayons in a box. {b} of them are orange, and the rest are blue. How many are blue?</ReadAloud>
           <SplitGroup total={a} partA={b} toneA="b" toneB="a" />
           <ReadAloud as="p" className="muted small">{a} − {b} = {a - b} blue crayons. When the TOTAL and one part are both known, you can subtract to find the missing part — even though the story never says "take away."</ReadAloud>
         </>

@@ -34,7 +34,7 @@ function TotalOrAddendQuestion({ onComplete }: { onComplete?: () => void }) {
   return (
     <ReadAloud className="align-stack-wrap">
       <p>
-        <b>1.</b> Mia has 4 red buttons and 5 blue buttons. How many buttons does Mia have IN ALL?
+        <b>1.</b> Mia has 4 green buttons and 5 orange buttons. How many buttons does Mia have IN ALL?
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
         <label>
@@ -295,15 +295,15 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <ReadAloud as="p" className="muted small">Put together: two parts make a whole.</ReadAloud>
         <div className="control-row" data-readaloud-part>
           <label>
-            Red: <input type="range" min={0} max={15} value={redCount} onChange={(e) => setRedCount(Number(e.target.value))} /> {redCount}
+            Green: <input type="range" min={0} max={15} value={redCount} onChange={(e) => setRedCount(Number(e.target.value))} /> {redCount}
           </label>
           <label>
-            Blue: <input type="range" min={0} max={15} value={blueCount} onChange={(e) => setBlueCount(Number(e.target.value))} /> {blueCount}
+            Orange: <input type="range" min={0} max={15} value={blueCount} onChange={(e) => setBlueCount(Number(e.target.value))} /> {blueCount}
           </label>
         </div>
         <TenFrameGroup value={Math.min(20, total)} tone="a" splitAt={redCount} tone2="b" />
         <ReadAloud as="p" className="muted small">
-          {redCount} + {blueCount} = {total} in all. Try different red/blue splits that still add up to the same total — notice there's more than
+          {redCount} + {blueCount} = {total} in all. Try different green/orange splits that still add up to the same total — notice there's more than
           one way.
         </ReadAloud>
       </div>
@@ -341,7 +341,7 @@ type Bucket = "ptaTotalUnknown" | "ptaAddendUnknown" | "ptaBothAddendsUnknown" |
 const BUCKETS: Bucket[] = ["ptaTotalUnknown", "ptaAddendUnknown", "ptaBothAddendsUnknown", "compareDiffMore", "compareDiffFewer", "compareBiggerUnknown", "compareSmallerUnknown"];
 
 const ITEM_CONTEXTS = [
-  { person: "Mia", item: "buttons", partA: "red", partB: "blue" },
+  { person: "Mia", item: "buttons", partA: "green", partB: "orange" },
   { person: "Jake", item: "cards", partA: "sports", partB: "animal" },
   { person: "Ava", item: "beads", partA: "round", partB: "square" },
   { person: "Liam", item: "stickers", partA: "star", partB: "heart" },

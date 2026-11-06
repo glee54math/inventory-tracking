@@ -69,7 +69,7 @@ export const putTogetherTotalQuestion = (): TestQuestion[] => {
     {
       visual: <SplitGroup total={total} partA={a} toneA="a" toneB="b" showDivider={false} />,
       difficulty: "medium",
-      step: { kind: "number", prompt: `Ana has ${a} red marbles and ${b} blue marbles in one jar. How many marbles are in the jar, all together?`, hint: "Both groups are already there — just add them.", explain: `${a} + ${b} = ${total}.`, answer: total },
+      step: { kind: "number", prompt: `Ana has ${a} blue marbles and ${b} orange marbles in one jar. How many marbles are in the jar, all together?`, hint: "Both groups are already there — just add them.", explain: `${a} + ${b} = ${total}.`, answer: total },
     },
   ];
 };
@@ -83,7 +83,7 @@ export const missingAddendQuestion = (): TestQuestion[] => {
     {
       visual: <SplitGroup total={total} partA={a} toneA="a" toneB="b" />,
       difficulty: "medium",
-      step: { kind: "number", prompt: `There are ${total} crayons in a box. ${a} are red, and the rest are blue. How many are blue?`, hint: "Subtract the known part from the total.", explain: `${total} − ${a} = ${b}.`, answer: b },
+      step: { kind: "number", prompt: `There are ${total} crayons in a box. ${a} are blue, and the rest are orange. How many are orange?`, hint: "Subtract the known part from the total.", explain: `${total} − ${a} = ${b}.`, answer: b },
     },
   ];
 };
