@@ -1,0 +1,438 @@
+/* Scoped under .asf-lab (the wrapper div in MG10_AddingAndSubtractingFractionsLab.tsx)
+   instead of :root/html/body, since this file is imported into one page of a much
+   larger app — same reasoning as every other Lab stylesheet. Shared engine chrome
+   (including the FractionStep's stacked boxes) comes from shared/styles/lab-base.css;
+   this file holds this lab's palette (light + dark, copied from
+   MG9_FractionOperationsLab_styles.css so the two fraction labs look alike), the CFU
+   box chrome, select.answer, module-test chrome, stacked <Frac>, SentenceStep sizing,
+   plus this lab's own diagrams (RecutBars rows, MultiplesList chips).
+   Import BOTH stylesheets, and add "lab-base" alongside "asf-lab" on the wrapper div. */
+
+.asf-lab {
+  --bg: #f2f6fb;
+  --card: #ffffff;
+  --ink: #1b2540;
+  --muted: #5d6782;
+  --line: #c9d0e2;
+  --grid: #e6edf6;
+  --qa: #2a6fbb;
+  --qa-soft: #d9e9fb;
+  --qa-text: #1f548a;
+  --qb: #c2410c;
+  --qb-soft: #fbe3d4;
+  --qb-text: #9a3408;
+  --qc: #7b4fd8;
+  --qc-soft: #e9e0fa;
+  --qc-text: #6334b8;
+  --good: #1f8f5f;
+  --good-soft: #d7f2e4;
+  --bad: #c93848;
+  --bad-soft: #fbe1e4;
+  --item-red: #c4432e;
+  --item-red-soft: #f6ddd6;
+  --item-red-text: #9a3420;
+  --item-green: #4c8c2b;
+  --item-green-soft: #e1edd4;
+  --item-green-text: #386b1f;
+  --item-yellow: #d4a72c;
+  --item-yellow-soft: #fbf1d1;
+  --item-yellow-text: #8c6b14;
+  --on-q: #ffffff;
+  --radius-lg: 18px;
+  --radius-sm: 10px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  -webkit-font-smoothing: antialiased;
+}
+/* .align-drill/.align-stack-wrap/.intro-gate-title aren't in lab-base.css —
+   they're the box chrome AlignDecimalsDrill (MG11) introduced for a mandatory
+   gated exercise, reused here for PositiveNegativePreCheck's same role. */
+.asf-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.asf-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.asf-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.asf-lab .feedback.good {
+  color: var(--good);
+}
+/* lab-base.css's .answer styling is scoped to `input.answer` only — the
+   Coordinate Plane Check for Understanding's dropdowns are <select>s, which
+   that selector doesn't match, so they need their own rule (same pattern as
+   MG9_IntroToFractionsLab_styles.css's .itf-lab select.answer). */
+.asf-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.asf-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+/* Module test nav/card — same rules as MM1_RatioLab_styles.css's own module
+   test chrome, since the two labs share this feature's markup verbatim. */
+.asf-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.asf-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.asf-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.asf-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.asf-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.asf-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+/* CFU choice buttons that stay pressed to show the current pick. */
+.asf-lab .btn.ghost.pressed {
+  background: var(--qa-soft);
+  border-color: var(--qa);
+}
+.asf-lab .module-test-back {
+  margin-bottom: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  .asf-lab:not([data-theme="light"]) {
+    --bg: #121a26;
+    --card: #1b2636;
+    --ink: #e8eefa;
+    --muted: #9bacc4;
+    --line: #34435e;
+    --grid: #202c3e;
+    --qa: #7cb3ff;
+    --qa-soft: #243a58;
+    --qa-text: #a8d0ff;
+    --qb: #f2976a;
+    --qb-soft: #4a3018;
+    --qb-text: #f5b38f;
+    --qc: #b696f5;
+    --qc-soft: #382a5c;
+    --qc-text: #c7a8fa;
+    --good: #4cc98f;
+    --good-soft: #173d2e;
+    --bad: #ff6b7a;
+    --bad-soft: #45202a;
+    --item-red: #e8775e;
+    --item-red-soft: #4a2a22;
+    --item-red-text: #f2a68f;
+    --item-green: #7fc44b;
+    --item-green-soft: #243318;
+    --item-green-text: #a3db7a;
+    --item-yellow: #e8c455;
+    --item-yellow-soft: #4a3c14;
+    --item-yellow-text: #f2d98a;
+    --on-q: #0e1626;
+  }
+}
+.asf-lab[data-theme="dark"] {
+  --bg: #121a26;
+  --card: #1b2636;
+  --ink: #e8eefa;
+  --muted: #9bacc4;
+  --line: #34435e;
+  --grid: #202c3e;
+  --qa: #7cb3ff;
+  --qa-soft: #243a58;
+  --qa-text: #a8d0ff;
+  --qb: #f2976a;
+  --qb-soft: #4a3018;
+  --qb-text: #f5b38f;
+  --qc: #b696f5;
+  --qc-soft: #382a5c;
+  --qc-text: #c7a8fa;
+  --good: #4cc98f;
+  --good-soft: #173d2e;
+  --bad: #ff6b7a;
+  --bad-soft: #45202a;
+  --item-red: #e8775e;
+  --item-red-soft: #4a2a22;
+  --item-red-text: #f2a68f;
+  --item-green: #7fc44b;
+  --item-green-soft: #243318;
+  --item-green-text: #a3db7a;
+  --item-yellow: #e8c455;
+  --item-yellow-soft: #4a3c14;
+  --item-yellow-text: #f2d98a;
+  --on-q: #0e1626;
+}
+
+/* Stacked fractions — the shared Frac component has no styling in lab-base.css
+   (same rule as MG9_IntroToFractionsLab_styles.css). */
+.asf-lab .frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  margin: 0 0.15em;
+  font-size: 0.88em;
+  line-height: 1.05;
+}
+.asf-lab .frac-n,
+.asf-lab .frac-d {
+  padding: 0 0.12em;
+}
+.asf-lab .frac-n {
+  border-bottom: 1.5px solid currentColor;
+}
+/* Every fraction in this lab's text is stacked (shared MathText inside
+   <StackedFractions>; MG10 round 3, user requirement). A mixed number keeps
+   its whole number and fraction together on one line. Text blocks get a
+   taller line height, so a line with a fraction in it is no taller than one
+   without (no uneven gaps between lines). */
+.asf-lab .frac-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.asf-lab .frac-text .frac {
+  margin: 0 0.1em;
+}
+.asf-lab .panel p,
+.asf-lab .key-idea p,
+.asf-lab .goal,
+.asf-lab .story,
+.asf-lab .step-prompt,
+.asf-lab .step-result,
+.asf-lab .explain,
+.asf-lab .show-me,
+.asf-lab .test-prompt,
+.asf-lab .test-review li {
+  line-height: 1.9;
+}
+.asf-lab .path-goal,
+.asf-lab .unit-carousel-goal {
+  line-height: 1.8;
+}
+/* Small print keeps its fractions readable on an iPad. */
+.asf-lab .small .frac,
+.asf-lab .path-goal .frac,
+.asf-lab .unit-carousel-goal .frac {
+  font-size: 0.92em;
+}
+
+/* A Check for Understanding fraction with typed boxes in it (BoxFrac). */
+.asf-lab .box-frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  gap: 3px;
+  margin: 2px 4px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+.asf-lab .box-frac-bar {
+  align-self: stretch;
+  min-width: 36px;
+  border-top: 2.5px solid currentColor;
+}
+.asf-lab .box-frac input.answer.cfu-typed {
+  margin: 0;
+}
+
+/* A CFU blank written as a mixed number: whole box, then top over bottom. */
+.asf-lab .cfu-mixed {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  vertical-align: middle;
+  margin: 2px 4px;
+  line-height: 1.15;
+}
+.asf-lab .cfu-mixed-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.asf-lab .cfu-mixed-bar {
+  align-self: stretch;
+  border-top: 2.5px solid currentColor;
+}
+.asf-lab .cfu-mixed input.answer.cfu-typed {
+  margin: 0;
+  padding: 3px 6px;
+}
+
+/* SentenceStep.overDen: a typed top over the printed LCD, inside the sentence. */
+.asf-lab .sentence-over-den {
+  vertical-align: middle;
+  margin: 0 4px;
+  line-height: 1.2;
+}
+.asf-lab .sentence-over-den .frac-entry-fixed {
+  line-height: 1.6;
+}
+.asf-lab .sentence-input {
+  align-items: center;
+}
+
+/* SentenceStep blanks (mixed-number answers: whole box + numerator box) —
+   same rules as MM1_RatioLab_styles.css. */
+.asf-lab .sentence-input {
+  font-size: 17px;
+  line-height: 1.6;
+}
+.asf-lab .sentence-select {
+  padding: 6px 10px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.asf-lab .sentence-select:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+.asf-lab .sentence-number {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.asf-lab input.sentence-input-box {
+  width: 70px;
+  padding: 6px 10px;
+  font-size: 16px;
+}
+
+/* CFU sentence with dropdowns slotted in — wraps cleanly on narrow screens. */
+.asf-lab .cfu-line {
+  line-height: 2.4;
+}
+.asf-lab .prereq-note {
+  margin-top: -6px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--qc);
+  background: var(--qc-soft);
+  border-radius: var(--radius-sm);
+}
+
+/* RecutBars / CFU picture rows: a fraction label, then its bar. */
+/* One grid for all rows, so every bar starts at the same x no matter how
+   wide its label is ("together" vs "3/4"). */
+.asf-lab .recut-bars {
+  display: grid;
+  grid-template-columns: max-content auto;
+  justify-content: start;
+  align-items: center;
+  gap: 8px 10px;
+}
+.asf-lab .recut-row {
+  display: contents;
+}
+.asf-lab .recut-bars > p {
+  grid-column: 1 / -1;
+}
+.asf-lab .recut-label {
+  font-size: 20px;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* MultiplesList: rows of multiples as chips; common ones ringed, the LCD starred. */
+.asf-lab .mult-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.asf-lab .mult-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.asf-lab .mult-head {
+  min-width: 34px;
+  font-weight: 800;
+  font-size: 17px;
+}
+.asf-lab .mult-chip {
+  position: relative;
+  min-width: 38px;
+  padding: 4px 8px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  text-align: center;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.asf-lab .mult-chip.common {
+  border-color: var(--qc);
+  background: var(--qc-soft);
+  color: var(--qc-text);
+}
+.asf-lab .mult-chip.least {
+  border-color: var(--good);
+  background: var(--good-soft);
+  color: var(--ink);
+  font-weight: 800;
+}
+.asf-lab .mult-tag {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 5px;
+  border-radius: 6px;
+  background: var(--good);
+  color: var(--card);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 15px;
+}
+
+/* Typed boxes inside a Check for Understanding sentence. */
+.asf-lab input.answer.cfu-typed {
+  padding: 5px 8px;
+  font-size: 17px;
+  margin: 0 2px;
+}

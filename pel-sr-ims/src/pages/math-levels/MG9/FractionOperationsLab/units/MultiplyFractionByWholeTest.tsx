@@ -21,7 +21,7 @@ export function unitTimesQuestion(difficulty: Diff = "easy"): TestQuestion[] {
       difficulty,
       step: {
         kind: "number",
-        suffix: `/${d}`,
+        overDen: d,
         prompt: (
           <>
             {n} × <Frac n={1} d={d} /> = ? (Type the numerator.)
@@ -101,7 +101,7 @@ export function nonUnitNumeratorQuestion(difficulty: Diff = "medium"): TestQuest
       difficulty,
       step: {
         kind: "number",
-        suffix: `/${d}`,
+        overDen: d,
         prompt: (
           <>
             {n} × <Frac n={a} d={d} /> = ? (Type the numerator — keep the denominator {d}.)

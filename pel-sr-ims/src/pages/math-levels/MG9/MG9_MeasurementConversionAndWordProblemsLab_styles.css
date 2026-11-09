@@ -234,3 +234,81 @@
   color: var(--qc-text);
   font-weight: 800;
 }
+
+/* Stacked fractions — the shared Frac component has no styling in lab-base.css
+   (same rule as MG9_IntroToFractionsLab_styles.css). */
+.mcv-lab .frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  margin: 0 0.15em;
+  font-size: 0.88em;
+  line-height: 1.05;
+}
+.mcv-lab .frac-n,
+.mcv-lab .frac-d {
+  padding: 0 0.12em;
+}
+.mcv-lab .frac-n {
+  border-bottom: 1.5px solid currentColor;
+}
+
+/* Every fraction in this lab's text is stacked, the handwritten way (shared
+   MathText inside <StackedFractions>; user requirement, same rules as
+   MG10_AddingAndSubtractingFractionsLab_styles.css). A mixed number keeps
+   its whole number and fraction together on one line, and text blocks get a
+   taller line height so a line with a fraction is no taller than one without. */
+.mcv-lab .frac-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.mcv-lab .frac-text .frac {
+  margin: 0 0.1em;
+}
+.mcv-lab .panel p,
+.mcv-lab .panel li,
+.mcv-lab .key-idea p,
+.mcv-lab .goal,
+.mcv-lab .story,
+.mcv-lab .step-prompt,
+.mcv-lab .step-result,
+.mcv-lab .explain,
+.mcv-lab .show-me,
+.mcv-lab .feedback,
+.mcv-lab .cfu-line,
+.mcv-lab .test-prompt,
+.mcv-lab .test-review li {
+  line-height: 1.9;
+}
+.mcv-lab .path-goal,
+.mcv-lab .unit-carousel-goal {
+  line-height: 1.8;
+}
+/* Small print keeps its fractions readable on an iPad. */
+.mcv-lab .small .frac,
+.mcv-lab .path-goal .frac,
+.mcv-lab .unit-carousel-goal .frac {
+  font-size: 0.92em;
+}
+/* A typed top over a printed denominator (NumberStep/SentenceStep overDen,
+   or a CFU box written as the top of a fraction). */
+.mcv-lab .sentence-over-den {
+  vertical-align: middle;
+  margin: 0 4px;
+  line-height: 1.2;
+}
+.mcv-lab .sentence-over-den .frac-entry-fixed {
+  line-height: 1.6;
+}
+.mcv-lab .answer-row .number-over-den {
+  display: inline-flex;
+}
+.mcv-lab .frac .frac-n select.answer,
+.mcv-lab .frac .frac-n .tap-select {
+  margin: 0 0 3px;
+}

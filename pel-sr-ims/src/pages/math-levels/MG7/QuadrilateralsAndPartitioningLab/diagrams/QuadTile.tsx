@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { palette } from "../../../shared/lib/palette";
+import { MathText } from "../../../shared/components/MathText";
 
 // ============================================================================
 // Basic quadrilateral + distractor tiles for Units 1-2. Checked shared/
@@ -160,13 +161,15 @@ export function QuadTile(p: QuadTileProps) {
   const fill = color ?? palette.a;
   const o = outline(kind, size, p);
   return (
-    <g transform={`translate(${cx}, ${cy}) rotate(${rotation})`} opacity={opacity}>
-      {o.points ? (
-        <polygon points={o.points} style={{ fill, stroke: palette.ink, strokeWidth: 2.5 }} aria-label={label} />
-      ) : (
-        <path d={o.path} style={{ fill, stroke: palette.ink, strokeWidth: 2.5 }} aria-label={label} />
-      )}
-    </g>
+    <MathText>
+      <g transform={`translate(${cx}, ${cy}) rotate(${rotation})`} opacity={opacity}>
+        {o.points ? (
+          <polygon points={o.points} style={{ fill, stroke: palette.ink, strokeWidth: 2.5 }} aria-label={label} />
+        ) : (
+          <path d={o.path} style={{ fill, stroke: palette.ink, strokeWidth: 2.5 }} aria-label={label} />
+        )}
+      </g>
+    </MathText>
   );
 }
 
@@ -174,9 +177,11 @@ export function QuadTile(p: QuadTileProps) {
  *  MG4/ShapeTile.tsx's ShapeCanvas. */
 export function QuadCanvas({ width = 120, height = 120, children, label }: { width?: number; height?: number; children: ReactNode; label: string }) {
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} width={width} style={{ maxWidth: "100%" }} role="img" aria-label={label}>
-      {children}
-    </svg>
+    <MathText>
+      <svg viewBox={`0 0 ${width} ${height}`} width={width} style={{ maxWidth: "100%" }} role="img" aria-label={label}>
+        {children}
+      </svg>
+    </MathText>
   );
 }
 

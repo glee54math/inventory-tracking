@@ -1,7 +1,8 @@
-export { PieceBars } from "./PieceBars";
-export type { PieceBarsProps, PieceSegment, PieceTone } from "./PieceBars";
-export { MixedNumberBars } from "./MixedNumberBars";
-export type { MixedNumberBarsProps } from "./MixedNumberBars";
+// PieceBars and MixedNumberBars were promoted to shared/diagrams/ (2026-11)
+// when MG10_AddingAndSubtractingFractionsLab became their second consumer —
+// re-exported here so this lab's units keep importing them from "../diagrams".
+export { PieceBars, MixedNumberBars } from "../../../shared/diagrams";
+export type { PieceBarsProps, PieceSegment, PieceTone, MixedNumberBarsProps } from "../../../shared/diagrams";
 export { FracLinePlot } from "./FracLinePlot";
 export type { FracLinePlotProps } from "./FracLinePlot";
 // Convenience re-export of the promoted shared bar, same as

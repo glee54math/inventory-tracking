@@ -231,7 +231,7 @@ export const minutesToHoursQuestion = (): TestQuestion[] => {
       difficulty: "hard",
       step: {
         kind: "number",
-        frac: true,
+        fracBoxes: "fraction", frac: true,
         fracRequired: true,
         fracAnswer: [num, den],
         prompt: `${m} minutes is how many hours? Write your answer as a simplified fraction.`,

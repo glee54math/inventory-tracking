@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { equivalentFractionsTest } from "./EquivalentFractionsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 /**
  * This lab's hand-picked "simple" equivalent-fraction pairs, every one
@@ -79,90 +80,92 @@ function EquivalentFractionsCheck({ onComplete }: { onComplete?: () => void }) {
   }, [allDone, onComplete]);
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure "equivalent" means the same point, before you try practice problems.</p>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Quick check: let's make sure "equivalent" means the same point, before you try practice problems.</p>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>1.</b> <EquivalentBars n1={1} d1={2} n2={2} d2={4} width={260} /> Why are 1/2 and 2/4 equivalent?
-        </p>
-        <div className="control-row">
-          {[
-            { id: "point", label: "They land on the exact same point on the number line" },
-            { id: "count", label: "Because 2/4 has more pieces shaded, so it must be the same or bigger" },
-          ].map((opt) => (
-            <button key={opt.id} type="button" className={`btn ghost ${q1 === opt.id ? "pressed" : ""}`} disabled={q1Done} onClick={() => setQ1(opt.id)}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        {q1 && (
-          <p className={`feedback ${q1Done ? "good" : "bad"}`} role="alert">
-            {q1Done ? "Correct — same point, same amount, just cut into a different number of pieces." : "Not quite — think about where each fraction would land if you marked it on a number line."}
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> <EquivalentBars n1={1} d1={2} n2={2} d2={4} width={260} /> Why are 1/2 and 2/4 equivalent?
           </p>
-        )}
-      </div>
+          <div className="control-row">
+            {[
+              { id: "point", label: "They land on the exact same point on the number line" },
+              { id: "count", label: "Because 2/4 has more pieces shaded, so it must be the same or bigger" },
+            ].map((opt) => (
+              <button key={opt.id} type="button" className={`btn ghost ${q1 === opt.id ? "pressed" : ""}`} disabled={q1Done} onClick={() => setQ1(opt.id)}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {q1 && (
+            <p className={`feedback ${q1Done ? "good" : "bad"}`} role="alert">
+              {q1Done ? "Correct — same point, same amount, just cut into a different number of pieces." : "Not quite — think about where each fraction would land if you marked it on a number line."}
+            </p>
+          )}
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>2.</b> <EquivalentBars n1={1} d1={3} n2={2} d2={4} width={260} /> Are 1/3 and 2/4 equivalent?
-        </p>
-        <div className="control-row">
-          {[
-            { id: "no", label: "No — they don't line up to the same amount" },
-            { id: "yes", label: "Yes — they're both simple fractions, so they must match" },
-          ].map((opt) => (
-            <button key={opt.id} type="button" className={`btn ghost ${q2 === opt.id ? "pressed" : ""}`} disabled={q2Done} onClick={() => setQ2(opt.id)}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        {q2 && (
-          <p className={`feedback ${q2Done ? "good" : "bad"}`} role="alert">
-            {q2Done ? "Correct — the shaded amounts don't line up, so they're NOT equivalent, even though both are simple fractions." : "Not quite — look closely at the bars above. Do the shaded widths actually match?"}
+        <div className="align-stack-wrap">
+          <p>
+            <b>2.</b> <EquivalentBars n1={1} d1={3} n2={2} d2={4} width={260} /> Are 1/3 and 2/4 equivalent?
           </p>
-        )}
-      </div>
+          <div className="control-row">
+            {[
+              { id: "no", label: "No — they don't line up to the same amount" },
+              { id: "yes", label: "Yes — they're both simple fractions, so they must match" },
+            ].map((opt) => (
+              <button key={opt.id} type="button" className={`btn ghost ${q2 === opt.id ? "pressed" : ""}`} disabled={q2Done} onClick={() => setQ2(opt.id)}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {q2 && (
+            <p className={`feedback ${q2Done ? "good" : "bad"}`} role="alert">
+              {q2Done ? "Correct — the shaded amounts don't line up, so they're NOT equivalent, even though both are simple fractions." : "Not quite — look closely at the bars above. Do the shaded widths actually match?"}
+            </p>
+          )}
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>3.</b> Use the stepper to find the missing numerator: 1/4 = ?/8.
-        </p>
-        <div className="control-row">
-          <Stepper label="Numerator" value={numerator} min={0} max={8} onChange={(v) => { setNumerator(v); setQ3Checked(false); }} tone="b" />
-        </div>
-        <EquivalentBars n1={1} d1={4} n2={numerator} d2={8} width={260} />
-        <button className="btn primary" type="button" disabled={q3Done} onClick={() => setQ3Checked(true)}>
-          Check my work
-        </button>
-        {q3Checked && (
-          <p className={`feedback ${q3Done ? "good" : "bad"}`} role="alert">
-            {q3Done ? "Correct — 1/4 = 2/8." : "Not quite — watch the bars above line up as you change the numerator."}
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> Use the stepper to find the missing numerator: 1/4 = ?/8.
           </p>
-        )}
-      </div>
+          <div className="control-row">
+            <Stepper label="Numerator" value={numerator} min={0} max={8} onChange={(v) => { setNumerator(v); setQ3Checked(false); }} tone="b" />
+          </div>
+          <EquivalentBars n1={1} d1={4} n2={numerator} d2={8} width={260} />
+          <button className="btn primary" type="button" disabled={q3Done} onClick={() => setQ3Checked(true)}>
+            Check my work
+          </button>
+          {q3Checked && (
+            <p className={`feedback ${q3Done ? "good" : "bad"}`} role="alert">
+              {q3Done ? "Correct — 1/4 = 2/8." : "Not quite — watch the bars above line up as you change the numerator."}
+            </p>
+          )}
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>4.</b> <EquivalentBars n1={2} d1={3} n2={4} d2={6} width={260} /> Are 2/3 and 4/6 equivalent?
-        </p>
-        <div className="control-row">
-          {[
-            { id: "yes", label: "Yes — they line up to the exact same amount" },
-            { id: "no", label: "No — they're split into a different number of pieces, so they can't be the same" },
-          ].map((opt) => (
-            <button key={opt.id} type="button" className={`btn ghost ${q4 === opt.id ? "pressed" : ""}`} disabled={q4Done} onClick={() => setQ4(opt.id)}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        {q4 && (
-          <p className={`feedback ${q4Done ? "good" : "bad"}`} role="alert">
-            {q4Done ? "Correct — a different number of pieces doesn't mean a different amount." : "Not quite — look at how much of each bar is shaded, not how many pieces each is split into."}
+        <div className="align-stack-wrap">
+          <p>
+            <b>4.</b> <EquivalentBars n1={2} d1={3} n2={4} d2={6} width={260} /> Are 2/3 and 4/6 equivalent?
           </p>
-        )}
+          <div className="control-row">
+            {[
+              { id: "yes", label: "Yes — they line up to the exact same amount" },
+              { id: "no", label: "No — they're split into a different number of pieces, so they can't be the same" },
+            ].map((opt) => (
+              <button key={opt.id} type="button" className={`btn ghost ${q4 === opt.id ? "pressed" : ""}`} disabled={q4Done} onClick={() => setQ4(opt.id)}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {q4 && (
+            <p className={`feedback ${q4Done ? "good" : "bad"}`} role="alert">
+              {q4Done ? "Correct — a different number of pieces doesn't mean a different amount." : "Not quite — look at how much of each bar is shaded, not how many pieces each is split into."}
+            </p>
+          )}
+        </div>
       </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -178,37 +181,39 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [n1, d1, n2, d2] = showNearMiss ? NEAR_MISS_PAIRS[pairIdx] : EQUIVALENT_PAIRS[pairIdx];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && (
-        <button
-          type="button"
-          className="btn ghost"
-          style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
-          onClick={() => setShowCheck((v) => !v)}
-        >
-          Quick Check
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Quick Check
+          </button>
+        )}
+        <p>Two fractions are equivalent when they name the exact same point on the number line — even written with totally different numbers.</p>
+        <Segmented
+          label="Pair"
+          value={String(pairIdx)}
+          onChange={(v) => setPairIdx(Number(v))}
+          options={(showNearMiss ? NEAR_MISS_PAIRS : EQUIVALENT_PAIRS).map((p, i) => ({ id: String(i), label: `${p[0]}/${p[1]} & ${p[2]}/${p[3]}` }))}
+        />
+        <button type="button" className="btn ghost" style={{ width: "fit-content" }} onClick={() => { setShowNearMiss((v) => !v); setPairIdx(0); }}>
+          {showNearMiss ? "Show a TRUE equivalent pair instead" : "Show a pair that LOOKS equivalent but isn't"}
         </button>
-      )}
-      <p>Two fractions are equivalent when they name the exact same point on the number line — even written with totally different numbers.</p>
-      <Segmented
-        label="Pair"
-        value={String(pairIdx)}
-        onChange={(v) => setPairIdx(Number(v))}
-        options={(showNearMiss ? NEAR_MISS_PAIRS : EQUIVALENT_PAIRS).map((p, i) => ({ id: String(i), label: `${p[0]}/${p[1]} & ${p[2]}/${p[3]}` }))}
-      />
-      <button type="button" className="btn ghost" style={{ width: "fit-content" }} onClick={() => { setShowNearMiss((v) => !v); setPairIdx(0); }}>
-        {showNearMiss ? "Show a TRUE equivalent pair instead" : "Show a pair that LOOKS equivalent but isn't"}
-      </button>
-      <EquivalentBars n1={n1} d1={d1} n2={n2} d2={d2} />
-      <StackedNumberLines n1={n1} d1={d1} n2={n2} d2={d2} />
-      <p className="muted small">
-        {n1 * d2 === n2 * d1
-          ? `${n1}/${d1} and ${n2}/${d2} land on the exact same point — they're equivalent.`
-          : `${n1}/${d1} and ${n2}/${d2} land on DIFFERENT points — even though both look like simple fractions, they're NOT equivalent.`}
-      </p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <EquivalentFractionsCheck onComplete={onIntroDone} />}
-    </div>
+        <EquivalentBars n1={n1} d1={d1} n2={n2} d2={d2} />
+        <StackedNumberLines n1={n1} d1={d1} n2={n2} d2={d2} />
+        <p className="muted small">
+          {n1 * d2 === n2 * d1
+            ? `${n1}/${d1} and ${n2}/${d2} land on the exact same point — they're equivalent.`
+            : `${n1}/${d1} and ${n2}/${d2} land on DIFFERENT points — even though both look like simple fractions, they're NOT equivalent.`}
+        </p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <EquivalentFractionsCheck onComplete={onIntroDone} />}
+      </div>
+    </MathText>
   );
 }
 

@@ -1,5 +1,7 @@
 import { palette } from "../../../shared/lib/palette";
 import { gcd, lcm } from "../../../shared/lib/math";
+import { spokenFractions } from "../../../shared/components/MathText";
+import { SvgMath, SvgMathLine } from "../../../shared/components/SvgMath";
 
 export interface FractionMeasureStripProps {
   /** The amount being measured out, e.g. [2,3] for 2/3. */
@@ -40,8 +42,9 @@ export function FractionMeasureStrip({ dividend, divisor, width = 360, height = 
 
   const topCellW = width / b; // top bar's own cells (one whole cup across the full width)
   const haveWidth = width * (a / b); // width of the shaded "what you have" portion
-  const rulerY = height + 42; // top bar + its caption + a gap before the ruler
-  const totalHeight = rulerY + height + (leftoverLabel ? 36 : 20);
+  // Captions hold stacked (handwritten) fractions, so each caption row is taller.
+  const rulerY = height + 56; // top bar + its caption + a gap before the ruler
+  const totalHeight = rulerY + height + (leftoverLabel ? 64 : 32);
 
   return (
     <svg
@@ -49,7 +52,7 @@ export function FractionMeasureStrip({ dividend, divisor, width = 360, height = 
       width={width}
       style={{ maxWidth: "100%" }}
       role="img"
-      aria-label={`${a}/${b} cup, measured in ${c}/${d}-cup servings`}
+      aria-label={spokenFractions(`${a}/${b} cup, measured in ${c}/${d}-cup servings`)}
     >
       {/* top bar: one whole cup, split into b equal cells, a of them shaded */}
       {Array.from({ length: b }, (_, i) => (
@@ -63,13 +66,11 @@ export function FractionMeasureStrip({ dividend, divisor, width = 360, height = 
         />
       ))}
       <rect x={0} y={0} width={width} height={height} style={{ fill: "none", stroke: palette.ink, strokeWidth: 2 }} />
-      <text x={width / 2} y={height + 16} textAnchor="middle" style={{ fill: palette.muted, fontSize: 13 }}>
-        {a}/{b} cup — what you have
-      </text>
+      <SvgMathLine text={`${a}/${b} cup — what you have`} x={width / 2} y={height + 26} fontSize={13} color={palette.muted} />
 
       {/* dashed guides tying the shaded portion above to the ruler below */}
-      <line x1={0} y1={height + 24} x2={0} y2={rulerY} style={{ stroke: palette.line, strokeWidth: 1, strokeDasharray: "3 3" }} />
-      <line x1={haveWidth} y1={height + 24} x2={haveWidth} y2={rulerY} style={{ stroke: palette.line, strokeWidth: 1, strokeDasharray: "3 3" }} />
+      <line x1={0} y1={height + 40} x2={0} y2={rulerY} style={{ stroke: palette.line, strokeWidth: 1, strokeDasharray: "3 3" }} />
+      <line x1={haveWidth} y1={height + 40} x2={haveWidth} y2={rulerY} style={{ stroke: palette.line, strokeWidth: 1, strokeDasharray: "3 3" }} />
 
       {/* bottom ruler: spans only the shaded width, marked off in divisor-sized servings */}
       <g transform={`translate(0, ${rulerY})`}>
@@ -81,20 +82,18 @@ export function FractionMeasureStrip({ dividend, divisor, width = 360, height = 
           return (
             <g key={`seg-${i}`}>
               <rect x={x0} y={0} width={segW} height={height} style={{ fill: isPartial ? palette.cSoft : palette.bSoft, stroke: isPartial ? palette.c : palette.b, strokeWidth: 2 }} />
-              <text x={x0 + segW / 2} y={height / 2 + 5} textAnchor="middle" style={{ fill: palette.ink, fontSize: 14, fontWeight: 700 }}>
-                {isPartial ? leftoverLabel : i + 1}
-              </text>
+              {isPartial && leftoverLabel ? (
+                <SvgMath text={leftoverLabel} x={x0 + segW / 2} y={height / 2} fontSize={14} color={palette.ink} weight={700} />
+              ) : (
+                <text x={x0 + segW / 2} y={height / 2 + 5} textAnchor="middle" style={{ fill: palette.ink, fontSize: 14, fontWeight: 700 }}>
+                  {i + 1}
+                </text>
+              )}
             </g>
           );
         })}
-        <text x={width / 2} y={height + 16} textAnchor="middle" style={{ fill: palette.muted, fontSize: 13 }}>
-          {c}/{d}-cup servings
-        </text>
-        {leftoverLabel && (
-          <text x={width / 2} y={height + 32} textAnchor="middle" style={{ fill: palette.muted, fontSize: 12 }}>
-            last one is only {leftoverLabel} of a serving
-          </text>
-        )}
+        <SvgMathLine text={`${c}/${d}-cup servings`} x={width / 2} y={height + 26} fontSize={13} color={palette.muted} />
+        {leftoverLabel && <SvgMathLine text={`last one is only ${leftoverLabel} of a serving`} x={width / 2} y={height + 58} fontSize={12} color={palette.muted} />}
       </g>
     </svg>
   );

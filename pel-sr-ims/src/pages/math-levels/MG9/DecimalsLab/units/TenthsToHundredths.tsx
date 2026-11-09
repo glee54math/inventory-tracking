@@ -5,8 +5,10 @@ import { pick, randInt } from "../../../shared/lib/math";
 import { allFilled, answerBorder } from "../../../shared/lib/answerChecks";
 import { choice, numberBlank, sentence, type Problem } from "../../../shared/engine/types";
 import { Frac, QA, QC, Segmented, Slider, Stepper } from "../../../shared/engine/controls";
+import { TapSelect } from "../../../shared/components/TapSelect";
 import type { Unit } from "../../../shared/units/types";
 import { tenthsToHundredthsTest } from "./TenthsToHundredthsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -55,147 +57,164 @@ function TenthsCheck({ onComplete }: { onComplete?: () => void }) {
   }, [allDone, onComplete]);
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for Understanding: answer these before you try practice problems.</p>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for Understanding: answer these before you try practice problems.</p>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>1.</b> Look at the shaded strip.
-        </p>
-        <GridRow size={130} segments={[{ count: 10, tone: "a" }]} />
-        <p>
-          The shaded strip is one{" "}
-          <select className="answer" value={piece} onChange={(e) => { setPiece(e.target.value); setQ1Checked(false); }} aria-label="Name of the strip" disabled={q1Done} style={answerBorder(q1aOk, q1Checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="hundredth">hundredth</option>
-            <option value="tenth">tenth</option>
-            <option value="whole">whole</option>
-          </select>{" "}
-          of the square, and it is made of{" "}
-          <select className="answer" value={count} onChange={(e) => { setCount(e.target.value); setQ1Checked(false); }} aria-label="How many small squares" disabled={q1Done} style={answerBorder(q1bOk, q1Checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="1">1</option>
-            <option value="10">10</option>
-            <option value="100">100</option>
-          </select>{" "}
-          hundredths squares.
-        </p>
-        <button className="btn primary" type="button" disabled={q1Done || !q1Filled} onClick={() => setQ1Checked(true)}>
-          Check Answer
-        </button>
-        {q1Checked && q1Filled && (
-          <p className={`feedback ${q1Done ? "good" : "bad"}`} role="alert">
-            {q1Done
-              ? "Correct — the square is cut into 10 strips, so one strip is a tenth. Each strip holds 10 tiny squares, and there are 100 tiny squares in all, so 1/10 = 10/100."
-              : "Not quite — count the strips across the whole square, then count the tiny squares in one strip."}
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> Look at the shaded strip.
           </p>
-        )}
-      </div>
-
-      <div className="align-stack-wrap">
-        <p>
-          <b>2.</b> Sam wrote: <Frac n={3} d={10} /> + <Frac n={24} d={100} /> = <Frac n={27} d={100} />
-        </p>
-        <p>
-          Sam&apos;s mistake: he{" "}
-          <select className="answer" value={mistake} onChange={(e) => { setMistake(e.target.value); setQ2Checked(false); }} aria-label="Sam's mistake" disabled={q2Done} style={answerBorder(q2aOk, q2Checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="bottoms">forgot to add the bottom numbers too</option>
-            <option value="tops">added top numbers of different-size pieces</option>
-            <option value="none">made no mistake</option>
-          </select>
-          . The right total is{" "}
-          <select className="answer" value={total} onChange={(e) => { setTotal(e.target.value); setQ2Checked(false); }} aria-label="Right total" disabled={q2Done} style={answerBorder(q2bOk, q2Checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="27/100">27/100</option>
-            <option value="27/10">27/10</option>
-            <option value="54/100">54/100</option>
-            <option value="324/100">324/100</option>
-          </select>
-          .
-        </p>
-        <button className="btn primary" type="button" disabled={q2Done || !q2Filled} onClick={() => setQ2Checked(true)}>
-          Check Answer
-        </button>
-        {q2Checked && q2Filled && (
-          <p className={`feedback ${q2Done ? "good" : "bad"}`} role="alert">
-            {q2Done
-              ? "Correct — 3 tenths and 24 hundredths are different-size pieces, so you can't just add 3 + 24. Rewrite first: 3/10 = 30/100, then 30/100 + 24/100 = 54/100."
-              : "Not quite — is a tenth the same size as a hundredth? Rewrite 3/10 as hundredths before adding."}
+          <GridRow size={130} segments={[{ count: 10, tone: "a" }]} />
+          <p>
+            The shaded strip is one{" "}
+            <select className="answer" value={piece} onChange={(e) => { setPiece(e.target.value); setQ1Checked(false); }} aria-label="Name of the strip" disabled={q1Done} style={answerBorder(q1aOk, q1Checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="hundredth">hundredth</option>
+              <option value="tenth">tenth</option>
+              <option value="whole">whole</option>
+            </select>{" "}
+            of the square, and it is made of{" "}
+            <select className="answer" value={count} onChange={(e) => { setCount(e.target.value); setQ1Checked(false); }} aria-label="How many small squares" disabled={q1Done} style={answerBorder(q1bOk, q1Checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="1">1</option>
+              <option value="10">10</option>
+              <option value="100">100</option>
+            </select>{" "}
+            hundredths squares.
           </p>
-        )}
-      </div>
-
-      <div className="align-stack-wrap">
-        <p>
-          <b>3.</b> True or false: When you add a tenths fraction and a hundredths fraction, the total is always less than 1 whole.
-        </p>
-        <div className="control-row">
-          {[
-            { id: "true", label: "True" },
-            { id: "false", label: "False" },
-          ].map((opt) => (
-            <button key={opt.id} type="button" className={`btn ghost ${q3 === opt.id ? "pressed" : ""}`} disabled={q3Done} onClick={() => setQ3(opt.id)}>
-              {opt.label}
-            </button>
-          ))}
+          <button className="btn primary" type="button" disabled={q1Done || !q1Filled} onClick={() => setQ1Checked(true)}>
+            Check Answer
+          </button>
+          {q1Checked && q1Filled && (
+            <p className={`feedback ${q1Done ? "good" : "bad"}`} role="alert">
+              {q1Done
+                ? "Correct — the square is cut into 10 strips, so one strip is a tenth. Each strip holds 10 tiny squares, and there are 100 tiny squares in all, so 1/10 = 10/100."
+                : "Not quite — count the strips across the whole square, then count the tiny squares in one strip."}
+            </p>
+          )}
         </div>
-        {q3 && (
-          <p className={`feedback ${q3Done ? "good" : "bad"}`} role="alert">
-            {q3Done
-              ? "Correct — it can go past 1 whole. 7/10 + 80/100 = 70/100 + 80/100 = 150/100, which is 1 whole and 50/100."
-              : "Not quite — try 7/10 + 80/100. Rewrite 7/10 as hundredths and add. Is it less than 100/100?"}
-          </p>
-        )}
-      </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>4.</b> Fill in both blanks.
-        </p>
-        <p>
-          <Frac n={6} d={10} /> ={" "}
-          <select className="answer" value={conv} onChange={(e) => { setConv(e.target.value); setQ4Checked(false); }} aria-label="6 tenths as hundredths" disabled={q4Done} style={answerBorder(q4aOk, q4Checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="6">6</option>
-            <option value="16">16</option>
-            <option value="60">60</option>
-            <option value="600">600</option>
-          </select>
-          /100, so <Frac n={6} d={10} /> + <Frac n={5} d={100} /> ={" "}
-          <select className="answer" value={sum} onChange={(e) => { setSum(e.target.value); setQ4Checked(false); }} aria-label="The total in hundredths" disabled={q4Done} style={answerBorder(q4bOk, q4Checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="11">11</option>
-            <option value="56">56</option>
-            <option value="65">65</option>
-            <option value="605">605</option>
-          </select>
-          /100.
-        </p>
-        <button className="btn primary" type="button" disabled={q4Done || !q4Filled} onClick={() => setQ4Checked(true)}>
-          Check Answer
-        </button>
-        {q4Checked && q4Filled && (
-          <p className={`feedback ${q4Done ? "good" : "bad"}`} role="alert">
-            {q4Done
-              ? "Correct — 6 tenths is 60 hundredths, and 60 hundredths + 5 hundredths = 65 hundredths."
-              : "Not quite — each tenth is 10 hundredths. Rewrite 6/10 first, then add the 5 hundredths."}
+        <div className="align-stack-wrap">
+          <p>
+            <b>2.</b> Sam wrote: <Frac n={3} d={10} /> + <Frac n={24} d={100} /> = <Frac n={27} d={100} />
           </p>
-        )}
+          <p>
+            Sam&apos;s mistake: he{" "}
+            <select className="answer" value={mistake} onChange={(e) => { setMistake(e.target.value); setQ2Checked(false); }} aria-label="Sam's mistake" disabled={q2Done} style={answerBorder(q2aOk, q2Checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="bottoms">forgot to add the bottom numbers too</option>
+              <option value="tops">added top numbers of different-size pieces</option>
+              <option value="none">made no mistake</option>
+            </select>
+            . The right total is{" "}
+            {/* Fraction choices are tap buttons: a dropdown can't show a stacked fraction. */}
+            <TapSelect
+              value={total}
+              onChange={(e) => {
+                if (q2Done) return;
+                setTotal(e.target.value);
+                setQ2Checked(false);
+              }}
+              aria-label="Right total"
+              style={answerBorder(q2bOk, q2Checked)}
+            >
+              <option value="27/100">27/100</option>
+              <option value="27/10">27/10</option>
+              <option value="54/100">54/100</option>
+              <option value="324/100">324/100</option>
+            </TapSelect>
+            .
+          </p>
+          <button className="btn primary" type="button" disabled={q2Done || !q2Filled} onClick={() => setQ2Checked(true)}>
+            Check Answer
+          </button>
+          {q2Checked && q2Filled && (
+            <p className={`feedback ${q2Done ? "good" : "bad"}`} role="alert">
+              {q2Done
+                ? "Correct — 3 tenths and 24 hundredths are different-size pieces, so you can't just add 3 + 24. Rewrite first: 3/10 = 30/100, then 30/100 + 24/100 = 54/100."
+                : "Not quite — is a tenth the same size as a hundredth? Rewrite 3/10 as hundredths before adding."}
+            </p>
+          )}
+        </div>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> True or false: When you add a tenths fraction and a hundredths fraction, the total is always less than 1 whole.
+          </p>
+          <div className="control-row">
+            {[
+              { id: "true", label: "True" },
+              { id: "false", label: "False" },
+            ].map((opt) => (
+              <button key={opt.id} type="button" className={`btn ghost ${q3 === opt.id ? "pressed" : ""}`} disabled={q3Done} onClick={() => setQ3(opt.id)}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {q3 && (
+            <p className={`feedback ${q3Done ? "good" : "bad"}`} role="alert">
+              {q3Done
+                ? "Correct — it can go past 1 whole. 7/10 + 80/100 = 70/100 + 80/100 = 150/100, which is 1 whole and 50/100."
+                : "Not quite — try 7/10 + 80/100. Rewrite 7/10 as hundredths and add. Is it less than 100/100?"}
+            </p>
+          )}
+        </div>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>4.</b> Fill in both blanks.
+          </p>
+          <p>
+            <Frac n={6} d={10} /> ={" "}
+            <Frac
+              n={
+                <select className="answer" value={conv} onChange={(e) => { setConv(e.target.value); setQ4Checked(false); }} aria-label="6 tenths as hundredths" disabled={q4Done} style={answerBorder(q4aOk, q4Checked)}>
+                  <option value="" disabled>
+                    choose
+                  </option>
+                  <option value="6">6</option>
+                  <option value="16">16</option>
+                  <option value="60">60</option>
+                  <option value="600">600</option>
+                </select>
+              }
+              d={100}
+            />, so <Frac n={6} d={10} /> + <Frac n={5} d={100} /> ={" "}
+            <Frac
+              n={
+                <select className="answer" value={sum} onChange={(e) => { setSum(e.target.value); setQ4Checked(false); }} aria-label="The total in hundredths" disabled={q4Done} style={answerBorder(q4bOk, q4Checked)}>
+                  <option value="" disabled>
+                    choose
+                  </option>
+                  <option value="11">11</option>
+                  <option value="56">56</option>
+                  <option value="65">65</option>
+                  <option value="605">605</option>
+                </select>
+              }
+              d={100}
+            />.
+          </p>
+          <button className="btn primary" type="button" disabled={q4Done || !q4Filled} onClick={() => setQ4Checked(true)}>
+            Check Answer
+          </button>
+          {q4Checked && q4Filled && (
+            <p className={`feedback ${q4Done ? "good" : "bad"}`} role="alert">
+              {q4Done
+                ? "Correct — 6 tenths is 60 hundredths, and 60 hundredths + 5 hundredths = 65 hundredths."
+                : "Not quite — each tenth is 10 hundredths. Rewrite 6/10 first, then add the 5 hundredths."}
+            </p>
+          )}
+        </div>
       </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -215,88 +234,90 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const s = 10 * a + b;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && (
-        <button
-          type="button"
-          className="btn ghost"
-          style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
-          onClick={() => setShowCheck((v) => !v)}
-        >
-          Check for Understanding
-        </button>
-      )}
-      <p>
-        A whole square can be cut into 10 strips (<b>tenths</b>) or 100 tiny squares (<b>hundredths</b>). Every tenth strip is exactly 10 hundredths.
-      </p>
-      <Segmented
-        label="Mode"
-        value={mode}
-        onChange={setMode}
-        options={[
-          { id: "rewrite", label: "Tenths as hundredths" },
-          { id: "add", label: "Add tenths + hundredths" },
-        ]}
-      />
-      {mode === "rewrite" ? (
-        <>
-          <div className="control-row">
-            <Stepper label="Tenths" value={n} min={0} max={10} onChange={setN} tone="a" />
-          </div>
-          <div className="control-row">
-            <GridRow size={150} tenthsOnly segments={[{ count: 10 * n, tone: "a" }]} caption={`${n}/10 — ${n} tenth strip${n === 1 ? "" : "s"}`} />
-            <GridRow size={150} segments={[{ count: 10 * n, tone: "a" }]} caption={`${10 * n}/100 — ${10 * n} hundredths squares`} />
-          </div>
-          <p className="says">
-            <QA>
-              <Frac n={n} d={10} />
-            </QA>{" "}
-            ={" "}
-            <QA>
-              <Frac n={10 * n} d={100} />
-            </QA>
-          </p>
-          <p className="muted small">Same shaded amount, two names. Multiply the top and the bottom by 10 to rename tenths as hundredths.</p>
-        </>
-      ) : (
-        <>
-          <div className="control-row">
-            <Stepper label="Tenths" value={a} min={0} max={9} onChange={setA} tone="a" />
-            <Slider label="Hundredths" value={b} min={0} max={99} onChange={setB} />
-          </div>
-          <GridRow size={150} segments={[{ count: 10 * a, tone: "a" }, { count: b, tone: "c" }]} />
-          <p className="says">
-            <QA>
-              <Frac n={a} d={10} />
-            </QA>{" "}
-            +{" "}
-            <QC>
-              <Frac n={b} d={100} />
-            </QC>{" "}
-            ={" "}
-            <QA>
-              <Frac n={10 * a} d={100} />
-            </QA>{" "}
-            +{" "}
-            <QC>
-              <Frac n={b} d={100} />
-            </QC>{" "}
-            = <Frac n={s} d={100} />
-            {s >= 100 && (
-              <>
-                {" "}
-                = 1 whole and <Frac n={s - 100} d={100} />
-              </>
-            )}
-          </p>
-          <p className="muted small">
-            Rename the tenths as hundredths FIRST — then every piece is the same size and you can add the top numbers. Past 100 hundredths, a second whole square starts filling.
-          </p>
-        </>
-      )}
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <TenthsCheck onComplete={onIntroDone} />}
-    </div>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Check for Understanding
+          </button>
+        )}
+        <p>
+          A whole square can be cut into 10 strips (<b>tenths</b>) or 100 tiny squares (<b>hundredths</b>). Every tenth strip is exactly 10 hundredths.
+        </p>
+        <Segmented
+          label="Mode"
+          value={mode}
+          onChange={setMode}
+          options={[
+            { id: "rewrite", label: "Tenths as hundredths" },
+            { id: "add", label: "Add tenths + hundredths" },
+          ]}
+        />
+        {mode === "rewrite" ? (
+          <>
+            <div className="control-row">
+              <Stepper label="Tenths" value={n} min={0} max={10} onChange={setN} tone="a" />
+            </div>
+            <div className="control-row">
+              <GridRow size={150} tenthsOnly segments={[{ count: 10 * n, tone: "a" }]} caption={`${n}/10 — ${n} tenth strip${n === 1 ? "" : "s"}`} />
+              <GridRow size={150} segments={[{ count: 10 * n, tone: "a" }]} caption={`${10 * n}/100 — ${10 * n} hundredths squares`} />
+            </div>
+            <p className="says">
+              <QA>
+                <Frac n={n} d={10} />
+              </QA>{" "}
+              ={" "}
+              <QA>
+                <Frac n={10 * n} d={100} />
+              </QA>
+            </p>
+            <p className="muted small">Same shaded amount, two names. Multiply the top and the bottom by 10 to rename tenths as hundredths.</p>
+          </>
+        ) : (
+          <>
+            <div className="control-row">
+              <Stepper label="Tenths" value={a} min={0} max={9} onChange={setA} tone="a" />
+              <Slider label="Hundredths" value={b} min={0} max={99} onChange={setB} />
+            </div>
+            <GridRow size={150} segments={[{ count: 10 * a, tone: "a" }, { count: b, tone: "c" }]} />
+            <p className="says">
+              <QA>
+                <Frac n={a} d={10} />
+              </QA>{" "}
+              +{" "}
+              <QC>
+                <Frac n={b} d={100} />
+              </QC>{" "}
+              ={" "}
+              <QA>
+                <Frac n={10 * a} d={100} />
+              </QA>{" "}
+              +{" "}
+              <QC>
+                <Frac n={b} d={100} />
+              </QC>{" "}
+              = <Frac n={s} d={100} />
+              {s >= 100 && (
+                <>
+                  {" "}
+                  = 1 whole and <Frac n={s - 100} d={100} />
+                </>
+              )}
+            </p>
+            <p className="muted small">
+              Rename the tenths as hundredths FIRST — then every piece is the same size and you can add the top numbers. Past 100 hundredths, a second whole square starts filling.
+            </p>
+          </>
+        )}
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <TenthsCheck onComplete={onIntroDone} />}
+      </div>
+    </MathText>
   );
 }
 
@@ -481,7 +502,8 @@ function carryProblem(): Problem {
         numberBlank(1),
         " whole and ",
         numberBlank(s - 100),
-        "/100"
+        "",
+        [undefined, 100]
       ),
     ],
     wrapUp: `${expr} = ${s}/100 = 1 whole and ${s - 100}/100. Don't stop at ${s}/100 — it's more than one whole.`,

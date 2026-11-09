@@ -170,7 +170,8 @@ export function carrySentenceQuestion(): TestQuestion[] {
         numberBlank(1),
         " whole and ",
         numberBlank(s - 100),
-        "/100"
+        "",
+        [undefined, 100]
       ),
     },
   ];

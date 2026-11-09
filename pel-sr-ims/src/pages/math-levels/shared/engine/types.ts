@@ -35,6 +35,14 @@ export interface VisualHelp {
   hint: boolean;
   /** The "Show me" walk-through is open (the picture is drawn with this step done). */
   showMe: boolean;
+  /**
+   * What the student typed at the last wrong Check, while its feedback is
+   * still on screen (undefined otherwise). Lets a picture show a named
+   * mistake, e.g. MG10 draws the "added across" answer's bar beside the
+   * bigger fraction's bar. Optional and additive: pictures that ignore it
+   * are unchanged. Practice only (the Test passes no VisualHelp).
+   */
+  lastTry?: string[];
 }
 
 /** True when a picture should point at the part that matters for this step. */
@@ -46,6 +54,15 @@ export interface NumberStep extends BaseStep {
   answer: number;
   prefix?: string; // e.g. "$"
   suffix?: string; // e.g. "cups"
+  /**
+   * Optional: type a fraction answer into handwritten boxes (top over a bar
+   * over bottom; "mixed" adds a whole-number box in front) instead of typing
+   * "3/4" with a slash. The boxes are joined back into the same text the
+   * student would have typed ("3/4", "2 1/4", or just "2" / "0.5" when the
+   * bottom box is empty), so grading is unchanged. Added for the all-labs
+   * stacked-fraction pass; steps without it render exactly as before.
+   */
+  fracBoxes?: "fraction" | "mixed";
   /**
    * Tint the answer box with a quantity color, so it can match a highlighted
    * spot in the picture (e.g. the "next dot" in MK1's TenGroups).
@@ -101,6 +118,58 @@ export interface NumberStep extends BaseStep {
    * `money` — see check() and answerText() in engine/StepProblem.tsx.
    */
   padTo?: number;
+  /**
+   * Named feedback for a predictable wrong answer (e.g. "24 is a common
+   * denominator, but not the least."). Called with the typed value only when
+   * it does NOT match `answer`; return null to fall back to the generic
+   * message. Optional and additive: steps without it grade exactly as before.
+   */
+  diagnose?: (value: number) => string | null;
+  /**
+   * Optional: draw the answer box as the TOP of a stacked fraction over this
+   * printed denominator (the box, a bar, then the number), instead of writing
+   * "/8" as text after the box. Grading is unchanged (the box holds the
+   * numerator); the answer text adds "/8" after the number. Added for MG9
+   * (stacked, handwritten fractions); steps without it render exactly as before.
+   */
+  overDen?: number;
+}
+
+/**
+ * A fraction or mixed number typed into real stacked boxes: an optional
+ * whole-number box, then a numerator box over a denominator box (or a fixed,
+ * printed denominator via `den`). Graded by VALUE against `answer`, then —
+ * when `simplest` is set — by FORM: an equal answer that isn't in simplest
+ * form (not in lowest terms, a fraction part of 1 or more next to the whole
+ * box, or "1 0/4" for a whole number) is rejected with "That's equal, but
+ * it's not in simplest form." and marks the step `formMiss`, so the solve
+ * does not count as clean (see StepProblem's isClean). Added for
+ * MG10_AddingAndSubtractingFractionsLab; earlier labs typed mixed numbers
+ * through a two-blank SentenceStep instead.
+ * inputs: [whole, numerator, denominator].
+ * Inside <AnswerFormPick> (shared/components/AnswerForm.tsx), a `mixed` step
+ * with no printed `den` first asks for the kind of answer (whole number,
+ * mixed number, proper fraction; inputs[3]), shows only that kind's boxes,
+ * and says whether the kind was right. Outside it, nothing changes.
+ */
+export interface FractionStep extends BaseStep {
+  kind: "fraction";
+  /** The value as numerator/denominator, in any form (e.g. [17, 12]). */
+  answer: [number, number];
+  /** Show a whole-number box before the fraction (answers can be mixed or whole). */
+  mixed?: boolean;
+  /** Require simplest form (lowest terms; a mixed number instead of an improper fraction when `mixed`). */
+  simplest?: boolean;
+  /** Print this denominator instead of a box (e.g. "rewrite as ?/12"). */
+  den?: number;
+  /**
+   * Named feedback for a predictable wrong VALUE, given the typed value as an
+   * improper fraction. `typed` (optional, additive; MG10 round 5) is the
+   * answer exactly as the student wrote it ("2/2", "1 3/5", "4"), so a
+   * message can quote it back without reducing it. Diagnoses that ignore it
+   * are unchanged.
+   */
+  diagnose?: (num: number, den: number, typed?: string) => string | null;
 }
 
 /**
@@ -151,6 +220,13 @@ export interface RatioStep extends BaseStep {
   tones?: ["a" | "b" | "c", "a" | "b" | "c"] | "none";
   /** Optional wording around the boxes: before ___ middle ___ after. */
   frame?: [string, string, string];
+  /**
+   * Optional: the two boxes are one fraction's top and bottom — draw box 1
+   * over a bar over box 2 (handwritten), and don't show frame[1]. Grading and
+   * the answer text are unchanged. Added for the all-labs stacked-fraction
+   * pass (MG11 "prove it"); steps without it render exactly as before.
+   */
+  stacked?: boolean;
 }
 
 export interface ChoiceStep extends BaseStep {
@@ -208,7 +284,47 @@ export interface SentenceStep extends BaseStep {
   /** Literal text: before blank 1, between blank 1 and blank 2, after blank 2. */
   parts: [string, string, string];
   blanks: [SentenceBlank, SentenceBlank];
+  /**
+   * Optional: draw blank i as the TOP of a stacked fraction over this printed
+   * denominator (e.g. [12, 12] for "3/4 = [ ]/12 and 5/6 = [ ]/12"), instead
+   * of writing "/12" in the text after the box. The answer text adds "/12"
+   * after that blank. Added for MG10 (stacked fractions); steps without it
+   * render exactly as before.
+   */
+  overDen?: [number | undefined, number | undefined];
+  /**
+   * Optional: draw the two number blanks as ONE handwritten fraction — blank 1
+   * over a bar over blank 2 — for a "type the top and the bottom" step whose
+   * middle text is " / ". parts[1] is then not shown. Grading and the answer
+   * text are unchanged. Added for MG9 (stacked fractions); steps without it
+   * render exactly as before.
+   */
+  stacked?: boolean;
+  /**
+   * Optional: more blanks after parts[2], each followed by its own text, for a
+   * sentence frame with 3 or more blanks. Their answers are inputs[2],
+   * inputs[3], and so on. Not used with `stacked`. Added for MG10 round 6;
+   * steps without it render and grade exactly as before.
+   */
+  more?: { blank: SentenceBlank; after: string }[];
+  /**
+   * Optional: a "fill in the reason" frame. Every select blank is drawn as tap
+   * buttons, Check stays off until every blank is filled, a wrong Check colors
+   * each blank's pick green or red, and a wrong Check counts against a clean
+   * solve (like a wrong pick on a choice step). Added for MG10 round 6; steps
+   * without it behave exactly as before.
+   */
+  checkEach?: boolean;
+  /**
+   * Optional: named feedback for a wrong answer, given every blank's raw value
+   * in order (inputs[0], inputs[1], then the `more` blanks). Return null for
+   * the generic message. Added for MG10 round 6.
+   */
+  diagnose?: (inputs: string[]) => string | null;
 }
+
+/** Every blank of a SentenceStep, in order: the two fixed blanks, then any `more` blanks. */
+export const sentenceBlanksOf = (s: SentenceStep): SentenceBlank[] => [...s.blanks, ...(s.more ?? []).map((m) => m.blank)];
 
 /**
  * Two fractions multiplied together, each of the 4 numbers either fixed
@@ -267,7 +383,15 @@ export interface CustomStep extends BaseStep {
   resultText: string;
 }
 
-export type Step = NumberStep | RatioStep | CoordinateStep | ChoiceStep | TapCountStep | SentenceStep | FracMultiplyStep | VerticalMultiplyStep | CustomStep;
+export type Step = NumberStep | RatioStep | CoordinateStep | ChoiceStep | TapCountStep | SentenceStep | FracMultiplyStep | VerticalMultiplyStep | CustomStep | FractionStep;
+
+/** Build a FractionStep — see its doc comment. */
+export const fractionStep = (base: BaseStep, n: number, d: number, opts: Omit<FractionStep, keyof BaseStep | "kind" | "answer"> = {}): FractionStep => ({
+  ...base,
+  ...opts,
+  kind: "fraction",
+  answer: [n, d],
+});
 
 /** Build a CustomStep — see CustomStep's doc comment for when to reach for this. */
 export const customStep = (base: BaseStep, render: (onDone: () => void, onWrong: () => void) => ReactNode, resultText: string): CustomStep => ({ ...base, kind: "custom", render, resultText });
@@ -380,11 +504,20 @@ export const numberBlank = (answer: number, money?: boolean): SentenceNumberBlan
 
 /** Build a sentence step from already-built blanks (selectBlank/numberBlank), e.g.
  *  sentence(base, "Store ", selectBlank("A", ["B"]), " is better, at $", numberBlank(1.5, true), " each."). */
-export const sentence = (base: BaseStep, before: string, blank1: SentenceBlank, between: string, blank2: SentenceBlank, after: string): SentenceStep => ({
+export const sentence = (
+  base: BaseStep,
+  before: string,
+  blank1: SentenceBlank,
+  between: string,
+  blank2: SentenceBlank,
+  after: string,
+  overDen?: SentenceStep["overDen"]
+): SentenceStep => ({
   ...base,
   kind: "sentence",
   parts: [before, between, after],
   blanks: [blank1, blank2],
+  ...(overDen ? { overDen } : {}),
 });
 
 /** Build a FracMultiplyStep — pass `null` for whichever of the 4 slots should

@@ -9,21 +9,24 @@ import { amountStep } from "../lib/steps";
 import { AMOUNT_CONTEXTS, amountWords, NAMES, sameWholeParams, twoNames, unitFor } from "../lib/words";
 import { CfuToggle, DropdownQuestion, useCfuProgress } from "./cfu";
 import { fractionWordProblemsTest } from "./FractionWordProblemsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 const BAR_W = 170; // every whole drawn the same width — the "same whole" made visible
 
 function TwoWholes({ a, d, small, large }: { a: number; d: number; small: string; large: string }) {
   return (
-    <div style={{ display: "flex", gap: 16, alignItems: "flex-end", flexWrap: "wrap" }}>
-      <div>
-        <FractionBar numerator={a} denominator={d} width={110} height={44} />
-        <p className="muted small">{small}</p>
+    <MathText>
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-end", flexWrap: "wrap" }}>
+        <div>
+          <FractionBar numerator={a} denominator={d} width={110} height={44} />
+          <p className="muted small">{small}</p>
+        </div>
+        <div>
+          <FractionBar numerator={a} denominator={d} width={260} height={44} />
+          <p className="muted small">{large}</p>
+        </div>
       </div>
-      <div>
-        <FractionBar numerator={a} denominator={d} width={260} height={44} />
-        <p className="muted small">{large}</p>
-      </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -41,84 +44,86 @@ function TwoWholes({ a, d, small, large }: { a: number; d: number; small: string
 function WordProblemsCheck({ onComplete }: { onComplete?: () => void }) {
   const { mark } = useCfuProgress(4, onComplete);
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: answer all four to unlock practice problems.</p>
-      <div className="align-stack-wrap">
-        <p>
-          <b>1.</b> "Jen had <Frac n={7} d={8} /> cup of milk and used <Frac n={3} d={8} /> cup. How much milk is left?"
-        </p>
-        <DropdownQuestion
-          blanks={[
-            { options: ["addition", "subtraction"], correct: "subtraction", label: "Operation" },
-            { options: ["4/8 cup", "10/8 cup", "4/0 cup"], correct: "4/8 cup", label: "Answer" },
-          ]}
-          render={([a, b]) => (
-            <>
-              This story needs {a}, and the answer is {b}.
-            </>
-          )}
-          good={"Correct — \"used\" and \"left\" mean some is taken away: 7/8 − 3/8 = 4/8 cup. The pieces are still eighths."}
-          bad="Not quite. Does using milk make the amount bigger or smaller? And when you take eighths away, are the pieces still eighths?"
-          onDone={mark(0)}
-        />
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: answer all four to unlock practice problems.</p>
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> "Jen had <Frac n={7} d={8} /> cup of milk and used <Frac n={3} d={8} /> cup. How much milk is left?"
+          </p>
+          <DropdownQuestion
+            blanks={[
+              { options: ["addition", "subtraction"], correct: "subtraction", label: "Operation" },
+              { options: ["4/8 cup", "10/8 cup", "4/0 cup"], correct: "4/8 cup", label: "Answer" },
+            ]}
+            render={([a, b]) => (
+              <>
+                This story needs {a}, and the answer is {b}.
+              </>
+            )}
+            good={"Correct — \"used\" and \"left\" mean some is taken away: 7/8 − 3/8 = 4/8 cup. The pieces are still eighths."}
+            bad="Not quite. Does using milk make the amount bigger or smaller? And when you take eighths away, are the pieces still eighths?"
+            onDone={mark(0)}
+          />
+        </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>2.</b> Ava ate <Frac n={1} d={2} /> of a small pizza. Kai ate <Frac n={1} d={2} /> of a large pizza. Kai says, "1/2 + 1/2 = 2/2, so together we ate exactly 1
+            whole pizza."
+          </p>
+          <TwoWholes a={1} d={2} small="small pizza" large="large pizza" />
+          <DropdownQuestion
+            blanks={[
+              {
+                options: ["the pizzas are different sizes, so the halves aren't the same size", "he should have added the denominators: 2/4", "nothing — he's right"],
+                correct: "the pizzas are different sizes, so the halves aren't the same size",
+                label: "What's wrong",
+              },
+              { options: ["less than", "exactly", "more than"], correct: "more than", label: "Compared to one small pizza" },
+            ]}
+            render={([a, b]) => (
+              <>
+                Kai is wrong because {a}. Together they ate {b} one small pizza.
+              </>
+            )}
+            good="Correct — you can only add the numerators when the pieces come from the SAME whole. Half of a small pizza plus half of a LARGE one is more than one small pizza (the large half is bigger)."
+            bad="Not quite. Compare the two halves in the picture — are they the same size? Then: a small half plus a bigger half — is that more or less than two small halves?"
+            onDone={mark(1)}
+          />
+        </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> True or false: if two fractions have the same denominator, you can ALWAYS add them by adding the numerators.
+          </p>
+          <DropdownQuestion
+            blanks={[{ options: ["True", "False"], correct: "False", label: "True or false" }]}
+            render={([a]) => <>That statement is {a}.</>}
+            good="Correct — false! They also have to be parts of the same whole (or same-size wholes). 1/2 of a small pizza + 1/2 of a large pizza isn't 2/2 of anything."
+            bad="Not quite — think back to question 2. Same denominator, but were those halves the same size?"
+            onDone={mark(2)}
+          />
+        </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>4.</b> "Max had 2 <Frac n={3} d={4} /> cups of flour. He bought 1 <Frac n={2} d={4} /> cups more, then used 2 <Frac n={1} d={4} /> cups. How much is left?"
+          </p>
+          <DropdownQuestion
+            blanks={[
+              { options: ["add", "subtract"], correct: "add", label: "First step" },
+              { options: ["add", "subtract"], correct: "subtract", label: "Second step" },
+            ]}
+            render={([a, b]) => (
+              <>
+                First {a} 1 2/4 to 2 3/4, then {b} 2 1/4.
+              </>
+            )}
+            good={'Correct — "bought more" makes it grow (add), "used" makes it shrink (subtract): 2 3/4 + 1 2/4 = 4 1/4, then 4 1/4 − 2 1/4 = 2 cups.'}
+            bad="Not quite — which part of the story makes the flour grow, and which makes it shrink?"
+            onDone={mark(3)}
+          />
+        </div>
       </div>
-      <div className="align-stack-wrap">
-        <p>
-          <b>2.</b> Ava ate <Frac n={1} d={2} /> of a small pizza. Kai ate <Frac n={1} d={2} /> of a large pizza. Kai says, "1/2 + 1/2 = 2/2, so together we ate exactly 1
-          whole pizza."
-        </p>
-        <TwoWholes a={1} d={2} small="small pizza" large="large pizza" />
-        <DropdownQuestion
-          blanks={[
-            {
-              options: ["the pizzas are different sizes, so the halves aren't the same size", "he should have added the denominators: 2/4", "nothing — he's right"],
-              correct: "the pizzas are different sizes, so the halves aren't the same size",
-              label: "What's wrong",
-            },
-            { options: ["less than", "exactly", "more than"], correct: "more than", label: "Compared to one small pizza" },
-          ]}
-          render={([a, b]) => (
-            <>
-              Kai is wrong because {a}. Together they ate {b} one small pizza.
-            </>
-          )}
-          good="Correct — you can only add the numerators when the pieces come from the SAME whole. Half of a small pizza plus half of a LARGE one is more than one small pizza (the large half is bigger)."
-          bad="Not quite. Compare the two halves in the picture — are they the same size? Then: a small half plus a bigger half — is that more or less than two small halves?"
-          onDone={mark(1)}
-        />
-      </div>
-      <div className="align-stack-wrap">
-        <p>
-          <b>3.</b> True or false: if two fractions have the same denominator, you can ALWAYS add them by adding the numerators.
-        </p>
-        <DropdownQuestion
-          blanks={[{ options: ["True", "False"], correct: "False", label: "True or false" }]}
-          render={([a]) => <>That statement is {a}.</>}
-          good="Correct — false! They also have to be parts of the same whole (or same-size wholes). 1/2 of a small pizza + 1/2 of a large pizza isn't 2/2 of anything."
-          bad="Not quite — think back to question 2. Same denominator, but were those halves the same size?"
-          onDone={mark(2)}
-        />
-      </div>
-      <div className="align-stack-wrap">
-        <p>
-          <b>4.</b> "Max had 2 <Frac n={3} d={4} /> cups of flour. He bought 1 <Frac n={2} d={4} /> cups more, then used 2 <Frac n={1} d={4} /> cups. How much is left?"
-        </p>
-        <DropdownQuestion
-          blanks={[
-            { options: ["add", "subtract"], correct: "add", label: "First step" },
-            { options: ["add", "subtract"], correct: "subtract", label: "Second step" },
-          ]}
-          render={([a, b]) => (
-            <>
-              First {a} 1 2/4 to 2 3/4, then {b} 2 1/4.
-            </>
-          )}
-          good={'Correct — "bought more" makes it grow (add), "used" makes it shrink (subtract): 2 3/4 + 1 2/4 = 4 1/4, then 4 1/4 − 2 1/4 = 2 cups.'}
-          bad="Not quite — which part of the story makes the flour grow, and which makes it shrink?"
-          onDone={mark(3)}
-        />
-      </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -148,52 +153,54 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         : `Ana's ribbon is ${amountWords(x, d, c)} long. Ben's is ${amountWords(yy, d, c)}. How much longer is Ana's?`;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && <CfuToggle on={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      <p>
-        The story's words tell you the operation: "in all" / "altogether" → <b>add</b>; "left" / "how much more" / "how much longer" → <b>subtract</b>.
-      </p>
-      <Segmented
-        label="Story type"
-        value={kind}
-        onChange={setKind}
-        options={[
-          { id: "combine", label: "Put together" },
-          { id: "left", label: "Take away" },
-          { id: "compare", label: "Compare" },
-        ]}
-      />
-      <div className="control-row">
-        <Stepper label="Pieces in a yard" value={d} min={2} max={10} onChange={setD} tone="c" />
-        <Stepper label="First amount (pieces)" value={x} min={1} max={4 * d} onChange={setX} tone="a" />
-        <Stepper label="Second amount (pieces)" value={yy} min={1} max={kind === "combine" ? 4 * d : x} onChange={setY} tone="b" />
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && <CfuToggle on={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
+        <p>
+          The story's words tell you the operation: "in all" / "altogether" → <b>add</b>; "left" / "how much more" / "how much longer" → <b>subtract</b>.
+        </p>
+        <Segmented
+          label="Story type"
+          value={kind}
+          onChange={setKind}
+          options={[
+            { id: "combine", label: "Put together" },
+            { id: "left", label: "Take away" },
+            { id: "compare", label: "Compare" },
+          ]}
+        />
+        <div className="control-row">
+          <Stepper label="Pieces in a yard" value={d} min={2} max={10} onChange={setD} tone="c" />
+          <Stepper label="First amount (pieces)" value={x} min={1} max={4 * d} onChange={setX} tone="a" />
+          <Stepper label="Second amount (pieces)" value={yy} min={1} max={kind === "combine" ? 4 * d : x} onChange={setY} tone="b" />
+        </div>
+        <p className="says">{story}</p>
+        {kind === "combine" && <PieceBars den={d} barWidth={BAR_W} segments={[{ count: x, tone: "a" }, { count: yy, tone: "b" }]} />}
+        {kind === "left" && <PieceBars den={d} barWidth={BAR_W} segments={[{ count: x - yy, tone: "a" }, { count: yy, tone: "gone" }]} />}
+        {kind === "compare" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <PieceBars den={d} barWidth={BAR_W} segments={[{ count: yy, tone: "a" }, { count: x - yy, tone: "c" }]} caption="Ana's ribbon (the violet part is the extra)" />
+            <PieceBars den={d} barWidth={BAR_W} segments={[{ count: yy, tone: "b" }]} minWholes={Math.ceil(x / d)} caption="Ben's ribbon" />
+          </div>
+        )}
+        <p className="says" style={{ fontSize: 18 }}>
+          {mixedText(x, d)} {kind === "combine" ? "+" : "−"} {mixedText(yy, d)} = <b>{amountWords(result, d, c)}</b>
+        </p>
+        <button className="btn ghost" type="button" style={{ width: "fit-content" }} onClick={() => setShowWholes((v) => !v)}>
+          {showWholes ? "Hide the same-whole trap" : "What if the wholes are different sizes?"}
+        </button>
+        {showWholes && (
+          <div>
+            <TwoWholes a={1} d={2} small="1/2 of a small pizza" large="1/2 of a large pizza" />
+            <p className="muted small">
+              Both are "1/2" — but not the same amount! Fractions can only be added (or compared) when they are parts of the same whole, or wholes of the same size.
+            </p>
+          </div>
+        )}
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <WordProblemsCheck onComplete={onIntroDone} />}
       </div>
-      <p className="says">{story}</p>
-      {kind === "combine" && <PieceBars den={d} barWidth={BAR_W} segments={[{ count: x, tone: "a" }, { count: yy, tone: "b" }]} />}
-      {kind === "left" && <PieceBars den={d} barWidth={BAR_W} segments={[{ count: x - yy, tone: "a" }, { count: yy, tone: "gone" }]} />}
-      {kind === "compare" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <PieceBars den={d} barWidth={BAR_W} segments={[{ count: yy, tone: "a" }, { count: x - yy, tone: "c" }]} caption="Ana's ribbon (the violet part is the extra)" />
-          <PieceBars den={d} barWidth={BAR_W} segments={[{ count: yy, tone: "b" }]} minWholes={Math.ceil(x / d)} caption="Ben's ribbon" />
-        </div>
-      )}
-      <p className="says" style={{ fontSize: 18 }}>
-        {mixedText(x, d)} {kind === "combine" ? "+" : "−"} {mixedText(yy, d)} = <b>{amountWords(result, d, c)}</b>
-      </p>
-      <button className="btn ghost" type="button" style={{ width: "fit-content" }} onClick={() => setShowWholes((v) => !v)}>
-        {showWholes ? "Hide the same-whole trap" : "What if the wholes are different sizes?"}
-      </button>
-      {showWholes && (
-        <div>
-          <TwoWholes a={1} d={2} small="1/2 of a small pizza" large="1/2 of a large pizza" />
-          <p className="muted small">
-            Both are "1/2" — but not the same amount! Fractions can only be added (or compared) when they are parts of the same whole, or wholes of the same size.
-          </p>
-        </div>
-      )}
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <WordProblemsCheck onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 

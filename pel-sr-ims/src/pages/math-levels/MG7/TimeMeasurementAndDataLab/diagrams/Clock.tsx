@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { palette, diagramFont } from "../../../shared/lib/palette";
+import { MathText } from "../../../shared/components/MathText";
 
 /** hour is always 1-12 (12-hour clock face); minute is 0-59 — unlike MG3's
  *  Grade-1 Clock (hour/half only), this lab's standard (3.MD.1) requires
@@ -127,51 +128,53 @@ export function Clock({ time, size = SIZE, tone = "a", onChange }: ClockProps) {
   const minuteEnd = handEnd(minuteAngle, R * 0.8);
 
   return (
-    <svg
-      ref={svgRef}
-      viewBox={`0 0 ${SIZE} ${SIZE}`}
-      width={size}
-      height={size}
-      role="img"
-      aria-label={`Analog clock showing ${clockLabel(time)}${draggable ? " — drag the long minute hand to change the minute" : ""}`}
-      style={{ display: "block", fontFamily: diagramFont, touchAction: draggable ? "none" : undefined }}
-    >
-      <circle cx={CX} cy={CY} r={R} fill={palette.paper} stroke={palette.line} strokeWidth={3} />
-      {/* 60 minor (1-minute) ticks — every 5th is swallowed by the major tick drawn below instead. */}
-      {Array.from({ length: 60 }, (_, m) => {
-        if (m % 5 === 0) return null;
-        const p = handEnd(m * 6, R * 0.94);
-        const t = handEnd(m * 6, R * 0.88);
-        return <line key={`m${m}`} x1={t.x} y1={t.y} x2={p.x} y2={p.y} stroke={palette.grid} strokeWidth={1.5} />;
-      })}
-      {Array.from({ length: 12 }, (_, i) => {
-        const n = i + 1;
-        const p = handEnd(n * 30, R * 0.94);
-        const t = handEnd(n * 30, R * 0.8);
-        return (
-          <g key={n}>
-            <line x1={t.x} y1={t.y} x2={p.x} y2={p.y} stroke={palette.muted} strokeWidth={2.5} />
-            <text x={handEnd(n * 30, R * 0.63).x} y={handEnd(n * 30, R * 0.63).y + 5} textAnchor="middle" fontSize={14} fontWeight={700} fill={palette.ink}>
-              {n}
-            </text>
-          </g>
-        );
-      })}
-      <line x1={CX} y1={CY} x2={hourEnd.x} y2={hourEnd.y} stroke={palette.ink} strokeWidth={4.5} strokeLinecap="round" />
-      <line x1={CX} y1={CY} x2={minuteEnd.x} y2={minuteEnd.y} stroke={fill} strokeWidth={2.75} strokeLinecap="round" />
-      {draggable && (
-        <circle
-          cx={minuteEnd.x}
-          cy={minuteEnd.y}
-          r={14}
-          fill="transparent"
-          style={{ cursor: "grab", touchAction: "none" }}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-        />
-      )}
-      <circle cx={CX} cy={CY} r={5} fill={palette.ink} />
-      {draggable && <title>Drag the long minute hand to set the minute.</title>}
-    </svg>
+    <MathText>
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${SIZE} ${SIZE}`}
+        width={size}
+        height={size}
+        role="img"
+        aria-label={`Analog clock showing ${clockLabel(time)}${draggable ? " — drag the long minute hand to change the minute" : ""}`}
+        style={{ display: "block", fontFamily: diagramFont, touchAction: draggable ? "none" : undefined }}
+      >
+        <circle cx={CX} cy={CY} r={R} fill={palette.paper} stroke={palette.line} strokeWidth={3} />
+        {/* 60 minor (1-minute) ticks — every 5th is swallowed by the major tick drawn below instead. */}
+        {Array.from({ length: 60 }, (_, m) => {
+          if (m % 5 === 0) return null;
+          const p = handEnd(m * 6, R * 0.94);
+          const t = handEnd(m * 6, R * 0.88);
+          return <line key={`m${m}`} x1={t.x} y1={t.y} x2={p.x} y2={p.y} stroke={palette.grid} strokeWidth={1.5} />;
+        })}
+        {Array.from({ length: 12 }, (_, i) => {
+          const n = i + 1;
+          const p = handEnd(n * 30, R * 0.94);
+          const t = handEnd(n * 30, R * 0.8);
+          return (
+            <g key={n}>
+              <line x1={t.x} y1={t.y} x2={p.x} y2={p.y} stroke={palette.muted} strokeWidth={2.5} />
+              <text x={handEnd(n * 30, R * 0.63).x} y={handEnd(n * 30, R * 0.63).y + 5} textAnchor="middle" fontSize={14} fontWeight={700} fill={palette.ink}>
+                {n}
+              </text>
+            </g>
+          );
+        })}
+        <line x1={CX} y1={CY} x2={hourEnd.x} y2={hourEnd.y} stroke={palette.ink} strokeWidth={4.5} strokeLinecap="round" />
+        <line x1={CX} y1={CY} x2={minuteEnd.x} y2={minuteEnd.y} stroke={fill} strokeWidth={2.75} strokeLinecap="round" />
+        {draggable && (
+          <circle
+            cx={minuteEnd.x}
+            cy={minuteEnd.y}
+            r={14}
+            fill="transparent"
+            style={{ cursor: "grab", touchAction: "none" }}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+          />
+        )}
+        <circle cx={CX} cy={CY} r={5} fill={palette.ink} />
+        {draggable && <title>Drag the long minute hand to set the minute.</title>}
+      </svg>
+    </MathText>
   );
 }

@@ -1,4 +1,6 @@
 import { palette, diagramFont } from "../../../shared/lib/palette";
+import { SvgMathLine } from "../../../shared/components/SvgMath";
+import { spokenFractions } from "../../../shared/components/MathText";
 
 export interface TapePart {
   /** Relative size — usually the amount in a COMMON unit. */
@@ -37,7 +39,7 @@ export function TapeBar({ parts, total }: { parts: TapePart[]; total?: string })
     <svg
       viewBox={`0 0 ${W} ${top + 52}`}
       role="img"
-      aria-label={`Tape diagram: ${parts.map((p) => p.label).join(", ")}${total ? `; total ${total}` : ""}`}
+      aria-label={spokenFractions(`Tape diagram: ${parts.map((p) => p.label).join(", ")}${total ? `; total ${total}` : ""}`)}
       style={{ display: "block", width: "100%", maxWidth: W, height: "auto", fontFamily: diagramFont }}
     >
       {total && (
@@ -53,9 +55,8 @@ export function TapeBar({ parts, total }: { parts: TapePart[]; total?: string })
         const el = (
           <g key={i}>
             <rect x={x} y={top} width={w} height={40} style={{ fill: soft(p.tone), stroke: main(p.tone), strokeWidth: 2 }} />
-            <text x={x + w / 2} y={top + 25} textAnchor="middle" style={{ fill: palette.ink, fontSize: 13, fontWeight: 700 }}>
-              {p.label}
-            </text>
+            {/* A fraction in a label ("3/4 km") is drawn stacked, the handwritten way. */}
+            <SvgMathLine text={p.label} x={x + w / 2} y={top + 25} fontSize={13} weight={700} color={palette.ink} />
           </g>
         );
         x += w;

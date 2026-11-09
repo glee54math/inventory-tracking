@@ -1,5 +1,6 @@
 import { palette } from "../../../shared/lib/palette";
 import { TwoTierBars } from "../../../shared/diagrams";
+import { spokenFractions } from "../../../shared/components/MathText";
 
 export interface EquivalentBarsProps {
   /** The fraction as given. */
@@ -26,7 +27,7 @@ export function EquivalentBars({ n, d, k, width = 360, topHeight = 52 }: Equival
     <TwoTierBars
       width={width}
       topHeight={topHeight}
-      ariaLabel={`${n}/${d} and the equivalent fraction ${n * k}/${d * k}`}
+      ariaLabel={spokenFractions(`${n}/${d} and the equivalent fraction ${n * k}/${d * k}`)}
       top={{
         cells: d,
         cellStyle: (i) => (i < n ? { fill: palette.a, fillOpacity: 0.85 } : { fill: palette.paper }),

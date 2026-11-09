@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { factorsMultiplesTest } from "./FactorsMultiplesTest";
+import { MathText } from "../../../shared/components/MathText";
 
 /** A coprime pair [m, n] with m,n in [2,9] — used so g*m and g*n have no
  *  leftover common factor once the shared factor g is divided out. */
@@ -28,25 +29,27 @@ function Explore() {
   const l = lcm(Math.min(a, 12), Math.min(b, 12));
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="controls">
-        <Stepper label="First number" value={a} min={4} max={100} onChange={setA} tone="a" />
-        <Stepper label="Second number" value={b} min={4} max={100} onChange={setB} tone="b" />
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="controls">
+          <Stepper label="First number" value={a} min={4} max={100} onChange={setA} tone="a" />
+          <Stepper label="Second number" value={b} min={4} max={100} onChange={setB} tone="b" />
+        </div>
+        <p>
+          GCF({a}, {b}) = <b>{g}</b>
+        </p>
+        <FactorRectangle rows={g} cols={a / g} label={`${a} = ${g} × ${a / g}`} />
+        {a / g !== b / g && <FactorRectangle rows={g} cols={b / g} label={`${b} = ${g} × ${b / g}`} />}
+        {a <= 12 && b <= 12 && (
+          <>
+            <p>
+              LCM({a}, {b}) = <b>{l}</b>
+            </p>
+            <MultiplesLine a={a} b={b} upTo={l} />
+          </>
+        )}
       </div>
-      <p>
-        GCF({a}, {b}) = <b>{g}</b>
-      </p>
-      <FactorRectangle rows={g} cols={a / g} label={`${a} = ${g} × ${a / g}`} />
-      {a / g !== b / g && <FactorRectangle rows={g} cols={b / g} label={`${b} = ${g} × ${b / g}`} />}
-      {a <= 12 && b <= 12 && (
-        <>
-          <p>
-            LCM({a}, {b}) = <b>{l}</b>
-          </p>
-          <MultiplesLine a={a} b={b} upTo={l} />
-        </>
-      )}
-    </div>
+    </MathText>
   );
 }
 

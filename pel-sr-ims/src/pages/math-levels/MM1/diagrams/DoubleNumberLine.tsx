@@ -1,6 +1,8 @@
 import React, { useId } from "react";
 import { palette } from "../../shared/lib/palette";
 import { fmt } from "../../shared/lib/math";
+import { useStackedFractions } from "../../shared/components/MathText";
+import { isSvgFraction, SvgMath } from "../../shared/components/SvgMath";
 
 export interface NumberLineSide {
   label: string;
@@ -73,8 +75,21 @@ export function DoubleNumberLine({ top, bottom, pairs, maxBottom, marker = null,
   });
 
   const anyStagger = [...stagger.values()].some((v) => v > 0);
-  const top0 = anyStagger ? -16 : 0;
-  const height = anyStagger ? 182 : 150;
+  // Stacked-fraction labs draw "3/4" tick labels the handwritten way; those
+  // labels are taller, so they get more room (and a bigger stagger step).
+  const stackedLabs = useStackedFractions();
+  const anyFrac = stackedLabs && pairs.some((p) => (!p.hideTop && isSvgFraction(fT(p.top))) || (!p.hideBottom && isSvgFraction(fB(p.bottom))));
+  const top0 = anyFrac ? (anyStagger ? -36 : -4) : anyStagger ? -16 : 0;
+  const height = anyFrac ? (anyStagger ? 222 : 160) : anyStagger ? 182 : 150;
+  const step = anyFrac ? 30 : 15;
+  const tickLabel = (text: string, px: number, baseline: number, barY: number, color: string) =>
+    anyFrac && isSvgFraction(text) ? (
+      <SvgMath text={text} x={px} y={barY} fontSize={14} color={color} weight={700} />
+    ) : (
+      <text x={px} y={baseline} textAnchor="middle" style={{ fill: color, fontWeight: 700, fontSize: 14 }}>
+        {text}
+      </text>
+    );
   const lineEnd = width - right + 12;
 
   return (
@@ -107,12 +122,8 @@ export function DoubleNumberLine({ top, bottom, pairs, maxBottom, marker = null,
             {hl && <rect x={px - 3} y={yTop - 8} width={6} height={yBot - yTop + 16} rx={3} style={{ fill: palette.cSoft }} />}
             <line x1={px} y1={yTop - 8} x2={px} y2={yTop + 8} style={{ stroke: hl ? palette.c : palette.ink, strokeWidth: hl ? 3 : 2 }} />
             <line x1={px} y1={yBot - 8} x2={px} y2={yBot + 8} style={{ stroke: hl ? palette.c : palette.ink, strokeWidth: hl ? 3 : 2 }} />
-            <text x={px} y={yTop - 14 - s * 15} textAnchor="middle" style={{ fill: p.hideTop ? palette.bad : top.color, fontWeight: 700, fontSize: 14 }}>
-              {p.hideTop ? "?" : fT(p.top)}
-            </text>
-            <text x={px} y={yBot + 26 + s * 15} textAnchor="middle" style={{ fill: p.hideBottom ? palette.bad : bottom.color, fontWeight: 700, fontSize: 14 }}>
-              {p.hideBottom ? "?" : fB(p.bottom)}
-            </text>
+            {tickLabel(p.hideTop ? "?" : fT(p.top), px, yTop - 14 - s * step, yTop - 26 - s * step, p.hideTop ? palette.bad : top.color)}
+            {tickLabel(p.hideBottom ? "?" : fB(p.bottom), px, yBot + 26 + s * step, yBot + 34 + s * step, p.hideBottom ? palette.bad : bottom.color)}
           </g>
         );
       })}

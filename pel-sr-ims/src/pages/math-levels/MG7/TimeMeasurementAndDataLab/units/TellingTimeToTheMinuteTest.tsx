@@ -4,6 +4,7 @@ import { randInt } from "../../../shared/lib/math";
 import { choice, customStep, type TestQuestion } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
+import { MathText } from "../../../shared/components/MathText";
 
 // ---------- end-of-unit test: Telling and Writing Time to the Minute ----------
 // 10 single-question generators, self-contained (not imported from
@@ -36,27 +37,29 @@ function SetClockHandsStep({ target, onDone }: { target: ClockTime; onDone: () =
   const [checked, setChecked] = useState(false);
   const ok = time.hour === target.hour && time.minute === target.minute;
   return (
-    <div className="clock-set-stage">
-      <Stepper label="Hour" value={time.hour} min={1} max={12} onChange={(h) => setTime((t) => ({ ...t, hour: h }))} tone="a" />
-      <Clock time={time} onChange={(t) => setTime(t)} tone="a" />
-      <div className="control-row">
-        <button
-          className="btn primary"
-          type="button"
-          onClick={() => {
-            setChecked(true);
-            if (ok) onDone();
-          }}
-        >
-          Check hands
-        </button>
+    <MathText>
+      <div className="clock-set-stage">
+        <Stepper label="Hour" value={time.hour} min={1} max={12} onChange={(h) => setTime((t) => ({ ...t, hour: h }))} tone="a" />
+        <Clock time={time} onChange={(t) => setTime(t)} tone="a" />
+        <div className="control-row">
+          <button
+            className="btn primary"
+            type="button"
+            onClick={() => {
+              setChecked(true);
+              if (ok) onDone();
+            }}
+          >
+            Check hands
+          </button>
+        </div>
+        {checked && !ok && (
+          <p className="feedback bad" role="alert">
+            Not yet — set the hour, then drag the long minute hand until the clock shows {clockLabel(target)}.
+          </p>
+        )}
       </div>
-      {checked && !ok && (
-        <p className="feedback bad" role="alert">
-          Not yet — set the hour, then drag the long minute hand until the clock shows {clockLabel(target)}.
-        </p>
-      )}
-    </div>
+    </MathText>
   );
 }
 

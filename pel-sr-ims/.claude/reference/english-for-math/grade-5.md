@@ -27,7 +27,11 @@
   scaling, "resizing" (5.NF.5); volume, cubic unit, unit cube, rectangular
   prism, base, height (5.MD.3–5); coordinate plane, axis, x-axis, y-axis,
   origin, ordered pair, coordinate (5.G.1); categories of shapes
-  ("every square is a rectangle") (5.G.3–4).
+  ("every square is a rectangle") (5.G.3–4); common denominator, least
+  common denominator (LCD), benchmark fraction (0, 1/2, 1), and the
+  mixed-number words *borrow* (also called regroup) and *carry* (5.NF.1–2).
+  Pick one word for each idea, and teach it with a picture before a hint
+  uses it.
 - **Not yet:** variable (as a formal word, 6th), ratio, rate, per, percent,
   negative numbers, integer (6th).
 

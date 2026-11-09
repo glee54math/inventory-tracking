@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../shared/engine/types";
 import { QA, QB, Says, Stepper } from "../../shared/engine/controls";
 import type { Unit } from "../../shared/units/types";
 import { conversionsTest } from "./ConversionsTest";
+import { MathText } from "../../shared/components/MathText";
 
 interface Conv {
   id: string;
@@ -79,104 +80,106 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   };
 
   return (
-    <div className="explore">
-      {showIntro && (
-        <div className="intro-gate">
-          <p className="intro-gate-title">Before you practice: let's lock in a few conversion facts.</p>
-          {drillReady ? (
-            <>
-              <p>
-                1 {drillTarget.big} = ___ {drillTarget.smalls}
-              </p>
-              <div className="control-row">
-                <input
-                  className="answer"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  value={introInput}
-                  onChange={(e) => setIntroInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && checkIntro()}
-                  aria-label={`1 ${drillTarget.big} equals how many ${drillTarget.smalls}`}
-                />
-                <button className="btn primary" onClick={checkIntro}>
-                  Check
-                </button>
-              </div>
-              {introWrong && (
-                <p className="feedback bad" role="alert">
-                  Not quite. Use the diagrams below to find it.
+    <MathText>
+      <div className="explore">
+        {showIntro && (
+          <div className="intro-gate">
+            <p className="intro-gate-title">Before you practice: let's lock in a few conversion facts.</p>
+            {drillReady ? (
+              <>
+                <p>
+                  1 {drillTarget.big} = ___ {drillTarget.smalls}
                 </p>
-              )}
-            </>
-          ) : (
-            <p>
-              Select <b>{drillTarget.bigs} & {drillTarget.smalls}</b> from the dropdown below to continue.
+                <div className="control-row">
+                  <input
+                    className="answer"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    value={introInput}
+                    onChange={(e) => setIntroInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && checkIntro()}
+                    aria-label={`1 ${drillTarget.big} equals how many ${drillTarget.smalls}`}
+                  />
+                  <button className="btn primary" onClick={checkIntro}>
+                    Check
+                  </button>
+                </div>
+                {introWrong && (
+                  <p className="feedback bad" role="alert">
+                    Not quite. Use the diagrams below to find it.
+                  </p>
+                )}
+              </>
+            ) : (
+              <p>
+                Select <b>{drillTarget.bigs} & {drillTarget.smalls}</b> from the dropdown below to continue.
+              </p>
+            )}
+            <p className="muted small">
+              Fact {drillStage + 1} of {drillIds.length}.
             </p>
-          )}
-          <p className="muted small">
-            Fact {drillStage + 1} of {drillIds.length}.
-          </p>
-        </div>
-      )}
-      <div className="controls">
-        <label className="select">
-          <span className="stepper-label">Units</span>
-          <select value={id} onChange={(e) => setId(e.target.value)}>
-            {conversions.map((x) => (
-              <option key={x.id} value={x.id}>
-                {x.bigs} and {x.smalls}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="control-row">
-          <Stepper tone="a" label={c.bigs} value={v} min={1} max={10} onChange={setV} />
-          <button className="btn ghost" onClick={() => setToBig((t) => !t)}>
-            Convert {toBig ? `${c.bigs} → ${c.smalls}` : `${c.smalls} → ${c.bigs}`} instead
-          </button>
-        </div>
-      </div>
-      <div className="stage">
-        {toBig ? (
-          <ConversionChain
-            start={{ value: amount, unit: c.smallAb, color: palette.b }}
-            factors={[{ num: { value: 1, unit: c.bigAb, color: palette.a }, den: { value: c.f, unit: c.smallAb, color: palette.b } }]}
-            result={{ value: fmt(result), unit: c.bigAb }}
-          />
-        ) : (
-          <ConversionChain
-            start={{ value: amount, unit: c.bigAb, color: palette.a }}
-            factors={[{ num: { value: c.f, unit: c.smallAb, color: palette.b }, den: { value: 1, unit: c.bigAb, color: palette.a } }]}
-            result={{ value: fmt(result), unit: c.smallAb }}
-          />
+          </div>
         )}
-        <DoubleNumberLine
-          top={{ label: c.bigs, color: palette.a }}
-          bottom={{ label: c.smalls, color: palette.b }}
-          pairs={Array.from({ length: Math.min(v, 6) + 1 }, (_, i) => ({ top: i, bottom: i * c.f, highlight: i === 1 })).concat(v > 6 ? [{ top: v, bottom: v * c.f, highlight: false }] : [])}
-          maxBottom={v * c.f}
-        />
-        <RatioTable
-          compact
-          columns={[
-            { label: c.bigs, color: palette.a },
-            { label: c.smalls, color: palette.b },
-          ]}
-          rows={[1, 2, 3, v].filter((n, i, arr) => arr.indexOf(n) === i).sort((x, y) => x - y).map((n) => [{ value: n, highlight: n === v }, { value: n * c.f, highlight: n === v }])}
-        />
+        <div className="controls">
+          <label className="select">
+            <span className="stepper-label">Units</span>
+            <select value={id} onChange={(e) => setId(e.target.value)}>
+              {conversions.map((x) => (
+                <option key={x.id} value={x.id}>
+                  {x.bigs} and {x.smalls}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="control-row">
+            <Stepper tone="a" label={c.bigs} value={v} min={1} max={10} onChange={setV} />
+            <button className="btn ghost" onClick={() => setToBig((t) => !t)}>
+              Convert {toBig ? `${c.bigs} → ${c.smalls}` : `${c.smalls} → ${c.bigs}`} instead
+            </button>
+          </div>
+        </div>
+        <div className="stage">
+          {toBig ? (
+            <ConversionChain
+              start={{ value: amount, unit: c.smallAb, color: palette.b }}
+              factors={[{ num: { value: 1, unit: c.bigAb, color: palette.a }, den: { value: c.f, unit: c.smallAb, color: palette.b } }]}
+              result={{ value: fmt(result), unit: c.bigAb }}
+            />
+          ) : (
+            <ConversionChain
+              start={{ value: amount, unit: c.bigAb, color: palette.a }}
+              factors={[{ num: { value: c.f, unit: c.smallAb, color: palette.b }, den: { value: 1, unit: c.bigAb, color: palette.a } }]}
+              result={{ value: fmt(result), unit: c.smallAb }}
+            />
+          )}
+          <DoubleNumberLine
+            top={{ label: c.bigs, color: palette.a }}
+            bottom={{ label: c.smalls, color: palette.b }}
+            pairs={Array.from({ length: Math.min(v, 6) + 1 }, (_, i) => ({ top: i, bottom: i * c.f, highlight: i === 1 })).concat(v > 6 ? [{ top: v, bottom: v * c.f, highlight: false }] : [])}
+            maxBottom={v * c.f}
+          />
+          <RatioTable
+            compact
+            columns={[
+              { label: c.bigs, color: palette.a },
+              { label: c.smalls, color: palette.b },
+            ]}
+            rows={[1, 2, 3, v].filter((n, i, arr) => arr.indexOf(n) === i).sort((x, y) => x - y).map((n) => [{ value: n, highlight: n === v }, { value: n * c.f, highlight: n === v }])}
+          />
+        </div>
+        <div className="sayings">
+          <Says>
+            The ratio is <QA>1 {c.big}</QA> to <QB>{c.f} {c.smalls}</QB>, so {c.f} {c.smalls} per {c.big}.
+          </Says>
+          <Says>
+            {toBig
+              ? `Going to a bigger unit, you need fewer of them: divide by ${c.f}.`
+              : `Going to a smaller unit, you need more of them: multiply by ${c.f}.`}{" "}
+            Pick the fraction that puts the unit you're getting rid of on the bottom, so it cancels.
+          </Says>
+        </div>
       </div>
-      <div className="sayings">
-        <Says>
-          The ratio is <QA>1 {c.big}</QA> to <QB>{c.f} {c.smalls}</QB>, so {c.f} {c.smalls} per {c.big}.
-        </Says>
-        <Says>
-          {toBig
-            ? `Going to a bigger unit, you need fewer of them: divide by ${c.f}.`
-            : `Going to a smaller unit, you need more of them: multiply by ${c.f}.`}{" "}
-          Pick the fraction that puts the unit you're getting rid of on the bottom, so it cancels.
-        </Says>
-      </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -380,7 +383,7 @@ const rateTimeProblem = (): Problem => {
       ),
       {
         kind: "number",
-        frac: true,
+        fracBoxes: "fraction", frac: true,
         fracRequired: true,
         fracAnswer: [hrsNum, hrsDen],
         prompt: <>{m} minutes is how many hours? Write your answer as a simplified fraction.</>,

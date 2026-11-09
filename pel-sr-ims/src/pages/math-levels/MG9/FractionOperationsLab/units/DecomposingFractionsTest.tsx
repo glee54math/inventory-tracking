@@ -69,7 +69,7 @@ export function missingPartQuestion(difficulty: Diff = "medium"): TestQuestion[]
       difficulty,
       step: {
         kind: "number",
-        suffix: `/${den}`,
+        overDen: den,
         prompt: (
           <>
             <Frac n={num} d={den} /> = <Frac n={first} d={den} /> + ? What's the missing numerator?
@@ -159,7 +159,7 @@ export function pastOneMissingQuestion(difficulty: Diff = "medium"): TestQuestio
       difficulty,
       step: {
         kind: "number",
-        suffix: `/${den}`,
+        overDen: den,
         prompt: (
           <>
             <Frac n={num} d={den} /> = {wholeTerms} + ? What's the missing numerator?
@@ -194,7 +194,8 @@ export function pastOneMixedQuestion(difficulty: Diff = "medium"): TestQuestion[
         numberBlank(wholes),
         " + ",
         numberBlank(rem),
-        `/${den}`
+        "",
+        [undefined, den]
       ),
     },
   ];
@@ -260,7 +261,7 @@ export function threePartQuestion(difficulty: Diff = "hard"): TestQuestion[] {
       difficulty,
       step: {
         kind: "number",
-        suffix: `/${den}`,
+        overDen: den,
         prompt: (
           <>
             <Frac n={num} d={den} /> = <Frac n={p} d={den} /> + <Frac n={q} d={den} /> + ? What's the missing numerator?

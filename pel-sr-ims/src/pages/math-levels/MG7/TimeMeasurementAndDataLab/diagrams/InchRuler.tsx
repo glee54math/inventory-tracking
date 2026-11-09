@@ -1,4 +1,5 @@
 import { palette, diagramFont } from "../../../shared/lib/palette";
+import { MathText } from "../../../shared/components/MathText";
 
 export interface InchRulerProps {
   /** Whole inches the ruler is marked to (0..maxInches). */
@@ -39,29 +40,31 @@ export function InchRuler({ maxInches, lengthQuarter, offset = 0, glyph, tone = 
     ticks.push({ x: PAD + (q / 4) * PX_PER_IN, h: kind === "whole" ? 22 : kind === "half" ? 15 : 9, label: kind === "whole" ? String(q / 4) : undefined });
   }
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      role="img"
-      aria-label={`An object laid along an inch ruler marked in whole, half, and quarter inches`}
-      style={{ display: "block", width: "100%", maxWidth: width, height: "auto", fontFamily: diagramFont }}
-    >
-      <rect x={PAD} y={OBJ_Y} width={drawn * PX_PER_IN} height={OBJ_H} rx={6} fill={fill} opacity={0.35} stroke={fill} strokeWidth={2} />
-      {glyph && (
-        <text x={PAD + 8} y={OBJ_Y + OBJ_H - 7} fontSize={18}>
-          {glyph}
-        </text>
-      )}
-      <rect x={PAD - 6} y={RULER_Y} width={maxInches * PX_PER_IN + 12} height={RULER_H} rx={4} fill={palette.paper} stroke={palette.line} strokeWidth={2} />
-      {ticks.map((t, i) => (
-        <g key={i}>
-          <line x1={t.x} y1={RULER_Y} x2={t.x} y2={RULER_Y + t.h} stroke={palette.ink} strokeWidth={t.label ? 2 : 1.25} />
-          {t.label && (
-            <text x={t.x} y={RULER_Y + RULER_H - 5} textAnchor="middle" fontSize={12} fontWeight={700} fill={palette.ink}>
-              {t.label}
-            </text>
-          )}
-        </g>
-      ))}
-    </svg>
+    <MathText>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={`An object laid along an inch ruler marked in whole, half, and quarter inches`}
+        style={{ display: "block", width: "100%", maxWidth: width, height: "auto", fontFamily: diagramFont }}
+      >
+        <rect x={PAD} y={OBJ_Y} width={drawn * PX_PER_IN} height={OBJ_H} rx={6} fill={fill} opacity={0.35} stroke={fill} strokeWidth={2} />
+        {glyph && (
+          <text x={PAD + 8} y={OBJ_Y + OBJ_H - 7} fontSize={18}>
+            {glyph}
+          </text>
+        )}
+        <rect x={PAD - 6} y={RULER_Y} width={maxInches * PX_PER_IN + 12} height={RULER_H} rx={4} fill={palette.paper} stroke={palette.line} strokeWidth={2} />
+        {ticks.map((t, i) => (
+          <g key={i}>
+            <line x1={t.x} y1={RULER_Y} x2={t.x} y2={RULER_Y + t.h} stroke={palette.ink} strokeWidth={t.label ? 2 : 1.25} />
+            {t.label && (
+              <text x={t.x} y={RULER_Y + RULER_H - 5} textAnchor="middle" fontSize={12} fontWeight={700} fill={palette.ink}>
+                {t.label}
+              </text>
+            )}
+          </g>
+        ))}
+      </svg>
+    </MathText>
   );
 }

@@ -1,4 +1,5 @@
 import { palette, diagramFont } from "../../../shared/lib/palette";
+import { MathText } from "../../../shared/components/MathText";
 
 export interface BarCategory {
   label: string;
@@ -57,43 +58,45 @@ export function ScaledBarChart({ categories, scale, axisMax, keyMode = false, mi
   for (let v = minorStep; v < axisMax; v += minorStep) if (v % scale !== 0) minorLines.push(v);
 
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      role="img"
-      aria-label={`A bar graph where each labeled gridline is ${scale} units apart, with ${categories.length} bars`}
-      style={{ display: "block", width: "100%", maxWidth: width, height: "auto", fontFamily: diagramFont }}
-    >
-      {keyMode && (
-        <text x={PAD_L} y={16} fontSize={13} fontWeight={700} fill={palette.ink}>
-          Key: each labeled line = {scale}
-        </text>
-      )}
-      {minorLines.map((v) => (
-        <line key={`m${v}`} x1={PAD_L} y1={yFor(v)} x2={width} y2={yFor(v)} stroke={palette.grid} strokeWidth={1} />
-      ))}
-      {majorLines.map((v) => (
-        <g key={`M${v}`}>
-          <line x1={PAD_L} y1={yFor(v)} x2={width} y2={yFor(v)} stroke={palette.line} strokeWidth={1.5} />
-          <text x={PAD_L - 8} y={yFor(v) + 4} textAnchor="end" fontSize={12} fontWeight={700} fill={palette.muted}>
-            {keyMode ? v / scale : v}
+    <MathText>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={`A bar graph where each labeled gridline is ${scale} units apart, with ${categories.length} bars`}
+        style={{ display: "block", width: "100%", maxWidth: width, height: "auto", fontFamily: diagramFont }}
+      >
+        {keyMode && (
+          <text x={PAD_L} y={16} fontSize={13} fontWeight={700} fill={palette.ink}>
+            Key: each labeled line = {scale}
           </text>
-        </g>
-      ))}
-      <line x1={PAD_L} y1={top} x2={PAD_L} y2={base} stroke={palette.ink} strokeWidth={2} />
-      <line x1={PAD_L} y1={base} x2={width} y2={base} stroke={palette.ink} strokeWidth={2} />
-      {categories.map((c, i) => {
-        const x = PAD_L + GAP + i * (BAR_W + GAP);
-        const y = yFor(c.value);
-        const fill = c.tone === "b" ? palette.b : c.tone === "c" ? palette.c : palette.a;
-        return (
-          <g key={c.label}>
-            <rect x={x} y={y} width={BAR_W} height={base - y} fill={fill} opacity={0.75} rx={3} />
-            <text x={x + BAR_W / 2} y={base + 20} textAnchor="middle" fontSize={13} fontWeight={700} fill={palette.ink}>
-              {c.label}
+        )}
+        {minorLines.map((v) => (
+          <line key={`m${v}`} x1={PAD_L} y1={yFor(v)} x2={width} y2={yFor(v)} stroke={palette.grid} strokeWidth={1} />
+        ))}
+        {majorLines.map((v) => (
+          <g key={`M${v}`}>
+            <line x1={PAD_L} y1={yFor(v)} x2={width} y2={yFor(v)} stroke={palette.line} strokeWidth={1.5} />
+            <text x={PAD_L - 8} y={yFor(v) + 4} textAnchor="end" fontSize={12} fontWeight={700} fill={palette.muted}>
+              {keyMode ? v / scale : v}
             </text>
           </g>
-        );
-      })}
-    </svg>
+        ))}
+        <line x1={PAD_L} y1={top} x2={PAD_L} y2={base} stroke={palette.ink} strokeWidth={2} />
+        <line x1={PAD_L} y1={base} x2={width} y2={base} stroke={palette.ink} strokeWidth={2} />
+        {categories.map((c, i) => {
+          const x = PAD_L + GAP + i * (BAR_W + GAP);
+          const y = yFor(c.value);
+          const fill = c.tone === "b" ? palette.b : c.tone === "c" ? palette.c : palette.a;
+          return (
+            <g key={c.label}>
+              <rect x={x} y={y} width={BAR_W} height={base - y} fill={fill} opacity={0.75} rx={3} />
+              <text x={x + BAR_W / 2} y={base + 20} textAnchor="middle" fontSize={13} fontWeight={700} fill={palette.ink}>
+                {c.label}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </MathText>
   );
 }

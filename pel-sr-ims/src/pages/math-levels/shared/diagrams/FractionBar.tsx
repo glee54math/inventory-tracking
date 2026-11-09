@@ -1,4 +1,6 @@
 import { palette } from "../lib/palette";
+import { spokenFractions, useStackedFractions } from "../components/MathText";
+import { SvgMathLine } from "../components/SvgMath";
 
 export interface FractionBarProps {
   numerator: number;
@@ -34,9 +36,18 @@ export interface FractionBarProps {
 export function FractionBar({ numerator, denominator, width = 320, height = 64, shareCount, highlightShare, label }: FractionBarProps) {
   const cellW = width / denominator;
   const shareSize = shareCount ? numerator / shareCount : 0;
+  // Labs with <StackedFractions> (MG9) draw fractions in the label stacked, which needs a taller label row.
+  const stacked = useStackedFractions();
+  const labelH = stacked ? 34 : 22;
 
   return (
-    <svg viewBox={`0 0 ${width} ${height + (label ? 22 : 0)}`} width={width} style={{ maxWidth: "100%" }} role="img" aria-label={label ?? `${numerator} of ${denominator} parts shaded`}>
+    <svg
+      viewBox={`0 0 ${width} ${height + (label ? labelH : 0)}`}
+      width={width}
+      style={{ maxWidth: "100%" }}
+      role="img"
+      aria-label={label ? (stacked ? spokenFractions(label) : label) : `${numerator} of ${denominator} parts shaded`}
+    >
       {Array.from({ length: denominator }, (_, i) => {
         const shaded = i < numerator;
         const inHighlightShare = shareCount && highlightShare !== undefined && Math.floor(i / shareSize) === highlightShare;
@@ -61,7 +72,8 @@ export function FractionBar({ numerator, denominator, width = 320, height = 64, 
           <line key={`div-${i}`} x1={(i + 1) * shareSize * cellW} y1={0} x2={(i + 1) * shareSize * cellW} y2={height} style={{ stroke: palette.ink, strokeWidth: 2.5 }} />
         ))}
       <rect x={0} y={0} width={width} height={height} style={{ fill: "none", stroke: palette.ink, strokeWidth: 2 }} />
-      {label && (
+      {label && stacked && <SvgMathLine text={label} x={width / 2} y={height + 22} fontSize={13} color={palette.muted} />}
+      {label && !stacked && (
         <text x={width / 2} y={height + 16} textAnchor="middle" style={{ fill: palette.muted, fontSize: 13 }}>
           {label}
         </text>

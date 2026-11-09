@@ -6,6 +6,7 @@ import type { Unit } from "../../../shared/units/types";
 import { pastOneParams, pieceWord, twoPartSplitCount, twoWaysParams, unitDecompParams } from "../lib/fractions";
 import { CfuToggle, DropdownQuestion, useCfuProgress } from "./cfu";
 import { decomposingFractionsTest } from "./DecomposingFractionsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 const TONES: PieceTone[] = ["a", "b", "c"];
 const repeatSum = (term: string, times: number) => Array.from({ length: times }, () => term).join(" + ");
@@ -40,93 +41,95 @@ const cutsFor = (groups: number[]): number[] => groups.slice(0, -1).map((_, i) =
 function DecomposingCheck({ onComplete }: { onComplete?: () => void }) {
   const { mark } = useCfuProgress(4, onComplete);
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: answer all four to unlock practice problems.</p>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: answer all four to unlock practice problems.</p>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>1.</b> <Frac n={5} d={6} /> = <Frac n={1} d={6} /> + <Frac n={1} d={6} /> + <Frac n={1} d={6} /> + <Frac n={1} d={6} /> + <Frac n={1} d={6} />
-        </p>
-        <PieceBars den={6} segments={[{ count: 5, tone: "a" }]} cuts={[1, 2, 3, 4]} unitLabels barWidth={240} />
-        <DropdownQuestion
-          blanks={[
-            { options: ["a mixed number", "a unit fraction", "a denominator"], correct: "a unit fraction", label: "What each 1/6 is called" },
-            { options: ["1", "5", "6"], correct: "5", label: "How many of them make 5/6" },
-          ]}
-          render={([a, b]) => (
-            <>
-              Each <Frac n={1} d={6} /> is called {a}, and <Frac n={5} d={6} /> is made of {b} of them.
-            </>
-          )}
-          good="Correct — a fraction with 1 on top is a unit fraction, one single piece. 5/6 is just 5 of those 1/6 pieces put together."
-          bad="Not quite. A fraction with a 1 on top is one single piece — count how many of those pieces make 5/6."
-          onDone={mark(0)}
-        />
-      </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> <Frac n={5} d={6} /> = <Frac n={1} d={6} /> + <Frac n={1} d={6} /> + <Frac n={1} d={6} /> + <Frac n={1} d={6} /> + <Frac n={1} d={6} />
+          </p>
+          <PieceBars den={6} segments={[{ count: 5, tone: "a" }]} cuts={[1, 2, 3, 4]} unitLabels barWidth={240} />
+          <DropdownQuestion
+            blanks={[
+              { options: ["a mixed number", "a unit fraction", "a denominator"], correct: "a unit fraction", label: "What each 1/6 is called" },
+              { options: ["1", "5", "6"], correct: "5", label: "How many of them make 5/6" },
+            ]}
+            render={([a, b]) => (
+              <>
+                Each <Frac n={1} d={6} /> is called {a}, and <Frac n={5} d={6} /> is made of {b} of them.
+              </>
+            )}
+            good="Correct — a fraction with 1 on top is a unit fraction, one single piece. 5/6 is just 5 of those 1/6 pieces put together."
+            bad="Not quite. A fraction with a 1 on top is one single piece — count how many of those pieces make 5/6."
+            onDone={mark(0)}
+          />
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>2.</b> Put <Frac n={2} d={8} /> and <Frac n={3} d={8} /> together:
-        </p>
-        <PieceBars den={8} segments={[{ count: 2, tone: "a" }, { count: 3, tone: "b" }]} barWidth={240} />
-        <DropdownQuestion
-          blanks={[
-            { options: ["1", "5", "6"], correct: "5", label: "How many pieces in all" },
-            { options: ["an eighth (1/8)", "a sixteenth (1/16)", "a fifth (1/5)"], correct: "an eighth (1/8)", label: "Size of each piece" },
-          ]}
-          render={([a, b]) => (
-            <>
-              Now there are {a} pieces, and each piece is still {b}. So <Frac n={2} d={8} /> + <Frac n={3} d={8} /> = <Frac n={5} d={8} />.
-            </>
-          )}
-          good="Correct — the numerator COUNTS the pieces (2 + 3 = 5), and the denominator NAMES their size. Putting pieces together doesn't make them smaller, so they're still eighths."
-          bad="Not quite. Count the colored pieces for the first box. For the second: did putting the pieces side by side change how big each one is?"
-          onDone={mark(1)}
-        />
-      </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>2.</b> Put <Frac n={2} d={8} /> and <Frac n={3} d={8} /> together:
+          </p>
+          <PieceBars den={8} segments={[{ count: 2, tone: "a" }, { count: 3, tone: "b" }]} barWidth={240} />
+          <DropdownQuestion
+            blanks={[
+              { options: ["1", "5", "6"], correct: "5", label: "How many pieces in all" },
+              { options: ["an eighth (1/8)", "a sixteenth (1/16)", "a fifth (1/5)"], correct: "an eighth (1/8)", label: "Size of each piece" },
+            ]}
+            render={([a, b]) => (
+              <>
+                Now there are {a} pieces, and each piece is still {b}. So <Frac n={2} d={8} /> + <Frac n={3} d={8} /> = <Frac n={5} d={8} />.
+              </>
+            )}
+            good="Correct — the numerator COUNTS the pieces (2 + 3 = 5), and the denominator NAMES their size. Putting pieces together doesn't make them smaller, so they're still eighths."
+            bad="Not quite. Count the colored pieces for the first box. For the second: did putting the pieces side by side change how big each one is?"
+            onDone={mark(1)}
+          />
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>3.</b> True or false: <Frac n={5} d={6} /> can be split into unit fractions in only ONE way, but it can be split into two parts in MORE than one way.
-        </p>
-        <DropdownQuestion
-          blanks={[
-            { options: ["True", "False"], correct: "True", label: "True or false" },
-            { options: ["3", "4", "5", "6"], correct: "4", label: "Missing numerator" },
-          ]}
-          render={([a, b]) => (
-            <>
-              That statement is {a}. One way is <Frac n={5} d={6} /> = <Frac n={2} d={6} /> + <Frac n={3} d={6} />. A different way: <Frac n={5} d={6} /> ={" "}
-              <Frac n={1} d={6} /> + {b}/6
-            </>
-          )}
-          good="Correct — 1/6 + 1/6 + 1/6 + 1/6 + 1/6 is the only unit-fraction way, but two parts can be 1 + 4 or 2 + 3 (two different ways). 1/6 + 4/6 = 5/6."
-          bad="Not quite. Unit fractions are all the same size, so there's only one way to write 5/6 with them. For two parts, which numerator goes with 1 to make 5?"
-          onDone={mark(2)}
-        />
-      </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> True or false: <Frac n={5} d={6} /> can be split into unit fractions in only ONE way, but it can be split into two parts in MORE than one way.
+          </p>
+          <DropdownQuestion
+            blanks={[
+              { options: ["True", "False"], correct: "True", label: "True or false" },
+              { options: ["3", "4", "5", "6"], correct: "4", label: "Missing numerator" },
+            ]}
+            render={([a, b]) => (
+              <>
+                That statement is {a}. One way is <Frac n={5} d={6} /> = <Frac n={2} d={6} /> + <Frac n={3} d={6} />. A different way: <Frac n={5} d={6} /> ={" "}
+                <Frac n={1} d={6} /> + <Frac n={b} d={6} />
+              </>
+            )}
+            good="Correct — 1/6 + 1/6 + 1/6 + 1/6 + 1/6 is the only unit-fraction way, but two parts can be 1 + 4 or 2 + 3 (two different ways). 1/6 + 4/6 = 5/6."
+            bad="Not quite. Unit fractions are all the same size, so there's only one way to write 5/6 with them. For two parts, which numerator goes with 1 to make 5?"
+            onDone={mark(2)}
+          />
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>4.</b> Decomposing works past one whole, too. Here is <Frac n={7} d={6} />:
-        </p>
-        <PieceBars den={6} segments={[{ count: 6, tone: "a" }, { count: 1, tone: "b" }]} barWidth={200} />
-        <DropdownQuestion
-          blanks={[
-            { options: ["1", "6", "7"], correct: "6", label: "Missing numerator" },
-            { options: ["1/6", "1 whole", "6 wholes"], correct: "1 whole", label: "What 6/6 equals" },
-          ]}
-          render={([a, b]) => (
-            <>
-              <Frac n={7} d={6} /> = {a}/6 + <Frac n={1} d={6} />, and <Frac n={6} d={6} /> is the same as {b}.
-            </>
-          )}
-          good="Correct — 7/6 = 6/6 + 1/6, and 6/6 fills one whole bar. So 7/6 = 1 + 1/6."
-          bad="Not quite. The first bar is full — how many sixths fill one whole bar, and what is a full bar worth?"
-          onDone={mark(3)}
-        />
+        <div className="align-stack-wrap">
+          <p>
+            <b>4.</b> Decomposing works past one whole, too. Here is <Frac n={7} d={6} />:
+          </p>
+          <PieceBars den={6} segments={[{ count: 6, tone: "a" }, { count: 1, tone: "b" }]} barWidth={200} />
+          <DropdownQuestion
+            blanks={[
+              { options: ["1", "6", "7"], correct: "6", label: "Missing numerator" },
+              { options: ["1/6", "1 whole", "6 wholes"], correct: "1 whole", label: "What 6/6 equals" },
+            ]}
+            render={([a, b]) => (
+              <>
+                <Frac n={7} d={6} /> = <Frac n={a} d={6} /> + <Frac n={1} d={6} />, and <Frac n={6} d={6} /> is the same as {b}.
+              </>
+            )}
+            good="Correct — 7/6 = 6/6 + 1/6, and 6/6 fills one whole bar. So 7/6 = 1 + 1/6."
+            bad="Not quite. The first bar is full — how many sixths fill one whole bar, and what is a full bar worth?"
+            onDone={mark(3)}
+          />
+        </div>
       </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -160,65 +163,67 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const toggleCut = (i: number) => setCuts((c) => (c.includes(i) ? c.filter((x) => x !== i) : [...c, i]));
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && <CfuToggle on={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && <CfuToggle on={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
 
-      <p>
-        A fraction is a bunch of same-size pieces. <b>Decomposing</b> means splitting those pieces into groups — and writing the fraction as a sum. Click a
-        colored piece to split just before it.
-      </p>
-      <div className="control-row">
-        <Stepper label="Pieces in one whole (denominator)" value={den} min={2} max={10} onChange={(d) => changeFraction(Math.min(num, 2 * d), d)} tone="b" />
-        <Stepper label="Pieces you have (numerator)" value={num} min={1} max={2 * den} onChange={(n) => changeFraction(n, den)} tone="a" />
-      </div>
-      <PieceBars den={den} segments={segmentsFor(groups)} cuts={cutsFor(groups)} unitLabels={groups.every((g) => g === 1)} onPieceClick={toggleCut} barWidth={260} />
-      <p className="says" style={{ fontSize: 18 }}>
-        <Frac n={num} d={den} /> ={" "}
-        {groups.map((g, i) => (
-          <span key={i}>
-            {i > 0 && " + "}
-            <span className={`q${TONES[i % 3]}-text`}>
-              <Frac n={g} d={den} />
-            </span>
-          </span>
-        ))}
-        {num > den && (
-          <span className="muted small" style={{ marginLeft: 10 }}>
-            ({num} {pieceWord(den)} is more than one whole: {den}/{den} = 1)
-          </span>
-        )}
-      </p>
-      <div className="control-row">
-        <button className="btn ghost" type="button" onClick={() => setCuts(Array.from({ length: num - 1 }, (_, i) => i + 1))}>
-          Split into unit fractions
-        </button>
-        <button className="btn ghost" type="button" onClick={() => setCuts([])}>
-          Remove all splits
-        </button>
-        <button className="btn primary" type="button" disabled={groups.length < 2 || saved.includes(key)} onClick={() => setSaved((s) => [...s, key])}>
-          {saved.includes(key) ? "Already saved" : "Save this way"}
-        </button>
-      </div>
-      {saved.length > 0 && (
-        <div>
-          <p className="muted small" style={{ marginBottom: 4 }}>
-            Different ways you've found to decompose {num}/{den} ({saved.length}):
-          </p>
-          <ul style={{ margin: 0 }}>
-            {saved.map((s) => (
-              <li key={s}>
-                {num}/{den} = {s
-                  .split("+")
-                  .map((g) => `${g}/${den}`)
-                  .join(" + ")}
-              </li>
-            ))}
-          </ul>
+        <p>
+          A fraction is a bunch of same-size pieces. <b>Decomposing</b> means splitting those pieces into groups — and writing the fraction as a sum. Click a
+          colored piece to split just before it.
+        </p>
+        <div className="control-row">
+          <Stepper label="Pieces in one whole (denominator)" value={den} min={2} max={10} onChange={(d) => changeFraction(Math.min(num, 2 * d), d)} tone="b" />
+          <Stepper label="Pieces you have (numerator)" value={num} min={1} max={2 * den} onChange={(n) => changeFraction(n, den)} tone="a" />
         </div>
-      )}
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <DecomposingCheck onComplete={onIntroDone} />}
-    </div>
+        <PieceBars den={den} segments={segmentsFor(groups)} cuts={cutsFor(groups)} unitLabels={groups.every((g) => g === 1)} onPieceClick={toggleCut} barWidth={260} />
+        <p className="says" style={{ fontSize: 18 }}>
+          <Frac n={num} d={den} /> ={" "}
+          {groups.map((g, i) => (
+            <span key={i}>
+              {i > 0 && " + "}
+              <span className={`q${TONES[i % 3]}-text`}>
+                <Frac n={g} d={den} />
+              </span>
+            </span>
+          ))}
+          {num > den && (
+            <span className="muted small" style={{ marginLeft: 10 }}>
+              ({num} {pieceWord(den)} is more than one whole: {den}/{den} = 1)
+            </span>
+          )}
+        </p>
+        <div className="control-row">
+          <button className="btn ghost" type="button" onClick={() => setCuts(Array.from({ length: num - 1 }, (_, i) => i + 1))}>
+            Split into unit fractions
+          </button>
+          <button className="btn ghost" type="button" onClick={() => setCuts([])}>
+            Remove all splits
+          </button>
+          <button className="btn primary" type="button" disabled={groups.length < 2 || saved.includes(key)} onClick={() => setSaved((s) => [...s, key])}>
+            {saved.includes(key) ? "Already saved" : "Save this way"}
+          </button>
+        </div>
+        {saved.length > 0 && (
+          <div>
+            <p className="muted small" style={{ marginBottom: 4 }}>
+              Different ways you've found to decompose {num}/{den} ({saved.length}):
+            </p>
+            <ul style={{ margin: 0 }}>
+              {saved.map((s) => (
+                <li key={s}>
+                  {num}/{den} = {s
+                    .split("+")
+                    .map((g) => `${g}/${den}`)
+                    .join(" + ")}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <DecomposingCheck onComplete={onIntroDone} />}
+      </div>
+    </MathText>
   );
 }
 
@@ -309,7 +314,7 @@ function twoWaysProblem(): Problem {
     steps: [
       {
         kind: "number",
-        suffix: `/${den}`,
+        overDen: den,
         prompt: (
           <>
             <Frac n={num} d={den} /> = <Frac n={first} d={den} /> + ? (The denominator stays {den}.)
@@ -321,7 +326,7 @@ function twoWaysProblem(): Problem {
       },
       {
         kind: "number",
-        suffix: `/${den}`,
+        overDen: den,
         prompt: (
           <>
             Now a different way: <Frac n={num} d={den} /> = <Frac n={second} d={den} /> + ?
@@ -373,7 +378,7 @@ function pastOneProblem(): Problem {
     steps: [
       {
         kind: "number",
-        suffix: `/${den}`,
+        overDen: den,
         prompt: (
           <>
             <Frac n={num} d={den} /> = {wholeTerms} + ?
@@ -393,7 +398,8 @@ function pastOneProblem(): Problem {
         numberBlank(wholes),
         " + ",
         numberBlank(rem),
-        `/${den}`
+        "",
+        [undefined, den]
       ),
       {
         kind: "number",

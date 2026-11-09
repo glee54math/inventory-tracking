@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Unit } from "../units/types";
+import { MathText } from "./MathText";
 
 export interface UnitPreviewCarouselProps {
   units: Unit[];
@@ -51,7 +52,9 @@ export function UnitPreviewCarousel({ units, onPick, intervalMs = 2500 }: UnitPr
           </div>
         )}
         <div className="unit-carousel-title">{unit.title}</div>
-        <div className="unit-carousel-goal">{unit.goal}</div>
+        <div className="unit-carousel-goal">
+          <MathText>{unit.goal}</MathText>
+        </div>
       </button>
       {units.length > 1 && (
         <div className="unit-carousel-dots" role="tablist" aria-label="Unit previews">

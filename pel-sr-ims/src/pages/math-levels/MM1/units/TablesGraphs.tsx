@@ -8,6 +8,7 @@ import { choice, type Problem } from "../../shared/engine/types";
 import { niceMax, niceStep, QA, QB, QC, Says, Stepper } from "../../shared/engine/controls";
 import { tablesGraphsTest } from "./TablesGraphsTest";
 import type { Unit } from "../../shared/units/types";
+import { MathText } from "../../shared/components/MathText";
 
 function Explore() {
   const [a, setA] = useState(2);
@@ -28,80 +29,82 @@ function Explore() {
     setPlotted((ps) => (ps.some((p) => p.x === x && p.y === y) ? ps.filter((p) => !(p.x === x && p.y === y)) : [...ps, { x, y }]));
 
   return (
-    <div className="explore">
-      <div className="controls">
-        <div className="control-row">
-          <Stepper tone="a" label="scoops of mix" value={a} min={1} max={6} onChange={(v) => { setA(v); setPlotted([]); }} />
-          <Stepper tone="b" label="cups of water" value={b} min={1} max={6} onChange={(v) => { setB(v); setPlotted([]); }} />
-          <button className={`btn ghost ${compare ? "pressed" : ""}`} aria-pressed={compare} onClick={() => setCompare((x) => !x)}>
-            Compare with a second recipe
-          </button>
-        </div>
-        {compare && (
+    <MathText>
+      <div className="explore">
+        <div className="controls">
           <div className="control-row">
-            <Stepper tone="c" label="recipe 2: scoops" value={c} min={1} max={6} onChange={setC} />
-            <Stepper tone="c" label="recipe 2: cups" value={d} min={1} max={6} onChange={setD} />
+            <Stepper tone="a" label="scoops of mix" value={a} min={1} max={6} onChange={(v) => { setA(v); setPlotted([]); }} />
+            <Stepper tone="b" label="cups of water" value={b} min={1} max={6} onChange={(v) => { setB(v); setPlotted([]); }} />
+            <button className={`btn ghost ${compare ? "pressed" : ""}`} aria-pressed={compare} onClick={() => setCompare((x) => !x)}>
+              Compare with a second recipe
+            </button>
           </div>
-        )}
-      </div>
-      <div className="stage two-col">
-        <div>
-          <RatioTable
-            columns={[
-              { label: "scoops of mix", color: palette.a },
-              { label: "cups of water", color: palette.b },
-            ]}
-            rows={Array.from({ length: rows }, (_, i) => [{ value: a * (i + 1) }, { value: b * (i + 1) }])}
-            scales={Array.from({ length: rows }, (_, i) => i + 1)}
-          />
           {compare && (
-            <div style={{ marginTop: 12 }}>
-              <RatioTable
-                columns={[
-                  { label: "recipe 2 scoops", color: palette.c },
-                  { label: "recipe 2 cups", color: palette.c },
-                ]}
-                rows={Array.from({ length: 4 }, (_, i) => [{ value: c * (i + 1) }, { value: d * (i + 1) }])}
-                compact
-              />
+            <div className="control-row">
+              <Stepper tone="c" label="recipe 2: scoops" value={c} min={1} max={6} onChange={setC} />
+              <Stepper tone="c" label="recipe 2: cups" value={d} min={1} max={6} onChange={setD} />
             </div>
           )}
         </div>
-        <div>
-          <CoordinatePlane
-            xMax={xMax}
-            yMax={yMax}
-            xStep={1}
-            yStep={1}
-            xLabel="scoops of mix"
-            yLabel="cups of water"
-            lines={[{ slope: b / a, color: palette.a, label: `${a}:${b}`, dashed: true }, ...(compare ? [{ slope: d / c, color: palette.c, label: `${c}:${d}`, dashed: true }] : [])]}
-            points={[
-              ...Array.from({ length: rows }, (_, i) => ({ x: a * (i + 1), y: b * (i + 1), color: palette.a, hollow: true })).filter((p) => p.x <= xMax && p.y <= yMax),
-              ...points,
-            ]}
-            onPlot={toggle}
-          />
-          <p className="muted small center">Click the grid to plot your own points. Click a point again to remove it.</p>
+        <div className="stage two-col">
+          <div>
+            <RatioTable
+              columns={[
+                { label: "scoops of mix", color: palette.a },
+                { label: "cups of water", color: palette.b },
+              ]}
+              rows={Array.from({ length: rows }, (_, i) => [{ value: a * (i + 1) }, { value: b * (i + 1) }])}
+              scales={Array.from({ length: rows }, (_, i) => i + 1)}
+            />
+            {compare && (
+              <div style={{ marginTop: 12 }}>
+                <RatioTable
+                  columns={[
+                    { label: "recipe 2 scoops", color: palette.c },
+                    { label: "recipe 2 cups", color: palette.c },
+                  ]}
+                  rows={Array.from({ length: 4 }, (_, i) => [{ value: c * (i + 1) }, { value: d * (i + 1) }])}
+                  compact
+                />
+              </div>
+            )}
+          </div>
+          <div>
+            <CoordinatePlane
+              xMax={xMax}
+              yMax={yMax}
+              xStep={1}
+              yStep={1}
+              xLabel="scoops of mix"
+              yLabel="cups of water"
+              lines={[{ slope: b / a, color: palette.a, label: `${a}:${b}`, dashed: true }, ...(compare ? [{ slope: d / c, color: palette.c, label: `${c}:${d}`, dashed: true }] : [])]}
+              points={[
+                ...Array.from({ length: rows }, (_, i) => ({ x: a * (i + 1), y: b * (i + 1), color: palette.a, hollow: true })).filter((p) => p.x <= xMax && p.y <= yMax),
+                ...points,
+              ]}
+              onPlot={toggle}
+            />
+            <p className="muted small center">Click the grid to plot your own points. Click a point again to remove it.</p>
+          </div>
+        </div>
+        <div className="sayings">
+          <Says>
+            Every row is the first row times the same number. Plotted as (<QA>mix</QA>, <QB>water</QB>), the pairs land on one straight line through (0, 0).
+          </Says>
+          {plotted.length > 0 && (
+            <Says>
+              {hits} of your {plotted.length} point{plotted.length === 1 ? "" : "s"} {hits === 1 ? "is" : "are"} on the {a}:{b} line. Green points belong to the ratio; red ones don't.
+            </Says>
+          )}
+          {compare && (
+            <Says>
+              The steeper line has <b>more water per scoop</b>, so it tastes weaker. Recipe 1 uses {(b / a).toFixed(2).replace(/\.?0+$/, "")} cups per scoop; <QC>recipe 2</QC> uses {(d / c).toFixed(2).replace(/\.?0+$/, "")}.{" "}
+              {b / a === d / c ? "They are equivalent: same taste." : b / a < d / c ? "Recipe 1 is stronger." : "Recipe 2 is stronger."}
+            </Says>
+          )}
         </div>
       </div>
-      <div className="sayings">
-        <Says>
-          Every row is the first row times the same number. Plotted as (<QA>mix</QA>, <QB>water</QB>), the pairs land on one straight line through (0, 0).
-        </Says>
-        {plotted.length > 0 && (
-          <Says>
-            {hits} of your {plotted.length} point{plotted.length === 1 ? "" : "s"} {hits === 1 ? "is" : "are"} on the {a}:{b} line. Green points belong to the ratio; red ones don't.
-          </Says>
-        )}
-        {compare && (
-          <Says>
-            The steeper line has <b>more water per scoop</b>, so it tastes weaker. Recipe 1 uses {(b / a).toFixed(2).replace(/\.?0+$/, "")} cups per scoop; <QC>recipe 2</QC> uses {(d / c).toFixed(2).replace(/\.?0+$/, "")}.{" "}
-            {b / a === d / c ? "They are equivalent: same taste." : b / a < d / c ? "Recipe 1 is stronger." : "Recipe 2 is stronger."}
-          </Says>
-        )}
-      </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -370,18 +373,20 @@ const compareProblem = (): Problem => {
 /** Static snapshot for the cover page's preview carousel — see shared/components/UnitPreviewCarousel.tsx. */
 function Preview() {
   return (
-    <RatioTable
-      compact
-      columns={[
-        { label: "A", color: palette.a },
-        { label: "B", color: palette.b },
-      ]}
-      rows={[
-        [{ value: 2 }, { value: 3 }],
-        [{ value: 4 }, { value: 6 }],
-        [{ value: 6 }, { value: 9 }],
-      ]}
-    />
+    <MathText>
+      <RatioTable
+        compact
+        columns={[
+          { label: "A", color: palette.a },
+          { label: "B", color: palette.b },
+        ]}
+        rows={[
+          [{ value: 2 }, { value: 3 }],
+          [{ value: 4 }, { value: 6 }],
+          [{ value: 6 }, { value: 9 }],
+        ]}
+      />
+    </MathText>
   );
 }
 

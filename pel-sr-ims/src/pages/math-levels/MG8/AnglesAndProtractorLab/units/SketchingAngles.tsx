@@ -7,6 +7,7 @@ import { choice, customStep, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { sketchingAnglesTest } from "./SketchingAnglesTest";
+import { MathText } from "../../../shared/components/MathText";
 
 /** Feedback for a sketch that isn't right yet — names the wrong-scale mistake when that's what happened. */
 function sketchFeedback(measured: number, target: number): string {
@@ -48,71 +49,73 @@ function SketchTask({ mode, baseDir, target, startRot, onDone }: { mode: "benchm
   };
 
   return (
-    <div className="ap-sketch">
-      {mode === "benchmark" ? (
-        <AngleFigure
-          rays={[
-            { dir: baseDir, len: 110 },
-            { dir, len: 110, tone: "c", draggable: true },
-          ]}
-          onDragRay={(_, d) => {
-            setMsg(null);
-            setDir(d);
-          }}
-          snap={5}
-          grid
-          frameRadius={130}
-          width={300}
-          ariaLabel="Sketch pad: drag the purple ray"
-        />
-      ) : (
-        <Protractor
-          rot={rot}
-          rays={[{ dir: baseDir, tone: "ink" }]}
-          dragDir={aligned ? dir : undefined}
-          onDrag={
-            aligned
-              ? (d) => {
-                  setMsg(null);
-                  setDir(d);
-                }
-              : undefined
-          }
-          fullFrame={mode === "align"}
-          width={mode === "align" ? 360 : 400}
-          ariaLabel="Protractor sketch pad: drag to turn the purple ray"
-        />
-      )}
-      {mode === "align" && (
-        <div className="control-row">
-          <button type="button" className="btn ghost" onClick={() => turnProtractor(15)}>
-            ↺ Turn protractor 15°
-          </button>
-          <button type="button" className="btn ghost" onClick={() => turnProtractor(-15)}>
-            ↻ Turn protractor 15°
-          </button>
-          <span className={aligned ? "ap-ok" : "muted small"}>{aligned ? "✓ Lined up — now drag the purple ray." : "Turn the protractor until its straight 0° line lies on the black ray."}</span>
-        </div>
-      )}
-      {aligned && (
-        <div className="control-row">
-          <button type="button" className="btn ghost" onClick={() => nudge(1)}>
-            ↺ {mode === "benchmark" ? "5°" : "1°"}
-          </button>
-          <button type="button" className="btn ghost" onClick={() => nudge(-1)}>
-            ↻ {mode === "benchmark" ? "5°" : "1°"}
-          </button>
-          <button type="button" className="btn primary" onClick={check}>
-            Check my angle
-          </button>
-        </div>
-      )}
-      {msg && (
-        <p className="feedback bad" role="alert">
-          {msg}
-        </p>
-      )}
-    </div>
+    <MathText>
+      <div className="ap-sketch">
+        {mode === "benchmark" ? (
+          <AngleFigure
+            rays={[
+              { dir: baseDir, len: 110 },
+              { dir, len: 110, tone: "c", draggable: true },
+            ]}
+            onDragRay={(_, d) => {
+              setMsg(null);
+              setDir(d);
+            }}
+            snap={5}
+            grid
+            frameRadius={130}
+            width={300}
+            ariaLabel="Sketch pad: drag the purple ray"
+          />
+        ) : (
+          <Protractor
+            rot={rot}
+            rays={[{ dir: baseDir, tone: "ink" }]}
+            dragDir={aligned ? dir : undefined}
+            onDrag={
+              aligned
+                ? (d) => {
+                    setMsg(null);
+                    setDir(d);
+                  }
+                : undefined
+            }
+            fullFrame={mode === "align"}
+            width={mode === "align" ? 360 : 400}
+            ariaLabel="Protractor sketch pad: drag to turn the purple ray"
+          />
+        )}
+        {mode === "align" && (
+          <div className="control-row">
+            <button type="button" className="btn ghost" onClick={() => turnProtractor(15)}>
+              ↺ Turn protractor 15°
+            </button>
+            <button type="button" className="btn ghost" onClick={() => turnProtractor(-15)}>
+              ↻ Turn protractor 15°
+            </button>
+            <span className={aligned ? "ap-ok" : "muted small"}>{aligned ? "✓ Lined up — now drag the purple ray." : "Turn the protractor until its straight 0° line lies on the black ray."}</span>
+          </div>
+        )}
+        {aligned && (
+          <div className="control-row">
+            <button type="button" className="btn ghost" onClick={() => nudge(1)}>
+              ↺ {mode === "benchmark" ? "5°" : "1°"}
+            </button>
+            <button type="button" className="btn ghost" onClick={() => nudge(-1)}>
+              ↻ {mode === "benchmark" ? "5°" : "1°"}
+            </button>
+            <button type="button" className="btn primary" onClick={check}>
+              Check my angle
+            </button>
+          </div>
+        )}
+        {msg && (
+          <p className="feedback bad" role="alert">
+            {msg}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -136,68 +139,70 @@ function Explore() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <p>
-        To <b>draw</b> an angle: put the protractor's center on the ray's endpoint, turn it so the 0° line lies on the ray, find your number on the scale that
-        starts at 0 on that ray, and draw the second ray through it. Try it — turn the black ray, line up the protractor, then drag the purple ray.
-      </p>
-      <div className="control-row">
-        <Stepper label="Black ray direction" value={baseDir} min={0} max={345} step={15} onChange={(v) => { setBaseDir(v); setResult(null); }} />
-        <Stepper label="Protractor turn" value={rot} min={0} max={345} step={15} onChange={changeRot} />
-        <button type="button" className="btn ghost" onClick={() => changeRot(baseDir)}>
-          Line it up for me
-        </button>
-      </div>
-      <div className="ap-explore">
-        <Protractor
-          rot={rot}
-          rays={[{ dir: baseDir, tone: "ink" }]}
-          dragDir={dir}
-          onDrag={(d) => {
-            setDir(d);
-            setResult(null);
-          }}
-          highlightScale={target === null ? scale : null}
-          fullFrame
-          width={380}
-          ariaLabel="Protractor sandbox"
-        />
-        <div className="ap-side">
-          {scale ? (
-            <p className="ap-ok">✓ Lined up: center on the vertex, 0° line on the black ray. Read the {scale === "inner" ? "blue inner" : "orange outer"} scale.</p>
-          ) : (
-            <p className="muted">Not lined up — the protractor's 0° line isn't on the black ray, so its numbers don't measure this angle yet.</p>
-          )}
-          {target === null ? (
-            scale && (
-              <p className="ap-readout">
-                <b>{measured}°</b>
-              </p>
-            )
-          ) : (
-            <>
-              <p>
-                Challenge: draw a <b>{target}°</b> angle (no readout — read the scale!).
-              </p>
-              <div className="control-row">
-                <button type="button" className="btn primary" onClick={() => setResult(measured === target ? `Yes! That's ${target}°.` : sketchFeedback(measured, target))}>
-                  Check
-                </button>
-                <button type="button" className="btn ghost" onClick={() => { setTarget(null); setResult(null); }}>
-                  Stop challenge
-                </button>
-              </div>
-              {result && <p className={`feedback ${result.startsWith("Yes") ? "good" : "bad"}`}>{result}</p>}
-            </>
-          )}
-          {target === null && (
-            <button type="button" className="btn ghost" onClick={() => { setTarget(sketchTarget()); setResult(null); }}>
-              Give me a challenge angle
-            </button>
-          )}
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <p>
+          To <b>draw</b> an angle: put the protractor's center on the ray's endpoint, turn it so the 0° line lies on the ray, find your number on the scale that
+          starts at 0 on that ray, and draw the second ray through it. Try it — turn the black ray, line up the protractor, then drag the purple ray.
+        </p>
+        <div className="control-row">
+          <Stepper label="Black ray direction" value={baseDir} min={0} max={345} step={15} onChange={(v) => { setBaseDir(v); setResult(null); }} />
+          <Stepper label="Protractor turn" value={rot} min={0} max={345} step={15} onChange={changeRot} />
+          <button type="button" className="btn ghost" onClick={() => changeRot(baseDir)}>
+            Line it up for me
+          </button>
+        </div>
+        <div className="ap-explore">
+          <Protractor
+            rot={rot}
+            rays={[{ dir: baseDir, tone: "ink" }]}
+            dragDir={dir}
+            onDrag={(d) => {
+              setDir(d);
+              setResult(null);
+            }}
+            highlightScale={target === null ? scale : null}
+            fullFrame
+            width={380}
+            ariaLabel="Protractor sandbox"
+          />
+          <div className="ap-side">
+            {scale ? (
+              <p className="ap-ok">✓ Lined up: center on the vertex, 0° line on the black ray. Read the {scale === "inner" ? "blue inner" : "orange outer"} scale.</p>
+            ) : (
+              <p className="muted">Not lined up — the protractor's 0° line isn't on the black ray, so its numbers don't measure this angle yet.</p>
+            )}
+            {target === null ? (
+              scale && (
+                <p className="ap-readout">
+                  <b>{measured}°</b>
+                </p>
+              )
+            ) : (
+              <>
+                <p>
+                  Challenge: draw a <b>{target}°</b> angle (no readout — read the scale!).
+                </p>
+                <div className="control-row">
+                  <button type="button" className="btn primary" onClick={() => setResult(measured === target ? `Yes! That's ${target}°.` : sketchFeedback(measured, target))}>
+                    Check
+                  </button>
+                  <button type="button" className="btn ghost" onClick={() => { setTarget(null); setResult(null); }}>
+                    Stop challenge
+                  </button>
+                </div>
+                {result && <p className={`feedback ${result.startsWith("Yes") ? "good" : "bad"}`}>{result}</p>}
+              </>
+            )}
+            {target === null && (
+              <button type="button" className="btn ghost" onClick={() => { setTarget(sketchTarget()); setResult(null); }}>
+                Give me a challenge angle
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </MathText>
   );
 }
 

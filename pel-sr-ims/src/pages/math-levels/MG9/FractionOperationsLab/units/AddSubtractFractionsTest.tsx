@@ -164,7 +164,8 @@ export function mixedUnbundleQuestion(difficulty: Diff = "medium"): TestQuestion
         numberBlank(b.regroupedWhole),
         " ",
         numberBlank(b.regroupedNum),
-        `/${d}`
+        "",
+        [undefined, d]
       ),
     },
   ];

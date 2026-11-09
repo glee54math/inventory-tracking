@@ -170,6 +170,15 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       componentExport: "TimeMeasurementAndDataLab",
     },
   ],
+  MG10: [
+    {
+      type: "standalone",
+      skillId: "AddingAndSubtractingFractionsLab",
+      label: "Adding & Subtracting Fractions",
+      componentFile: "MG10_AddingAndSubtractingFractionsLab",
+      componentExport: "AddingAndSubtractingFractionsLab",
+    },
+  ],
   MG11: [
     {
       type: "standalone",

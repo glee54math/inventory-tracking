@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { NumberLine } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type Problem } from "../../../shared/engine/types";
-import { Segmented, Stepper } from "../../../shared/engine/controls";
+import { Frac, Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { fractionsOnANumberLineTest } from "./FractionsOnANumberLineTest";
+import { MathText } from "../../../shared/components/MathText";
 
 // Own local copy of the lab-wide denominator set — every unit file keeps its
 // own copy rather than importing it from a sibling unit file, same
@@ -43,63 +44,65 @@ function FractionNumberLineCheck({ onComplete }: { onComplete?: () => void }) {
   }, [allDone, onComplete]);
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure a fraction can be a point before you try practice problems.</p>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Quick check: let's make sure a fraction can be a point before you try practice problems.</p>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>1.</b> A whole number like 2 is a point on the number line. What about a fraction, like 3/4?
-        </p>
-        <div className="control-row">
-          {[
-            { id: "same", label: "It's also a point on the number line, same as any whole number" },
-            { id: "diff", label: "It's only ever a picture of parts of a shape, never a point" },
-          ].map((opt) => (
-            <button key={opt.id} type="button" className={`btn ghost ${q1 === opt.id ? "pressed" : ""}`} disabled={q1Done} onClick={() => setQ1(opt.id)}>
-              {opt.label}
-            </button>
-          ))}
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> A whole number like 2 is a point on the number line. What about a fraction, like 3/4?
+          </p>
+          <div className="control-row">
+            {[
+              { id: "same", label: "It's also a point on the number line, same as any whole number" },
+              { id: "diff", label: "It's only ever a picture of parts of a shape, never a point" },
+            ].map((opt) => (
+              <button key={opt.id} type="button" className={`btn ghost ${q1 === opt.id ? "pressed" : ""}`} disabled={q1Done} onClick={() => setQ1(opt.id)}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {q1 && (
+            <p className={`feedback ${q1Done ? "good" : "bad"}`} role="alert">
+              {q1Done
+                ? "Correct — every fraction sits at exactly one spot on the number line, just like every whole number does."
+                : "Not quite — a fraction can be drawn as parts of a shape AND as a single point on the number line. Try again."}
+            </p>
+          )}
         </div>
-        {q1 && (
-          <p className={`feedback ${q1Done ? "good" : "bad"}`} role="alert">
-            {q1Done
-              ? "Correct — every fraction sits at exactly one spot on the number line, just like every whole number does."
-              : "Not quite — a fraction can be drawn as parts of a shape AND as a single point on the number line. Try again."}
-          </p>
-        )}
-      </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>2.</b> Drag the dot to 3/4.
-        </p>
-        <NumberLine min={0} max={1} minorTicksPerUnit={4} snapDenominator={4} points={[{ value: q2Value, label: q2Done ? "3/4" : undefined, tone: q2Done ? "a" : "b", onChange: q2Done ? undefined : setQ2Value }]} />
-        {q2Done && (
-          <p className="feedback good" role="alert">
-            Correct — 3/4 is three of the four equal parts past 0.
+        <div className="align-stack-wrap">
+          <p>
+            <b>2.</b> Drag the dot to 3/4.
           </p>
-        )}
-      </div>
-
-      <div className="align-stack-wrap">
-        <p>
-          <b>3.</b> This number line has no tick marks yet. To show fourths, into how many equal parts should the space between 0 and 1 be split?
-        </p>
-        <NumberLine min={0} max={1} points={[]} />
-        <div className="control-row">
-          {[3, 4, 5].map((n) => (
-            <button key={n} type="button" className={`btn ghost ${q3 === n ? "pressed" : ""}`} disabled={q3Done} onClick={() => setQ3(n)}>
-              {n}
-            </button>
-          ))}
+          <NumberLine min={0} max={1} minorTicksPerUnit={4} snapDenominator={4} points={[{ value: q2Value, label: q2Done ? "3/4" : undefined, tone: q2Done ? "a" : "b", onChange: q2Done ? undefined : setQ2Value }]} />
+          {q2Done && (
+            <p className="feedback good" role="alert">
+              Correct — 3/4 is three of the four equal parts past 0.
+            </p>
+          )}
         </div>
-        {q3 !== null && (
-          <p className={`feedback ${q3Done ? "good" : "bad"}`} role="alert">
-            {q3Done ? "Correct — fourths means 4 equal parts between 0 and 1." : "Not quite — look at the word \"fourths.\" How many equal parts does that name?"}
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> This number line has no tick marks yet. To show fourths, into how many equal parts should the space between 0 and 1 be split?
           </p>
-        )}
+          <NumberLine min={0} max={1} points={[]} />
+          <div className="control-row">
+            {[3, 4, 5].map((n) => (
+              <button key={n} type="button" className={`btn ghost ${q3 === n ? "pressed" : ""}`} disabled={q3Done} onClick={() => setQ3(n)}>
+                {n}
+              </button>
+            ))}
+          </div>
+          {q3 !== null && (
+            <p className={`feedback ${q3Done ? "good" : "bad"}`} role="alert">
+              {q3Done ? "Correct — fourths means 4 equal parts between 0 and 1." : "Not quite — look at the word \"fourths.\" How many equal parts does that name?"}
+            </p>
+          )}
+        </div>
       </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -115,27 +118,29 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const snapped = Math.round(value * den);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && (
-        <button
-          type="button"
-          className="btn ghost"
-          style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
-          onClick={() => setShowCheck((v) => !v)}
-        >
-          Quick Check
-        </button>
-      )}
-      <p>A fraction isn't just part of a shape — it's a point on the number line, exactly like a whole number. Drag the dot and watch its name change.</p>
-      <Segmented label="Split each whole into" value={String(den)} onChange={(v) => setDen(Number(v))} options={DENOMS.map((d) => ({ id: String(d), label: `${d} parts` }))} />
-      <div className="control-row">
-        <Stepper label="Value" value={value} min={0} max={2} step={1 / den} onChange={setValue} tone="a" />
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Quick Check
+          </button>
+        )}
+        <p>A fraction isn't just part of a shape — it's a point on the number line, exactly like a whole number. Drag the dot and watch its name change.</p>
+        <Segmented label="Split each whole into" value={String(den)} onChange={(v) => setDen(Number(v))} options={DENOMS.map((d) => ({ id: String(d), label: `${d} parts` }))} />
+        <div className="control-row">
+          <Stepper label="Value" value={value} min={0} max={2} step={1 / den} onChange={setValue} tone="a" />
+        </div>
+        <NumberLine min={0} max={2} minorTicksPerUnit={den} snapDenominator={den} points={[{ value, label: `${snapped}/${den}`, tone: "a", onChange: setValue }]} />
+        <p className="muted small">Drag the dot past 1 — the same equal-size parts keep going, so a fraction like {den + 1}/{den} is just one more part past a whole.</p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <FractionNumberLineCheck onComplete={onIntroDone} />}
       </div>
-      <NumberLine min={0} max={2} minorTicksPerUnit={den} snapDenominator={den} points={[{ value, label: `${snapped}/${den}`, tone: "a", onChange: setValue }]} />
-      <p className="muted small">Drag the dot past 1 — the same equal-size parts keep going, so a fraction like {den + 1}/{den} is just one more part past a whole.</p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <FractionNumberLineCheck onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 
@@ -302,7 +307,7 @@ export const fractionsOnANumberLine: Unit = {
   keyIdea: (
     <>
       <p>A fraction is a point on the number line, exactly like a whole number — not just a picture of parts of a shape.</p>
-      <p>Splitting the line between 0 and 1 into b equal parts and counting a of them from 0 lands you at a/b.</p>
+      <p>Splitting the line between 0 and 1 into b equal parts and counting a of them from 0 lands you at <Frac n="a" d="b" />.</p>
       <p>The same equal-size parts keep going past 1 — a fraction can be greater than 1, like 5/4.</p>
     </>
   ),

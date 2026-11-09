@@ -1,5 +1,7 @@
 import { useRef } from "react";
 import { palette, diagramFont } from "../lib/palette";
+import { spokenFractions, useStackedFractions } from "../components/MathText";
+import { isSvgFraction, SvgMath } from "../components/SvgMath";
 
 export interface NumberLinePoint {
   value: number;
@@ -113,6 +115,10 @@ export function NumberLine({ min, max, points = [], minorTicksPerUnit, snapDenom
   const width = span * unitPx + PAD_X * 2;
   const visiblePoints = points.filter((p) => p.value >= min && p.value <= max);
   const hasDraggable = visiblePoints.some((p) => p.onChange);
+  // Labs with <StackedFractions> (MG9) draw a fraction label stacked, the
+  // handwritten way; the drawing gets extra room on top for it.
+  const stacked = useStackedFractions();
+  const lift = stacked && visiblePoints.some((p) => p.label && isSvgFraction(p.label)) ? 16 : 0;
 
   const tickValues: number[] = [];
   for (let v = Math.ceil(min / step) * step; v <= max; v += step) tickValues.push(v);
@@ -152,10 +158,10 @@ export function NumberLine({ min, max, points = [], minorTicksPerUnit, snapDenom
   return (
     <svg
       ref={svgRef}
-      viewBox={`0 0 ${width} ${HEIGHT}`}
+      viewBox={`0 ${-lift} ${width} ${HEIGHT + lift}`}
       role="img"
       aria-label={`Number line from ${min} to ${max}${
-        visiblePoints.length ? `, with ${visiblePoints.map((p) => p.value).join(" and ")} marked` : ""
+        visiblePoints.length ? `, with ${visiblePoints.map((p) => (stacked && p.label && isSvgFraction(p.label) ? spokenFractions(p.label) : p.value)).join(" and ")} marked` : ""
       }`}
       style={{ display: "block", width: "100%", maxWidth: width, height: "auto", fontFamily: diagramFont }}
     >
@@ -199,10 +205,14 @@ export function NumberLine({ min, max, points = [], minorTicksPerUnit, snapDenom
           : undefined;
         return (
           <g key={i}>
-            {p.label && (
-              <text x={x} y={MID_Y - 14} textAnchor="middle" fontSize={13} fontWeight={700} fill={toneColor(p.tone)}>
-                {p.label}
-              </text>
+            {p.label && stacked && isSvgFraction(p.label) ? (
+              <SvgMath text={p.label} x={x} y={MID_Y - 22} fontSize={13} weight={700} color={toneColor(p.tone)} />
+            ) : (
+              p.label && (
+                <text x={x} y={MID_Y - 14} textAnchor="middle" fontSize={13} fontWeight={700} fill={toneColor(p.tone)}>
+                  {p.label}
+                </text>
+              )
             )}
             <circle cx={x} cy={MID_Y} r={7} fill={toneColor(p.tone)} stroke={palette.paper} strokeWidth={2} pointerEvents="none" />
             {/* Larger invisible hit-area — a 7px dot is a small, fiddly drag

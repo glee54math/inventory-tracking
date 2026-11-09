@@ -1482,6 +1482,20 @@ input.align-slot.align-slot-input {
   vertical-align: middle;
 }
 
+/* SentenceStep.checkEach (MG10 round 6): a "fill in the reason" sentence frame
+   wraps like text, word by word, with each blank's tap buttons inline, so a
+   line never starts with a lone period. */
+.lab-base .answer-row.sentence-frame {
+  display: block;
+  line-height: 3.5;
+}
+.lab-base .sentence-frame .tap-select {
+  margin: 0 2px;
+}
+.lab-base .sentence-frame .tap-option {
+  line-height: 1.3;
+}
+
 .lab-base .tap-option {
   display: inline-flex;
   align-items: center;
@@ -1656,4 +1670,161 @@ input.align-slot.align-slot-input {
   grid-column: 1 / -1;
   font-weight: 700;
   font-size: 18px;
+}
+
+/* FractionStep ("fraction" kind, shared/engine/types.ts): an optional
+   whole-number box, then a numerator box stacked over a denominator box (or a
+   printed denominator), so a typed fraction looks like a written one. Added
+   with MG10_AddingAndSubtractingFractionsLab. */
+.lab-base .frac-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.lab-base .frac-entry-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.lab-base input.answer.frac-entry-box,
+.lab-base input.answer.frac-entry-whole {
+  width: 64px;
+  padding: 6px 8px;
+}
+.lab-base input.answer.frac-entry-whole {
+  height: 52px;
+  font-size: 22px;
+}
+.lab-base .frac-entry-bar {
+  display: block;
+  width: 72px;
+  height: 0;
+  border-top: 3px solid var(--ink);
+}
+.lab-base .frac-entry-fixed {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 38px;
+}
+.lab-base .frac-entry-note {
+  flex-basis: 100%;
+}
+
+/* "Pick the kind of answer" (shared/components/AnswerForm.tsx): three tap
+   buttons above a fraction answer's boxes, in labs with <AnswerFormPick>.
+   Added with MG10 (round 4). The picked button is tinted; after a Check it
+   turns green (right kind) or red (wrong kind). */
+.lab-base .form-entry-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+/* The "Pick a format to write your answer." line on its own row just above
+   the buttons (MG10 round 5, U5-01). */
+.lab-base .form-pick-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.lab-base .form-pick-say {
+  font-weight: 600;
+}
+.lab-base .form-pick-wrap.compact .form-pick-say {
+  font-size: 15px;
+}
+.lab-base .form-pick {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.lab-base .form-pick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 6px 14px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.lab-base .form-pick-btn:hover:not(:disabled) {
+  border-color: var(--qa);
+}
+.lab-base .form-pick-btn.on {
+  background: var(--qa-soft);
+  border-color: var(--qa);
+  box-shadow: inset 0 0 0 1px var(--qa);
+}
+.lab-base .form-pick-btn.on.good {
+  background: var(--good-soft);
+  border-color: var(--good);
+  box-shadow: inset 0 0 0 1px var(--good);
+}
+.lab-base .form-pick-btn.on.bad {
+  background: var(--bad-soft);
+  border-color: var(--bad);
+  box-shadow: inset 0 0 0 1px var(--bad);
+}
+.lab-base .form-pick-btn:disabled {
+  cursor: default;
+}
+.lab-base .form-pick-eg {
+  font-weight: 700;
+  color: var(--muted);
+  font-size: 0.95em;
+}
+.lab-base .form-pick.compact .form-pick-btn {
+  min-height: 44px;
+  padding: 4px 10px;
+  gap: 6px;
+  font-size: 15px;
+}
+/* A CFU mixedFraction blank with kind buttons: buttons, then the boxes. */
+.lab-base .cfu-form {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  vertical-align: middle;
+  margin: 4px 4px;
+}
+/* AnswerFormGuide: the three kinds, taught once in Explore. */
+.lab-base .form-guide {
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  background: var(--card);
+}
+.lab-base .form-guide-title {
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+.lab-base .form-guide-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.lab-base .form-guide-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 150px;
+  flex: 1 1 150px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+.lab-base .form-guide-eg {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.6;
 }

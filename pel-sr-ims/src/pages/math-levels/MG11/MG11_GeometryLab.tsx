@@ -13,6 +13,7 @@ import { WordProblemsModule } from "./GeometryLab/modules/WordProblems";
 import { Stars } from "./GeometryLab/components/ui";
 import { MASTERY_GOAL, useModuleProgress } from "../../../hooks/useModuleProgress";
 import { useStudentContext } from "../../../components/student_portal/StudentContext";
+import { StackedFractions } from "../shared/components/MathText";
 
 const MODULE_ID = "MG11_GeometryLab";
 
@@ -44,6 +45,8 @@ function GeometryLab() {
 
   return (
     <div className="geometry-lab">
+      {/* Every fraction a student sees is stacked, the handwritten way (shared MathText). */}
+      <StackedFractions>
       <header className="top">
         <div className="brand">
           <svg viewBox="0 0 40 40" width="36" height="36" aria-hidden="true">
@@ -99,6 +102,7 @@ function GeometryLab() {
         {tab === "nets" && <NetsModule onSolved={(clean) => record("nets", clean)} />}
         {tab === "word" && <WordProblemsModule onSolved={(clean) => record("word", clean)} />}
       </main>
+      </StackedFractions>
     </div>
   );
 }

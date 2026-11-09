@@ -1,4 +1,5 @@
 import { palette, diagramFont } from "../../../shared/lib/palette";
+import { MathText } from "../../../shared/components/MathText";
 
 /** A quarter-inch value as a kid-readable mixed number: 3 -> "3",
  *  3.25 -> "3 1/4", 3.5 -> "3 1/2", 3.75 -> "3 3/4". The one formatter every
@@ -57,31 +58,33 @@ export function LinePlot({ minWhole, maxWhole, data, tone = "a" }: LinePlotProps
   }
 
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      role="img"
-      aria-label={`A line plot from ${minWhole} to ${maxWhole} inches, marked in whole, half, and quarter inches, with ${data.length} measurements plotted`}
-      style={{ display: "block", width: "100%", maxWidth: width, height: "auto", fontFamily: diagramFont }}
-    >
-      <line x1={24} y1={AXIS_Y} x2={width - 24} y2={AXIS_Y} stroke={palette.ink} strokeWidth={2} />
-      {ticks.map((t, i) => {
-        const h = t.kind === "whole" ? 14 : t.kind === "half" ? 10 : 6;
-        return (
-          <g key={i}>
-            <line x1={t.x} y1={AXIS_Y} x2={t.x} y2={AXIS_Y + h} stroke={palette.muted} strokeWidth={t.kind === "whole" ? 2 : 1.25} />
-            {t.label && (
-              <text x={t.x} y={AXIS_Y + h + 16} textAnchor="middle" fontSize={12} fontWeight={700} fill={palette.ink}>
-                {t.label}"
-              </text>
-            )}
-          </g>
-        );
-      })}
-      {Array.from(counts.entries()).map(([value, n]) =>
-        Array.from({ length: n }, (_, i) => (
-          <circle key={`${value}-${i}`} cx={xFor(value)} cy={AXIS_Y - 10 - i * DOT_GAP} r={DOT_R} fill={fill} opacity={0.85} />
-        ))
-      )}
-    </svg>
+    <MathText>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={`A line plot from ${minWhole} to ${maxWhole} inches, marked in whole, half, and quarter inches, with ${data.length} measurements plotted`}
+        style={{ display: "block", width: "100%", maxWidth: width, height: "auto", fontFamily: diagramFont }}
+      >
+        <line x1={24} y1={AXIS_Y} x2={width - 24} y2={AXIS_Y} stroke={palette.ink} strokeWidth={2} />
+        {ticks.map((t, i) => {
+          const h = t.kind === "whole" ? 14 : t.kind === "half" ? 10 : 6;
+          return (
+            <g key={i}>
+              <line x1={t.x} y1={AXIS_Y} x2={t.x} y2={AXIS_Y + h} stroke={palette.muted} strokeWidth={t.kind === "whole" ? 2 : 1.25} />
+              {t.label && (
+                <text x={t.x} y={AXIS_Y + h + 16} textAnchor="middle" fontSize={12} fontWeight={700} fill={palette.ink}>
+                  {t.label}"
+                </text>
+              )}
+            </g>
+          );
+        })}
+        {Array.from(counts.entries()).map(([value, n]) =>
+          Array.from({ length: n }, (_, i) => (
+            <circle key={`${value}-${i}`} cx={xFor(value)} cy={AXIS_Y - 10 - i * DOT_GAP} r={DOT_R} fill={fill} opacity={0.85} />
+          ))
+        )}
+      </svg>
+    </MathText>
   );
 }

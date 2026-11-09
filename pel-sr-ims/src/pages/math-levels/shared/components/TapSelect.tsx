@@ -1,4 +1,5 @@
 import { Children, isValidElement, type CSSProperties, type ReactElement, type ReactNode } from "react";
+import { MathText } from "./MathText";
 
 /**
  * A drop-in replacement for a <select> of <option>s, drawn as big tap
@@ -58,7 +59,7 @@ export function TapSelect({ value, onChange, style, children, "aria-label": aria
               }
             }}
           >
-            {o.label}
+            <MathText>{o.label}</MathText>
           </span>
         );
       })}

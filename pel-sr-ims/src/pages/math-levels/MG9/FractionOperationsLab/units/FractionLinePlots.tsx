@@ -9,6 +9,7 @@ import { amountStep } from "../lib/steps";
 import { PLOT_CONTEXTS, type PlotContext } from "../lib/words";
 import { CfuToggle, DropdownQuestion, useCfuProgress } from "./cfu";
 import { fractionLinePlotsTest } from "./FractionLinePlotsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 // Every plot in this unit uses denominators 2, 4 or 8 ONLY (4.MD.4) — see
 // lib/fractions.ts's PLOT_DENS; makePlot() never draws from anything else.
@@ -34,59 +35,61 @@ const CFU_DATA = [2, 3, 3, 4, 4, 4, 4, 6, 6, 6, 7];
 function ClusterWalkthrough({ onDone }: { onDone: () => void }) {
   const [stage, setStage] = useState(0);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>2.</b> Let's find the total length of all the beetles that measured <Frac n={3} d={4} /> inch.
-      </p>
-      <FracLinePlot den={8} minWhole={0} maxWhole={1} data={CFU_DATA} unit="inches" highlight={6} />
-      <DropdownQuestion
-        blanks={[{ options: ["2", "3", "4"], correct: "3", label: "Dots above 3/4" }]}
-        render={([a]) => (
-          <>
-            How many dots are above <Frac n={3} d={4} />? {a}
-          </>
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>2.</b> Let's find the total length of all the beetles that measured <Frac n={3} d={4} /> inch.
+        </p>
+        <FracLinePlot den={8} minWhole={0} maxWhole={1} data={CFU_DATA} unit="inches" highlight={6} />
+        <DropdownQuestion
+          blanks={[{ options: ["2", "3", "4"], correct: "3", label: "Dots above 3/4" }]}
+          render={([a]) => (
+            <>
+              How many dots are above <Frac n={3} d={4} />? {a}
+            </>
+          )}
+          good="Right — 3 dots, so 3 beetles that were each 3/4 inch long."
+          bad="Not quite — find the 3/4 tick (it's highlighted) and count only the dots stacked on it."
+          onDone={() => setStage((s) => Math.max(s, 1))}
+        />
+        {stage >= 1 && (
+          <div style={{ marginTop: 10 }}>
+            <DropdownQuestion
+              blanks={[{ options: ["3", "9", "12"], correct: "9", label: "Numerator of the sum" }]}
+              render={([a]) => (
+                <>
+                  Add one <Frac n={3} d={4} /> for each dot: <Frac n={3} d={4} /> + <Frac n={3} d={4} /> + <Frac n={3} d={4} /> = <Frac n={a} d={4} />
+                </>
+              )}
+              good="Yes — 3 + 3 + 3 = 9 fourths. (That's 3 × 3/4 — the multiplying idea from Unit 4!)"
+              bad="Not quite — add the numerators of the three copies of 3/4: 3 + 3 + 3. The pieces stay fourths."
+              onDone={() => setStage((s) => Math.max(s, 2))}
+            />
+          </div>
         )}
-        good="Right — 3 dots, so 3 beetles that were each 3/4 inch long."
-        bad="Not quite — find the 3/4 tick (it's highlighted) and count only the dots stacked on it."
-        onDone={() => setStage((s) => Math.max(s, 1))}
-      />
-      {stage >= 1 && (
-        <div style={{ marginTop: 10 }}>
-          <DropdownQuestion
-            blanks={[{ options: ["3", "9", "12"], correct: "9", label: "Numerator of the sum" }]}
-            render={([a]) => (
-              <>
-                Add one <Frac n={3} d={4} /> for each dot: <Frac n={3} d={4} /> + <Frac n={3} d={4} /> + <Frac n={3} d={4} /> = {a}/4
-              </>
-            )}
-            good="Yes — 3 + 3 + 3 = 9 fourths. (That's 3 × 3/4 — the multiplying idea from Unit 4!)"
-            bad="Not quite — add the numerators of the three 3/4s: 3 + 3 + 3. The pieces stay fourths."
-            onDone={() => setStage((s) => Math.max(s, 2))}
-          />
-        </div>
-      )}
-      {stage >= 2 && (
-        <div style={{ marginTop: 10 }}>
-          <DropdownQuestion
-            blanks={[
-              { options: ["1", "2", "3"], correct: "2", label: "Wholes" },
-              { options: ["1", "2", "3"], correct: "1", label: "Fourths left" },
-            ]}
-            render={([a, b]) => (
-              <>
-                <Frac n={9} d={4} /> = {a} and {b}/4 inches
-              </>
-            )}
-            good="Correct — 8 of the 9 fourths make 2 whole inches, with 1/4 left: 2 1/4 inches in all."
-            bad="Not quite — every 4 fourths make 1 whole. How many wholes fit in 9 fourths, and what's left?"
-            onDone={() => {
-              setStage(3);
-              onDone();
-            }}
-          />
-        </div>
-      )}
-    </div>
+        {stage >= 2 && (
+          <div style={{ marginTop: 10 }}>
+            <DropdownQuestion
+              blanks={[
+                { options: ["1", "2", "3"], correct: "2", label: "Wholes" },
+                { options: ["1", "2", "3"], correct: "1", label: "Fourths left" },
+              ]}
+              render={([a, b]) => (
+                <>
+                  <Frac n={9} d={4} /> = {a} and <Frac n={b} d={4} /> inches
+                </>
+              )}
+              good="Correct — 8 of the 9 fourths make 2 whole inches, with 1/4 left: 2 1/4 inches in all."
+              bad="Not quite — every 4 fourths make 1 whole. How many wholes fit in 9 fourths, and what's left?"
+              onDone={() => {
+                setStage(3);
+                onDone();
+              }}
+            />
+          </div>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -100,68 +103,70 @@ function ClusterWalkthrough({ onDone }: { onDone: () => void }) {
 function LinePlotCheck({ onComplete }: { onComplete?: () => void }) {
   const { mark } = useCfuProgress(4, onComplete);
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: answer all four to unlock practice problems.</p>
-      <div className="align-stack-wrap">
-        <p>
-          <b>1.</b> A class measured some beetles and made this line plot (inches).
-        </p>
-        <FracLinePlot den={8} minWhole={0} maxWhole={1} data={CFU_DATA} unit="inches" />
-        <DropdownQuestion
-          blanks={[
-            { options: ["one measured beetle", "1/8 of an inch", "one inch"], correct: "one measured beetle", label: "What one dot stands for" },
-            { options: ["3 beetles were each 3/4 inch long", "one beetle was 3 3/4 inches long", "3/4 of the beetles"], correct: "3 beetles were each 3/4 inch long", label: "What 3 dots above 3/4 mean" },
-          ]}
-          render={([a, b]) => (
-            <>
-              Each dot stands for {a}, and the 3 dots above 3/4 mean {b}.
-            </>
-          )}
-          good="Correct — every dot is one beetle, placed above its length. A stack of 3 dots at 3/4 means three beetles that each measured 3/4 inch."
-          bad="Not quite. The number line shows the lengths; each dot is one thing that was measured. What does a stack of 3 dots at one length tell you?"
-          onDone={mark(0)}
-        />
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: answer all four to unlock practice problems.</p>
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> A class measured some beetles and made this line plot (inches).
+          </p>
+          <FracLinePlot den={8} minWhole={0} maxWhole={1} data={CFU_DATA} unit="inches" />
+          <DropdownQuestion
+            blanks={[
+              { options: ["one measured beetle", "1/8 of an inch", "one inch"], correct: "one measured beetle", label: "What one dot stands for" },
+              { options: ["3 beetles were each 3/4 inch long", "one beetle was 3 3/4 inches long", "3/4 of the beetles"], correct: "3 beetles were each 3/4 inch long", label: "What 3 dots above 3/4 mean" },
+            ]}
+            render={([a, b]) => (
+              <>
+                Each dot stands for {a}, and the 3 dots above 3/4 mean {b}.
+              </>
+            )}
+            good="Correct — every dot is one beetle, placed above its length. A stack of 3 dots at 3/4 means three beetles that each measured 3/4 inch."
+            bad="Not quite. The number line shows the lengths; each dot is one thing that was measured. What does a stack of 3 dots at one length tell you?"
+            onDone={mark(0)}
+          />
+        </div>
+        <ClusterWalkthrough onDone={mark(1)} />
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> Same beetle plot as question 1.
+          </p>
+          <DropdownQuestion
+            blanks={[
+              { options: ["1/2", "7/8", "1"], correct: "7/8", label: "Longest beetle" },
+              { options: ["4", "7/8", "1/2"], correct: "1/2", label: "Most common length" },
+            ]}
+            render={([a, b]) => (
+              <>
+                The longest beetle measured {a} inch, and the most common length was {b} inch.
+              </>
+            )}
+            good="Correct — the LONGEST is the dot farthest to the right (7/8). The MOST COMMON length is the tallest stack (1/2, with 4 dots). Two different questions!"
+            bad="Not quite. Longest = farthest to the right (a dot, not just the end of the line). Most common = the tallest stack — and the answer is a length, not a count."
+            onDone={mark(2)}
+          />
+        </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>4.</b> Theo says: "There are 4 dots at <Frac n={1} d={2} />, so those beetles total 4 <Frac n={1} d={2} /> inches."
+          </p>
+          <DropdownQuestion
+            blanks={[
+              { options: ["True", "False"], correct: "False", label: "Is Theo right" },
+              { options: ["4 1/2", "2", "4/8"], correct: "2", label: "Real total" },
+            ]}
+            render={([a, b]) => (
+              <>
+                Theo is {a}. The real total is {b} inches.
+              </>
+            )}
+            good="Correct — Theo wrote the count next to the length. The total is 1/2 + 1/2 + 1/2 + 1/2 = 4/2 = 2 inches."
+            bad="Not quite. Four beetles that are each 1/2 inch: add 1/2 four times. Is that 4 1/2?"
+            onDone={mark(3)}
+          />
+        </div>
       </div>
-      <ClusterWalkthrough onDone={mark(1)} />
-      <div className="align-stack-wrap">
-        <p>
-          <b>3.</b> Same beetle plot as question 1.
-        </p>
-        <DropdownQuestion
-          blanks={[
-            { options: ["1/2", "7/8", "1"], correct: "7/8", label: "Longest beetle" },
-            { options: ["4", "7/8", "1/2"], correct: "1/2", label: "Most common length" },
-          ]}
-          render={([a, b]) => (
-            <>
-              The longest beetle measured {a} inch, and the most common length was {b} inch.
-            </>
-          )}
-          good="Correct — the LONGEST is the dot farthest to the right (7/8). The MOST COMMON length is the tallest stack (1/2, with 4 dots). Two different questions!"
-          bad="Not quite. Longest = farthest to the right (a dot, not just the end of the line). Most common = the tallest stack — and the answer is a length, not a count."
-          onDone={mark(2)}
-        />
-      </div>
-      <div className="align-stack-wrap">
-        <p>
-          <b>4.</b> Theo says: "There are 4 dots at <Frac n={1} d={2} />, so those beetles total 4 <Frac n={1} d={2} /> inches."
-        </p>
-        <DropdownQuestion
-          blanks={[
-            { options: ["True", "False"], correct: "False", label: "Is Theo right" },
-            { options: ["4 1/2", "2", "4/8"], correct: "2", label: "Real total" },
-          ]}
-          render={([a, b]) => (
-            <>
-              Theo is {a}. The real total is {b} inches.
-            </>
-          )}
-          good="Correct — Theo wrote the count next to the length. The total is 1/2 + 1/2 + 1/2 + 1/2 = 4/2 = 2 inches."
-          bad="Not quite. Four beetles that are each 1/2 inch: add 1/2 four times. Is that 4 1/2?"
-          onDone={mark(3)}
-        />
-      </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -179,60 +184,62 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const vals = plotValues(data);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && <CfuToggle on={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      <p>
-        A line plot is a number line with a dot for every measurement. Click above a tick to add a measurement there.
-      </p>
-      <div className="control-row">
-        <Segmented
-          label="Marked in"
-          value={String(den)}
-          onChange={(v) => {
-            setDen(Number(v) as PlotDen);
-            setData([]);
-          }}
-          options={[
-            { id: "2", label: "Halves" },
-            { id: "4", label: "Fourths" },
-            { id: "8", label: "Eighths" },
-          ]}
-        />
-        <button className="btn ghost" type="button" disabled={data.length === 0} onClick={() => setData((d) => d.slice(0, -1))}>
-          Undo last dot
-        </button>
-        <button className="btn ghost" type="button" disabled={data.length === 0} onClick={() => setData([])}>
-          Clear
-        </button>
-      </div>
-      <FracLinePlot den={den} minWhole={minWhole} maxWhole={maxWhole} data={data} unit="inches" onTickClick={(e) => e > 0 && setData((d) => [...d, e])} />
-      {vals.length > 0 ? (
-        <div>
-          <ul style={{ margin: 0 }}>
-            {vals.map((v) => {
-              const k = countAt(data, v);
-              const { n, d } = eighthsLowest(v);
-              return (
-                <li key={v}>
-                  {k} dot{k === 1 ? "" : "s"} at {eighthsText(v)}: total {k > 1 ? `${Array.from({ length: Math.min(k, 4) }, () => `${n}/${d}`).join(" + ")}${k > 4 ? " + …" : ""} = ` : ""}
-                  <b>{mixedText(k * n, d)}</b> in
-                </li>
-              );
-            })}
-          </ul>
-          {vals.length > 1 && (
-            <p className="muted small">
-              Longest {eighthsText(vals[vals.length - 1])} − shortest {eighthsText(vals[0])} = <b>{mixedText((vals[vals.length - 1] - vals[0]) / (8 / den), den)}</b> inch difference (in{" "}
-              {denWord(den)}).
-            </p>
-          )}
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && <CfuToggle on={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
+        <p>
+          A line plot is a number line with a dot for every measurement. Click above a tick to add a measurement there.
+        </p>
+        <div className="control-row">
+          <Segmented
+            label="Marked in"
+            value={String(den)}
+            onChange={(v) => {
+              setDen(Number(v) as PlotDen);
+              setData([]);
+            }}
+            options={[
+              { id: "2", label: "Halves" },
+              { id: "4", label: "Fourths" },
+              { id: "8", label: "Eighths" },
+            ]}
+          />
+          <button className="btn ghost" type="button" disabled={data.length === 0} onClick={() => setData((d) => d.slice(0, -1))}>
+            Undo last dot
+          </button>
+          <button className="btn ghost" type="button" disabled={data.length === 0} onClick={() => setData([])}>
+            Clear
+          </button>
         </div>
-      ) : (
-        <p className="muted small">No dots yet — click above a tick (not 0) to add one.</p>
-      )}
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <LinePlotCheck onComplete={onIntroDone} />}
-    </div>
+        <FracLinePlot den={den} minWhole={minWhole} maxWhole={maxWhole} data={data} unit="inches" onTickClick={(e) => e > 0 && setData((d) => [...d, e])} />
+        {vals.length > 0 ? (
+          <div>
+            <ul style={{ margin: 0 }}>
+              {vals.map((v) => {
+                const k = countAt(data, v);
+                const { n, d } = eighthsLowest(v);
+                return (
+                  <li key={v}>
+                    {k} dot{k === 1 ? "" : "s"} at {eighthsText(v)}: total {k > 1 ? `${Array.from({ length: Math.min(k, 4) }, () => `${n}/${d}`).join(" + ")}${k > 4 ? " + …" : ""} = ` : ""}
+                    <b>{mixedText(k * n, d)}</b> in
+                  </li>
+                );
+              })}
+            </ul>
+            {vals.length > 1 && (
+              <p className="muted small">
+                Longest {eighthsText(vals[vals.length - 1])} − shortest {eighthsText(vals[0])} = <b>{mixedText((vals[vals.length - 1] - vals[0]) / (8 / den), den)}</b> inch difference (in{" "}
+                {denWord(den)}).
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className="muted small">No dots yet — click above a tick (not 0) to add one.</p>
+        )}
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <LinePlotCheck onComplete={onIntroDone} />}
+      </div>
+    </MathText>
   );
 }
 
@@ -372,42 +379,44 @@ function BuildPlot({ s, onDone }: { s: PlotSpec; onDone: () => void }) {
   const bad = ticks.filter((e) => countAt(placed, e) !== countAt(s.data, e));
   const ok = bad.length === 0;
   return (
-    <div>
-      <FracLinePlot
-        den={s.den}
-        minWhole={s.minWhole}
-        maxWhole={s.maxWhole}
-        data={placed}
-        tone="b"
-        onTickClick={(e) => {
-          setPlaced((p) => [...p, e]);
-          setChecked(false);
-        }}
-        goodTicks={checked ? good : []}
-        badTicks={checked ? bad : []}
-      />
-      <div className="control-row" style={{ marginTop: 8 }}>
-        <button className="btn ghost" type="button" disabled={placed.length === 0} onClick={() => {
-            setPlaced((p) => p.slice(0, -1));
+    <MathText>
+      <div>
+        <FracLinePlot
+          den={s.den}
+          minWhole={s.minWhole}
+          maxWhole={s.maxWhole}
+          data={placed}
+          tone="b"
+          onTickClick={(e) => {
+            setPlaced((p) => [...p, e]);
             setChecked(false);
-          }}>
-          Undo last dot
-        </button>
-        <button className="btn primary" type="button" disabled={placed.length === 0} onClick={() => setChecked(true)}>
-          Check my plot
-        </button>
-        {checked && ok && (
-          <button className="btn primary" type="button" onClick={onDone}>
-            Continue
+          }}
+          goodTicks={checked ? good : []}
+          badTicks={checked ? bad : []}
+        />
+        <div className="control-row" style={{ marginTop: 8 }}>
+          <button className="btn ghost" type="button" disabled={placed.length === 0} onClick={() => {
+              setPlaced((p) => p.slice(0, -1));
+              setChecked(false);
+            }}>
+            Undo last dot
           </button>
+          <button className="btn primary" type="button" disabled={placed.length === 0} onClick={() => setChecked(true)}>
+            Check my plot
+          </button>
+          {checked && ok && (
+            <button className="btn primary" type="button" onClick={onDone}>
+              Continue
+            </button>
+          )}
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok ? "Every dot is in the right place!" : `Not yet — the red labels have the wrong number of dots (${placed.length} placed, ${s.data.length} needed).`}
+          </p>
         )}
       </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Every dot is in the right place!" : `Not yet — the red labels have the wrong number of dots (${placed.length} placed, ${s.data.length} needed).`}
-        </p>
-      )}
-    </div>
+    </MathText>
   );
 }
 

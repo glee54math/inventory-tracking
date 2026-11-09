@@ -142,7 +142,7 @@ export function decimalToFractionQuestion(): TestQuestion[] {
     {
       visual: null,
       difficulty: "medium",
-      step: sentence(
+      step: { ...sentence(
         {
           prompt: `Write ${decimalText(m, 2)} as a fraction. Use the place of the last digit for the bottom number.`,
           hint: "Two digits after the point means hundredths.",
@@ -153,7 +153,7 @@ export function decimalToFractionQuestion(): TestQuestion[] {
         " / ",
         numberBlank(100),
         ""
-      ),
+      ), stacked: true },
     },
   ];
 }

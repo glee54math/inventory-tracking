@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { palette } from "../lib/palette";
+import { useStackedFractions } from "../components/MathText";
+import { SvgMathLine } from "../components/SvgMath";
 
 export interface TierCellStyle {
   fill: string;
@@ -31,9 +33,15 @@ export interface TwoTierBarsProps {
 const CAPTION_LINE_H = 17;
 const CAPTION_TOP_PAD = 16;
 const CAPTION_BOTTOM_PAD = 16;
+// Labs with <StackedFractions> (MG9): a caption's fractions are drawn stacked
+// (numerator over denominator), so each caption line needs more room.
+const STACKED_LINE_H = 30;
+const STACKED_TOP_PAD = 24;
+const STACKED_BOTTOM_PAD = 16;
 
 /** Vertical space a tier's caption block takes up, 0 if it has none. */
-const captionBlockHeight = (lines: number) => (lines ? CAPTION_TOP_PAD + (lines - 1) * CAPTION_LINE_H + CAPTION_BOTTOM_PAD : 0);
+const captionBlockHeight = (lines: number, stacked = false) =>
+  lines ? (stacked ? STACKED_TOP_PAD : CAPTION_TOP_PAD) + (lines - 1) * (stacked ? STACKED_LINE_H : CAPTION_LINE_H) + (stacked ? STACKED_BOTTOM_PAD : CAPTION_BOTTOM_PAD) : 0;
 
 /**
  * Two bars, stacked, sharing one fixed pixel width — the top bar partitioned
@@ -53,8 +61,21 @@ export function TwoTierBars({ top, bottom, width = 360, topHeight = 52, bottomHe
   const effectiveBottomHeight = bottomHeight ?? Math.max(28, topHeight - 16);
   const topCellW = width / top.cells;
   const bottomCellW = width / bottom.cells;
-  const topCaptionH = captionBlockHeight(top.captions?.length ?? 0);
-  const bottomCaptionH = captionBlockHeight(bottom.captions?.length ?? 0);
+  const stacked = useStackedFractions();
+  const lineH = stacked ? STACKED_LINE_H : CAPTION_LINE_H;
+  const topPad = stacked ? STACKED_TOP_PAD : CAPTION_TOP_PAD;
+  const bottomPad = stacked ? STACKED_BOTTOM_PAD : CAPTION_BOTTOM_PAD;
+  const topCaptionH = captionBlockHeight(top.captions?.length ?? 0, stacked);
+  const bottomCaptionH = captionBlockHeight(bottom.captions?.length ?? 0, stacked);
+  // A plain-string caption in a stacked lab is drawn with its fractions stacked.
+  const caption = (c: ReactNode, i: number, y: number) =>
+    stacked && typeof c === "string" ? (
+      <SvgMathLine key={i} text={c} x={width / 2} y={y} fontSize={13} color={palette.muted} />
+    ) : (
+      <text key={i} x={width / 2} y={y} textAnchor="middle" style={{ fill: palette.muted, fontSize: 13 }}>
+        {c}
+      </text>
+    );
   const guideY = topHeight + topCaptionH;
   const totalHeight = guideY + effectiveBottomHeight + bottomCaptionH;
 
@@ -72,14 +93,10 @@ export function TwoTierBars({ top, bottom, width = 360, topHeight = 52, bottomHe
       })}
       {top.dividers?.map((b, i) => <line key={`td${i}`} x1={b * topCellW} y1={0} x2={b * topCellW} y2={topHeight} style={{ stroke: palette.ink, strokeWidth: 2 }} />)}
       <rect x={0} y={0} width={width} height={topHeight} style={{ fill: "none", stroke: palette.ink, strokeWidth: 2 }} />
-      {top.captions?.map((c, i) => (
-        <text key={i} x={width / 2} y={topHeight + CAPTION_TOP_PAD + i * CAPTION_LINE_H} textAnchor="middle" style={{ fill: palette.muted, fontSize: 13 }}>
-          {c}
-        </text>
-      ))}
+      {top.captions?.map((c, i) => caption(c, i, topHeight + topPad + i * lineH))}
 
-      <line x1={0} y1={topHeight + topCaptionH - CAPTION_BOTTOM_PAD / 2} x2={0} y2={guideY} style={{ stroke: palette.line, strokeWidth: 1, strokeDasharray: "3 3" }} />
-      <line x1={width} y1={topHeight + topCaptionH - CAPTION_BOTTOM_PAD / 2} x2={width} y2={guideY} style={{ stroke: palette.line, strokeWidth: 1, strokeDasharray: "3 3" }} />
+      <line x1={0} y1={topHeight + topCaptionH - bottomPad / 2} x2={0} y2={guideY} style={{ stroke: palette.line, strokeWidth: 1, strokeDasharray: "3 3" }} />
+      <line x1={width} y1={topHeight + topCaptionH - bottomPad / 2} x2={width} y2={guideY} style={{ stroke: palette.line, strokeWidth: 1, strokeDasharray: "3 3" }} />
 
       <g transform={`translate(0, ${guideY})`}>
         {Array.from({ length: bottom.cells }, (_, i) => {
@@ -88,11 +105,7 @@ export function TwoTierBars({ top, bottom, width = 360, topHeight = 52, bottomHe
         })}
         {bottom.dividers?.map((b, i) => <line key={`bd${i}`} x1={b * bottomCellW} y1={0} x2={b * bottomCellW} y2={effectiveBottomHeight} style={{ stroke: palette.ink, strokeWidth: 2 }} />)}
         <rect x={0} y={0} width={width} height={effectiveBottomHeight} style={{ fill: "none", stroke: palette.ink, strokeWidth: 2 }} />
-        {bottom.captions?.map((c, i) => (
-          <text key={i} x={width / 2} y={effectiveBottomHeight + CAPTION_TOP_PAD + i * CAPTION_LINE_H} textAnchor="middle" style={{ fill: palette.muted, fontSize: 13 }}>
-            {c}
-          </text>
-        ))}
+        {bottom.captions?.map((c, i) => caption(c, i, effectiveBottomHeight + topPad + i * lineH))}
       </g>
     </svg>
   );

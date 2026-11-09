@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { palette } from "../../../shared/lib/palette";
+import { MathText, spokenFractions } from "../../../shared/components/MathText";
 
 export interface FractionCircleProps {
   numerator: number;
@@ -92,7 +93,7 @@ export interface WholePlusPartCirclesProps {
  */
 export function WholePlusPartCircles({ whole, leftoverNum, den, radius = 50, caption }: WholePlusPartCirclesProps) {
   return (
-    <div role="img" aria-label={`${whole} whole${whole === 1 ? "" : "s"} and ${leftoverNum}/${den} left over`}>
+    <div role="img" aria-label={spokenFractions(`${whole} whole${whole === 1 ? "" : "s"} and ${leftoverNum}/${den} left over`)}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
         {Array.from({ length: whole }, (_, i) => (
           <FractionCircle key={`w${i}`} numerator={den} denominator={den} radius={radius} />
@@ -101,7 +102,7 @@ export function WholePlusPartCircles({ whole, leftoverNum, den, radius = 50, cap
       </div>
       {caption && (
         <p className="muted small" style={{ marginTop: 8 }}>
-          {caption}
+          <MathText>{caption}</MathText>
         </p>
       )}
     </div>

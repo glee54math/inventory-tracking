@@ -4,6 +4,8 @@ import { stopIfPlaying } from "../tts/speechEngine";
 import type { Unit } from "../units/types";
 import { tappedList, type Step, type TestQuestion } from "./types";
 import { answerText, check, fresh, StepInput, type StepState } from "./StepProblem";
+import { MathText, useStackedFractions } from "../components/MathText";
+import { formBoxes, formName, isAnswerForm } from "../components/answerKinds";
 
 export interface UnitTestViewProps {
   /** A unit's `test` field — or any other `{questions, passScore}` config, e.g. a cross-unit module test. */
@@ -14,18 +16,44 @@ export interface UnitTestViewProps {
 
 /** Formats what the student actually typed/picked, for the results review list. */
 const studentAnswerText = (step: Step, inputs: string[]): string => {
+  if (step.kind === "fraction" && step.mixed && step.den === undefined && isAnswerForm(inputs[3])) {
+    // Labs with <AnswerFormPick>: only the boxes the picked kind shows, then the kind.
+    const show = formBoxes(inputs[3]);
+    const w = show[0] ? (inputs[0] ?? "").trim() : "";
+    const n = show[1] ? (inputs[1] ?? "").trim() : "";
+    const d = show[2] ? (inputs[2] ?? "").trim() : "";
+    const frac = n || d ? `${n || "?"}/${d || "?"}` : "";
+    const text = [w, frac].filter(Boolean).join(" ");
+    return `${text || "(blank)"} (${formName(inputs[3])})`;
+  }
+  if (step.kind === "fraction") {
+    const w = step.mixed ? (inputs[0] ?? "").trim() : "";
+    const n = (inputs[1] ?? "").trim();
+    const d = step.den !== undefined ? String(step.den) : (inputs[2] ?? "").trim();
+    const frac = n || d ? `${n || "?"}/${d || "?"}` : "";
+    const text = [w, frac].filter(Boolean).join(" ");
+    return text || "(blank)";
+  }
   if (!inputs[0]) return "(blank)";
   if (step.kind === "choice") return step.choices[Number(inputs[0])] ?? "(blank)";
   if (step.kind === "tapCount") {
     const n = tappedList(inputs[0]).length;
     return `${n} counter${n === 1 ? "" : "s"}`;
   }
+  // NumberStep.overDen: the typed box is the top of a fraction over a printed denominator.
+  if (step.kind === "number" && step.overDen !== undefined) return `${inputs[0]}/${step.overDen}`;
   if (step.kind === "number" || step.kind === "coordinate") return inputs[0];
   if (step.kind === "sentence") {
     if (!inputs[1]) return "(blank)";
     const blankText = (b: (typeof step.blanks)[number], raw: string): string => (b.kind === "select" ? (b.choices[Number(raw)] ?? "?") : raw);
-    return `${step.parts[0]}${blankText(step.blanks[0], inputs[0])}${step.parts[1]}${blankText(step.blanks[1], inputs[1])}${step.parts[2]}`;
+    if (step.stacked) return `${step.parts[0]}${blankText(step.blanks[0], inputs[0])}/${blankText(step.blanks[1], inputs[1])}${step.parts[2]}`;
+    const over = (i: 0 | 1) => (step.overDen?.[i] !== undefined ? `/${step.overDen[i]}` : "");
+    // SentenceStep.more (MG10): blanks 3+ follow parts[2].
+    const more = (step.more ?? []).map((m, k) => `${inputs[k + 2] ? blankText(m.blank, inputs[k + 2]) : "(blank)"}${m.after}`).join("");
+    return `${step.parts[0]}${blankText(step.blanks[0], inputs[0])}${over(0)}${step.parts[1]}${blankText(step.blanks[1], inputs[1])}${over(1)}${step.parts[2]}${more}`;
   }
+  // RatioStep.stacked: the two boxes are one fraction's top and bottom.
+  if (step.kind === "ratio" && step.stacked) return inputs[1] ? `${step.frame?.[0] ?? ""}${inputs[0]}/${inputs[1]}${step.frame?.[2] ?? ""}` : "(blank)";
   return inputs[1] ? inputs.join(" : ") : "(blank)";
 };
 
@@ -55,6 +83,10 @@ export function UnitTestView({ test, onComplete }: UnitTestViewProps) {
   const toolsRef = useRef<HTMLDivElement>(null);
   const promptRef = useRef<HTMLDivElement>(null);
   const readerId = useId();
+  // Labs with <StackedFractions> (MG10) show a score as "8 out of 10", so the
+  // only slash-numbers a student sees are fractions (and those are stacked).
+  const stacked = useStackedFractions();
+  const outOf = (a: number, b: number) => (stacked ? `${a} out of ${b}` : `${a}/${b}`);
 
   const finished = current >= questions.length;
 
@@ -100,27 +132,35 @@ export function UnitTestView({ test, onComplete }: UnitTestViewProps) {
     return (
       <div className="unit-test results">
         <div className={`test-score ${passed ? "pass" : "fail"}`}>
-          <div className="test-score-num">
-            {score}/{questions.length}
-          </div>
+          <div className="test-score-num">{outOf(score, questions.length)}</div>
           <ReadAloud className="test-score-label" autoPlay text={passed ? `${score} out of ${questions.length}. Passed, nice work!` : `${score} out of ${questions.length}. Keep practicing. Aim for ${test.passScore} out of ${questions.length}.`}>
-            {passed ? "Passed — nice work!" : `Keep practicing — aim for ${test.passScore}/${questions.length}.`}
+            {passed ? "Passed — nice work!" : `Keep practicing — aim for ${outOf(test.passScore, questions.length)}.`}
           </ReadAloud>
         </div>
         <ol className="test-review">
           {questions.map((q, i) => (
             <ReadAloud as="li" key={i} className={results[i].ok ? "ok" : "bad"}>
-              {q.visual && <div className="test-review-visual">{q.visual}</div>}
-              <div className="test-review-prompt">{q.step.prompt}</div>
+              {q.visual && <div className="test-review-visual"><MathText>{q.visual}</MathText></div>}
+              <div className="test-review-prompt">
+                <MathText>{q.step.prompt}</MathText>
+              </div>
               <div className="test-review-answer">
-                Your answer: <b>{studentAnswerText(q.step, states[i].inputs)}</b>
+                Your answer:{" "}
+                <b>
+                  <MathText>{studentAnswerText(q.step, states[i].inputs)}</MathText>
+                </b>
               </div>
               {!results[i].ok && (
                 <div className="test-review-correct">
-                  Correct answer: <b>{answerText(q.step)}</b>
+                  Correct answer:{" "}
+                  <b>
+                    <MathText>{answerText(q.step)}</MathText>
+                  </b>
                 </div>
               )}
-              <div className="test-review-explain">{q.step.explain}</div>
+              <div className="test-review-explain">
+                <MathText>{q.step.explain}</MathText>
+              </div>
             </ReadAloud>
           ))}
         </ol>
@@ -142,10 +182,10 @@ export function UnitTestView({ test, onComplete }: UnitTestViewProps) {
         ))}
       </div>
       <div className="test-question">
-        {q.visual && <div className="problem-visual">{q.visual}</div>}
+        {q.visual && <div className="problem-visual"><MathText>{q.visual}</MathText></div>}
         <div ref={promptRef}>
           <ReadAloud className="test-prompt" alsoRead={[inputRef, toolsRef]}>
-            {q.step.prompt}
+            <MathText>{q.step.prompt}</MathText>
           </ReadAloud>
         </div>
         <div ref={inputRef} data-readaloud-part>

@@ -1,4 +1,5 @@
 import { palette, diagramFont } from "../../../shared/lib/palette";
+import { MathText } from "../../../shared/components/MathText";
 
 export interface GraduatedContainerProps {
   /** Whole liters the container is marked up to (the top tick). */
@@ -42,28 +43,30 @@ export function GraduatedContainer({ capacityL, fillL, tone = "a" }: GraduatedCo
   }
 
   return (
-    <svg
-      viewBox={`0 0 ${W + 34} ${H}`}
-      role="img"
-      aria-label={`A container marked up to ${capacityL} liters, filled to ${fillL} liters`}
-      style={{ display: "block", width: "100%", maxWidth: W + 34, height: "auto", fontFamily: diagramFont }}
-    >
-      {/* container outline */}
-      <rect x={10} y={bodyTop} width={W} height={BODY_H} rx={6} fill={palette.paper} stroke={palette.line} strokeWidth={2.5} />
-      {/* fill */}
-      <rect x={10} y={bodyBottom - fillH} width={W} height={fillH} fill={fill} opacity={0.35} />
-      <line x1={10} y1={bodyBottom - fillH} x2={10 + W} y2={bodyBottom - fillH} stroke={fill} strokeWidth={2.5} />
-      {/* ticks */}
-      {ticks.map((t, i) => (
-        <g key={i}>
-          <line x1={10} y1={t.y} x2={10 + (t.major ? 22 : 12)} y2={t.y} stroke={palette.muted} strokeWidth={t.major ? 2 : 1.25} />
-          {t.label && (
-            <text x={10 + W + 6} y={t.y + 4} fontSize={12} fontWeight={700} fill={palette.ink}>
-              {t.label} L
-            </text>
-          )}
-        </g>
-      ))}
-    </svg>
+    <MathText>
+      <svg
+        viewBox={`0 0 ${W + 34} ${H}`}
+        role="img"
+        aria-label={`A container marked up to ${capacityL} liters, filled to ${fillL} liters`}
+        style={{ display: "block", width: "100%", maxWidth: W + 34, height: "auto", fontFamily: diagramFont }}
+      >
+        {/* container outline */}
+        <rect x={10} y={bodyTop} width={W} height={BODY_H} rx={6} fill={palette.paper} stroke={palette.line} strokeWidth={2.5} />
+        {/* fill */}
+        <rect x={10} y={bodyBottom - fillH} width={W} height={fillH} fill={fill} opacity={0.35} />
+        <line x1={10} y1={bodyBottom - fillH} x2={10 + W} y2={bodyBottom - fillH} stroke={fill} strokeWidth={2.5} />
+        {/* ticks */}
+        {ticks.map((t, i) => (
+          <g key={i}>
+            <line x1={10} y1={t.y} x2={10 + (t.major ? 22 : 12)} y2={t.y} stroke={palette.muted} strokeWidth={t.major ? 2 : 1.25} />
+            {t.label && (
+              <text x={10 + W + 6} y={t.y + 4} fontSize={12} fontWeight={700} fill={palette.ink}>
+                {t.label} L
+              </text>
+            )}
+          </g>
+        ))}
+      </svg>
+    </MathText>
   );
 }

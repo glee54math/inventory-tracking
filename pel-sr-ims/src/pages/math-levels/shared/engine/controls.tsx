@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
 import { ReadAloud } from "../tts/ReadAloud";
+import { MathText, spokenFraction, useStackedFractions } from "../components/MathText";
 
 /**
  * Quantity words, colored to match the diagrams. `color` overrides the default
@@ -10,13 +11,13 @@ import { ReadAloud } from "../tts/ReadAloud";
  * overrides color, since inline style wins over a class for the same property.
  */
 export const QA = ({ children, color }: { children: React.ReactNode; color?: string }) => (
-  <span className="qa-text" style={color ? { color } : undefined}>{children}</span>
+  <span className="qa-text" style={color ? { color } : undefined}><MathText>{children}</MathText></span>
 );
 export const QB = ({ children, color }: { children: React.ReactNode; color?: string }) => (
-  <span className="qb-text" style={color ? { color } : undefined}>{children}</span>
+  <span className="qb-text" style={color ? { color } : undefined}><MathText>{children}</MathText></span>
 );
 export const QC = ({ children, color }: { children: React.ReactNode; color?: string }) => (
-  <span className="qc-text" style={color ? { color } : undefined}>{children}</span>
+  <span className="qc-text" style={color ? { color } : undefined}><MathText>{children}</MathText></span>
 );
 
 /**
@@ -24,13 +25,20 @@ export const QC = ({ children, color }: { children: React.ReactNode; color?: str
  * with a dividing line — instead of as a slash string like "2/3". Inherits
  * color/weight from an ancestor like QA/QB, since it sets neither itself.
  */
-export const Frac = ({ n, d }: { n: React.ReactNode; d: React.ReactNode }) => (
-  // data-tts-say: read-aloud says "3 fourths" instead of "34".
-  <span className="frac" role="math" aria-label={`${n}/${d}`} data-tts-say={typeof n !== "object" && typeof d !== "object" ? `${n}/${d}` : undefined}>
-    <span className="frac-n">{n}</span>
-    <span className="frac-d">{d}</span>
-  </span>
-);
+export const Frac = ({ n, d }: { n: React.ReactNode; d: React.ReactNode }) => {
+  const plain = typeof n !== "object" && typeof d !== "object";
+  // Labs with <StackedFractions> (MG10): screen readers say "3 over 4", and a
+  // fraction with a typed box inside keeps the box reachable (no label over it).
+  const stacked = useStackedFractions();
+  const label = stacked ? (plain ? spokenFraction(String(n), String(d)) : undefined) : `${n}/${d}`;
+  return (
+    // data-tts-say: read-aloud says "3 fourths" instead of "34".
+    <span className="frac" role={stacked && !plain ? undefined : "math"} aria-label={label} data-tts-say={plain ? `${n}/${d}` : undefined}>
+      <span className="frac-n">{n}</span>
+      <span className="frac-d">{d}</span>
+    </span>
+  );
+};
 
 /**
  * Renders a quotient as a plain whole number when it reduces to one, instead
@@ -84,7 +92,7 @@ export function Slider({ label, value, min, max, step = 1, onChange, display }: 
   return (
     <label className="slider" data-readaloud-part>
       <span className="stepper-label">
-        {label} <b>{display ?? value}</b>
+        <MathText>{label}</MathText> <b>{display !== undefined ? <MathText>{display}</MathText> : value}</b>
       </span>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} />
     </label>
@@ -132,7 +140,7 @@ export function Segmented<T extends string>({
       {indicator && <span className="segmented-indicator" style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }} aria-hidden="true" />}
       {options.map((o) => (
         <button key={o.id} role="radio" aria-checked={o.id === value} className={o.id === value ? "on" : ""} disabled={disabled && o.id !== value} onClick={() => onChange(o.id)}>
-          {o.label}
+          <MathText>{o.label}</MathText>
         </button>
       ))}
     </div>
@@ -143,7 +151,7 @@ export function Segmented<T extends string>({
 export function Says({ children }: { children: React.ReactNode }) {
   return (
     <ReadAloud as="p" className="says">
-      {children}
+      <MathText>{children}</MathText>
     </ReadAloud>
   );
 }

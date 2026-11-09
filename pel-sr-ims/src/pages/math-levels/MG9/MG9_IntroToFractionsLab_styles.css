@@ -178,3 +178,61 @@
   outline: none;
   box-shadow: 0 0 0 3px var(--qa-soft);
 }
+
+/* Every fraction in this lab's text is stacked, the handwritten way (shared
+   MathText inside <StackedFractions>; user requirement, same rules as
+   MG10_AddingAndSubtractingFractionsLab_styles.css). A mixed number keeps
+   its whole number and fraction together on one line, and text blocks get a
+   taller line height so a line with a fraction is no taller than one without. */
+.itf-lab .frac-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.itf-lab .frac-text .frac {
+  margin: 0 0.1em;
+}
+.itf-lab .panel p,
+.itf-lab .panel li,
+.itf-lab .key-idea p,
+.itf-lab .goal,
+.itf-lab .story,
+.itf-lab .step-prompt,
+.itf-lab .step-result,
+.itf-lab .explain,
+.itf-lab .show-me,
+.itf-lab .feedback,
+.itf-lab .cfu-line,
+.itf-lab .test-prompt,
+.itf-lab .test-review li {
+  line-height: 1.9;
+}
+.itf-lab .path-goal,
+.itf-lab .unit-carousel-goal {
+  line-height: 1.8;
+}
+/* Small print keeps its fractions readable on an iPad. */
+.itf-lab .small .frac,
+.itf-lab .path-goal .frac,
+.itf-lab .unit-carousel-goal .frac {
+  font-size: 0.92em;
+}
+/* A typed top over a printed denominator (NumberStep/SentenceStep overDen,
+   or a CFU box written as the top of a fraction). */
+.itf-lab .sentence-over-den {
+  vertical-align: middle;
+  margin: 0 4px;
+  line-height: 1.2;
+}
+.itf-lab .sentence-over-den .frac-entry-fixed {
+  line-height: 1.6;
+}
+.itf-lab .answer-row .number-over-den {
+  display: inline-flex;
+}
+.itf-lab .frac .frac-n select.answer,
+.itf-lab .frac .frac-n .tap-select {
+  margin: 0 0 3px;
+}

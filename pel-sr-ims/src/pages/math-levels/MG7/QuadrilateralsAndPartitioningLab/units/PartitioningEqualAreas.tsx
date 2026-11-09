@@ -15,6 +15,8 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Frac, Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { partitioningEqualAreasTest } from "./PartitioningEqualAreasTest";
+import { MathText } from "../../../shared/components/MathText";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 const STRIP_BS = [2, 3, 4, 6, 8];
 const REVERSE_BS = [3, 4, 5, 6, 8];
@@ -51,26 +53,28 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>1.</b> This rectangle is cut into 4 EQUAL parts. What fraction of the whole is ONE part?
-      </p>
-      <GridPartition rows={2} cols={4} cellRegion={stripRegions(2, 4, 4, "v")} width={160} />
-      <div className="choices" role="group">
-        {options.map((o, i) => (
-          <button key={i} className="choice" onClick={() => setPicked(i)} disabled={ok} style={fieldStyle(i === 0, picked === i)}>
-            {o}
-          </button>
-        ))}
-      </div>
-      {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Right — when a whole is cut into 4 equal parts, each part is 1/4. The bottom number tells how many equal parts make the whole."
-            : "Not quite — one part out of 4 equal parts is written with a 1 on top and the number of equal parts on the bottom."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>1.</b> This rectangle is cut into 4 EQUAL parts. What fraction of the whole is ONE part?
         </p>
-      )}
-    </div>
+        <GridPartition rows={2} cols={4} cellRegion={stripRegions(2, 4, 4, "v")} width={160} />
+        <div className="choices" role="group">
+          {options.map((o, i) => (
+            <button key={i} className="choice" onClick={() => setPicked(i)} disabled={ok} style={fieldStyle(i === 0, picked === i)}>
+              {o}
+            </button>
+          ))}
+        </div>
+        {picked !== null && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Right — when a whole is cut into 4 equal parts, each part is 1/4. The bottom number tells how many equal parts make the whole."
+              : "Not quite — one part out of 4 equal parts is written with a 1 on top and the number of equal parts on the bottom."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -89,42 +93,45 @@ function UnequalNonExampleQuestion({ onComplete }: { onComplete?: () => void }) 
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>2.</b> Look at this rectangle:
-      </p>
-      <GridPartition {...UNEQUAL_FOUR} width={210} />
-      <p>
-        It has{" "}
-        <select className="answer" style={{ width: 70, ...fieldStyle(okCount, checked) }} value={countVal} onChange={(e) => setCountVal(e.target.value)}>
-          <option value="" disabled>
-            ?
-          </option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="6">6</option>
-        </select>{" "}
-        pieces, and{" "}
-        <select className="answer" style={{ width: 330, ...fieldStyle(okSize, checked) }} value={sizeVal} onChange={(e) => setSizeVal(e.target.value)}>
-          <option value="" disabled>
-            ?
-          </option>
-          <option value="not-fourths">they're NOT equal in area, so they are NOT fourths</option>
-          <option value="fourths">there are 4 of them, so each one is 1/4</option>
-        </select>
-        .
-      </p>
-      <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-        Check Answer
-      </button>
-      {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Right — the last piece covers 6 unit squares and the others only 2. Having 4 pieces isn't enough; they must have EQUAL area to be fourths."
-            : "Count the unit squares inside each piece. Do all 4 pieces cover the same amount?"}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>2.</b> Look at this rectangle:
         </p>
-      )}
-    </div>
+        <GridPartition {...UNEQUAL_FOUR} width={210} />
+        <p>
+          It has{" "}
+          <select className="answer" style={{ width: 70, ...fieldStyle(okCount, checked) }} value={countVal} onChange={(e) => setCountVal(e.target.value)}>
+            <option value="" disabled>
+              ?
+            </option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="6">6</option>
+          </select>{" "}
+          pieces, and{" "}
+          {/* Tap buttons, not a native dropdown: a dropdown can't draw the stacked 1/4. */}
+          <TapSelect aria-label="Are the pieces fourths?" style={fieldStyle(okSize, checked)} value={sizeVal} onChange={(e) => setSizeVal(e.target.value)}>
+            <option value="" disabled>
+              ?
+            </option>
+            <option value="not-fourths">they're NOT equal in area, so they are NOT fourths</option>
+            <option value="fourths">there are 4 of them, so each one is 1/4</option>
+          </TapSelect>
+          .
+        </p>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+          Check Answer
+        </button>
+        {checked && allFilled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Right — the last piece covers 6 unit squares and the others only 2. Having 4 pieces isn't enough; they must have EQUAL area to be fourths."
+              : "Count the unit squares inside each piece. Do all 4 pieces cover the same amount?"}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -137,24 +144,26 @@ function DifferentShapeQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>3.</b> The blue part and the orange part are different shapes. Are they equal in area?
-      </p>
-      <GridPartition rows={4} cols={4} cellRegion={templateToCellRegion(NONCONGRUENT_TEMPLATES[0])} width={150} />
-      <div className="choices" role="group">
-        {options.map((o, i) => (
-          <button key={i} className="choice" onClick={() => setPicked(i)} disabled={ok} style={fieldStyle(i === 0, picked === i)}>
-            {o}
-          </button>
-        ))}
-      </div>
-      {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Right — area is how much space a part covers. Same number of unit squares means same area, even if the shapes are different. Each part is 1/2." : "Count the unit squares in each part before deciding. Does the shape matter, or how much it covers?"}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>3.</b> The blue part and the orange part are different shapes. Are they equal in area?
         </p>
-      )}
-    </div>
+        <GridPartition rows={4} cols={4} cellRegion={templateToCellRegion(NONCONGRUENT_TEMPLATES[0])} width={150} />
+        <div className="choices" role="group">
+          {options.map((o, i) => (
+            <button key={i} className="choice" onClick={() => setPicked(i)} disabled={ok} style={fieldStyle(i === 0, picked === i)}>
+              {o}
+            </button>
+          ))}
+        </div>
+        {picked !== null && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok ? "Right — area is how much space a part covers. Same number of unit squares means same area, even if the shapes are different. Each part is 1/2." : "Count the unit squares in each part before deciding. Does the shape matter, or how much it covers?"}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -166,23 +175,25 @@ function CountTrapQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>4.</b> True or False: if you cut a shape into 5 pieces, each piece is always 1/5 of the whole.
-      </p>
-      <div style={{ display: "flex", gap: 10 }}>
-        {(["true", "false"] as const).map((v) => (
-          <button key={v} type="button" className="choice" disabled={ok} onClick={() => setPicked(v)} style={fieldStyle(v === "false", picked === v)}>
-            {v === "true" ? "True" : "False"}
-          </button>
-        ))}
-      </div>
-      {picked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "False — each piece is 1/5 only if all 5 pieces have EQUAL area. 5 uneven pieces aren't fifths." : "Think back to question 2. Does the number of pieces alone tell you the fraction?"}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>4.</b> True or False: if you cut a shape into 5 pieces, each piece is always 1/5 of the whole.
         </p>
-      )}
-    </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          {(["true", "false"] as const).map((v) => (
+            <button key={v} type="button" className="choice" disabled={ok} onClick={() => setPicked(v)} style={fieldStyle(v === "false", picked === v)}>
+              {v === "true" ? "True" : "False"}
+            </button>
+          ))}
+        </div>
+        {picked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok ? "False — each piece is 1/5 only if all 5 pieces have EQUAL area. 5 uneven pieces aren't fifths." : "Think back to question 2. Does the number of pieces alone tell you the fraction?"}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -193,13 +204,15 @@ function PartitioningCheck({ onComplete }: { onComplete?: () => void }) {
     if (allDone) onComplete?.();
   }, [allDone, onComplete]);
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure "equal parts" and fractions like 1/4 make sense before you try practice problems.</p>
-      <VocabQuestion onComplete={() => setDone((d) => ({ ...d, q1: true }))} />
-      <UnequalNonExampleQuestion onComplete={() => setDone((d) => ({ ...d, q2: true }))} />
-      <DifferentShapeQuestion onComplete={() => setDone((d) => ({ ...d, q3: true }))} />
-      <CountTrapQuestion onComplete={() => setDone((d) => ({ ...d, q4: true }))} />
-    </div>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Quick check: let's make sure "equal parts" and fractions like 1/4 make sense before you try practice problems.</p>
+        <VocabQuestion onComplete={() => setDone((d) => ({ ...d, q1: true }))} />
+        <UnequalNonExampleQuestion onComplete={() => setDone((d) => ({ ...d, q2: true }))} />
+        <DifferentShapeQuestion onComplete={() => setDone((d) => ({ ...d, q3: true }))} />
+        <CountTrapQuestion onComplete={() => setDone((d) => ({ ...d, q4: true }))} />
+      </div>
+    </MathText>
   );
 }
 
@@ -217,40 +230,42 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const counts = regionCounts(grid.cellRegion);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && (
-        <button
-          type="button"
-          className="btn ghost"
-          style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
-          onClick={() => setShowCheck((v) => !v)}
-        >
-          Quick Check
-        </button>
-      )}
-      <h3 style={{ margin: 0 }}>Cut it yourself</h3>
-      <div className="control-row">
-        <Stepper label="Pieces" value={b} min={2} max={6} onChange={setB} tone="a" />
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Quick Check
+          </button>
+        )}
+        <h3 style={{ margin: 0 }}>Cut it yourself</h3>
+        <div className="control-row">
+          <Stepper label="Pieces" value={b} min={2} max={6} onChange={setB} tone="a" />
+        </div>
+        <CutLineRect key={b} b={b} />
+        <h3 style={{ margin: 0 }}>Same area, different shape?</h3>
+        <Segmented
+          label="Parts"
+          value={mode}
+          onChange={setMode}
+          options={[
+            { id: "same", label: "Same shape" },
+            { id: "different", label: "Different shapes" },
+          ]}
+        />
+        <GridPartition rows={grid.rows} cols={grid.cols} cellRegion={grid.cellRegion} width={170} />
+        <p className="muted small">
+          Blue: {counts[0]} unit squares · Orange: {counts[1]} unit squares. {mode === "same" ? "Two matching halves — " : "Different shapes, but they cover the same number of squares — "}
+          so each part is <Frac n={1} d={2} /> of the whole either way. Equal AREA is what counts, not equal shape.
+        </p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <PartitioningCheck onComplete={onIntroDone} />}
       </div>
-      <CutLineRect key={b} b={b} />
-      <h3 style={{ margin: 0 }}>Same area, different shape?</h3>
-      <Segmented
-        label="Parts"
-        value={mode}
-        onChange={setMode}
-        options={[
-          { id: "same", label: "Same shape" },
-          { id: "different", label: "Different shapes" },
-        ]}
-      />
-      <GridPartition rows={grid.rows} cols={grid.cols} cellRegion={grid.cellRegion} width={170} />
-      <p className="muted small">
-        Blue: {counts[0]} unit squares · Orange: {counts[1]} unit squares. {mode === "same" ? "Two matching halves — " : "Different shapes, but they cover the same number of squares — "}
-        so each part is <Frac n={1} d={2} /> of the whole either way. Equal AREA is what counts, not equal shape.
-      </p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <PartitioningCheck onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 
@@ -264,7 +279,7 @@ const fracStep = (b: number, prompt: string, explain: string) => ({
   hint: `One of ${b} equal parts: 1 on top, ${b} (the number of equal parts) on the bottom.`,
   explain,
   answer: 1 / b,
-  frac: true,
+  fracBoxes: "fraction" as const, frac: true,
   fracAnswer: [1, b] as [number, number],
   fracRequired: true,
 });
@@ -288,7 +303,7 @@ function obviousStripProblem(): Problem {
         explain: `${b} equal parts, each covering 2 unit squares.`,
         answer: b,
       },
-      fracStep(b, "What fraction of the whole is ONE part? (Type it like 1/3.)", `Each part is 1/${b} of the whole.`),
+      fracStep(b, "What fraction of the whole is ONE part? (Type the top and bottom numbers.)", `Each part is 1/${b} of the whole.`),
     ],
     wrapUp: `${b} equal parts, so each part is 1/${b}.`,
   };
@@ -405,7 +420,7 @@ function reverseProblem(): Problem {
         explain: `${total} squares ÷ ${thick} squares per part = ${b} equal parts.`,
         answer: b,
       },
-      fracStep(b, "So what fraction of the whole is the shaded part? (Type it like 1/3.)", `One of ${b} equal parts is 1/${b}.`),
+      fracStep(b, "So what fraction of the whole is the shaded part? (Type the top and bottom numbers.)", `One of ${b} equal parts is 1/${b}.`),
     ],
     wrapUp: `The whole is ${b} equal parts, so the shaded part is 1/${b}.`,
   };
@@ -414,10 +429,12 @@ function reverseProblem(): Problem {
 /** Static snapshot for the cover page's preview carousel. */
 function Preview() {
   return (
-    <div style={{ display: "flex", gap: 12 }}>
-      <GridPartition rows={2} cols={4} cellRegion={stripRegions(2, 4, 4, "v")} width={110} />
-      <GridPartition rows={4} cols={4} cellRegion={templateToCellRegion(NONCONGRUENT_TEMPLATES[0])} width={80} />
-    </div>
+    <MathText>
+      <div style={{ display: "flex", gap: 12 }}>
+        <GridPartition rows={2} cols={4} cellRegion={stripRegions(2, 4, 4, "v")} width={110} />
+        <GridPartition rows={4} cols={4} cellRegion={templateToCellRegion(NONCONGRUENT_TEMPLATES[0])} width={80} />
+      </div>
+    </MathText>
   );
 }
 

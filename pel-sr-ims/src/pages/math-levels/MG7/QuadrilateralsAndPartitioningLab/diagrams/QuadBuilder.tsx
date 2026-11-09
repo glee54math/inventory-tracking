@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type React from "react";
 import { palette } from "../../../shared/lib/palette";
+import { MathText } from "../../../shared/components/MathText";
 
 // ============================================================================
 // Direct-manipulation 4-vertex quadrilateral builder for Unit 2 (Drawing
@@ -209,40 +210,42 @@ export function QuadBuilder({ requirement, onValidChange, initial }: QuadBuilder
   const polyPoints = points.map((p) => toPx(p).join(",")).join(" ");
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <svg
-        ref={svgRef}
-        viewBox={`0 0 ${SIZE} ${SIZE}`}
-        width={SIZE}
-        style={{ maxWidth: "100%", touchAction: "none" }}
-        role="img"
-        aria-label="A quadrilateral with 4 draggable corners on a grid"
-        onPointerMove={onMove}
-        onPointerUp={endDrag}
-        onPointerLeave={endDrag}
-      >
-        <rect x={PAD} y={PAD} width={GRID * CELL} height={GRID * CELL} fill="none" stroke={palette.grid} strokeWidth={1} />
-        <polygon points={polyPoints} fill={metrics.isSimple ? palette.aSoft : palette.bSoft} stroke={palette.ink} strokeWidth={2.5} />
-        {points.map((p, i) => {
-          const [px, py] = toPx(p);
-          return <circle key={i} cx={px} cy={py} r={12} fill={palette.paper} stroke={palette.a} strokeWidth={3} style={{ cursor: "grab", touchAction: "none" }} onPointerDown={startDrag(i)} />;
-        })}
-      </svg>
-      <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 4 }}>
-        {checks.map((c, i) => (
-          <li key={i} style={{ color: c.ok ? "var(--good)" : "var(--bad)", fontWeight: 600, fontSize: 14 }}>
-            {c.ok ? "✓" : "✗"} {c.label}
-          </li>
-        ))}
-      </ul>
-      <button
-        type="button"
-        className="btn ghost"
-        style={{ width: "fit-content" }}
-        onClick={() => setPoints(initial ?? DEFAULT_START)}
-      >
-        Reset shape
-      </button>
-    </div>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${SIZE} ${SIZE}`}
+          width={SIZE}
+          style={{ maxWidth: "100%", touchAction: "none" }}
+          role="img"
+          aria-label="A quadrilateral with 4 draggable corners on a grid"
+          onPointerMove={onMove}
+          onPointerUp={endDrag}
+          onPointerLeave={endDrag}
+        >
+          <rect x={PAD} y={PAD} width={GRID * CELL} height={GRID * CELL} fill="none" stroke={palette.grid} strokeWidth={1} />
+          <polygon points={polyPoints} fill={metrics.isSimple ? palette.aSoft : palette.bSoft} stroke={palette.ink} strokeWidth={2.5} />
+          {points.map((p, i) => {
+            const [px, py] = toPx(p);
+            return <circle key={i} cx={px} cy={py} r={12} fill={palette.paper} stroke={palette.a} strokeWidth={3} style={{ cursor: "grab", touchAction: "none" }} onPointerDown={startDrag(i)} />;
+          })}
+        </svg>
+        <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+          {checks.map((c, i) => (
+            <li key={i} style={{ color: c.ok ? "var(--good)" : "var(--bad)", fontWeight: 600, fontSize: 14 }}>
+              {c.ok ? "✓" : "✗"} {c.label}
+            </li>
+          ))}
+        </ul>
+        <button
+          type="button"
+          className="btn ghost"
+          style={{ width: "fit-content" }}
+          onClick={() => setPoints(initial ?? DEFAULT_START)}
+        >
+          Reset shape
+        </button>
+      </div>
+    </MathText>
   );
 }

@@ -6,6 +6,7 @@ import { allFilled, answerBorder } from "../../../shared/lib/answerChecks";
 import { choice, type Problem } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 import { angleAdditionTest } from "./AngleAdditionTest";
+import { MathText } from "../../../shared/components/MathText";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -55,102 +56,104 @@ function AngleAdditionCheck({ onComplete }: { onComplete?: () => void }) {
   const digits = (v: string) => v.replace(/[^0-9]/g, "").slice(0, 3);
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure adding angles makes sense before you try practice problems.</p>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Quick check: let's make sure adding angles makes sense before you try practice problems.</p>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>1.</b> Two angles can be added together when they share a{" "}
-          <Pick label="What the angles share" value={a1} onChange={(v) => { setA1(v); setC1(false); }} ok={ok1a} checked={c1} disabled={done1} options={[{ id: "color", label: "color" }, { id: "vertexRay", label: "vertex and a ray" }, { id: "size", label: "size" }]} />{" "}
-          and don't overlap. Then the whole angle's measure is the{" "}
-          <Pick label="How the parts make the whole" value={b1} onChange={(v) => { setB1(v); setC1(false); }} ok={ok1b} checked={c1} disabled={done1} options={[{ id: "difference", label: "difference (subtract)" }, { id: "sum", label: "sum (add)" }, { id: "product", label: "product (multiply)" }]} />{" "}
-          of the parts.
-        </p>
-        <CheckRow
-          filled={allFilled(a1, b1)}
-          checked={c1}
-          ok={ok1a && ok1b}
-          done={done1}
-          onCheck={() => setC1(true)}
-          good="Correct — side-by-side angles with the same vertex and a shared ray add up: the whole is the sum of the parts."
-          bad="Not quite — check each red box. The parts have to meet at the same vertex and share a ray, and you ADD them to get the whole."
-        />
-      </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> Two angles can be added together when they share a{" "}
+            <Pick label="What the angles share" value={a1} onChange={(v) => { setA1(v); setC1(false); }} ok={ok1a} checked={c1} disabled={done1} options={[{ id: "color", label: "color" }, { id: "vertexRay", label: "vertex and a ray" }, { id: "size", label: "size" }]} />{" "}
+            and don't overlap. Then the whole angle's measure is the{" "}
+            <Pick label="How the parts make the whole" value={b1} onChange={(v) => { setB1(v); setC1(false); }} ok={ok1b} checked={c1} disabled={done1} options={[{ id: "difference", label: "difference (subtract)" }, { id: "sum", label: "sum (add)" }, { id: "product", label: "product (multiply)" }]} />{" "}
+            of the parts.
+          </p>
+          <CheckRow
+            filled={allFilled(a1, b1)}
+            checked={c1}
+            ok={ok1a && ok1b}
+            done={done1}
+            onCheck={() => setC1(true)}
+            good="Correct — side-by-side angles with the same vertex and a shared ray add up: the whole is the sum of the parts."
+            bad="Not quite — check each red box. The parts have to meet at the same vertex and share a ray, and you ADD them to get the whole."
+          />
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>2.</b> A 110° angle is split into two parts. One part is 40°.
-        </p>
-        <PartsPicture base={10} parts={[40, 70]} partLabels={["40°", "?"]} wholeLabel="110°" width={240} />
-        <p>
-          The 110° angle is the{" "}
-          <Pick label="Is 110 the whole or a part" value={a2} onChange={(v) => { setA2(v); setC2(false); }} ok={ok2a} checked={c2} disabled={done2} options={[{ id: "whole", label: "whole" }, { id: "part", label: "part" }]} />
-          . To find the missing part, I{" "}
-          <Pick label="Add or subtract" value={b2} onChange={(v) => { setB2(v); setC2(false); }} ok={ok2b} checked={c2} disabled={done2} options={[{ id: "add", label: "add: 110 + 40" }, { id: "subtract", label: "subtract: 110 − 40" }]} />
-          . The missing part is{" "}
-          <input className="answer" style={{ width: 64, ...answerBorder(ok2n, c2) }} inputMode="numeric" aria-label="Missing part" value={n2} disabled={done2} onChange={(e) => { setN2(digits(e.target.value)); setC2(false); }} />°.
-        </p>
-        <CheckRow
-          filled={allFilled(a2, b2, n2)}
-          checked={c2}
-          ok={ok2a && ok2b && ok2n}
-          done={done2}
-          onCheck={() => setC2(true)}
-          good="Correct — 110° is the whole, so take away the part you know: 110 − 40 = 70°. Check: 40 + 70 = 110."
-          bad="Not quite — the biggest angle (the one around everything) is the whole. A missing PART must be smaller than the whole, so you can't add."
-        />
-      </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>2.</b> A 110° angle is split into two parts. One part is 40°.
+          </p>
+          <PartsPicture base={10} parts={[40, 70]} partLabels={["40°", "?"]} wholeLabel="110°" width={240} />
+          <p>
+            The 110° angle is the{" "}
+            <Pick label="Is 110 the whole or a part" value={a2} onChange={(v) => { setA2(v); setC2(false); }} ok={ok2a} checked={c2} disabled={done2} options={[{ id: "whole", label: "whole" }, { id: "part", label: "part" }]} />
+            . To find the missing part, I{" "}
+            <Pick label="Add or subtract" value={b2} onChange={(v) => { setB2(v); setC2(false); }} ok={ok2b} checked={c2} disabled={done2} options={[{ id: "add", label: "add: 110 + 40" }, { id: "subtract", label: "subtract: 110 − 40" }]} />
+            . The missing part is{" "}
+            <input className="answer" style={{ width: 64, ...answerBorder(ok2n, c2) }} inputMode="numeric" aria-label="Missing part" value={n2} disabled={done2} onChange={(e) => { setN2(digits(e.target.value)); setC2(false); }} />°.
+          </p>
+          <CheckRow
+            filled={allFilled(a2, b2, n2)}
+            checked={c2}
+            ok={ok2a && ok2b && ok2n}
+            done={done2}
+            onCheck={() => setC2(true)}
+            good="Correct — 110° is the whole, so take away the part you know: 110 − 40 = 70°. Check: 40 + 70 = 110."
+            bad="Not quite — the biggest angle (the one around everything) is the whole. A missing PART must be smaller than the whole, so you can't add."
+          />
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>3.</b> The blue angle is 70° and the orange angle is 70°, but they <b>overlap</b>. True or false: the whole angle, from the first ray to the last ray, is
-          70° + 70° = 140°.
-        </p>
-        <AngleFigure
-          rays={[{ dir: 10, len: 110 }, { dir: 50, len: 110 }, { dir: 80, len: 110 }, { dir: 120, len: 110 }]}
-          arcs={[
-            { from: 10, sweep: 70, r: 40, tone: "a", fill: true, label: "70°" },
-            { from: 50, sweep: 70, r: 64, tone: "b", fill: true, label: "70°" },
-          ]}
-          width={230}
-          ariaLabel="Two 70 degree angles that overlap"
-        />
-        <PickOne
-          value={q3}
-          onPick={setQ3}
-          correct="false"
-          done={done3}
-          options={[
-            { id: "true", label: "True" },
-            { id: "false", label: "False" },
-          ]}
-          good="Correct — the middle 40° piece is inside BOTH angles, so 70 + 70 counts it twice. The whole is really 110°. Angles only add like this when they don't overlap."
-          bad="Not quite — look at the middle piece where blue and orange overlap. Adding 70 + 70 counts that piece twice."
-        />
-      </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> The blue angle is 70° and the orange angle is 70°, but they <b>overlap</b>. True or false: the whole angle, from the first ray to the last ray, is
+            70° + 70° = 140°.
+          </p>
+          <AngleFigure
+            rays={[{ dir: 10, len: 110 }, { dir: 50, len: 110 }, { dir: 80, len: 110 }, { dir: 120, len: 110 }]}
+            arcs={[
+              { from: 10, sweep: 70, r: 40, tone: "a", fill: true, label: "70°" },
+              { from: 50, sweep: 70, r: 64, tone: "b", fill: true, label: "70°" },
+            ]}
+            width={230}
+            ariaLabel="Two 70 degree angles that overlap"
+          />
+          <PickOne
+            value={q3}
+            onPick={setQ3}
+            correct="false"
+            done={done3}
+            options={[
+              { id: "true", label: "True" },
+              { id: "false", label: "False" },
+            ]}
+            good="Correct — the middle 40° piece is inside BOTH angles, so 70 + 70 counts it twice. The whole is really 110°. Angles only add like this when they don't overlap."
+            bad="Not quite — look at the middle piece where blue and orange overlap. Adding 70 + 70 counts that piece twice."
+          />
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>4.</b> This square corner is split into two angles. One of them is 35°.
-        </p>
-        <PartsPicture base={0} parts={[35, 55]} partLabels={["35°", "?"]} squareWhole width={200} />
-        <p>
-          A square corner is{" "}
-          <Pick label="Size of a square corner" value={a4} onChange={(v) => { setA4(v); setC4(false); }} ok={ok4a} checked={c4} disabled={done4} options={[{ id: "100", label: "100°" }, { id: "90", label: "90°" }, { id: "180", label: "180°" }]} />
-          , so the other angle is{" "}
-          <input className="answer" style={{ width: 64, ...answerBorder(ok4n, c4) }} inputMode="numeric" aria-label="The other angle" value={n4} disabled={done4} onChange={(e) => { setN4(digits(e.target.value)); setC4(false); }} />°.
-        </p>
-        <CheckRow
-          filled={allFilled(a4, n4)}
-          checked={c4}
-          ok={ok4a && ok4n}
-          done={done4}
-          onCheck={() => setC4(true)}
-          good="Correct — a square corner (right angle) is 90°, even with no number written on it. 90 − 35 = 55°."
-          bad="Not quite — a square corner is a quarter turn. Use that as the whole, then subtract the part you know."
-        />
+        <div className="align-stack-wrap">
+          <p>
+            <b>4.</b> This square corner is split into two angles. One of them is 35°.
+          </p>
+          <PartsPicture base={0} parts={[35, 55]} partLabels={["35°", "?"]} squareWhole width={200} />
+          <p>
+            A square corner is{" "}
+            <Pick label="Size of a square corner" value={a4} onChange={(v) => { setA4(v); setC4(false); }} ok={ok4a} checked={c4} disabled={done4} options={[{ id: "100", label: "100°" }, { id: "90", label: "90°" }, { id: "180", label: "180°" }]} />
+            , so the other angle is{" "}
+            <input className="answer" style={{ width: 64, ...answerBorder(ok4n, c4) }} inputMode="numeric" aria-label="The other angle" value={n4} disabled={done4} onChange={(e) => { setN4(digits(e.target.value)); setC4(false); }} />°.
+          </p>
+          <CheckRow
+            filled={allFilled(a4, n4)}
+            checked={c4}
+            ok={ok4a && ok4n}
+            done={done4}
+            onCheck={() => setC4(true)}
+            good="Correct — a square corner (right angle) is 90°, even with no number written on it. 90 − 35 = 55°."
+            bad="Not quite — a square corner is a quarter turn. Use that as the whole, then subtract the part you know."
+          />
+        </div>
       </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -194,57 +197,59 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   arcs.push({ from: 0, sweep: whole, r: 100, tone: "ink", label: `${whole}°` });
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && (
-        <button
-          type="button"
-          className="btn ghost"
-          style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
-          onClick={() => setShowCheck((v) => !v)}
-        >
-          Check for Understanding
-        </button>
-      )}
-      <p>
-        When angles sit side by side — same vertex, sharing a ray, no overlap — their measures <b>add up</b> to the whole angle, just like lengths do. Drag the rays
-        with dots and watch the equation.
-      </p>
-      <div className="ap-explore">
-        <AngleFigure rays={figRays} arcs={arcs} onDragRay={onDrag} frameRadius={150} width={340} ariaLabel={`An angle of ${whole} degrees split into ${parts.length} parts`} />
-        <div className="ap-side">
-          <p className="ap-readout">
-            {parts.map((p, i) => (
-              <span key={i}>
-                {i > 0 && " + "}
-                <span className={`ap-tone-${TONES[i]}`}>{i === hiddenIdx && !revealed ? "?" : `${p}°`}</span>
-              </span>
-            ))}{" "}
-            = <b>{whole}°</b>
-          </p>
-          {mystery && !revealed && (
-            <p>
-              Can you find the missing part? It's {whole}°{parts.filter((_, i) => i !== hiddenIdx).map((p) => ` − ${p}°`).join("")}.{" "}
-              <button type="button" className="btn ghost" onClick={() => setRevealed(true)}>
-                Reveal
-              </button>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Check for Understanding
+          </button>
+        )}
+        <p>
+          When angles sit side by side — same vertex, sharing a ray, no overlap — their measures <b>add up</b> to the whole angle, just like lengths do. Drag the rays
+          with dots and watch the equation.
+        </p>
+        <div className="ap-explore">
+          <AngleFigure rays={figRays} arcs={arcs} onDragRay={onDrag} frameRadius={150} width={340} ariaLabel={`An angle of ${whole} degrees split into ${parts.length} parts`} />
+          <div className="ap-side">
+            <p className="ap-readout">
+              {parts.map((p, i) => (
+                <span key={i}>
+                  {i > 0 && " + "}
+                  <span className={`ap-tone-${TONES[i]}`}>{i === hiddenIdx && !revealed ? "?" : `${p}°`}</span>
+                </span>
+              ))}{" "}
+              = <b>{whole}°</b>
             </p>
-          )}
+            {mystery && !revealed && (
+              <p>
+                Can you find the missing part? It's {whole}°{parts.filter((_, i) => i !== hiddenIdx).map((p) => ` − ${p}°`).join("")}.{" "}
+                <button type="button" className="btn ghost" onClick={() => setRevealed(true)}>
+                  Reveal
+                </button>
+              </p>
+            )}
+          </div>
         </div>
+        <div className="control-row">
+          <button type="button" className="btn ghost" onClick={toggleThird}>
+            {rays.length === 4 ? "Use 2 parts" : "Split into 3 parts"}
+          </button>
+          <button type="button" className={`btn ghost ${mystery ? "pressed" : ""}`} onClick={() => { setMystery((m) => !m); setRevealed(false); }}>
+            {mystery ? "Show every part" : "Hide a part (mystery mode)"}
+          </button>
+          <button type="button" className="btn ghost" onClick={() => setRays(rays.length === 4 ? [0, 30, 90, 180] : [0, 35, 90])}>
+            {rays.length === 4 ? "Fill a straight line" : "Make a square corner"}
+          </button>
+        </div>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <AngleAdditionCheck onComplete={onIntroDone} />}
       </div>
-      <div className="control-row">
-        <button type="button" className="btn ghost" onClick={toggleThird}>
-          {rays.length === 4 ? "Use 2 parts" : "Split into 3 parts"}
-        </button>
-        <button type="button" className={`btn ghost ${mystery ? "pressed" : ""}`} onClick={() => { setMystery((m) => !m); setRevealed(false); }}>
-          {mystery ? "Show every part" : "Hide a part (mystery mode)"}
-        </button>
-        <button type="button" className="btn ghost" onClick={() => setRays(rays.length === 4 ? [0, 30, 90, 180] : [0, 35, 90])}>
-          {rays.length === 4 ? "Fill a straight line" : "Make a square corner"}
-        </button>
-      </div>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <AngleAdditionCheck onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 

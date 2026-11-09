@@ -5,6 +5,7 @@ import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { exponentsTest } from "./ExponentsTest";
 import { toSuperscript } from "./formatExponent";
+import { MathText } from "../../../shared/components/MathText";
 
 /** The repeated-multiplication string, e.g. (3, 4) -> "3 × 3 × 3 × 3" — the
  *  SAME function the Explore diagram and the Practice steps both read from,
@@ -24,31 +25,33 @@ const fieldStyle = (ok: boolean, checked: boolean): CSSProperties => (checked ? 
 function RepeatedMultiplicationStrip({ base, exponent, revealTo }: { base: number; exponent: number; revealTo?: number }) {
   const shown = revealTo ?? exponent;
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }} aria-label={`${base} to the power of ${exponent}`}>
-      {Array.from({ length: exponent }, (_, i) => (
-        <span key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {i > 0 && <span style={{ color: "var(--muted)", fontWeight: 700 }}>×</span>}
-          <span
-            style={{
-              display: "inline-grid",
-              placeItems: "center",
-              width: 44,
-              height: 44,
-              borderRadius: "var(--radius-sm)",
-              border: "2px solid var(--qa)",
-              background: i < shown ? "var(--qa-soft)" : "var(--card)",
-              color: "var(--qa-text)",
-              fontWeight: 700,
-              fontSize: 18,
-              opacity: i < shown ? 1 : 0.25,
-              transition: "opacity 0.2s, background 0.2s",
-            }}
-          >
-            {base}
+    <MathText>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }} aria-label={`${base} to the power of ${exponent}`}>
+        {Array.from({ length: exponent }, (_, i) => (
+          <span key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {i > 0 && <span style={{ color: "var(--muted)", fontWeight: 700 }}>×</span>}
+            <span
+              style={{
+                display: "inline-grid",
+                placeItems: "center",
+                width: 44,
+                height: 44,
+                borderRadius: "var(--radius-sm)",
+                border: "2px solid var(--qa)",
+                background: i < shown ? "var(--qa-soft)" : "var(--card)",
+                color: "var(--qa-text)",
+                fontWeight: 700,
+                fontSize: 18,
+                opacity: i < shown ? 1 : 0.25,
+                transition: "opacity 0.2s, background 0.2s",
+              }}
+            >
+              {base}
+            </span>
           </span>
-        </span>
-      ))}
-    </div>
+        ))}
+      </div>
+    </MathText>
   );
 }
 
@@ -73,43 +76,45 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>1.</b> In the expression 5<sup>3</sup>, the 5 is called{" "}
-        <select className="answer" value={first} onChange={(e) => setFirst(e.target.value)} style={fieldStyle(okFirst, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          {OPTIONS.map((o) => (
-            <option key={o} value={o}>
-              {o}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>1.</b> In the expression 5<sup>3</sup>, the 5 is called{" "}
+          <select className="answer" value={first} onChange={(e) => setFirst(e.target.value)} style={fieldStyle(okFirst, checked)}>
+            <option value="" disabled>
+              choose
             </option>
-          ))}
-        </select>
-        , and the 3 is called{" "}
-        <select className="answer" value={second} onChange={(e) => setSecond(e.target.value)} style={fieldStyle(okSecond, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          {OPTIONS.map((o) => (
-            <option key={o} value={o}>
-              {o}
+            {OPTIONS.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
+          , and the 3 is called{" "}
+          <select className="answer" value={second} onChange={(e) => setSecond(e.target.value)} style={fieldStyle(okSecond, checked)}>
+            <option value="" disabled>
+              choose
             </option>
-          ))}
-        </select>
-        .
-      </p>
-      <div className="control-row">
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — the base is the number being multiplied; the exponent says how many times." : "Not quite — the base is the number repeated; the exponent is the small number telling you how many times."}
+            {OPTIONS.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
+          .
         </p>
-      )}
-    </div>
+        <div className="control-row">
+          <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && allFilled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok ? "Correct — the base is the number being multiplied; the exponent says how many times." : "Not quite — the base is the number repeated; the exponent is the small number telling you how many times."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -127,40 +132,42 @@ function RepeatedMultVsTimesQuestion({ onComplete }: { onComplete?: () => void }
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>2.</b> What is 3<sup>2</sup>?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={valuePick} onChange={(e) => setValuePick(e.target.value)} style={fieldStyle(valueOk, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="9">9 (3 × 3)</option>
-          <option value="6">6 (3 × 2)</option>
-        </select>
-      </div>
-      <p>An exponent tells you to...</p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={meaningPick} onChange={(e) => setMeaningPick(e.target.value)} style={fieldStyle(meaningOk, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="multiply the base by itself that many times">multiply the base by itself that many times</option>
-          <option value="multiply the base by the exponent">multiply the base by the exponent</option>
-        </select>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — 3² means 3 × 3 = 9, not 3 × 2 = 6. An exponent multiplies the base by itself, it never multiplies the base by the exponent."
-            : "Not quite — 3² means 3 multiplied by ITSELF 2 times (3 × 3), not 3 multiplied by 2."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>2.</b> What is 3<sup>2</sup>?
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={valuePick} onChange={(e) => setValuePick(e.target.value)} style={fieldStyle(valueOk, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="9">9 (3 × 3)</option>
+            <option value="6">6 (3 × 2)</option>
+          </select>
+        </div>
+        <p>An exponent tells you to...</p>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={meaningPick} onChange={(e) => setMeaningPick(e.target.value)} style={fieldStyle(meaningOk, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="multiply the base by itself that many times">multiply the base by itself that many times</option>
+            <option value="multiply the base by the exponent">multiply the base by the exponent</option>
+          </select>
+          <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && allFilled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — 3² means 3 × 3 = 9, not 3 × 2 = 6. An exponent multiplies the base by itself, it never multiplies the base by the exponent."
+              : "Not quite — 3² means 3 multiplied by ITSELF 2 times (3 × 3), not 3 multiplied by 2."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -174,30 +181,32 @@ function PowerZeroTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or False: any number raised to the power of 0 equals 0.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="True">True</option>
-          <option value="False">False</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — False. Any nonzero number to the 0 power equals 1 (e.g. 5⁰ = 1), not 0. It's a rule to remember, not something you compute by repeated multiplication."
-            : "Not quite — try 5⁰. It equals 1, not 0. Any nonzero number to the power of 0 is 1."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>3.</b> True or False: any number raised to the power of 0 equals 0.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="True">True</option>
+            <option value="False">False</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — False. Any nonzero number to the 0 power equals 1 (e.g. 5⁰ = 1), not 0. It's a rule to remember, not something you compute by repeated multiplication."
+              : "Not quite — try 5⁰. It equals 1, not 0. Any nonzero number to the power of 0 is 1."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -211,30 +220,32 @@ function OrderOfOpsQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>4.</b> In the expression 2 + 3<sup>2</sup>, which happens first: the addition, or the exponent?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="the addition">the addition</option>
-          <option value="the exponent">the exponent</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — exponents are evaluated before addition: 3² = 9 first, then 2 + 9 = 11."
-            : "Not quite — exponents always come before addition and subtraction in the order of operations. Evaluate 3² first."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>4.</b> In the expression 2 + 3<sup>2</sup>, which happens first: the addition, or the exponent?
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="the addition">the addition</option>
+            <option value="the exponent">the exponent</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — exponents are evaluated before addition: 3² = 9 first, then 2 + 9 = 11."
+              : "Not quite — exponents always come before addition and subtraction in the order of operations. Evaluate 3² first."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -247,13 +258,15 @@ function ExponentsCheckForUnderstanding({ onComplete }: { onComplete?: () => voi
   const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's connect a few ideas before you try practice problems.</p>
-      <VocabQuestion onComplete={mark("vocab")} />
-      <RepeatedMultVsTimesQuestion onComplete={mark("repeatedVsTimes")} />
-      <PowerZeroTrapQuestion onComplete={mark("powerZero")} />
-      <OrderOfOpsQuestion onComplete={mark("orderOfOps")} />
-    </div>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: let's connect a few ideas before you try practice problems.</p>
+        <VocabQuestion onComplete={mark("vocab")} />
+        <RepeatedMultVsTimesQuestion onComplete={mark("repeatedVsTimes")} />
+        <PowerZeroTrapQuestion onComplete={mark("powerZero")} />
+        <OrderOfOpsQuestion onComplete={mark("orderOfOps")} />
+      </div>
+    </MathText>
   );
 }
 
@@ -269,44 +282,46 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const value = Math.pow(base, exponent);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
-        <Stepper label="Base" value={base} min={0} max={9} step={1} onChange={setBase} tone="a" />
-        <Stepper label="Exponent" value={exponent} min={0} max={5} step={1} onChange={setExponent} tone="b" />
-        {!introActive && (
-          <button
-            type="button"
-            className="btn ghost"
-            style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
-            onClick={() => setShowCheck((v) => !v)}
-          >
-            Check for Understanding
-          </button>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="control-row">
+          <Stepper label="Base" value={base} min={0} max={9} step={1} onChange={setBase} tone="a" />
+          <Stepper label="Exponent" value={exponent} min={0} max={5} step={1} onChange={setExponent} tone="b" />
+          {!introActive && (
+            <button
+              type="button"
+              className="btn ghost"
+              style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
+              onClick={() => setShowCheck((v) => !v)}
+            >
+              Check for Understanding
+            </button>
+          )}
+        </div>
+        <div style={{ fontSize: 28, fontWeight: 700 }}>
+          {base}
+          <sup>{exponent}</sup> = {value}
+        </div>
+        {exponent === 0 ? (
+          <RepeatedMultiplicationStrip base={base} exponent={1} />
+        ) : (
+          <RepeatedMultiplicationStrip base={base} exponent={exponent} />
         )}
+        <p className="muted small">
+          {exponent === 0
+            ? `Any nonzero number to the power of 0 is 1 (and this is a rule to remember, not something to multiply out).`
+            : exponent === 1
+            ? `An exponent of 1 means the base just appears once — ${base}¹ = ${base}.`
+            : base === 0
+            ? `0 multiplied by itself any number of times is still 0.`
+            : base === 1
+            ? `1 multiplied by itself any number of times is still 1.`
+            : `${base}${exponent === 2 ? "²" : exponent === 3 ? "³" : "ⁿ"} means ${repeatedMultString(base, exponent)} = ${value} — the base repeated as a factor, NOT ${base} × ${exponent} (= ${base * exponent}).`}
+        </p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <ExponentsCheckForUnderstanding onComplete={onIntroDone} />}
       </div>
-      <div style={{ fontSize: 28, fontWeight: 700 }}>
-        {base}
-        <sup>{exponent}</sup> = {value}
-      </div>
-      {exponent === 0 ? (
-        <RepeatedMultiplicationStrip base={base} exponent={1} />
-      ) : (
-        <RepeatedMultiplicationStrip base={base} exponent={exponent} />
-      )}
-      <p className="muted small">
-        {exponent === 0
-          ? `Any nonzero number to the power of 0 is 1 (and this is a rule to remember, not something to multiply out).`
-          : exponent === 1
-          ? `An exponent of 1 means the base just appears once — ${base}¹ = ${base}.`
-          : base === 0
-          ? `0 multiplied by itself any number of times is still 0.`
-          : base === 1
-          ? `1 multiplied by itself any number of times is still 1.`
-          : `${base}${exponent === 2 ? "²" : exponent === 3 ? "³" : "ⁿ"} means ${repeatedMultString(base, exponent)} = ${value} — the base repeated as a factor, NOT ${base} × ${exponent} (= ${base * exponent}).`}
-      </p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <ExponentsCheckForUnderstanding onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 

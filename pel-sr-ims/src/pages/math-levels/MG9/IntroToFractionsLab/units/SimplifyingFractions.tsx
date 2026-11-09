@@ -9,6 +9,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Frac, Quotient, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { simplifyingFractionsTest } from "./SimplifyingFractionsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 /** A coprime pair [m, n], m < n, both in [1, 9] — a proper fraction already
  *  in lowest terms, which g*m / g*n then scales up by a chosen GCF. */
@@ -32,24 +33,26 @@ function Explore() {
   const [sm, sd] = simplify(num, den);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="controls">
-        <Stepper label="Numerator" value={num} min={1} max={48} onChange={setNum} tone="a" />
-        <Stepper label="Denominator" value={den} min={2} max={48} onChange={setDen} tone="b" />
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="controls">
+          <Stepper label="Numerator" value={num} min={1} max={48} onChange={setNum} tone="a" />
+          <Stepper label="Denominator" value={den} min={2} max={48} onChange={setDen} tone="b" />
+        </div>
+        <p>
+          GCF({num}, {den}) = <b>{g}</b>
+        </p>
+        <SimplifyBeforeAfter num={num} den={den} simpleNum={sm} simpleDen={sd} />
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+          <FactorRectangle rows={g} cols={num / g} label={`numerator: ${num} = ${g} × ${num / g}`} />
+          <FactorRectangle rows={g} cols={den / g} label={`denominator: ${den} = ${g} × ${den / g}`} />
+        </div>
+        <p className="muted small">
+          The same {g} rows show up in both rectangles — that's exactly why {g} divides evenly into both numbers, and why dividing both by {g} shrinks
+          the fraction to {sm}/{sd} without changing its value.
+        </p>
       </div>
-      <p>
-        GCF({num}, {den}) = <b>{g}</b>
-      </p>
-      <SimplifyBeforeAfter num={num} den={den} simpleNum={sm} simpleDen={sd} />
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-        <FactorRectangle rows={g} cols={num / g} label={`numerator: ${num} = ${g} × ${num / g}`} />
-        <FactorRectangle rows={g} cols={den / g} label={`denominator: ${den} = ${g} × ${den / g}`} />
-      </div>
-      <p className="muted small">
-        The same {g} rows show up in both rectangles — that's exactly why {g} divides evenly into both numbers, and why dividing both by {g} shrinks
-        the fraction to {sm}/{sd} without changing its value.
-      </p>
-    </div>
+    </MathText>
   );
 }
 

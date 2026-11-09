@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { pick, randInt } from "../lib/math";
 import { CoordinatePlane, type PlanePoint, type PlaneSegment } from "../shapes/coordinate";
 import { Segmented, type Step, StepSolver, Workbench } from "../components/ui";
+import { MathText } from "../../../shared/components/MathText";
 
 type V = { label: string; x: number; y: number };
 type SegSpec = { id: string; a: V; b: V; len: number; revealAt: number };
@@ -114,26 +115,28 @@ function FreeDraw() {
     sides.push({ a, b, color: straight ? "teal" : "ink", label: straight ? String(Math.abs(a.x - b.x) + Math.abs(a.y - b.y)) : undefined });
   }
   return (
-    <Workbench
-      figure={<CoordinatePlane onPick={add} points={pts.map((p) => ({ ...p, label: p.label }))} polygon={closed ? pts : undefined} segments={sides} />}
-      caption="Click grid points to place vertices. Sides that are perfectly horizontal or vertical show their length."
-    >
-      <div className="vertex-list">
-        {pts.length === 0 && <p className="muted">Click anywhere on the grid to place vertex A.</p>}
-        {pts.map((p) => <span key={p.label} className="vertex-tag">{pt(p)}</span>)}
-      </div>
-      <div className="button-row">
-        <button className="btn primary" disabled={pts.length < 3 || closed} onClick={() => setClosed(true)}>Close the polygon</button>
-        <button className="btn" disabled={!pts.length} onClick={() => { setPts(closed ? pts : pts.slice(0, -1)); setClosed(false); }}>Undo</button>
-        <button className="btn" disabled={!pts.length} onClick={() => { setPts([]); setClosed(false); }}>Clear</button>
-      </div>
-      <div className="tip-card">
-        <strong>The counting rule</strong>
-        <p>Same y-coordinate → horizontal side → length is the distance between the x's.</p>
-        <p>Same x-coordinate → vertical side → length is the distance between the y's.</p>
-        <p>Opposite sides of an axis? Add the distances to 0. Same side? Subtract.</p>
-      </div>
-    </Workbench>
+    <MathText>
+      <Workbench
+        figure={<CoordinatePlane onPick={add} points={pts.map((p) => ({ ...p, label: p.label }))} polygon={closed ? pts : undefined} segments={sides} />}
+        caption="Click grid points to place vertices. Sides that are perfectly horizontal or vertical show their length."
+      >
+        <div className="vertex-list">
+          {pts.length === 0 && <p className="muted">Click anywhere on the grid to place vertex A.</p>}
+          {pts.map((p) => <span key={p.label} className="vertex-tag">{pt(p)}</span>)}
+        </div>
+        <div className="button-row">
+          <button className="btn primary" disabled={pts.length < 3 || closed} onClick={() => setClosed(true)}>Close the polygon</button>
+          <button className="btn" disabled={!pts.length} onClick={() => { setPts(closed ? pts : pts.slice(0, -1)); setClosed(false); }}>Undo</button>
+          <button className="btn" disabled={!pts.length} onClick={() => { setPts([]); setClosed(false); }}>Clear</button>
+        </div>
+        <div className="tip-card">
+          <strong>The counting rule</strong>
+          <p>Same y-coordinate → horizontal side → length is the distance between the x's.</p>
+          <p>Same x-coordinate → vertical side → length is the distance between the y's.</p>
+          <p>Opposite sides of an axis? Add the distances to 0. Same side? Subtract.</p>
+        </div>
+      </Workbench>
+    </MathText>
   );
 }
 
@@ -164,51 +167,53 @@ export function CoordinateModule({ onSolved }: { onSolved: (clean: boolean) => v
     : [];
 
   return (
-    <section>
-      <div className="module-head">
-        <div>
-          <h2>Coordinate plane</h2>
-          <p className="lede">Draw polygons from their vertices and use coordinates to find side lengths.</p>
+    <MathText>
+      <section>
+        <div className="module-head">
+          <div>
+            <h2>Coordinate plane</h2>
+            <p className="lede">Draw polygons from their vertices and use coordinates to find side lengths.</p>
+          </div>
+          <Segmented label="Mode" value={mode} onChange={setMode}
+            options={[{ id: "practice", label: "Practice" }, { id: "draw", label: "Draw freely" }]} />
         </div>
-        <Segmented label="Mode" value={mode} onChange={setMode}
-          options={[{ id: "practice", label: "Practice" }, { id: "draw", label: "Draw freely" }]} />
-      </div>
-      {mode === "draw" ? <FreeDraw /> : (
-        <Workbench
-          figure={
-            <CoordinatePlane
-              onPick={allPlotted ? undefined : plot}
-              points={shown.map((v): PlanePoint => ({ ...v, label: v.label }))}
-              polygon={allPlotted ? problem.vertices : undefined}
-              segments={segs}
-            />
-          }
-          caption={problem.intro}
-        >
-          {!allPlotted ? (
-            <div className="plot-task">
-              <ol className="steps">
-                <li className="step current">
-                  <div className="step-num">●</div>
-                  <div className="step-body">
-                    <div className="step-prompt">Plot point <strong>{pt(target)}</strong> by clicking the grid.</div>
-                    <p className="muted">Start at the origin (0, 0). Move across for x, then up or down for y.</p>
-                    {miss && <div className="feedback bad" role="status">{miss}</div>}
-                    <div className="step-tools">
-                      <button className="link" onClick={() => { setPlotted(problem.vertices.length); setMiss(null); }}>Plot them all for me</button>
+        {mode === "draw" ? <FreeDraw /> : (
+          <Workbench
+            figure={
+              <CoordinatePlane
+                onPick={allPlotted ? undefined : plot}
+                points={shown.map((v): PlanePoint => ({ ...v, label: v.label }))}
+                polygon={allPlotted ? problem.vertices : undefined}
+                segments={segs}
+              />
+            }
+            caption={problem.intro}
+          >
+            {!allPlotted ? (
+              <div className="plot-task">
+                <ol className="steps">
+                  <li className="step current">
+                    <div className="step-num">●</div>
+                    <div className="step-body">
+                      <div className="step-prompt">Plot point <strong>{pt(target)}</strong> by clicking the grid.</div>
+                      <p className="muted">Start at the origin (0, 0). Move across for x, then up or down for y.</p>
+                      {miss && <div className="feedback bad" role="status">{miss}</div>}
+                      <div className="step-tools">
+                        <button className="link" onClick={() => { setPlotted(problem.vertices.length); setMiss(null); }}>Plot them all for me</button>
+                      </div>
                     </div>
-                  </div>
-                </li>
-              </ol>
-              <div className="vertex-list">
-                {problem.vertices.map((v, i) => <span key={v.label} className={"vertex-tag" + (i < plotted ? " done" : "")}>{pt(v)}</span>)}
+                  </li>
+                </ol>
+                <div className="vertex-list">
+                  {problem.vertices.map((v, i) => <span key={v.label} className={"vertex-tag" + (i < plotted ? " done" : "")}>{pt(v)}</span>)}
+                </div>
               </div>
-            </div>
-          ) : (
-            <StepSolver key={problem.key} steps={problem.steps} onStepChange={setStepIdx} onComplete={onSolved} onNext={next} />
-          )}
-        </Workbench>
-      )}
-    </section>
+            ) : (
+              <StepSolver key={problem.key} steps={problem.steps} onStepChange={setStepIdx} onComplete={onSolved} onNext={next} />
+            )}
+          </Workbench>
+        )}
+      </section>
+    </MathText>
   );
 }

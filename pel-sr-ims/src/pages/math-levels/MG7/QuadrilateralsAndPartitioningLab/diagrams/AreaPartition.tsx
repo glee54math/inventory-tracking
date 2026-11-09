@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import type React from "react";
 import { palette, itemColors } from "../../../shared/lib/palette";
+import { MathText } from "../../../shared/components/MathText";
 
 // ============================================================================
 // Unit 3 (Partitioning Shapes into Equal-Area Parts and Naming Unit
@@ -38,38 +39,40 @@ export function GridPartition({ rows, cols, cellRegion, width = 180, height, lab
   const at = (r: number, c: number) => cellRegion[r * cols + c];
 
   return (
-    <svg viewBox={`0 0 ${width} ${h}`} width={width} style={{ maxWidth: "100%" }} role="img" aria-label={label ?? `A shape split into a ${rows} by ${cols} grid of parts`}>
-      {/* Colored cells first, faint grid lines on top everywhere (the "count
-          the unit squares" method 3.G.2 teaches is meant to stay visible,
-          even inside a colored region) — then bold strokes around each
-          region's own outer boundary, drawn last so they read as the "real"
-          cut lines. */}
-      {Array.from({ length: rows }, (_, r) =>
-        Array.from({ length: cols }, (_, c) => {
-          const region = at(r, c);
-          if (region < 0) return null;
-          return <rect key={`${r}-${c}`} x={c * cell} y={r * cell} width={cell} height={cell} fill={REGION_FILLS[region % REGION_FILLS.length]} />;
-        })
-      )}
-      {Array.from({ length: rows + 1 }, (_, r) => <line key={`h${r}`} x1={0} y1={r * cell} x2={width} y2={r * cell} stroke={palette.grid} strokeWidth={1} />)}
-      {Array.from({ length: cols + 1 }, (_, c) => <line key={`v${c}`} x1={c * cell} y1={0} x2={c * cell} y2={h} stroke={palette.grid} strokeWidth={1} />)}
-      {/* Bold boundary: for every cell edge where the neighboring region
-          differs (or it's the outer edge of a shaded cell), draw a thick line. */}
-      {Array.from({ length: rows }, (_, r) =>
-        Array.from({ length: cols }, (_, c) => {
-          const region = at(r, c);
-          const lines: React.ReactNode[] = [];
-          const right = c + 1 < cols ? at(r, c + 1) : -2;
-          const down = r + 1 < rows ? at(r + 1, c) : -2;
-          if (region >= 0 && right !== region) lines.push(<line key={`br${r}-${c}`} x1={(c + 1) * cell} y1={r * cell} x2={(c + 1) * cell} y2={(r + 1) * cell} stroke={palette.ink} strokeWidth={2.5} />);
-          if (region >= 0 && down !== region) lines.push(<line key={`bd${r}-${c}`} x1={c * cell} y1={(r + 1) * cell} x2={(c + 1) * cell} y2={(r + 1) * cell} stroke={palette.ink} strokeWidth={2.5} />);
-          if (region >= 0 && c === 0) lines.push(<line key={`bl${r}-${c}`} x1={0} y1={r * cell} x2={0} y2={(r + 1) * cell} stroke={palette.ink} strokeWidth={2.5} />);
-          if (region >= 0 && r === 0) lines.push(<line key={`bt${r}-${c}`} x1={c * cell} y1={0} x2={(c + 1) * cell} y2={0} stroke={palette.ink} strokeWidth={2.5} />);
-          return lines;
-        })
-      )}
-      <rect x={0} y={0} width={width} height={h} fill="none" stroke={palette.ink} strokeWidth={2.5} />
-    </svg>
+    <MathText>
+      <svg viewBox={`0 0 ${width} ${h}`} width={width} style={{ maxWidth: "100%" }} role="img" aria-label={label ?? `A shape split into a ${rows} by ${cols} grid of parts`}>
+        {/* Colored cells first, faint grid lines on top everywhere (the "count
+            the unit squares" method 3.G.2 teaches is meant to stay visible,
+            even inside a colored region) — then bold strokes around each
+            region's own outer boundary, drawn last so they read as the "real"
+            cut lines. */}
+        {Array.from({ length: rows }, (_, r) =>
+          Array.from({ length: cols }, (_, c) => {
+            const region = at(r, c);
+            if (region < 0) return null;
+            return <rect key={`${r}-${c}`} x={c * cell} y={r * cell} width={cell} height={cell} fill={REGION_FILLS[region % REGION_FILLS.length]} />;
+          })
+        )}
+        {Array.from({ length: rows + 1 }, (_, r) => <line key={`h${r}`} x1={0} y1={r * cell} x2={width} y2={r * cell} stroke={palette.grid} strokeWidth={1} />)}
+        {Array.from({ length: cols + 1 }, (_, c) => <line key={`v${c}`} x1={c * cell} y1={0} x2={c * cell} y2={h} stroke={palette.grid} strokeWidth={1} />)}
+        {/* Bold boundary: for every cell edge where the neighboring region
+            differs (or it's the outer edge of a shaded cell), draw a thick line. */}
+        {Array.from({ length: rows }, (_, r) =>
+          Array.from({ length: cols }, (_, c) => {
+            const region = at(r, c);
+            const lines: React.ReactNode[] = [];
+            const right = c + 1 < cols ? at(r, c + 1) : -2;
+            const down = r + 1 < rows ? at(r + 1, c) : -2;
+            if (region >= 0 && right !== region) lines.push(<line key={`br${r}-${c}`} x1={(c + 1) * cell} y1={r * cell} x2={(c + 1) * cell} y2={(r + 1) * cell} stroke={palette.ink} strokeWidth={2.5} />);
+            if (region >= 0 && down !== region) lines.push(<line key={`bd${r}-${c}`} x1={c * cell} y1={(r + 1) * cell} x2={(c + 1) * cell} y2={(r + 1) * cell} stroke={palette.ink} strokeWidth={2.5} />);
+            if (region >= 0 && c === 0) lines.push(<line key={`bl${r}-${c}`} x1={0} y1={r * cell} x2={0} y2={(r + 1) * cell} stroke={palette.ink} strokeWidth={2.5} />);
+            if (region >= 0 && r === 0) lines.push(<line key={`bt${r}-${c}`} x1={c * cell} y1={0} x2={(c + 1) * cell} y2={0} stroke={palette.ink} strokeWidth={2.5} />);
+            return lines;
+          })
+        )}
+        <rect x={0} y={0} width={width} height={h} fill="none" stroke={palette.ink} strokeWidth={2.5} />
+      </svg>
+    </MathText>
   );
 }
 
@@ -253,33 +256,35 @@ export function CutLineRect({ b }: { b: number }) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <svg
-        ref={svgRef}
-        viewBox={`0 0 ${RECT_W} ${RECT_H}`}
-        width={RECT_W}
-        style={{ maxWidth: "100%", touchAction: "none" }}
-        role="img"
-        aria-label={`A rectangle with ${b - 1} draggable cut lines, making ${b} pieces`}
-        onPointerMove={onMove}
-        onPointerUp={endDrag}
-        onPointerLeave={endDrag}
-      >
-        {Array.from({ length: b }, (_, i) => (
-          <rect key={i} x={bounds[i]} y={0} width={bounds[i + 1] - bounds[i]} height={RECT_H} fill={REGION_FILLS[i % REGION_FILLS.length]} stroke={palette.ink} strokeWidth={1} />
-        ))}
-        <rect x={0} y={0} width={RECT_W} height={RECT_H} fill="none" stroke={palette.ink} strokeWidth={2.5} />
-        {cuts.map((x, i) => (
-          <g key={i}>
-            <line x1={x} y1={0} x2={x} y2={RECT_H} stroke={palette.ink} strokeWidth={3} />
-            <circle cx={x} cy={RECT_H / 2} r={11} fill={palette.paper} stroke={palette.a} strokeWidth={3} style={{ cursor: "ew-resize", touchAction: "none" }} onPointerDown={startDrag(i)} />
-          </g>
-        ))}
-      </svg>
-      <p className="muted small">
-        {widths.map((_, i) => `Piece ${i + 1}: ${totalPct[i].toFixed(0)}%`).join(" · ")}
-        {allClose ? ` — all about equal! Each piece is 1/${b} of the whole.` : " — drag the cut lines until every piece looks the same size."}
-      </p>
-    </div>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${RECT_W} ${RECT_H}`}
+          width={RECT_W}
+          style={{ maxWidth: "100%", touchAction: "none" }}
+          role="img"
+          aria-label={`A rectangle with ${b - 1} draggable cut lines, making ${b} pieces`}
+          onPointerMove={onMove}
+          onPointerUp={endDrag}
+          onPointerLeave={endDrag}
+        >
+          {Array.from({ length: b }, (_, i) => (
+            <rect key={i} x={bounds[i]} y={0} width={bounds[i + 1] - bounds[i]} height={RECT_H} fill={REGION_FILLS[i % REGION_FILLS.length]} stroke={palette.ink} strokeWidth={1} />
+          ))}
+          <rect x={0} y={0} width={RECT_W} height={RECT_H} fill="none" stroke={palette.ink} strokeWidth={2.5} />
+          {cuts.map((x, i) => (
+            <g key={i}>
+              <line x1={x} y1={0} x2={x} y2={RECT_H} stroke={palette.ink} strokeWidth={3} />
+              <circle cx={x} cy={RECT_H / 2} r={11} fill={palette.paper} stroke={palette.a} strokeWidth={3} style={{ cursor: "ew-resize", touchAction: "none" }} onPointerDown={startDrag(i)} />
+            </g>
+          ))}
+        </svg>
+        <p className="muted small">
+          {widths.map((_, i) => `Piece ${i + 1}: ${totalPct[i].toFixed(0)}%`).join(" · ")}
+          {allClose ? ` — all about equal! Each piece is 1/${b} of the whole.` : " — drag the cut lines until every piece looks the same size."}
+        </p>
+      </div>
+    </MathText>
   );
 }

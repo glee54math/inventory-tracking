@@ -31,7 +31,8 @@ export const measureQuestion = (difficulty: "medium" | "hard"): TestQuestion[] =
       difficulty,
       step: {
         kind: "number",
-        prompt: `How long is the ${obj.name}, to the nearest 1/4 inch? (Type like 2 1/4.)`,
+        prompt: `How long is the ${obj.name}, to the nearest 1/4 inch? (Type the whole number and the fraction.)`,
+        fracBoxes: "mixed",
         hint: "Short ticks are quarters, medium ticks are halves.",
         explain: `About ${inchText(len)} inches.`,
         answer: len,

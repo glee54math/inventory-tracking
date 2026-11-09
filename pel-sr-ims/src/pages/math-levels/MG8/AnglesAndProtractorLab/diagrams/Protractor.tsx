@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { palette, diagramFont } from "../../../shared/lib/palette";
 import { arcPath, dirPoint, dragToDir, pointerDir, protractorReading, toneColor, type Scale, type Tone } from "./angleGeometry";
+import { MathText } from "../../../shared/components/MathText";
 
 export interface ProtractorRay {
   dir: number;
@@ -138,74 +139,76 @@ export function Protractor({
   };
 
   return (
-    <svg
-      ref={svgRef}
-      viewBox={`${minX.toFixed(1)} ${minY.toFixed(1)} ${vbW.toFixed(1)} ${vbH.toFixed(1)}`}
-      width={width}
-      style={{ display: "block", maxWidth: "100%", height: "auto", fontFamily: diagramFont, touchAction: draggable ? "none" : undefined, cursor: draggable ? "grab" : undefined }}
-      role="img"
-      aria-label={ariaLabel}
-      onPointerDown={
-        draggable
-          ? (e) => {
-              dragging.current = true;
-              e.currentTarget.setPointerCapture(e.pointerId);
-              moveTo(e);
-            }
-          : undefined
-      }
-      onPointerMove={draggable ? (e) => dragging.current && moveTo(e) : undefined}
-      onPointerUp={() => (dragging.current = false)}
-      onPointerCancel={() => (dragging.current = false)}
-    >
-      {showProtractor && (
-        <g>
-          <path d={`${arcPath(rot, 180, R)} Z`} style={{ fill: palette.aSoft, stroke: palette.muted }} fillOpacity={0.45} strokeWidth={1.5} />
-          <line x1={left.x} y1={left.y} x2={right.x} y2={right.y} style={{ stroke: palette.muted }} strokeWidth={1.5} />
-          {Array.from({ length: 181 }, (_, L) => {
-            const len = L % 10 === 0 ? 14 : L % 5 === 0 ? 9 : 5;
-            const p0 = dirPoint(rot + L, R);
-            const p1 = dirPoint(rot + L, R - len);
-            return <line key={`t${L}`} x1={p0.x} y1={p0.y} x2={p1.x} y2={p1.y} style={{ stroke: palette.muted }} strokeWidth={L % 10 === 0 ? 1.3 : 0.7} />;
-          })}
-          {Array.from({ length: 19 }, (_, i) => {
-            const L = i * 10;
-            const { inner, outer } = protractorReading(rot, rot + L);
-            const po = dirPoint(rot + L, R - 24);
-            const pi = dirPoint(rot + L, R - 44);
-            return (
-              <g key={`l${L}`}>
-                <text x={po.x} y={po.y + 3.5} textAnchor="middle" fontSize={10} fontWeight={scaleWeight("outer")} opacity={scaleOpacity("outer")} style={{ fill: palette.b }}>
-                  {outer}
-                </text>
-                <text x={pi.x} y={pi.y + 3.5} textAnchor="middle" fontSize={10} fontWeight={scaleWeight("inner")} opacity={scaleOpacity("inner")} style={{ fill: palette.a }}>
-                  {inner}
-                </text>
-              </g>
-            );
-          })}
-          {/* center mark: a small cross-hair on the straight edge */}
-          <line x1={dirPoint(rot + 90, 10).x} y1={dirPoint(rot + 90, 10).y} x2={0} y2={0} style={{ stroke: palette.muted }} strokeWidth={1.5} />
-        </g>
-      )}
-      {arc && <path d={arcPath(arc.from, arc.sweep, 28, true)} style={{ fill: palette.c }} opacity={0.2} />}
-      {arc && <path d={arcPath(arc.from, arc.sweep, 28)} fill="none" style={{ stroke: palette.c }} strokeWidth={2} />}
-      {rays.map((r, i) => drawRay(r.dir, r.tone ?? "ink", `r${i}`, r.label))}
-      {draggable && drawRay(dragDir!, dragTone, "drag", undefined, true)}
-      {marks.map((m) => {
-        const p = dirPoint(rot + m.local, R + 8);
-        const lab = dirPoint(rot + m.local, R + 21);
-        return (
-          <g key={`m${m.label}`}>
-            <circle cx={p.x} cy={p.y} r={4} style={{ fill: palette.c }} />
-            <text x={lab.x} y={lab.y + 5} textAnchor="middle" fontSize={13} fontWeight={800} style={{ fill: palette.c }}>
-              {m.label}
-            </text>
+    <MathText>
+      <svg
+        ref={svgRef}
+        viewBox={`${minX.toFixed(1)} ${minY.toFixed(1)} ${vbW.toFixed(1)} ${vbH.toFixed(1)}`}
+        width={width}
+        style={{ display: "block", maxWidth: "100%", height: "auto", fontFamily: diagramFont, touchAction: draggable ? "none" : undefined, cursor: draggable ? "grab" : undefined }}
+        role="img"
+        aria-label={ariaLabel}
+        onPointerDown={
+          draggable
+            ? (e) => {
+                dragging.current = true;
+                e.currentTarget.setPointerCapture(e.pointerId);
+                moveTo(e);
+              }
+            : undefined
+        }
+        onPointerMove={draggable ? (e) => dragging.current && moveTo(e) : undefined}
+        onPointerUp={() => (dragging.current = false)}
+        onPointerCancel={() => (dragging.current = false)}
+      >
+        {showProtractor && (
+          <g>
+            <path d={`${arcPath(rot, 180, R)} Z`} style={{ fill: palette.aSoft, stroke: palette.muted }} fillOpacity={0.45} strokeWidth={1.5} />
+            <line x1={left.x} y1={left.y} x2={right.x} y2={right.y} style={{ stroke: palette.muted }} strokeWidth={1.5} />
+            {Array.from({ length: 181 }, (_, L) => {
+              const len = L % 10 === 0 ? 14 : L % 5 === 0 ? 9 : 5;
+              const p0 = dirPoint(rot + L, R);
+              const p1 = dirPoint(rot + L, R - len);
+              return <line key={`t${L}`} x1={p0.x} y1={p0.y} x2={p1.x} y2={p1.y} style={{ stroke: palette.muted }} strokeWidth={L % 10 === 0 ? 1.3 : 0.7} />;
+            })}
+            {Array.from({ length: 19 }, (_, i) => {
+              const L = i * 10;
+              const { inner, outer } = protractorReading(rot, rot + L);
+              const po = dirPoint(rot + L, R - 24);
+              const pi = dirPoint(rot + L, R - 44);
+              return (
+                <g key={`l${L}`}>
+                  <text x={po.x} y={po.y + 3.5} textAnchor="middle" fontSize={10} fontWeight={scaleWeight("outer")} opacity={scaleOpacity("outer")} style={{ fill: palette.b }}>
+                    {outer}
+                  </text>
+                  <text x={pi.x} y={pi.y + 3.5} textAnchor="middle" fontSize={10} fontWeight={scaleWeight("inner")} opacity={scaleOpacity("inner")} style={{ fill: palette.a }}>
+                    {inner}
+                  </text>
+                </g>
+              );
+            })}
+            {/* center mark: a small cross-hair on the straight edge */}
+            <line x1={dirPoint(rot + 90, 10).x} y1={dirPoint(rot + 90, 10).y} x2={0} y2={0} style={{ stroke: palette.muted }} strokeWidth={1.5} />
           </g>
-        );
-      })}
-      <circle cx={0} cy={0} r={4} style={{ fill: palette.ink }} />
-      {draggable && <title>Drag anywhere over the protractor to turn the purple ray.</title>}
-    </svg>
+        )}
+        {arc && <path d={arcPath(arc.from, arc.sweep, 28, true)} style={{ fill: palette.c }} opacity={0.2} />}
+        {arc && <path d={arcPath(arc.from, arc.sweep, 28)} fill="none" style={{ stroke: palette.c }} strokeWidth={2} />}
+        {rays.map((r, i) => drawRay(r.dir, r.tone ?? "ink", `r${i}`, r.label))}
+        {draggable && drawRay(dragDir!, dragTone, "drag", undefined, true)}
+        {marks.map((m) => {
+          const p = dirPoint(rot + m.local, R + 8);
+          const lab = dirPoint(rot + m.local, R + 21);
+          return (
+            <g key={`m${m.label}`}>
+              <circle cx={p.x} cy={p.y} r={4} style={{ fill: palette.c }} />
+              <text x={lab.x} y={lab.y + 5} textAnchor="middle" fontSize={13} fontWeight={800} style={{ fill: palette.c }}>
+                {m.label}
+              </text>
+            </g>
+          );
+        })}
+        <circle cx={0} cy={0} r={4} style={{ fill: palette.ink }} />
+        {draggable && <title>Drag anywhere over the protractor to turn the purple ray.</title>}
+      </svg>
+    </MathText>
   );
 }

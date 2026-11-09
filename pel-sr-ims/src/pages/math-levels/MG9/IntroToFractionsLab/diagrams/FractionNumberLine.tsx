@@ -1,4 +1,6 @@
 import { palette, diagramFont } from "../../../shared/lib/palette";
+import { SvgMath } from "../../../shared/components/SvgMath";
+import { spokenFractions } from "../../../shared/components/MathText";
 
 export interface FractionNumberLineProps {
   /** How many equal parts each whole is divided into. */
@@ -14,7 +16,8 @@ export interface FractionNumberLineProps {
 
 const TICK_PX = 44;
 const PAD_X = 20;
-const HEIGHT = 56;
+// Tall enough for a stacked (handwritten) tick label under the line.
+const HEIGHT = 68;
 const MID_Y = 24;
 
 function tickLabel(k: number, den: number, style: "fraction" | "mixed"): string {
@@ -55,7 +58,7 @@ export function FractionNumberLine({ denominator, numerator, labelStyle }: Fract
         width={width}
         style={{ display: "block", fontFamily: diagramFont }}
         role="img"
-        aria-label={`Number line from 0 to ${maxWhole}, marked at ${numerator}/${denominator}`}
+        aria-label={spokenFractions(`Number line from 0 to ${maxWhole}, marked at ${numerator}/${denominator}`)}
       >
         <line x1={PAD_X} y1={MID_Y} x2={width - PAD_X} y2={MID_Y} stroke={palette.line} strokeWidth={2} />
         {Array.from({ length: tickCount }, (_, k) => {
@@ -64,9 +67,8 @@ export function FractionNumberLine({ denominator, numerator, labelStyle }: Fract
           return (
             <g key={k}>
               <line x1={toX(k)} y1={MID_Y - (isWhole ? 7 : 5)} x2={toX(k)} y2={MID_Y + (isWhole ? 7 : 5)} stroke={isWhole ? palette.ink : palette.line} strokeWidth={isWhole ? 2.5 : 1.5} />
-              <text x={toX(k)} y={MID_Y + 20} textAnchor="middle" fontSize={12} fontWeight={isWhole || isMarked ? 800 : 400} fill={isMarked ? palette.a : isWhole ? palette.ink : palette.muted}>
-                {tickLabel(k, denominator, labelStyle)}
-              </text>
+              {/* Fractions are drawn stacked, the handwritten way (SvgMath). */}
+              <SvgMath text={tickLabel(k, denominator, labelStyle)} x={toX(k)} y={MID_Y + 25} fontSize={12} weight={isWhole || isMarked ? 800 : 400} color={isMarked ? palette.a : isWhole ? palette.ink : palette.muted} />
             </g>
           );
         })}

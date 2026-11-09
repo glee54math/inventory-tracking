@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../shared/engine/types";
 import { QA, QB, Says, Slider } from "../../shared/engine/controls";
 import type { Unit } from "../../shared/units/types";
 import { rateProblemsTest } from "./RateProblemsTest";
+import { MathText } from "../../shared/components/MathText";
 
 function Explore() {
   const [speed, setSpeed] = useState(40);
@@ -34,58 +35,60 @@ function Explore() {
   const maxMiles = 70 * 6;
 
   return (
-    <div className="explore">
-      <div className="controls">
-        <div className="control-row">
-          <Slider label="Speed:" value={speed} min={10} max={70} step={5} onChange={setSpeed} display={`${speed} miles per hour`} />
-          <Slider label="Trip length:" value={hours} min={1} max={6} onChange={setHours} display={`${hours} hours`} />
-          <button
-            className="btn primary"
-            onClick={() => {
-              setT(0);
-              setPlaying(true);
-            }}
-            disabled={playing}
-          >
-            {playing ? "Driving…" : "Drive"}
-          </button>
+    <MathText>
+      <div className="explore">
+        <div className="controls">
+          <div className="control-row">
+            <Slider label="Speed:" value={speed} min={10} max={70} step={5} onChange={setSpeed} display={`${speed} miles per hour`} />
+            <Slider label="Trip length:" value={hours} min={1} max={6} onChange={setHours} display={`${hours} hours`} />
+            <button
+              className="btn primary"
+              onClick={() => {
+                setT(0);
+                setPlaying(true);
+              }}
+              disabled={playing}
+            >
+              {playing ? "Driving…" : "Drive"}
+            </button>
+          </div>
+        </div>
+        <div className="stage">
+          <svg viewBox={`0 0 ${trackW + 40} 70`} width="100%" style={{ maxWidth: trackW + 40, display: "block", margin: "0 auto" }} role="img" aria-label={`Car has gone ${fmt(dist)} miles`}>
+            <rect x={20} y={38} width={trackW} height={10} rx={5} style={{ fill: palette.grid }} />
+            <rect x={20} y={38} width={(dist / maxMiles) * trackW} height={10} rx={5} style={{ fill: palette.a }} />
+            {Array.from({ length: 7 }, (_, i) => (
+              <text key={i} x={20 + (i * 60 * trackW) / maxMiles} y={66} textAnchor="middle" style={{ fill: palette.muted, fontSize: 11 }}>
+                {i * 60}
+              </text>
+            ))}
+            <g transform={`translate(${20 + (dist / maxMiles) * trackW} 26)`}>
+              <rect x={-16} y={-10} width={32} height={16} rx={5} style={{ fill: palette.b }} />
+              <rect x={-8} y={-17} width={16} height={9} rx={3} style={{ fill: palette.b }} />
+              <circle cx={-9} cy={7} r={4} style={{ fill: palette.ink }} />
+              <circle cx={9} cy={7} r={4} style={{ fill: palette.ink }} />
+            </g>
+          </svg>
+          <DoubleNumberLine
+            top={{ label: "miles", color: palette.a }}
+            bottom={{ label: "hours", color: palette.b }}
+            pairs={Array.from({ length: hours + 1 }, (_, h) => ({ top: speed * h, bottom: h, highlight: h === 1 }))}
+            marker={t}
+            markerTransition={false}
+            maxBottom={hours}
+          />
+          <ConversionChain start={{ value: fmt(t), unit: "hr", color: palette.b }} factors={[{ num: { value: speed, unit: "mi", color: palette.a }, den: { value: 1, unit: "hr", color: palette.b } }]} result={{ value: fmt(dist), unit: "mi" }} />
+        </div>
+        <div className="sayings">
+          <Says>
+            At a constant speed, every hour adds the same distance: <QA>{speed} miles</QA> per <QB>hour</QB>. That's the unit rate.
+          </Says>
+          <Says>
+            distance = rate × time. The hours cancel, leaving miles: {speed} × {fmt(t)} = <b>{fmt(dist)} miles</b>.
+          </Says>
         </div>
       </div>
-      <div className="stage">
-        <svg viewBox={`0 0 ${trackW + 40} 70`} width="100%" style={{ maxWidth: trackW + 40, display: "block", margin: "0 auto" }} role="img" aria-label={`Car has gone ${fmt(dist)} miles`}>
-          <rect x={20} y={38} width={trackW} height={10} rx={5} style={{ fill: palette.grid }} />
-          <rect x={20} y={38} width={(dist / maxMiles) * trackW} height={10} rx={5} style={{ fill: palette.a }} />
-          {Array.from({ length: 7 }, (_, i) => (
-            <text key={i} x={20 + (i * 60 * trackW) / maxMiles} y={66} textAnchor="middle" style={{ fill: palette.muted, fontSize: 11 }}>
-              {i * 60}
-            </text>
-          ))}
-          <g transform={`translate(${20 + (dist / maxMiles) * trackW} 26)`}>
-            <rect x={-16} y={-10} width={32} height={16} rx={5} style={{ fill: palette.b }} />
-            <rect x={-8} y={-17} width={16} height={9} rx={3} style={{ fill: palette.b }} />
-            <circle cx={-9} cy={7} r={4} style={{ fill: palette.ink }} />
-            <circle cx={9} cy={7} r={4} style={{ fill: palette.ink }} />
-          </g>
-        </svg>
-        <DoubleNumberLine
-          top={{ label: "miles", color: palette.a }}
-          bottom={{ label: "hours", color: palette.b }}
-          pairs={Array.from({ length: hours + 1 }, (_, h) => ({ top: speed * h, bottom: h, highlight: h === 1 }))}
-          marker={t}
-          markerTransition={false}
-          maxBottom={hours}
-        />
-        <ConversionChain start={{ value: fmt(t), unit: "hr", color: palette.b }} factors={[{ num: { value: speed, unit: "mi", color: palette.a }, den: { value: 1, unit: "hr", color: palette.b } }]} result={{ value: fmt(dist), unit: "mi" }} />
-      </div>
-      <div className="sayings">
-        <Says>
-          At a constant speed, every hour adds the same distance: <QA>{speed} miles</QA> per <QB>hour</QB>. That's the unit rate.
-        </Says>
-        <Says>
-          distance = rate × time. The hours cancel, leaving miles: {speed} × {fmt(t)} = <b>{fmt(dist)} miles</b>.
-        </Says>
-      </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -329,13 +332,15 @@ const betterBuyProblem = (): Problem => {
 /** Static snapshot for the cover page's preview carousel — see shared/components/UnitPreviewCarousel.tsx. */
 function Preview() {
   return (
-    <TapeDiagram
-      tapes={[
-        { label: "Store A", units: 4, color: palette.a, values: ["$2", "$2", "$2", "$2"], total: "$8 total" },
-        { label: "Store B", units: 5, color: palette.b, values: ["$2", "$2", "$2", "$2", "$2"], total: "$10 total" },
-      ]}
-      unitWidth={32}
-    />
+    <MathText>
+      <TapeDiagram
+        tapes={[
+          { label: "Store A", units: 4, color: palette.a, values: ["$2", "$2", "$2", "$2"], total: "$8 total" },
+          { label: "Store B", units: 5, color: palette.b, values: ["$2", "$2", "$2", "$2", "$2"], total: "$10 total" },
+        ]}
+        unitWidth={32}
+      />
+    </MathText>
   );
 }
 

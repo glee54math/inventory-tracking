@@ -49,3 +49,23 @@
 
 ## Open questions / flags for the builder
 None. This is a clean, non-overlapping gap in the current curriculum map — no existing lab touches 5.NF.1/5.NF.2 content, so there is no ambiguity about placement or duplication to resolve before building.
+
+---
+
+## Approved changes (user, 2026-11-06) — these override anything above
+
+- **Slot:** MG10, as `MG10_AddingAndSubtractingFractionsLab` (component export `AddingAndSubtractingFractionsLab`). MG10 is not yet in `LEVEL_SKILLS`; add it. Grade 5. No read-aloud, no `EarlyLearnerProvider` (MG6+ convention).
+- **No `reintroEverySolved` anywhere.** Every unit has a one-time CFU gate only.
+- **LCD is required and taught as a word.** Teach "LCD means least common denominator" in Unit 2 (Explore with a picture or list of multiples, plus a CFU question on it), and use the term the same way in Units 3–5. A common denominator that is NOT the least (e.g. 192 for 12 and 16, whose LCD is 48) is marked WRONG, with feedback that names the mistake ("192 is a common denominator, but not the least. Find the smallest number both 12 and 16 go into."). Practice and Test must include pairs where multiplying the denominators is NOT the LCD (4 & 6, 6 & 9, 8 & 12, 10 & 15, 12 & 16), not only co-prime pairs. Unit 2 bucket (c) is required.
+- **Simplest form is required, as its own check.** An answer that is equal but not simplified (or an improper fraction where a mixed number is asked) is not accepted: the student is told "That's equal, but it's not in simplest form. Simplify it." and the solve does not count as clean. After such a solve, the student must do **"Try one like it"** (a fresh problem of the SAME type) and cannot move to a new problem until they solve one cleanly — the same retry lock the MK1 shell uses (`onRetrySame`, `owesRetry`, disabled problem-type switch, no side doors). Make this work for this lab without turning on full early-learner mode; extend shared code only additively.
+- **"Borrow" is taught by name.** Unit 4 teaches what borrowing means here — take 1 whole from the whole-number part and turn it into fraction pieces (1 = 4/4), so 5 1/4 becomes 4 5/4 — in Explore with a picture, in a CFU question, and in every "Show me" for the borrowing problem types. Use "borrow" consistently (it may say once that this is also called regrouping).
+- **Unit 3 bucket (f):** use an unlike-denominator example that lands on a whole number, e.g. 3/2 − 2/4 = 1.
+- **Unit order is open.** The user wants the curriculum checker to judge whether Unit 5's benchmark/reasonableness work (or part of it) should come earlier.
+
+## Round 5 (user, 2026-11-08) — these override Unit 1 above
+
+- **Unit 1 is refocused on "you can't add across", using only what students bring in:** equivalent fractions (3.NF.3, 4.NF.1), adding like denominators (4.NF.3), and adding when one denominator fits in the other (4.NF.5, like 3/10 + 4/100). Students do NOT find a common denominator in Unit 1; that starts in Unit 2. The words "common denominator" and "LCD" are not used in Unit 1.
+- **Practice problem "Find a + b":** 1. estimate (more or less than the bigger fraction, 1, or 2; the answer is picked first); 2. judge a named person's add-across answer (too small / more or less than the bigger or smaller fraction); 3–4. find the real sum. When one denominator fits in the other: rename one fraction (the picture shows the cut), then type the sum. When they share no factor: pick the picture of the sum, then count the same-size pieces and type it. "Who is right?" was dropped (step 2 covers it).
+- **Buckets (replace (a)–(d) above):** one bottom fits in the other with a sum less than 1; one bottom fits with a sum of 1 or more (exactly 1 half the time); no shared factor, sum less than 1; no shared factor, sum more than 1. About a third of Unit 1 sums are more than 1, and about 1 in 8 is exactly 1.
+- **Every typed fraction answer** has the line "Pick a format to write your answer." above the format buttons, and Unit 1 Explore shows the format guide (Unit 1 answers can now be whole or mixed numbers).
+- **Add-across mistakes are named everywhere in Practice** (Units 1, 3, 4, 5), with a size check ("2/12 is less than 1/3, but adding should make a bigger number"); Units 1 and 3 also show the two bars. Tests never show it.

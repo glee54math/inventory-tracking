@@ -1,5 +1,6 @@
 import { palette } from "../../../shared/lib/palette";
 import { TwoTierBars } from "../../../shared/diagrams";
+import { spokenFractions } from "../../../shared/components/MathText";
 
 export interface SimplifyBeforeAfterProps {
   /** The fraction as given (before simplifying). */
@@ -25,7 +26,7 @@ export function SimplifyBeforeAfter({ num, den, simpleNum, simpleDen, width = 36
     <TwoTierBars
       width={width}
       topHeight={topHeight}
-      ariaLabel={`${num}/${den} simplifies to ${simpleNum}/${simpleDen}`}
+      ariaLabel={spokenFractions(`${num}/${den} simplifies to ${simpleNum}/${simpleDen}`)}
       top={{
         cells: den,
         cellStyle: (i) => (i < num ? { fill: palette.a, fillOpacity: 0.85 } : { fill: palette.paper }),

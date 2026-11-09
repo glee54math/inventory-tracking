@@ -8,6 +8,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { whatIsAnAngleTest } from "./WhatIsAnAngleTest";
+import { MathText } from "../../../shared/components/MathText";
 
 const LENGTHS = [0, 50, 85, 120];
 const randomBase = () => randInt(0, 23) * 15;
@@ -70,137 +71,139 @@ function WhatIsAnAngleCheck({ onComplete }: { onComplete?: () => void }) {
   ];
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure "angle" makes sense before you try practice problems.</p>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Quick check: let's make sure "angle" makes sense before you try practice problems.</p>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>1.</b> An angle is made of two{" "}
-          <Pick
-            label="What an angle is made of"
-            value={v1a}
-            onChange={(v) => { setV1a(v); setC1(false); }}
-            ok={ok1a}
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> An angle is made of two{" "}
+            <Pick
+              label="What an angle is made of"
+              value={v1a}
+              onChange={(v) => { setV1a(v); setC1(false); }}
+              ok={ok1a}
+              checked={c1}
+              disabled={done1}
+              options={[
+                { id: "segments", label: "lines that must be the same length" },
+                { id: "rays", label: "rays" },
+                { id: "circles", label: "circles" },
+              ]}
+            />{" "}
+            that share an endpoint called the{" "}
+            <Pick
+              label="Name of the shared endpoint"
+              value={v1b}
+              onChange={(v) => { setV1b(v); setC1(false); }}
+              ok={ok1b}
+              checked={c1}
+              disabled={done1}
+              options={[
+                { id: "degree", label: "degree" },
+                { id: "vertex", label: "vertex" },
+                { id: "arc", label: "arc" },
+              ]}
+            />
+            .
+          </p>
+          <CheckRow
+            filled={allFilled(v1a, v1b)}
             checked={c1}
-            disabled={done1}
-            options={[
-              { id: "segments", label: "lines that must be the same length" },
-              { id: "rays", label: "rays" },
-              { id: "circles", label: "circles" },
-            ]}
-          />{" "}
-          that share an endpoint called the{" "}
-          <Pick
-            label="Name of the shared endpoint"
-            value={v1b}
-            onChange={(v) => { setV1b(v); setC1(false); }}
-            ok={ok1b}
-            checked={c1}
-            disabled={done1}
-            options={[
-              { id: "degree", label: "degree" },
-              { id: "vertex", label: "vertex" },
-              { id: "arc", label: "arc" },
-            ]}
+            ok={ok1a && ok1b}
+            done={done1}
+            onCheck={() => setC1(true)}
+            good="Correct — an angle is two rays that start at the same point, the vertex. Rays can be drawn any length."
+            bad="Not quite — check each red box. The sides of an angle are rays (they can be drawn any length), and the point they share is the vertex."
           />
-          .
-        </p>
-        <CheckRow
-          filled={allFilled(v1a, v1b)}
-          checked={c1}
-          ok={ok1a && ok1b}
-          done={done1}
-          onCheck={() => setC1(true)}
-          good="Correct — an angle is two rays that start at the same point, the vertex. Rays can be drawn any length."
-          bad="Not quite — check each red box. The sides of an angle are rays (they can be drawn any length), and the point they share is the vertex."
-        />
-      </div>
-
-      <div className="align-stack-wrap">
-        <p>
-          <b>2.</b> Look closely at these two angles.
-        </p>
-        <PairPicture a={{ base: 10, m: 45, len: 110 }} b={{ base: 10, m: 80, len: 50 }} />
-        <p>
-          Angle <Pick label="Which angle has longer rays" value={v2a} onChange={(v) => { setV2a(v); setC2(false); }} ok={ok2a} checked={c2} disabled={done2} options={letters} /> has longer rays. Angle{" "}
-          <Pick label="Which angle has more turn" value={v2b} onChange={(v) => { setV2b(v); setC2(false); }} ok={ok2b} checked={c2} disabled={done2} options={letters} /> has more turn between its rays, so it is the bigger angle.
-        </p>
-        <CheckRow
-          filled={allFilled(v2a, v2b)}
-          checked={c2}
-          ok={ok2a && ok2b}
-          done={done2}
-          onCheck={() => setC2(true)}
-          good="Correct — Angle A's rays are longer and their tips are farther apart, but Angle B is turned open wider (80° vs 45°). Only the turn counts."
-          bad="Not quite — long rays and a big angle are two different things. Look at how far apart the rays are turned right at the vertex, not how far apart their tips are."
-        />
-      </div>
-
-      <div className="align-stack-wrap">
-        <p>
-          <b>3.</b> A full turn (all the way around a circle) is{" "}
-          <Pick
-            label="Degrees in a full turn"
-            value={v3a}
-            onChange={(v) => { setV3a(v); setC3(false); }}
-            ok={ok3a}
-            checked={c3}
-            disabled={done3}
-            options={[
-              { id: "100", label: "100°" },
-              { id: "180", label: "180°" },
-              { id: "360", label: "360°" },
-            ]}
-          />
-          , so a quarter turn is{" "}
-          <Pick
-            label="Degrees in a quarter turn"
-            value={v3b}
-            onChange={(v) => { setV3b(v); setC3(false); }}
-            ok={ok3b}
-            checked={c3}
-            disabled={done3}
-            options={[
-              { id: "25", label: "25°" },
-              { id: "45", label: "45°" },
-              { id: "90", label: "90°" },
-            ]}
-          />
-          .
-        </p>
-        <CheckRow
-          filled={allFilled(v3a, v3b)}
-          checked={c3}
-          ok={ok3a && ok3b}
-          done={done3}
-          onCheck={() => setC3(true)}
-          good="Correct — a full turn is 360 one-degree turns, and a quarter of 360° is 90°."
-          bad="Not quite — degrees are not percents. A full circle is 360°, and a quarter turn is 1/4 of that."
-        />
-      </div>
-
-      <div className="align-stack-wrap">
-        <p>
-          <b>4.</b> True or false: a quarter turn is always 90°, no matter which way the angle faces on the page.
-        </p>
-        <div className="ap-figs">
-          <TurnPicture base={0} m={90} width={150} />
-          <TurnPicture base={135} m={90} width={150} />
         </div>
-        <PickOne
-          value={q4}
-          onPick={setQ4}
-          correct="true"
-          done={done4}
-          options={[
-            { id: "true", label: "True" },
-            { id: "false", label: "False" },
-          ]}
-          good="Correct — both pictures turn exactly one quarter of the circle. Facing a different way doesn't change the turn."
-          bad="Not quite — the second picture faces a different way, but it still turns one quarter of the circle. The direction on the page doesn't change the measure."
-        />
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>2.</b> Look closely at these two angles.
+          </p>
+          <PairPicture a={{ base: 10, m: 45, len: 110 }} b={{ base: 10, m: 80, len: 50 }} />
+          <p>
+            Angle <Pick label="Which angle has longer rays" value={v2a} onChange={(v) => { setV2a(v); setC2(false); }} ok={ok2a} checked={c2} disabled={done2} options={letters} /> has longer rays. Angle{" "}
+            <Pick label="Which angle has more turn" value={v2b} onChange={(v) => { setV2b(v); setC2(false); }} ok={ok2b} checked={c2} disabled={done2} options={letters} /> has more turn between its rays, so it is the bigger angle.
+          </p>
+          <CheckRow
+            filled={allFilled(v2a, v2b)}
+            checked={c2}
+            ok={ok2a && ok2b}
+            done={done2}
+            onCheck={() => setC2(true)}
+            good="Correct — Angle A's rays are longer and their tips are farther apart, but Angle B is turned open wider (80° vs 45°). Only the turn counts."
+            bad="Not quite — long rays and a big angle are two different things. Look at how far apart the rays are turned right at the vertex, not how far apart their tips are."
+          />
+        </div>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> A full turn (all the way around a circle) is{" "}
+            <Pick
+              label="Degrees in a full turn"
+              value={v3a}
+              onChange={(v) => { setV3a(v); setC3(false); }}
+              ok={ok3a}
+              checked={c3}
+              disabled={done3}
+              options={[
+                { id: "100", label: "100°" },
+                { id: "180", label: "180°" },
+                { id: "360", label: "360°" },
+              ]}
+            />
+            , so a quarter turn is{" "}
+            <Pick
+              label="Degrees in a quarter turn"
+              value={v3b}
+              onChange={(v) => { setV3b(v); setC3(false); }}
+              ok={ok3b}
+              checked={c3}
+              disabled={done3}
+              options={[
+                { id: "25", label: "25°" },
+                { id: "45", label: "45°" },
+                { id: "90", label: "90°" },
+              ]}
+            />
+            .
+          </p>
+          <CheckRow
+            filled={allFilled(v3a, v3b)}
+            checked={c3}
+            ok={ok3a && ok3b}
+            done={done3}
+            onCheck={() => setC3(true)}
+            good="Correct — a full turn is 360 one-degree turns, and a quarter of 360° is 90°."
+            bad="Not quite — degrees are not percents. A full circle is 360°, and a quarter turn is 1/4 of that."
+          />
+        </div>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>4.</b> True or false: a quarter turn is always 90°, no matter which way the angle faces on the page.
+          </p>
+          <div className="ap-figs">
+            <TurnPicture base={0} m={90} width={150} />
+            <TurnPicture base={135} m={90} width={150} />
+          </div>
+          <PickOne
+            value={q4}
+            onPick={setQ4}
+            correct="true"
+            done={done4}
+            options={[
+              { id: "true", label: "True" },
+              { id: "false", label: "False" },
+            ]}
+            good="Correct — both pictures turn exactly one quarter of the circle. Facing a different way doesn't change the turn."
+            bad="Not quite — the second picture faces a different way, but it still turns one quarter of the circle. The direction on the page doesn't change the measure."
+          />
+        </div>
       </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -217,71 +220,73 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [len2, setLen2] = useState(2);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && (
-        <button
-          type="button"
-          className="btn ghost"
-          style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
-          onClick={() => setShowCheck((v) => !v)}
-        >
-          Check for Understanding
-        </button>
-      )}
-      <p>
-        An angle is two rays that share a starting point (the <b>vertex</b>). Its size is <b>how far one ray is turned from the other</b>. Drag the
-        blue ray's dot to turn it.
-      </p>
-      <div className="ap-explore">
-        <AngleFigure
-          rays={[
-            { dir: base, len: LENGTHS[len1] },
-            { dir: base + m, len: LENGTHS[len2], tone: "a", draggable: true },
-          ]}
-          arcs={[{ from: base, sweep: m, r: 30, tone: "c", fill: true, label: `${m}°` }]}
-          onDragRay={(_, dir) => setM(turnCCW(base, dir))}
-          showCircle
-          frameRadius={150}
-          width={320}
-          ariaLabel={`An angle turning ${m} degrees`}
-        />
-        <div className="ap-side">
-          <p className="ap-readout">
-            <b>{m}°</b>
-          </p>
-          <p>
-            {m} one-degree turns — that's {m}/360 of a full circle.
-          </p>
-          <p>{describeTurn(m)}</p>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Check for Understanding
+          </button>
+        )}
+        <p>
+          An angle is two rays that share a starting point (the <b>vertex</b>). Its size is <b>how far one ray is turned from the other</b>. Drag the
+          blue ray's dot to turn it.
+        </p>
+        <div className="ap-explore">
+          <AngleFigure
+            rays={[
+              { dir: base, len: LENGTHS[len1] },
+              { dir: base + m, len: LENGTHS[len2], tone: "a", draggable: true },
+            ]}
+            arcs={[{ from: base, sweep: m, r: 30, tone: "c", fill: true, label: `${m}°` }]}
+            onDragRay={(_, dir) => setM(turnCCW(base, dir))}
+            showCircle
+            frameRadius={150}
+            width={320}
+            ariaLabel={`An angle turning ${m} degrees`}
+          />
+          <div className="ap-side">
+            <p className="ap-readout">
+              <b>{m}°</b>
+            </p>
+            <p>
+              {m} one-degree turns — that's {m}/360 of a full circle.
+            </p>
+            <p>{describeTurn(m)}</p>
+          </div>
         </div>
+        <div className="control-row">
+          <button type="button" className="btn ghost" onClick={() => setM(90)}>
+            Quarter turn
+          </button>
+          <button type="button" className="btn ghost" onClick={() => setM(180)}>
+            Half turn
+          </button>
+          <button type="button" className="btn ghost" onClick={() => setM(270)}>
+            Three-quarter turn
+          </button>
+        </div>
+        <div className="control-row">
+          <Stepper label="Black ray length" value={len1} min={1} max={3} onChange={setLen1} />
+          <Stepper label="Blue ray length" value={len2} min={1} max={3} onChange={setLen2} tone="a" />
+          <Stepper label="Turn the whole picture" value={base} min={0} max={345} step={15} onChange={setBase} />
+        </div>
+        <p className="says">
+          Does a longer ray make a bigger angle? Let's check: stretch or shrink either ray — the angle stays <b>{m}°</b>. Turn the whole picture — still{" "}
+          <b>{m}°</b>. Only turning one ray <i>away from the other</i> changes the angle.
+        </p>
+        <p className="muted small">
+          Angle words you'll use: an angle smaller than a quarter turn (less than 90°) is <b>acute</b>; exactly a quarter turn (90°, a square corner) is a{" "}
+          <b>right angle</b>; between 90° and 180° is <b>obtuse</b>; a half turn (180°) makes a <b>straight angle</b>.
+        </p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <WhatIsAnAngleCheck onComplete={onIntroDone} />}
       </div>
-      <div className="control-row">
-        <button type="button" className="btn ghost" onClick={() => setM(90)}>
-          Quarter turn
-        </button>
-        <button type="button" className="btn ghost" onClick={() => setM(180)}>
-          Half turn
-        </button>
-        <button type="button" className="btn ghost" onClick={() => setM(270)}>
-          Three-quarter turn
-        </button>
-      </div>
-      <div className="control-row">
-        <Stepper label="Black ray length" value={len1} min={1} max={3} onChange={setLen1} />
-        <Stepper label="Blue ray length" value={len2} min={1} max={3} onChange={setLen2} tone="a" />
-        <Stepper label="Turn the whole picture" value={base} min={0} max={345} step={15} onChange={setBase} />
-      </div>
-      <p className="says">
-        Does a longer ray make a bigger angle? Let's check: stretch or shrink either ray — the angle stays <b>{m}°</b>. Turn the whole picture — still{" "}
-        <b>{m}°</b>. Only turning one ray <i>away from the other</i> changes the angle.
-      </p>
-      <p className="muted small">
-        Angle words you'll use: an angle smaller than a quarter turn (less than 90°) is <b>acute</b>; exactly a quarter turn (90°, a square corner) is a{" "}
-        <b>right angle</b>; between 90° and 180° is <b>obtuse</b>; a half turn (180°) makes a <b>straight angle</b>.
-      </p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <WhatIsAnAngleCheck onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 

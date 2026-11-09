@@ -7,7 +7,9 @@ import { StepProblem } from "../shared/engine/StepProblem";
 import { Segmented } from "../shared/engine/controls";
 import { UnitTestView } from "../shared/engine/UnitTest";
 import { UnitPreviewCarousel } from "../shared/components/UnitPreviewCarousel";
+import { MathText, StackedFractions } from "../shared/components/MathText";
 import type { Problem } from "../shared/engine/types";
+import { bagItems, debtItem, useRetryDebts, type BagItem, type RetryDebt } from "../shared/engine/retryDebt";
 import { shuffle } from "../shared/lib/math";
 import { MASTERY_GOAL, isMastered as sharedIsMastered, starCount as sharedStarCount, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
 import { useStudentContext } from "../../../components/student_portal/StudentContext";
@@ -93,7 +95,9 @@ function Home({
                 <span className="path-num">{i + 1}</span>
                 <span className="path-body">
                   <span className="path-title">{u.title}</span>
-                  <span className="path-goal">{u.goal}</span>
+                  <span className="path-goal">
+                    <MathText>{u.goal}</MathText>
+                  </span>
                 </span>
                 <Stars unit={u} p={progress[u.id]} />
               </button>
@@ -125,7 +129,7 @@ function TestBadge({ p, passScore, total = 10 }: { p?: UnitProgress; passScore: 
   const passed = p.testScore >= passScore;
   return (
     <span className={`test-badge ${passed ? "pass" : "fail"}`} title="Your best score across all attempts">
-      Best test score: {p.testScore}/{total}
+      Best test score: {p.testScore} out of {total}
       {passed ? " ✓" : ""}
     </span>
   );
@@ -138,6 +142,8 @@ function UnitView({
   onTest,
   onIntroDone,
   onNextUnit,
+  debt,
+  onDebt,
 }: {
   unit: Unit;
   progress?: UnitProgress;
@@ -145,10 +151,14 @@ function UnitView({
   onTest: (score: number) => void;
   onIntroDone: () => void;
   onNextUnit?: () => void;
+  /** "Try one like it" still owed in this unit, kept by the lab so leaving the unit doesn't clear it. */
+  debt: RetryDebt | null;
+  onDebt: (debt: RetryDebt | null) => void;
 }) {
   const [tab, setTab] = useState<"explore" | "practice" | "test">("explore");
   const tabsRef = useRef<HTMLDivElement>(null);
-  const [typeIdx, setTypeIdx] = useState<number | "mix">("mix");
+  // A retry owed from an earlier visit reopens in the mode it was owed in.
+  const [typeIdx, setTypeIdx] = useState<number | "mix">(() => (debt ? (debt.mix ? "mix" : debt.type) : "mix"));
   const [seed, setSeed] = useState(0);
 
   // A shuffle bag, not independent random draws per problem — every item in
@@ -157,9 +167,11 @@ function UnitView({
   // this lab declares buckets), so a full cycle guarantees every required
   // bucket its own turn. Resets whenever the mode (mix vs a specific type)
   // changes, or naturally refills+reshuffles once exhausted.
-  const bagRef = useRef<{ key: string; items: Array<() => Problem> }>({ key: "", items: [] });
+  const bagRef = useRef<{ key: string; items: BagItem[] }>({ key: "", items: [] });
   // The generator behind the problem on screen, so "Try one like it" can draw the same kind again.
-  const lastMakeRef = useRef<(() => Problem) | null>(null);
+  const lastMakeRef = useRef<BagItem | null>(null);
+  // A retry owed from an earlier visit: the first problem drawn is that same kind.
+  const carriedRef = useRef<RetryDebt | null>(debt);
   // The last draw, so running this memo twice for the same draw (React
   // StrictMode does this in dev) returns the same problem instead of popping
   // a second one from the bag — which left lastMakeRef pointing at a
@@ -171,13 +183,13 @@ function UnitView({
     const token = `${unit.id}|${key}|${seed}`;
     if (drawRef.current?.token === token) return drawRef.current.problem;
     if (bagRef.current.key !== key || bagRef.current.items.length === 0) {
-      const types = typeIdx === "mix" ? unit.problems : [unit.problems[typeIdx]];
-      const items = types.flatMap((pt) => (pt.buckets && pt.buckets.length > 0 ? pt.buckets.map((b) => () => pt.make(b)) : [() => pt.make()]));
-      bagRef.current = { key, items: shuffle(items) };
+      bagRef.current = { key, items: shuffle(bagItems(unit.problems, typeIdx)) };
     }
-    const make = bagRef.current.items.pop()!;
-    lastMakeRef.current = make;
-    const made = make();
+    const carried = carriedRef.current && debtItem(unit.problems, carriedRef.current);
+    carriedRef.current = null;
+    const item = carried || bagRef.current.items.pop()!;
+    lastMakeRef.current = item;
+    const made = item.make();
     drawRef.current = { token, problem: made };
     return made;
     // seed forces drawing a fresh problem from the bag
@@ -193,13 +205,15 @@ function UnitView({
   // same type solved on their own. Until then "New problem" gives the same
   // type, the type switch is locked, and leaving Practice and coming back
   // never brings back the helped problem with empty boxes.
-  const [owesRetry, setOwesRetry] = useState(false);
+  const [owesRetry, setOwesRetry] = useState(!!debt);
   // The draw on screen once it is finished or helped, so it isn't shown again fresh.
   const usedTokenRef = useRef<string | null>(null);
   const handleHelped = useCallback(() => {
     setOwesRetry(true);
     usedTokenRef.current = drawRef.current?.token ?? null;
-  }, []);
+    const item = lastMakeRef.current;
+    if (item) onDebt({ type: item.type, bucket: item.bucket, mix: typeIdx === "mix" });
+  }, [onDebt, typeIdx]);
   const newProblem = () => (owesRetry ? retrySame() : setSeed((s) => s + 1));
   const openPractice = () => {
     if (tab !== "practice" && usedTokenRef.current !== null && usedTokenRef.current === drawRef.current?.token) {
@@ -233,7 +247,9 @@ function UnitView({
       <header className="unit-head">
         <div>
           <h1>{unit.title}</h1>
-          <ReadAloud as="p" className="goal">{unit.goal}</ReadAloud>
+          <ReadAloud as="p" className="goal">
+            <MathText>{unit.goal}</MathText>
+          </ReadAloud>
         </div>
         <div className="unit-stars">
           <Stars unit={unit} p={progress} size="lg" />
@@ -243,7 +259,9 @@ function UnitView({
         </div>
       </header>
 
-      <ReadAloud as="aside" className="key-idea">{unit.keyIdea}</ReadAloud>
+      <ReadAloud as="aside" className="key-idea">
+        <MathText>{unit.keyIdea}</MathText>
+      </ReadAloud>
 
       <div className="tts-inline-row">
         <SpeakButton targets={() => [tabsRef.current]} label="Read the tab names" />
@@ -303,7 +321,10 @@ function UnitView({
             problem={problem}
             onComplete={(clean, bucket) => {
               usedTokenRef.current = drawRef.current?.token ?? null;
-              if (clean) setOwesRetry(false);
+              if (clean) {
+                setOwesRetry(false);
+                onDebt(null);
+              }
               onSolved(clean && typeIdx === "mix", bucket);
             }}
             onHelped={handleHelped}
@@ -357,9 +378,14 @@ function AdditionSubtractionAndTeenNumbersLab() {
   const onTest = useCallback((score: number) => unit && recordTest(unit.id, score), [unit, recordTest]);
   const onModuleTestComplete = useCallback((score: number) => recordTest(MODULE_PROGRESS_KEY, score), [recordTest]);
   const onIntroDone = useCallback(() => unit && recordIntroDone(unit.id), [unit, recordIntroDone]);
+  // "Try one like it" owed per unit. Kept here (and in sessionStorage), not in
+  // UnitView, so switching units or reloading can't clear it.
+  const { debts, setDebt, clearDebts } = useRetryDebts(`${MODULE_ID}:${currentStudent?.id ?? "guest"}`);
+  const onDebt = useCallback((d: RetryDebt | null) => unit && setDebt(unit.id, d), [unit, setDebt]);
 
   return (
     <div className="atn-lab lab-base lab-early">
+      <StackedFractions>
       <TtsProvider>
         <EarlyLearnerProvider>
           <div className="app">
@@ -394,6 +420,7 @@ function AdditionSubtractionAndTeenNumbersLab() {
                 onClick={() => {
                   if (confirmReset) {
                     reset();
+                    clearDebts();
                     setConfirmReset(false);
                   } else setConfirmReset(true);
                 }}
@@ -433,6 +460,8 @@ function AdditionSubtractionAndTeenNumbersLab() {
                   onSolved={onSolved}
                   onTest={onTest}
                   onIntroDone={onIntroDone}
+                  debt={debts[unit.id] ?? null}
+                  onDebt={onDebt}
                   onNextUnit={current !== null && current < units.length - 1 ? () => go(current + 1) : undefined}
                 />
               ) : (
@@ -442,6 +471,7 @@ function AdditionSubtractionAndTeenNumbersLab() {
           </div>
         </EarlyLearnerProvider>
       </TtsProvider>
+      </StackedFractions>
     </div>
   );
 }

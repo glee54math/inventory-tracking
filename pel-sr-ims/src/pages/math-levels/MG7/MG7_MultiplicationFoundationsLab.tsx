@@ -7,6 +7,7 @@ import { StepProblem } from "../shared/engine/StepProblem";
 import { Segmented } from "../shared/engine/controls";
 import { UnitTestView } from "../shared/engine/UnitTest";
 import { UnitPreviewCarousel } from "../shared/components/UnitPreviewCarousel";
+import { MathText, StackedFractions } from "../shared/components/MathText";
 import type { Problem } from "../shared/engine/types";
 import { shuffle } from "../shared/lib/math";
 import { MASTERY_GOAL, isMastered as sharedIsMastered, starCount as sharedStarCount, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
@@ -57,7 +58,7 @@ function TestBadge({ p, passScore, total = 10 }: { p?: UnitProgress; passScore: 
   const passed = p.testScore >= passScore;
   return (
     <span className={`test-badge ${passed ? "pass" : "fail"}`} title="Your best score across all attempts">
-      Best test score: {p.testScore}/{total}
+      Best test score: {p.testScore} out of {total}
       {passed ? " ✓" : ""}
     </span>
   );
@@ -91,7 +92,9 @@ function Home({ onPick, progress, onModuleTest }: { onPick: (i: number) => void;
                 <span className="path-num">{i + 1}</span>
                 <span className="path-body">
                   <span className="path-title">{u.title}</span>
-                  <span className="path-goal">{u.goal}</span>
+                  <span className="path-goal">
+                    <MathText>{u.goal}</MathText>
+                  </span>
                 </span>
                 <Stars unit={u} p={progress[u.id]} />
               </button>
@@ -157,11 +160,12 @@ function UnitView({
   }, [unit, typeIdx, seed]);
 
   const mastered = isMastered(unit, progress);
-  // Grandfather in anyone with practice history; reintroEverySolved (One-Digit
+  // The CFU gates Practice for every student, including those with practice
+  // history (user requirement). reintroEverySolved (One-Digit
   // Facts) re-gates once that many new problems are solved since the last pass.
   const solvedSinceIntro = (progress?.solved ?? 0) - (progress?.introDoneAtSolved ?? 0);
   const introNeedsRefresh = !!unit.reintroEverySolved && !!progress?.introDone && solvedSinceIntro >= unit.reintroEverySolved;
-  const introSatisfied = !unit.requiresIntro || ((!!progress?.introDone || (progress?.solved ?? 0) > 0) && !introNeedsRefresh);
+  const introSatisfied = !unit.requiresIntro || (!!progress?.introDone && !introNeedsRefresh);
 
   // Once the Check for Understanding is passed, keep it open (with its
   // feedback) until the student leaves the Explore tab, instead of letting
@@ -178,7 +182,9 @@ function UnitView({
       <header className="unit-head">
         <div>
           <h1>{unit.title}</h1>
-          <p className="goal">{unit.goal}</p>
+          <p className="goal">
+            <MathText>{unit.goal}</MathText>
+          </p>
         </div>
         <div className="unit-stars">
           <Stars unit={unit} p={progress} size="lg" />
@@ -188,7 +194,9 @@ function UnitView({
         </div>
       </header>
 
-      <aside className="key-idea">{unit.keyIdea}</aside>
+      <aside className="key-idea">
+        <MathText>{unit.keyIdea}</MathText>
+      </aside>
 
       <div className="tabs" role="tablist">
         <button role="tab" aria-selected={tab === "explore"} className={tab === "explore" ? "on" : ""} onClick={() => setTab("explore")}>
@@ -288,6 +296,7 @@ function MultiplicationFoundationsLab() {
 
   return (
     <div className="mf-lab lab-base">
+      <StackedFractions>
       <div className="app">
         <nav className="rail" aria-label="Units">
           <button className="brand" onClick={() => go(null)}>
@@ -363,6 +372,7 @@ function MultiplicationFoundationsLab() {
           )}
         </main>
       </div>
+      </StackedFractions>
     </div>
   );
 }

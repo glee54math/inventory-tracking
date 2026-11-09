@@ -6,6 +6,7 @@ import type { Problem } from "../../shared/engine/types";
 import { QA, QC, Says, Stepper } from "../../shared/engine/controls";
 import type { Unit } from "../../shared/units/types";
 import { percentTest } from "./PercentTest";
+import { MathText } from "../../shared/components/MathText";
 
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
@@ -42,95 +43,97 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   };
 
   return (
-    <div className="explore">
-      {showIntro && (
-        <div className="intro-gate">
-          <p className="intro-gate-title">Before you practice: let's find 10% first.</p>
-          {introReady ? (
-            <>
-              <p>
-                {introBlocks} block{introBlocks > 1 ? "s" : ""} = {introTargetPct}% = ___
-              </p>
-              <div className="control-row">
-                <input
-                  className="answer"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  value={introInput}
-                  onChange={(e) => setIntroInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && checkIntro()}
-                  aria-label={`${introBlocks} block${introBlocks > 1 ? "s" : ""} equals ${introTargetPct}%, what number`}
-                />
-                <button className="btn primary" onClick={checkIntro}>
-                  Check
-                </button>
-              </div>
-              {introWrong && (
-                <p className="feedback bad" role="alert">
-                  Not quite. Look at how many squares are shaded on the grid, or divide the whole by 10.
+    <MathText>
+      <div className="explore">
+        {showIntro && (
+          <div className="intro-gate">
+            <p className="intro-gate-title">Before you practice: let's find 10% first.</p>
+            {introReady ? (
+              <>
+                <p>
+                  {introBlocks} block{introBlocks > 1 ? "s" : ""} = {introTargetPct}% = ___
                 </p>
-              )}
-            </>
-          ) : (
-            <p>
-              Move the <b>percent</b> stepper below to <b>{introTargetPct}%</b> to continue.
+                <div className="control-row">
+                  <input
+                    className="answer"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    value={introInput}
+                    onChange={(e) => setIntroInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && checkIntro()}
+                    aria-label={`${introBlocks} block${introBlocks > 1 ? "s" : ""} equals ${introTargetPct}%, what number`}
+                  />
+                  <button className="btn primary" onClick={checkIntro}>
+                    Check
+                  </button>
+                </div>
+                {introWrong && (
+                  <p className="feedback bad" role="alert">
+                    Not quite. Look at how many squares are shaded on the grid, or divide the whole by 10.
+                  </p>
+                )}
+              </>
+            ) : (
+              <p>
+                Move the <b>percent</b> stepper below to <b>{introTargetPct}%</b> to continue.
+              </p>
+            )}
+          </div>
+        )}
+        <div className="controls">
+          <div className="control-row">
+            <Stepper tone="a" label="percent" value={pct} min={0} max={100} step={5} onChange={setPct} />
+            <Stepper tone="c" label="the whole" value={whole} min={10} max={500} step={10} onChange={setWhole} />
+          </div>
+          <p className="muted small">Tip: click or drag across the hundred grid to shade it.</p>
+        </div>
+        <div className="stage two-col">
+          <div>
+            <PercentGrid filled={pct} onChange={setPct} color={palette.a} />
+            <p className="center small muted">
+              {pct} of 100 squares = {pct}%
             </p>
-          )}
+          </div>
+          <div>
+            <DoubleNumberLine
+              top={{ label: "amount", color: palette.c }}
+              bottom={{ label: "percent", color: palette.a, format: (v) => `${fmt(v)}%` }}
+              pairs={[
+                { top: 0, bottom: 0 },
+                ...(pct === 10 ? [] : [{ top: whole / 10, bottom: 10 }]),
+                ...(pct > 0 && pct < 100 ? [{ top: part, bottom: pct, highlight: true }] : []),
+                { top: whole, bottom: 100 },
+              ]}
+              width={440}
+            />
+            <TapeDiagram
+              tapes={[
+                {
+                  label: "10% each",
+                  units: 10,
+                  color: palette.a,
+                  softColor: palette.aSoft,
+                  shaded: Math.floor(pct / 10),
+                  values: showIntro && introStage === 0 ? Array(10).fill("?") : Array(10).fill(fmt(whole / 10)),
+                  total: `${whole} = 100%`,
+                },
+              ]}
+              unitWidth={38}
+              labelWidth={78}
+            />
+          </div>
         </div>
-      )}
-      <div className="controls">
-        <div className="control-row">
-          <Stepper tone="a" label="percent" value={pct} min={0} max={100} step={5} onChange={setPct} />
-          <Stepper tone="c" label="the whole" value={whole} min={10} max={500} step={10} onChange={setWhole} />
-        </div>
-        <p className="muted small">Tip: click or drag across the hundred grid to shade it.</p>
-      </div>
-      <div className="stage two-col">
-        <div>
-          <PercentGrid filled={pct} onChange={setPct} color={palette.a} />
-          <p className="center small muted">
-            {pct} of 100 squares = {pct}%
-          </p>
-        </div>
-        <div>
-          <DoubleNumberLine
-            top={{ label: "amount", color: palette.c }}
-            bottom={{ label: "percent", color: palette.a, format: (v) => `${fmt(v)}%` }}
-            pairs={[
-              { top: 0, bottom: 0 },
-              ...(pct === 10 ? [] : [{ top: whole / 10, bottom: 10 }]),
-              ...(pct > 0 && pct < 100 ? [{ top: part, bottom: pct, highlight: true }] : []),
-              { top: whole, bottom: 100 },
-            ]}
-            width={440}
-          />
-          <TapeDiagram
-            tapes={[
-              {
-                label: "10% each",
-                units: 10,
-                color: palette.a,
-                softColor: palette.aSoft,
-                shaded: Math.floor(pct / 10),
-                values: showIntro && introStage === 0 ? Array(10).fill("?") : Array(10).fill(fmt(whole / 10)),
-                total: `${whole} = 100%`,
-              },
-            ]}
-            unitWidth={38}
-            labelWidth={78}
-          />
+        <div className="sayings">
+          <Says>
+            <b>{pct}%</b> means {pct} per 100, the fraction <b>{pct}/100</b>
+            {fracText(pct, 100) !== `${pct}/100` && pct > 0 ? <> = {fracText(pct, 100)}</> : null}.
+          </Says>
+          <Says>
+            {pct}% of <QC>{whole}</QC> = {pct}/100 × {whole} = <QA>{fmt(part)}</QA>.
+          </Says>
         </div>
       </div>
-      <div className="sayings">
-        <Says>
-          <b>{pct}%</b> means {pct} per 100, the fraction <b>{pct}/100</b>
-          {fracText(pct, 100) !== `${pct}/100` && pct > 0 ? <> = {fracText(pct, 100)}</> : null}.
-        </Says>
-        <Says>
-          {pct}% of <QC>{whole}</QC> = {pct}/100 × {whole} = <QA>{fmt(part)}</QA>.
-        </Says>
-      </div>
-    </div>
+    </MathText>
   );
 }
 

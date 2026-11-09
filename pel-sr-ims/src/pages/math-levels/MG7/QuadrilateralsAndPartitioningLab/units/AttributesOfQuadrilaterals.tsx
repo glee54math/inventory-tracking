@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { attributesOfQuadrilateralsTest } from "./AttributesOfQuadrilateralsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 const QUADS: QuadKind[] = ["square", "rectangle", "rhombus", "genericQuad", "trapezoidLike"];
 const NON_QUADS: QuadKind[] = ["triangle", "pentagon", "circle"];
@@ -33,25 +34,27 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>1.</b> What makes a shape a quadrilateral?
-      </p>
-      <div className="choices" role="group">
-        {options.map((o, i) => (
-          <button key={i} className="choice" onClick={() => setPicked(i)} disabled={ok} style={fieldStyle(i === 0, picked === i)}>
-            {o}
-          </button>
-        ))}
-      </div>
-      {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Right — ANY shape with exactly 4 straight sides is a quadrilateral, no matter what else is true about it."
-            : "Not quite — a square is one KIND of quadrilateral, and equal sides are extra, not required. What's true of every 4-sided shape?"}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>1.</b> What makes a shape a quadrilateral?
         </p>
-      )}
-    </div>
+        <div className="choices" role="group">
+          {options.map((o, i) => (
+            <button key={i} className="choice" onClick={() => setPicked(i)} disabled={ok} style={fieldStyle(i === 0, picked === i)}>
+              {o}
+            </button>
+          ))}
+        </div>
+        {picked !== null && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Right — ANY shape with exactly 4 straight sides is a quadrilateral, no matter what else is true about it."
+              : "Not quite — a square is one KIND of quadrilateral, and equal sides are extra, not required. What's true of every 4-sided shape?"}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -69,37 +72,39 @@ function NotExclusiveQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>2.</b> Here's a square:
-      </p>
-      <QuadCanvas width={90} height={90} label="A blue square">
-        <QuadTile kind="square" cx={45} cy={45} size={32} color={SHAPE_COLORS[1]} />
-      </QuadCanvas>
-      <p>True or False: this square is ALSO a rectangle.</p>
-      <div style={{ display: "flex", gap: 10 }}>
-        {(["true", "false"] as const).map((v) => (
-          <button key={v} type="button" className="choice" disabled={okRect} onClick={() => setIsRect(v)} style={fieldStyle(v === "true", isRect === v)}>
-            {v === "true" ? "True" : "False"}
-          </button>
-        ))}
-      </div>
-      <p>True or False: this SAME square is ALSO a rhombus.</p>
-      <div style={{ display: "flex", gap: 10 }}>
-        {(["true", "false"] as const).map((v) => (
-          <button key={v} type="button" className="choice" disabled={okRhombus} onClick={() => setIsRhombus(v)} style={fieldStyle(v === "true", isRhombus === v)}>
-            {v === "true" ? "True" : "False"}
-          </button>
-        ))}
-      </div>
-      {(isRect !== null || isRhombus !== null) && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Both True! A shape can belong to more than one category at once — a square is a rectangle AND a rhombus AND a quadrilateral, all at the same time."
-            : "A shape isn't locked into just ONE category — check whether this square also has 4 right angles (rectangle) and 4 equal sides (rhombus)."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>2.</b> Here's a square:
         </p>
-      )}
-    </div>
+        <QuadCanvas width={90} height={90} label="A blue square">
+          <QuadTile kind="square" cx={45} cy={45} size={32} color={SHAPE_COLORS[1]} />
+        </QuadCanvas>
+        <p>True or False: this square is ALSO a rectangle.</p>
+        <div style={{ display: "flex", gap: 10 }}>
+          {(["true", "false"] as const).map((v) => (
+            <button key={v} type="button" className="choice" disabled={okRect} onClick={() => setIsRect(v)} style={fieldStyle(v === "true", isRect === v)}>
+              {v === "true" ? "True" : "False"}
+            </button>
+          ))}
+        </div>
+        <p>True or False: this SAME square is ALSO a rhombus.</p>
+        <div style={{ display: "flex", gap: 10 }}>
+          {(["true", "false"] as const).map((v) => (
+            <button key={v} type="button" className="choice" disabled={okRhombus} onClick={() => setIsRhombus(v)} style={fieldStyle(v === "true", isRhombus === v)}>
+              {v === "true" ? "True" : "False"}
+            </button>
+          ))}
+        </div>
+        {(isRect !== null || isRhombus !== null) && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Both True! A shape can belong to more than one category at once — a square is a rectangle AND a rhombus AND a quadrilateral, all at the same time."
+              : "A shape isn't locked into just ONE category — check whether this square also has 4 right angles (rectangle) and 4 equal sides (rhombus)."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -111,29 +116,31 @@ function AtypicalShapeQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>3.</b> Is this slanted shape a quadrilateral?
-      </p>
-      <QuadCanvas width={120} height={120} label="A slanted purple rhombus, rotated sideways">
-        <QuadTile kind="rhombus" cx={60} cy={60} size={32} rotation={35} rhombusRatio={2.1} color={SHAPE_COLORS[3]} />
-      </QuadCanvas>
-      <div style={{ display: "flex", gap: 10 }}>
-        <button type="button" className="choice" disabled={ok} onClick={() => setPicked("yes")} style={fieldStyle(true, picked === "yes")}>
-          Yes
-        </button>
-        <button type="button" className="choice" disabled={ok} onClick={() => setPicked("no")} style={fieldStyle(false, picked === "no")}>
-          No
-        </button>
-      </div>
-      {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Yes — it has 4 straight sides, so it's a quadrilateral, even though it's slanted and doesn't look like a typical square or rectangle."
-            : "Count its sides, not how 'normal' it looks — a shape doesn't stop being a quadrilateral just because it's slanted or turned."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>3.</b> Is this slanted shape a quadrilateral?
         </p>
-      )}
-    </div>
+        <QuadCanvas width={120} height={120} label="A slanted purple rhombus, rotated sideways">
+          <QuadTile kind="rhombus" cx={60} cy={60} size={32} rotation={35} rhombusRatio={2.1} color={SHAPE_COLORS[3]} />
+        </QuadCanvas>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button type="button" className="choice" disabled={ok} onClick={() => setPicked("yes")} style={fieldStyle(true, picked === "yes")}>
+            Yes
+          </button>
+          <button type="button" className="choice" disabled={ok} onClick={() => setPicked("no")} style={fieldStyle(false, picked === "no")}>
+            No
+          </button>
+        </div>
+        {picked !== null && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Yes — it has 4 straight sides, so it's a quadrilateral, even though it's slanted and doesn't look like a typical square or rectangle."
+              : "Count its sides, not how 'normal' it looks — a shape doesn't stop being a quadrilateral just because it's slanted or turned."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -149,33 +156,35 @@ function HierarchyPairQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>4.</b> True or False: every rhombus is a rectangle.
-      </p>
-      <div style={{ display: "flex", gap: 10 }}>
-        {(["true", "false"] as const).map((v) => (
-          <button key={v} type="button" className="choice" disabled={okA} onClick={() => setRhombusRect(v)} style={fieldStyle(v === "false", rhombusRect === v)}>
-            {v === "true" ? "True" : "False"}
-          </button>
-        ))}
-      </div>
-      <p>True or False: every square is a rhombus.</p>
-      <div style={{ display: "flex", gap: 10 }}>
-        {(["true", "false"] as const).map((v) => (
-          <button key={v} type="button" className="choice" disabled={okB} onClick={() => setSquareRhombus(v)} style={fieldStyle(v === "true", squareRhombus === v)}>
-            {v === "true" ? "True" : "False"}
-          </button>
-        ))}
-      </div>
-      {(rhombusRect !== null || squareRhombus !== null) && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Right on both! A rhombus only needs 4 equal sides (no right-angle requirement), so most rhombuses AREN'T rectangles. But a square always has 4 equal sides, so every square IS a rhombus."
-            : "Think about which attribute each category actually requires — a rhombus needs equal sides (not right angles); a square has both, so it always qualifies as a rhombus too."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>4.</b> True or False: every rhombus is a rectangle.
         </p>
-      )}
-    </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          {(["true", "false"] as const).map((v) => (
+            <button key={v} type="button" className="choice" disabled={okA} onClick={() => setRhombusRect(v)} style={fieldStyle(v === "false", rhombusRect === v)}>
+              {v === "true" ? "True" : "False"}
+            </button>
+          ))}
+        </div>
+        <p>True or False: every square is a rhombus.</p>
+        <div style={{ display: "flex", gap: 10 }}>
+          {(["true", "false"] as const).map((v) => (
+            <button key={v} type="button" className="choice" disabled={okB} onClick={() => setSquareRhombus(v)} style={fieldStyle(v === "true", squareRhombus === v)}>
+              {v === "true" ? "True" : "False"}
+            </button>
+          ))}
+        </div>
+        {(rhombusRect !== null || squareRhombus !== null) && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Right on both! A rhombus only needs 4 equal sides (no right-angle requirement), so most rhombuses AREN'T rectangles. But a square always has 4 equal sides, so every square IS a rhombus."
+              : "Think about which attribute each category actually requires — a rhombus needs equal sides (not right angles); a square has both, so it always qualifies as a rhombus too."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -186,13 +195,15 @@ function AttributesCheck({ onComplete }: { onComplete?: () => void }) {
     if (allDone) onComplete?.();
   }, [allDone, onComplete]);
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure you can tell what REALLY makes a shape a quadrilateral before you try practice problems.</p>
-      <VocabQuestion onComplete={() => setDone((d) => ({ ...d, q1: true }))} />
-      <NotExclusiveQuestion onComplete={() => setDone((d) => ({ ...d, q2: true }))} />
-      <AtypicalShapeQuestion onComplete={() => setDone((d) => ({ ...d, q3: true }))} />
-      <HierarchyPairQuestion onComplete={() => setDone((d) => ({ ...d, q4: true }))} />
-    </div>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Quick check: let's make sure you can tell what REALLY makes a shape a quadrilateral before you try practice problems.</p>
+        <VocabQuestion onComplete={() => setDone((d) => ({ ...d, q1: true }))} />
+        <NotExclusiveQuestion onComplete={() => setDone((d) => ({ ...d, q2: true }))} />
+        <AtypicalShapeQuestion onComplete={() => setDone((d) => ({ ...d, q3: true }))} />
+        <HierarchyPairQuestion onComplete={() => setDone((d) => ({ ...d, q4: true }))} />
+      </div>
+    </MathText>
   );
 }
 
@@ -237,43 +248,45 @@ function SortGallery() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <p className="muted small">Drag each shape below into the bin where it belongs.</p>
-      <div className="control-row" style={{ flexWrap: "wrap", gap: 10 }}>
-        {tray.map((p) => (
-          <div key={p.id} draggable onDragStart={() => setDragging(p.id)} onDragEnd={() => setDragging(null)} style={{ cursor: "grab" }} aria-label={`Drag this ${QUAD_NAMES[p.kind]}`}>
-            <QuadCanvas width={64} height={64} label={`A ${QUAD_NAMES[p.kind]}`}>
-              <QuadTile kind={p.kind} cx={32} cy={32} size={22} rotation={p.rotation} color={SHAPE_COLORS[p.colorIdx]} />
-            </QuadCanvas>
-          </div>
-        ))}
-      </div>
-      <div className="control-row" style={{ gap: 16 }}>
-        <div onDragOver={(e) => e.preventDefault()} onDrop={() => dropInto("yes")} style={{ flex: 1, minHeight: 100, border: "3px dashed var(--line)", borderRadius: 10, padding: 10, ...binStyle("yes") }}>
-          <b>Yes — quadrilateral</b>
-          <div className="control-row" style={{ flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-            {inBin("yes").map((p) => (
-              <QuadCanvas key={p.id} width={44} height={44} label={QUAD_NAMES[p.kind]}>
-                <QuadTile kind={p.kind} cx={22} cy={22} size={15} rotation={p.rotation} color={SHAPE_COLORS[p.colorIdx]} />
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <p className="muted small">Drag each shape below into the bin where it belongs.</p>
+        <div className="control-row" style={{ flexWrap: "wrap", gap: 10 }}>
+          {tray.map((p) => (
+            <div key={p.id} draggable onDragStart={() => setDragging(p.id)} onDragEnd={() => setDragging(null)} style={{ cursor: "grab" }} aria-label={`Drag this ${QUAD_NAMES[p.kind]}`}>
+              <QuadCanvas width={64} height={64} label={`A ${QUAD_NAMES[p.kind]}`}>
+                <QuadTile kind={p.kind} cx={32} cy={32} size={22} rotation={p.rotation} color={SHAPE_COLORS[p.colorIdx]} />
               </QuadCanvas>
-            ))}
+            </div>
+          ))}
+        </div>
+        <div className="control-row" style={{ gap: 16 }}>
+          <div onDragOver={(e) => e.preventDefault()} onDrop={() => dropInto("yes")} style={{ flex: 1, minHeight: 100, border: "3px dashed var(--line)", borderRadius: 10, padding: 10, ...binStyle("yes") }}>
+            <b>Yes — quadrilateral</b>
+            <div className="control-row" style={{ flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+              {inBin("yes").map((p) => (
+                <QuadCanvas key={p.id} width={44} height={44} label={QUAD_NAMES[p.kind]}>
+                  <QuadTile kind={p.kind} cx={22} cy={22} size={15} rotation={p.rotation} color={SHAPE_COLORS[p.colorIdx]} />
+                </QuadCanvas>
+              ))}
+            </div>
+          </div>
+          <div onDragOver={(e) => e.preventDefault()} onDrop={() => dropInto("no")} style={{ flex: 1, minHeight: 100, border: "3px dashed var(--line)", borderRadius: 10, padding: 10, ...binStyle("no") }}>
+            <b>No — not a quadrilateral</b>
+            <div className="control-row" style={{ flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+              {inBin("no").map((p) => (
+                <QuadCanvas key={p.id} width={44} height={44} label={QUAD_NAMES[p.kind]}>
+                  <QuadTile kind={p.kind} cx={22} cy={22} size={15} rotation={p.rotation} color={SHAPE_COLORS[p.colorIdx]} />
+                </QuadCanvas>
+              ))}
+            </div>
           </div>
         </div>
-        <div onDragOver={(e) => e.preventDefault()} onDrop={() => dropInto("no")} style={{ flex: 1, minHeight: 100, border: "3px dashed var(--line)", borderRadius: 10, padding: 10, ...binStyle("no") }}>
-          <b>No — not a quadrilateral</b>
-          <div className="control-row" style={{ flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-            {inBin("no").map((p) => (
-              <QuadCanvas key={p.id} width={44} height={44} label={QUAD_NAMES[p.kind]}>
-                <QuadTile kind={p.kind} cx={22} cy={22} size={15} rotation={p.rotation} color={SHAPE_COLORS[p.colorIdx]} />
-              </QuadCanvas>
-            ))}
-          </div>
-        </div>
+        <button type="button" className="btn ghost" style={{ width: "fit-content" }} onClick={() => { setPieces(makeSortPieces()); setPlaced({}); }}>
+          New shapes
+        </button>
       </div>
-      <button type="button" className="btn ghost" style={{ width: "fit-content" }} onClick={() => { setPieces(makeSortPieces()); setPlaced({}); }}>
-        New shapes
-      </button>
-    </div>
+    </MathText>
   );
 }
 
@@ -285,42 +298,44 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [colorIdx, setColorIdx] = useState(1);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && (
-        <button
-          type="button"
-          className="btn ghost"
-          style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
-          onClick={() => setShowCheck((v) => !v)}
-        >
-          Quick Check
-        </button>
-      )}
-      <Segmented label="Shape" value={kind} onChange={setKind} options={QUADS.map((k) => ({ id: k, label: QUAD_NAMES[k][0].toUpperCase() + QUAD_NAMES[k].slice(1) }))} />
-      <div className="control-row">
-        <Stepper label="Turn" value={rotation} min={0} max={345} step={15} onChange={setRotation} tone="b" />
-      </div>
-      <div className="control-row">
-        {SHAPE_COLORS.map((c, i) => (
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && (
           <button
-            key={c}
             type="button"
-            aria-label={`Color: ${SHAPE_COLOR_NAMES[i]}`}
-            onClick={() => setColorIdx(i)}
-            style={{ width: 34, height: 34, borderRadius: "50%", background: c, border: colorIdx === i ? "3px solid var(--ink)" : "2px solid var(--line)", cursor: "pointer" }}
-          />
-        ))}
+            className="btn ghost"
+            style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Quick Check
+          </button>
+        )}
+        <Segmented label="Shape" value={kind} onChange={setKind} options={QUADS.map((k) => ({ id: k, label: QUAD_NAMES[k][0].toUpperCase() + QUAD_NAMES[k].slice(1) }))} />
+        <div className="control-row">
+          <Stepper label="Turn" value={rotation} min={0} max={345} step={15} onChange={setRotation} tone="b" />
+        </div>
+        <div className="control-row">
+          {SHAPE_COLORS.map((c, i) => (
+            <button
+              key={c}
+              type="button"
+              aria-label={`Color: ${SHAPE_COLOR_NAMES[i]}`}
+              onClick={() => setColorIdx(i)}
+              style={{ width: 34, height: 34, borderRadius: "50%", background: c, border: colorIdx === i ? "3px solid var(--ink)" : "2px solid var(--line)", cursor: "pointer" }}
+            />
+          ))}
+        </div>
+        <QuadCanvas width={160} height={160} label={`A ${SHAPE_COLOR_NAMES[colorIdx]} ${QUAD_NAMES[kind]}, turned ${rotation} degrees`}>
+          <QuadTile kind={kind} cx={80} cy={80} size={40} rotation={rotation} color={SHAPE_COLORS[colorIdx]} />
+        </QuadCanvas>
+        <p className="muted small">
+          A {QUAD_NAMES[kind]} always has: <b>{SHAPE_DESCRIPTION[kind]}</b>. Try turning it — it stays a {QUAD_NAMES[kind]} no matter which way it's rotated.
+        </p>
+        <SortGallery />
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <AttributesCheck onComplete={onIntroDone} />}
       </div>
-      <QuadCanvas width={160} height={160} label={`A ${SHAPE_COLOR_NAMES[colorIdx]} ${QUAD_NAMES[kind]}, turned ${rotation} degrees`}>
-        <QuadTile kind={kind} cx={80} cy={80} size={40} rotation={rotation} color={SHAPE_COLORS[colorIdx]} />
-      </QuadCanvas>
-      <p className="muted small">
-        A {QUAD_NAMES[kind]} always has: <b>{SHAPE_DESCRIPTION[kind]}</b>. Try turning it — it stays a {QUAD_NAMES[kind]} no matter which way it's rotated.
-      </p>
-      <SortGallery />
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <AttributesCheck onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 
@@ -504,14 +519,16 @@ function truefalsePairProblem(): Problem {
 /** Static snapshot for the cover page's preview carousel. */
 function Preview() {
   return (
-    <div style={{ display: "flex", gap: 12 }}>
-      <QuadCanvas width={90} height={90} label="A slanted rhombus">
-        <QuadTile kind="rhombus" cx={45} cy={48} size={26} rotation={30} rhombusRatio={1.9} color={SHAPE_COLORS[3]} />
-      </QuadCanvas>
-      <QuadCanvas width={90} height={90} label="A long rectangle">
-        <QuadTile kind="rectangle" cx={45} cy={45} size={26} rotation={0} rectAspect={2.4} color={SHAPE_COLORS[1]} />
-      </QuadCanvas>
-    </div>
+    <MathText>
+      <div style={{ display: "flex", gap: 12 }}>
+        <QuadCanvas width={90} height={90} label="A slanted rhombus">
+          <QuadTile kind="rhombus" cx={45} cy={48} size={26} rotation={30} rhombusRatio={1.9} color={SHAPE_COLORS[3]} />
+        </QuadCanvas>
+        <QuadCanvas width={90} height={90} label="A long rectangle">
+          <QuadTile kind="rectangle" cx={45} cy={45} size={26} rotation={0} rectAspect={2.4} color={SHAPE_COLORS[1]} />
+        </QuadCanvas>
+      </div>
+    </MathText>
   );
 }
 

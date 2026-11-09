@@ -7,6 +7,7 @@ import { StepProblem } from "../shared/engine/StepProblem";
 import { Segmented } from "../shared/engine/controls";
 import { UnitTestView } from "../shared/engine/UnitTest";
 import { UnitPreviewCarousel } from "../shared/components/UnitPreviewCarousel";
+import { MathText, StackedFractions } from "../shared/components/MathText";
 import type { Problem } from "../shared/engine/types";
 import { shuffle } from "../shared/lib/math";
 import { MASTERY_GOAL, isMastered as sharedIsMastered, starCount as sharedStarCount, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
@@ -94,7 +95,9 @@ function Home({
                 <span className="path-num">{i + 1}</span>
                 <span className="path-body">
                   <span className="path-title">{u.title}</span>
-                  <span className="path-goal">{u.goal}</span>
+                  <span className="path-goal">
+                    <MathText>{u.goal}</MathText>
+                  </span>
                 </span>
                 <Stars unit={u} p={progress[u.id]} />
               </button>
@@ -124,7 +127,7 @@ function TestBadge({ p, passScore, total = 10 }: { p?: UnitProgress; passScore: 
   const passed = p.testScore >= passScore;
   return (
     <span className={`test-badge ${passed ? "pass" : "fail"}`} title="Your best score across all attempts">
-      Best test score: {p.testScore}/{total}
+      Best test score: {p.testScore} out of {total}
       {passed ? " ✓" : ""}
     </span>
   );
@@ -172,14 +175,14 @@ function UnitView({
   }, [unit, typeIdx, seed]);
 
   const mastered = isMastered(unit, progress);
-  // Grandfather in anyone who already has practice history from before this unit
-  // had a required intro — only ever gate a student who's never touched Practice.
+  // The Check for Understanding gates Practice for every student, including
+  // those with practice history (user requirement, 2026-11-07).
   // Not actually reachable for THIS lab (brand-new module id, so no student has
   // prior content), but kept identical to every other Lab's UnitView for
   // consistency and so this file stays a drop-in match if that ever changes.
   const solvedSinceIntro = (progress?.solved ?? 0) - (progress?.introDoneAtSolved ?? 0);
   const introNeedsRefresh = !!unit.reintroEverySolved && !!progress?.introDone && solvedSinceIntro >= unit.reintroEverySolved;
-  const introSatisfied = !unit.requiresIntro || ((!!progress?.introDone || (progress?.solved ?? 0) > 0) && !introNeedsRefresh);
+  const introSatisfied = !unit.requiresIntro || (!!progress?.introDone && !introNeedsRefresh);
 
   // Once the Check for Understanding is passed, keep it open (with its
   // feedback) until the student leaves the Explore tab, instead of letting
@@ -196,7 +199,9 @@ function UnitView({
       <header className="unit-head">
         <div>
           <h1>{unit.title}</h1>
-          <p className="goal">{unit.goal}</p>
+          <p className="goal">
+            <MathText>{unit.goal}</MathText>
+          </p>
         </div>
         <div className="unit-stars">
           <Stars unit={unit} p={progress} size="lg" />
@@ -206,7 +211,9 @@ function UnitView({
         </div>
       </header>
 
-      <aside className="key-idea">{unit.keyIdea}</aside>
+      <aside className="key-idea">
+        <MathText>{unit.keyIdea}</MathText>
+      </aside>
 
       <div className="tabs" role="tablist">
         <button role="tab" aria-selected={tab === "explore"} className={tab === "explore" ? "on" : ""} onClick={() => setTab("explore")}>
@@ -310,6 +317,7 @@ function LinesAnglesAndShapeClassificationLab() {
 
   return (
     <div className="lasc-lab lab-base">
+      <StackedFractions>
       <div className="app">
         <nav className="rail" aria-label="Units">
           <button className="brand" onClick={() => go(null)}>
@@ -387,6 +395,7 @@ function LinesAnglesAndShapeClassificationLab() {
           )}
         </main>
       </div>
+      </StackedFractions>
     </div>
   );
 }

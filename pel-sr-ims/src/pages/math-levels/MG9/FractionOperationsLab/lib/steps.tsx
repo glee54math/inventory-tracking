@@ -14,13 +14,16 @@ export interface StepText {
  * pieces — picks the input shape from the VALUE itself, so a generator never
  * has to special-case it:
  *   - an exact whole number  -> one plain number box ("3"),
- *   - less than one whole    -> one numerator box with "/d" printed after it
- *                               (like-denominator work: the denominator is
+ *   - less than one whole    -> one numerator box over a printed d, drawn
+ *                               as a stacked fraction (NumberStep.overDen;
+ *                               like-denominator work: the denominator is
  *                               given, the student counts pieces),
  *   - more than one, not whole -> a whole-number box + a numerator box over
- *                               d, i.e. a mixed number (a SentenceStep with
- *                               two number blanks, so the review screen's
- *                               answer text reads "2 3/8", not "2 : 3").
+ *                               a printed d, i.e. a mixed number (a
+ *                               SentenceStep with two number blanks and
+ *                               overDen, so the review screen's answer text
+ *                               reads "2 3/8", not "2 : 3").
+ * Every fraction is drawn stacked, the handwritten way (user requirement).
  * Never simplified — 4.NF.3 like-denominator answers keep their denominator,
  * consistent with MG9_IntroToFractionsLab's own "denominator stays d —
  * what's the numerator?" convention.
@@ -40,7 +43,8 @@ export function amountStep(text: StepText, pieces: number, d: number, unit = "")
       ),
       kind: "number",
       answer: pieces,
-      suffix: `/${d}${u}`,
+      overDen: d,
+      suffix: unit || undefined,
     };
   }
   return sentence(
@@ -56,7 +60,8 @@ export function amountStep(text: StepText, pieces: number, d: number, unit = "")
     numberBlank(Math.floor(pieces / d)),
     " ",
     numberBlank(pieces % d),
-    `/${d}${u}`
+    u,
+    [undefined, d]
   );
 }
 

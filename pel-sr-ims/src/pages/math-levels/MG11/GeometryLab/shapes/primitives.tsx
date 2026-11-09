@@ -1,6 +1,8 @@
 // shapes/primitives.tsx — low-level SVG building blocks.
 // Every figure in the app is composed from these. They work in pixel space (y points down).
 import React from "react";
+import { hasFraction, useStackedFractions } from "../../../shared/components/MathText";
+import { SvgMathLine } from "../../../shared/components/SvgMath";
 
 export type Pt = { x: number; y: number };
 /** Palette keys map to CSS variables: --c-blue, --c-blue-soft, etc. */
@@ -87,6 +89,12 @@ export function Seg({ a, b, color = "ink", dashed, width = 2 }: { a: Pt; b: Pt; 
 export function Label({ x, y, text, size = 15, color = "ink", anchor = "middle", weight = 600 }: {
   x: number; y: number; text: React.ReactNode; size?: number; color?: Hue; anchor?: "start" | "middle" | "end"; weight?: number;
 }) {
+  // A fraction label ("1 1/2 ft") is drawn stacked, the handwritten way, in a
+  // <StackedFractions> lab. SvgMathLine's y is the text baseline.
+  const stacked = useStackedFractions();
+  if (stacked && typeof text === "string" && hasFraction(text)) {
+    return <SvgMathLine text={text} x={x} y={y + size * 0.35} fontSize={size} color={hue(color)} weight={weight} anchor={anchor} />;
+  }
   return (
     <text x={x} y={y} className="svg-label" fontSize={size} fill={hue(color)} textAnchor={anchor} dominantBaseline="central" fontWeight={weight}>
       {text}

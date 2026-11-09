@@ -260,3 +260,61 @@
   background: var(--qc-soft);
   border-radius: var(--radius-sm);
 }
+
+/* Every fraction in this lab's text is stacked, the handwritten way (shared
+   MathText inside <StackedFractions>; user requirement, same rules as
+   MG10_AddingAndSubtractingFractionsLab_styles.css). A mixed number keeps
+   its whole number and fraction together on one line, and text blocks get a
+   taller line height so a line with a fraction is no taller than one without. */
+.fop-lab .frac-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.fop-lab .frac-text .frac {
+  margin: 0 0.1em;
+}
+.fop-lab .panel p,
+.fop-lab .panel li,
+.fop-lab .key-idea p,
+.fop-lab .goal,
+.fop-lab .story,
+.fop-lab .step-prompt,
+.fop-lab .step-result,
+.fop-lab .explain,
+.fop-lab .show-me,
+.fop-lab .feedback,
+.fop-lab .cfu-line,
+.fop-lab .test-prompt,
+.fop-lab .test-review li {
+  line-height: 1.9;
+}
+.fop-lab .path-goal,
+.fop-lab .unit-carousel-goal {
+  line-height: 1.8;
+}
+/* Small print keeps its fractions readable on an iPad. */
+.fop-lab .small .frac,
+.fop-lab .path-goal .frac,
+.fop-lab .unit-carousel-goal .frac {
+  font-size: 0.92em;
+}
+/* A typed top over a printed denominator (NumberStep/SentenceStep overDen,
+   or a CFU box written as the top of a fraction). */
+.fop-lab .sentence-over-den {
+  vertical-align: middle;
+  margin: 0 4px;
+  line-height: 1.2;
+}
+.fop-lab .sentence-over-den .frac-entry-fixed {
+  line-height: 1.6;
+}
+.fop-lab .answer-row .number-over-den {
+  display: inline-flex;
+}
+.fop-lab .frac .frac-n select.answer,
+.fop-lab .frac .frac-n .tap-select {
+  margin: 0 0 3px;
+}

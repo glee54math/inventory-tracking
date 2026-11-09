@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { palette, diagramFont } from "../../../shared/lib/palette";
+import { palette, diagramFont } from "../lib/palette";
+import { MathText } from "../components/MathText";
 
 export interface MixedNumberBarsProps {
   /** Bundled wholes — each drawn as ONE solid bar labeled "1", no piece lines. */
@@ -17,6 +18,10 @@ export interface MixedNumberBarsProps {
   barWidth?: number;
   height?: number;
   caption?: ReactNode;
+  /** Ring the last bundled whole with a dashed outline: "this is the whole you
+   *  will borrow". Points at it without cutting it, so the picture doesn't
+   *  show the regrouped numbers a borrow step asks for. */
+  ringLastWhole?: boolean;
 }
 
 /**
@@ -28,7 +33,7 @@ export interface MixedNumberBarsProps {
  * Callers pass the regrouped numbers straight from lib/fractions.ts's
  * mixedSubtract(), the same breakdown the graded steps use.
  */
-export function MixedNumberBars({ wholes, num, den, tone = "a", takeWholes = 0, takeNum = 0, barWidth = 150, height = 48, caption }: MixedNumberBarsProps) {
+export function MixedNumberBars({ wholes, num, den, tone = "a", takeWholes = 0, takeNum = 0, barWidth = 150, height = 48, caption, ringLastWhole }: MixedNumberBarsProps) {
   const fill = tone === "b" ? palette.b : tone === "c" ? palette.c : palette.a;
   const looseBars = Math.ceil(num / den);
   const cellW = barWidth / den;
@@ -53,6 +58,9 @@ export function MixedNumberBars({ wholes, num, den, tone = "a", takeWholes = 0, 
                   1
                 </text>
                 {taken && cross(0, barWidth)}
+                {ringLastWhole && i === wholes - 1 && (
+                  <rect x={1} y={1} width={barWidth - 2} height={height - 2} style={{ fill: "none", stroke: palette.c, strokeWidth: 4, strokeDasharray: "7 4" }} />
+                )}
               </g>
             </svg>
           );
@@ -84,7 +92,7 @@ export function MixedNumberBars({ wholes, num, den, tone = "a", takeWholes = 0, 
       </div>
       {caption && (
         <p className="muted small" style={{ marginTop: 6, marginBottom: 0 }}>
-          {caption}
+          <MathText>{caption}</MathText>
         </p>
       )}
     </div>

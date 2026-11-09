@@ -5,6 +5,7 @@ import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { identifyingEquivalentExpressionsTest } from "./IdentifyingEquivalentExpressionsTest";
 import { answerBorder } from "../../../shared/lib/answerChecks";
+import { MathText } from "../../../shared/components/MathText";
 
 interface LinearExpr {
   coeffX: number;
@@ -24,30 +25,32 @@ const fieldStyle = (ok: boolean, checked: boolean): CSSProperties => (checked ? 
  *  CFU, and Practice alike. */
 function EvalTable({ exprA, exprB, xValues }: { exprA: LinearExpr; exprB: LinearExpr; xValues: number[] }) {
   return (
-    <div style={{ overflowX: "auto" }}>
-      <table style={{ borderCollapse: "collapse", fontSize: 15 }}>
-        <thead>
-          <tr>
-            <th style={{ padding: "4px 12px", textAlign: "left" }}>x</th>
-            <th style={{ padding: "4px 12px", textAlign: "left", color: "var(--qa-text)" }}>{exprA.display}</th>
-            <th style={{ padding: "4px 12px", textAlign: "left", color: "var(--qb-text)" }}>{exprB.display}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {xValues.map((x) => {
-            const vA = evaluateLinear(exprA, x);
-            const vB = evaluateLinear(exprB, x);
-            return (
-              <tr key={x}>
-                <td style={{ padding: "4px 12px", fontWeight: 700 }}>{x}</td>
-                <td style={{ padding: "4px 12px" }}>{vA}</td>
-                <td style={{ padding: "4px 12px", color: vA === vB ? "var(--good)" : "var(--bad)" }}>{vB}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <MathText>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ borderCollapse: "collapse", fontSize: 15 }}>
+          <thead>
+            <tr>
+              <th style={{ padding: "4px 12px", textAlign: "left" }}>x</th>
+              <th style={{ padding: "4px 12px", textAlign: "left", color: "var(--qa-text)" }}>{exprA.display}</th>
+              <th style={{ padding: "4px 12px", textAlign: "left", color: "var(--qb-text)" }}>{exprB.display}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {xValues.map((x) => {
+              const vA = evaluateLinear(exprA, x);
+              const vB = evaluateLinear(exprB, x);
+              return (
+                <tr key={x}>
+                  <td style={{ padding: "4px 12px", fontWeight: 700 }}>{x}</td>
+                  <td style={{ padding: "4px 12px" }}>{vA}</td>
+                  <td style={{ padding: "4px 12px", color: vA === vB ? "var(--good)" : "var(--bad)" }}>{vB}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </MathText>
   );
 }
 
@@ -65,31 +68,33 @@ function EquivalentVocabQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>1.</b> What does it mean for two expressions to be "equivalent"?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="same value for every value of the variable">they have the same value for EVERY value of the variable</option>
-          <option value="they look similar">they look similar</option>
-          <option value="same value for one value">they have the same value for one value of the variable</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — equivalent expressions must match for EVERY possible value of the variable, not just one, and not just by looking alike."
-            : "Not quite — looking similar, or matching at just one value, isn't enough. Equivalent means equal for every value of the variable."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>1.</b> What does it mean for two expressions to be "equivalent"?
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="same value for every value of the variable">they have the same value for EVERY value of the variable</option>
+            <option value="they look similar">they look similar</option>
+            <option value="same value for one value">they have the same value for one value of the variable</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — equivalent expressions must match for EVERY possible value of the variable, not just one, and not just by looking alike."
+              : "Not quite — looking similar, or matching at just one value, isn't enough. Equivalent means equal for every value of the variable."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -111,43 +116,45 @@ function LookalikeTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>2.</b> Is 2(x+3) equivalent to 2x+3? Check by substituting x = 5 into both.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          2(x+3) at x=5:{" "}
-          <input className="answer" style={{ width: 55, ...answerBorder(vAOk, checked) }} inputMode="numeric" value={vAPick} onChange={(e) => setVAPick(e.target.value)} />
-        </label>
-        <label>
-          2x+3 at x=5:{" "}
-          <input className="answer" style={{ width: 55, ...answerBorder(vBOk, checked) }} inputMode="numeric" value={vBPick} onChange={(e) => setVBPick(e.target.value)} />
-        </label>
-      </div>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Equivalent?{" "}
-          <select className="answer" value={equivPick} onChange={(e) => setEquivPick(e.target.value)} style={fieldStyle(equivOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? `Correct — 2(x+3) at x=5 is ${evaluateLinear(exprA, 5)}, but 2x+3 at x=5 is only ${evaluateLinear(exprB, 5)}. Different values, so they're NOT equivalent — 2x+3 forgot to distribute the 2 to the 3.`
-            : `Not quite — compute each expression carefully at x=5, then compare. 2(x+3) means 2 times the WHOLE sum (x+3).`}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>2.</b> Is 2(x+3) equivalent to 2x+3? Check by substituting x = 5 into both.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            2(x+3) at x=5:{" "}
+            <input className="answer" style={{ width: 55, ...answerBorder(vAOk, checked) }} inputMode="numeric" value={vAPick} onChange={(e) => setVAPick(e.target.value)} />
+          </label>
+          <label>
+            2x+3 at x=5:{" "}
+            <input className="answer" style={{ width: 55, ...answerBorder(vBOk, checked) }} inputMode="numeric" value={vBPick} onChange={(e) => setVBPick(e.target.value)} />
+          </label>
+        </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            Equivalent?{" "}
+            <select className="answer" value={equivPick} onChange={(e) => setEquivPick(e.target.value)} style={fieldStyle(equivOk, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && allFilled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? `Correct — 2(x+3) at x=5 is ${evaluateLinear(exprA, 5)}, but 2x+3 at x=5 is only ${evaluateLinear(exprB, 5)}. Different values, so they're NOT equivalent — 2x+3 forgot to distribute the 2 to the 3.`
+              : `Not quite — compute each expression carefully at x=5, then compare. 2(x+3) means 2 times the WHOLE sum (x+3).`}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -161,30 +168,32 @@ function CheckOneValueTrapQuestion({ onComplete }: { onComplete?: () => void }) 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or False: if two expressions give the same value when x = 2, that proves they're equivalent for every x.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="True">True</option>
-          <option value="False">False</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — False. For example, 3x+5 and 5x+3 both equal 8 when x=1, but they're NOT equivalent — try x=2: 3(2)+5=11, while 5(2)+3=13. Matching at one value can be coincidence."
-            : "Not quite — try 3x+5 and 5x+3 at x=1: both equal 8! But at x=2 they disagree. Matching at ONE value doesn't prove they're always equal."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>3.</b> True or False: if two expressions give the same value when x = 2, that proves they're equivalent for every x.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="True">True</option>
+            <option value="False">False</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — False. For example, 3x+5 and 5x+3 both equal 8 when x=1, but they're NOT equivalent — try x=2: 3(2)+5=11, while 5(2)+3=13. Matching at one value can be coincidence."
+              : "Not quite — try 3x+5 and 5x+3 at x=1: both equal 8! But at x=2 they disagree. Matching at ONE value doesn't prove they're always equal."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -198,31 +207,33 @@ function VerificationStrategyQuestion({ onComplete }: { onComplete?: () => void 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>4.</b> To check whether two expressions are equivalent, what's a good strategy?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="substituteFewValues">substitute a couple of different x-values into both and compare</option>
-          <option value="justCheckX">just check that both use the same variable</option>
-          <option value="assumeAlike">assume they're equivalent if they look alike</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — substituting a couple of different values is a quick, reliable check. One match could be coincidence, but if even one value disagrees, they're definitely not equivalent."
-            : "Not quite — looking alike or sharing a variable doesn't prove anything. Substitute a couple of different values and compare the results."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>4.</b> To check whether two expressions are equivalent, what's a good strategy?
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="substituteFewValues">substitute a couple of different x-values into both and compare</option>
+            <option value="justCheckX">just check that both use the same variable</option>
+            <option value="assumeAlike">assume they're equivalent if they look alike</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — substituting a couple of different values is a quick, reliable check. One match could be coincidence, but if even one value disagrees, they're definitely not equivalent."
+              : "Not quite — looking alike or sharing a variable doesn't prove anything. Substitute a couple of different values and compare the results."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -235,13 +246,15 @@ function IdentifyingCheckForUnderstanding({ onComplete }: { onComplete?: () => v
   const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's connect a few ideas before you try practice problems.</p>
-      <EquivalentVocabQuestion onComplete={mark("vocab")} />
-      <LookalikeTrapQuestion onComplete={mark("lookalike")} />
-      <CheckOneValueTrapQuestion onComplete={mark("oneValueTrap")} />
-      <VerificationStrategyQuestion onComplete={mark("strategy")} />
-    </div>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: let's connect a few ideas before you try practice problems.</p>
+        <EquivalentVocabQuestion onComplete={mark("vocab")} />
+        <LookalikeTrapQuestion onComplete={mark("lookalike")} />
+        <CheckOneValueTrapQuestion onComplete={mark("oneValueTrap")} />
+        <VerificationStrategyQuestion onComplete={mark("strategy")} />
+      </div>
+    </MathText>
   );
 }
 
@@ -259,36 +272,38 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const exprCLookalike: LinearExpr = { coeffX: a, constant: b, display: `${a}x+${b}` };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
-        <Stepper label="a" value={a} min={2} max={6} step={1} onChange={setA} tone="a" />
-        <Stepper label="b" value={b} min={1} max={9} step={1} onChange={setB} tone="b" />
-        {!introActive && (
-          <button
-            type="button"
-            className="btn ghost"
-            style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
-            onClick={() => setShowCheck((v) => !v)}
-          >
-            Check for Understanding
-          </button>
-        )}
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="control-row">
+          <Stepper label="a" value={a} min={2} max={6} step={1} onChange={setA} tone="a" />
+          <Stepper label="b" value={b} min={1} max={9} step={1} onChange={setB} tone="b" />
+          {!introActive && (
+            <button
+              type="button"
+              className="btn ghost"
+              style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
+              onClick={() => setShowCheck((v) => !v)}
+            >
+              Check for Understanding
+            </button>
+          )}
+        </div>
+        <p className="muted small">
+          {exprA.display} and {exprB.display} ARE equivalent — distributing {a} correctly keeps every value the same:
+        </p>
+        <EvalTable exprA={exprA} exprB={exprB} xValues={[1, 2, 3, 4]} />
+        <p className="muted small">
+          But {exprA.display} and {exprCLookalike.display} are NOT equivalent — {exprCLookalike.display} forgot to multiply the {b} by {a}:
+        </p>
+        <EvalTable exprA={exprA} exprB={exprCLookalike} xValues={[1, 2, 3, 4]} />
+        <p className="muted small">
+          Change a and b above — the first table always stays equal at every row, but the second table disagrees as soon as x changes, since the
+          two expressions are genuinely different.
+        </p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <IdentifyingCheckForUnderstanding onComplete={onIntroDone} />}
       </div>
-      <p className="muted small">
-        {exprA.display} and {exprB.display} ARE equivalent — distributing {a} correctly keeps every value the same:
-      </p>
-      <EvalTable exprA={exprA} exprB={exprB} xValues={[1, 2, 3, 4]} />
-      <p className="muted small">
-        But {exprA.display} and {exprCLookalike.display} are NOT equivalent — {exprCLookalike.display} forgot to multiply the {b} by {a}:
-      </p>
-      <EvalTable exprA={exprA} exprB={exprCLookalike} xValues={[1, 2, 3, 4]} />
-      <p className="muted small">
-        Change a and b above — the first table always stays equal at every row, but the second table disagrees as soon as x changes, since the
-        two expressions are genuinely different.
-      </p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <IdentifyingCheckForUnderstanding onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 

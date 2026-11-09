@@ -4,6 +4,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { wordProblemsWithMassAndVolumeTest } from "./WordProblemsWithMassAndVolumeTest";
+import { MathText } from "../../../shared/components/MathText";
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
@@ -15,14 +16,16 @@ const UNIT_LABEL: Record<UnitName, string> = { L: "liters", g: "grams", kg: "kil
  *  local to this unit (no SVG diagram needed; plain text glyphs repeated). */
 function IconRow({ glyph, count, label }: { glyph: string; count: number; label?: string }) {
   return (
-    <div className="icon-row" aria-label={label}>
-      {Array.from({ length: Math.min(count, 10) }, (_, i) => (
-        <span key={i} aria-hidden style={{ fontSize: 28 }}>
-          {glyph}
-        </span>
-      ))}
-      {count > 10 && <span className="muted small">× {count}</span>}
-    </div>
+    <MathText>
+      <div className="icon-row" aria-label={label}>
+        {Array.from({ length: Math.min(count, 10) }, (_, i) => (
+          <span key={i} aria-hidden style={{ fontSize: 28 }}>
+            {glyph}
+          </span>
+        ))}
+        {count > 10 && <span className="muted small">× {count}</span>}
+      </div>
+    </MathText>
   );
 }
 
@@ -40,33 +43,35 @@ function SameUnitsQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>1.</b> A word problem says two masses are given "in the same units."
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What does that mean?{" "}
-          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="sameWord">Both numbers use the exact same unit word — both grams, or both kilograms, or both liters</option>
-            <option value="bothNumbers">Both numbers are measurements, no matter which unit each one uses</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — \"same units\" means the exact same word: both grams, both kilograms, or both liters. Mixing grams with kilograms (or liters with grams) isn't the same unit, even though both are measurements."
-            : "Not quite — \"same units\" means the literal same word (both grams, or both kilograms, or both liters) — not just \"both are some kind of measurement.\""}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>1.</b> A word problem says two masses are given "in the same units."
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            What does that mean?{" "}
+            <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="sameWord">Both numbers use the exact same unit word — both grams, or both kilograms, or both liters</option>
+              <option value="bothNumbers">Both numbers are measurements, no matter which unit each one uses</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — \"same units\" means the exact same word: both grams, both kilograms, or both liters. Mixing grams with kilograms (or liters with grams) isn't the same unit, even though both are measurements."
+              : "Not quite — \"same units\" means the literal same word (both grams, or both kilograms, or both liters) — not just \"both are some kind of measurement.\""}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -80,33 +85,35 @@ function MismatchedUnitsQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>2.</b> A recipe uses 300 grams of flour and 2 liters of milk.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Can you add 300 + 2 to find a combined total?{" "}
-          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="yes">Yes — 302 of something</option>
-            <option value="cant">No — grams measure mass and liters measure volume; they can't be combined into one total at all</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — this problem is a trap: 300 grams (mass) and 2 liters (volume) measure two completely different things. There's no single combined total to find, no matter what operation you try."
-            : "Not quite — 300 grams measures MASS and 2 liters measures VOLUME. Adding their numbers together gives \"302\" of nothing real — always check that two quantities share the same unit before combining them."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>2.</b> A recipe uses 300 grams of flour and 2 liters of milk.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            Can you add 300 + 2 to find a combined total?{" "}
+            <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="yes">Yes — 302 of something</option>
+              <option value="cant">No — grams measure mass and liters measure volume; they can't be combined into one total at all</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — this problem is a trap: 300 grams (mass) and 2 liters (volume) measure two completely different things. There's no single combined total to find, no matter what operation you try."
+              : "Not quite — 300 grams measures MASS and 2 liters measures VOLUME. Adding their numbers together gives \"302\" of nothing real — always check that two quantities share the same unit before combining them."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -125,43 +132,45 @@ function OperationChoiceQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>3.</b> Which operation fits each story?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          "20 liters of water are shared EQUALLY among 5 bins."{" "}
-          <select className="answer" value={pickedA} onChange={(e) => setPickedA(e.target.value)} style={fieldOk(okA, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="multiply">Multiply</option>
-            <option value="divide">Divide</option>
-          </select>
-        </label>
-        <label>
-          "3 crates EACH hold 6 kilograms of apples."{" "}
-          <select className="answer" value={pickedB} onChange={(e) => setPickedB(e.target.value)} style={fieldOk(okB, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="multiply">Multiply</option>
-            <option value="divide">Divide</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — \"shared equally among\" means DIVIDE; \"EACH holds the same amount, how many in all\" means MULTIPLY. Neither story used the word \"divide\" or \"multiply\" itself — you have to reason from the structure."
-            : "Not quite — \"shared equally among\" is a DIVIDE story (splitting a total into equal groups); \"each holds the same amount\" asking for a total is a MULTIPLY story (equal groups combined). Look at the structure, not just the wording."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>3.</b> Which operation fits each story?
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            "20 liters of water are shared EQUALLY among 5 bins."{" "}
+            <select className="answer" value={pickedA} onChange={(e) => setPickedA(e.target.value)} style={fieldOk(okA, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="multiply">Multiply</option>
+              <option value="divide">Divide</option>
+            </select>
+          </label>
+          <label>
+            "3 crates EACH hold 6 kilograms of apples."{" "}
+            <select className="answer" value={pickedB} onChange={(e) => setPickedB(e.target.value)} style={fieldOk(okB, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="multiply">Multiply</option>
+              <option value="divide">Divide</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && allFilled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — \"shared equally among\" means DIVIDE; \"EACH holds the same amount, how many in all\" means MULTIPLY. Neither story used the word \"divide\" or \"multiply\" itself — you have to reason from the structure."
+              : "Not quite — \"shared equally among\" is a DIVIDE story (splitting a total into equal groups); \"each holds the same amount\" asking for a total is a MULTIPLY story (equal groups combined). Look at the structure, not just the wording."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -175,30 +184,32 @@ function AlwaysAddTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>4.</b> True or false: whenever a word problem about mass or volume gives you two numbers, the answer always comes from adding them.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — the right operation depends on the story: combining is addition, finding a difference is subtraction, equal groups combined is multiplication, and splitting into equal groups is division. \"Always add\" ignores what's actually happening in the story."
-            : "Not quite — remember the bin/crate stories. Sometimes the right move is to divide or multiply, not add. Always read what's actually happening before picking an operation."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>4.</b> True or false: whenever a word problem about mass or volume gives you two numbers, the answer always comes from adding them.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="true">True</option>
+            <option value="false">False</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — the right operation depends on the story: combining is addition, finding a difference is subtraction, equal groups combined is multiplication, and splitting into equal groups is division. \"Always add\" ignores what's actually happening in the story."
+              : "Not quite — remember the bin/crate stories. Sometimes the right move is to divide or multiply, not add. Always read what's actually happening before picking an operation."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -211,13 +222,15 @@ function WordProblemsCheckForUnderstanding({ onComplete }: { onComplete?: () => 
   const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure picking the right operation makes sense before you try practice problems.</p>
-      <SameUnitsQuestion onComplete={mark("sameUnits")} />
-      <MismatchedUnitsQuestion onComplete={mark("mismatched")} />
-      <OperationChoiceQuestion onComplete={mark("opChoice")} />
-      <AlwaysAddTrapQuestion onComplete={mark("trap")} />
-    </div>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: let's make sure picking the right operation makes sense before you try practice problems.</p>
+        <SameUnitsQuestion onComplete={mark("sameUnits")} />
+        <MismatchedUnitsQuestion onComplete={mark("mismatched")} />
+        <OperationChoiceQuestion onComplete={mark("opChoice")} />
+        <AlwaysAddTrapQuestion onComplete={mark("trap")} />
+      </div>
+    </MathText>
   );
 }
 
@@ -232,31 +245,33 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [each, setEach] = useState(3);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && (
-        <button
-          type="button"
-          className="btn ghost"
-          style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
-          onClick={() => setShowCheck((v) => !v)}
-        >
-          Check for Understanding
-        </button>
-      )}
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Check for Understanding
+          </button>
+        )}
 
-      <p className="muted small">{n} jugs, each holding {each} liters — an equal-groups story, the setup for a multiply (total) or divide (share) question.</p>
-      <IconRow glyph="🧃" count={n} label={`${n} jugs`} />
-      <div className="control-row">
-        <Stepper label="Jugs" value={n} min={2} max={8} onChange={setN} tone="a" />
-        <Stepper label="Liters each" value={each} min={1} max={6} onChange={setEach} tone="b" />
+        <p className="muted small">{n} jugs, each holding {each} liters — an equal-groups story, the setup for a multiply (total) or divide (share) question.</p>
+        <IconRow glyph="🧃" count={n} label={`${n} jugs`} />
+        <div className="control-row">
+          <Stepper label="Jugs" value={n} min={2} max={8} onChange={setN} tone="a" />
+          <Stepper label="Liters each" value={each} min={1} max={6} onChange={setEach} tone="b" />
+        </div>
+        <p className="feedback good">
+          {n} jugs × {each} liters each = {n * each} liters in all. Flip it around: {n * each} liters shared equally among {n} jugs is {each} liters
+          each.
+        </p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <WordProblemsCheckForUnderstanding onComplete={onIntroDone} />}
       </div>
-      <p className="feedback good">
-        {n} jugs × {each} liters each = {n * each} liters in all. Flip it around: {n * each} liters shared equally among {n} jugs is {each} liters
-        each.
-      </p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <WordProblemsCheckForUnderstanding onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 

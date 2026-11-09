@@ -6,6 +6,7 @@ import { palette } from "../../../shared/lib/palette";
 import { choice, customStep, type Problem } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 import { drawingNonExamplesTest } from "./DrawingNonExamplesTest";
+import { MathText } from "../../../shared/components/MathText";
 
 const NAMED: QuadKind[] = ["square", "rectangle", "rhombus"];
 const OUTSIDE: QuadKind[] = ["genericQuad", "trapezoidLike"];
@@ -22,11 +23,13 @@ function fieldStyle(ok: boolean, checked: boolean) {
  *  QuadTile only draws closed polygons, so this one picture lives here. */
 function OpenFigure({ color }: { color: string }) {
   return (
-    <QuadCanvas width={120} height={120} label="A 4-segment shape with a gap — it isn't closed">
-      <polyline points="30,30 95,38 88,92 28,85 28,48" style={{ fill: "none", stroke: color, strokeWidth: 4, strokeLinecap: "round" }} />
-      <circle cx={30} cy={30} r={3.5} style={{ fill: palette.ink }} />
-      <circle cx={28} cy={48} r={3.5} style={{ fill: palette.ink }} />
-    </QuadCanvas>
+    <MathText>
+      <QuadCanvas width={120} height={120} label="A 4-segment shape with a gap — it isn't closed">
+        <polyline points="30,30 95,38 88,92 28,85 28,48" style={{ fill: "none", stroke: color, strokeWidth: 4, strokeLinecap: "round" }} />
+        <circle cx={30} cy={30} r={3.5} style={{ fill: palette.ink }} />
+        <circle cx={28} cy={48} r={3.5} style={{ fill: palette.ink }} />
+      </QuadCanvas>
+    </MathText>
   );
 }
 
@@ -43,25 +46,27 @@ function BaselineQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>1.</b> You're asked to draw a quadrilateral that is NOT a rhombus, rectangle, or square. Your shape must still have:
-      </p>
-      <div className="choices" role="group">
-        {options.map((o, i) => (
-          <button key={i} className="choice" onClick={() => setPicked(i)} disabled={ok} style={fieldStyle(i === 0, picked === i)}>
-            {o}
-          </button>
-        ))}
-      </div>
-      {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Right — it still has to BE a quadrilateral: 4 straight sides, closed. You're only avoiding the three special kinds."
-            : "Not quite — avoiding the special kinds doesn't let you skip the basic rule. What does every quadrilateral need?"}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>1.</b> You're asked to draw a quadrilateral that is NOT a rhombus, rectangle, or square. Your shape must still have:
         </p>
-      )}
-    </div>
+        <div className="choices" role="group">
+          {options.map((o, i) => (
+            <button key={i} className="choice" onClick={() => setPicked(i)} disabled={ok} style={fieldStyle(i === 0, picked === i)}>
+              {o}
+            </button>
+          ))}
+        </div>
+        {picked !== null && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Right — it still has to BE a quadrilateral: 4 straight sides, closed. You're only avoiding the three special kinds."
+              : "Not quite — avoiding the special kinds doesn't let you skip the basic rule. What does every quadrilateral need?"}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -80,44 +85,46 @@ function WorkedNonExampleQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>2.</b> Maya was asked to draw a quadrilateral that isn't a rhombus, rectangle, or square. She was so busy avoiding those that she drew this:
-      </p>
-      <QuadCanvas width={110} height={110} label="Maya's shape: a pentagon">
-        <QuadTile kind="pentagon" cx={55} cy={58} size={40} rotation={8} color={SHAPE_COLORS[4]} />
-      </QuadCanvas>
-      <p>
-        Maya's shape has{" "}
-        <select className="answer" style={{ width: 70, ...fieldStyle(okSides, checked) }} value={sides} onChange={(e) => setSides(e.target.value)}>
-          <option value="" disabled>
-            ?
-          </option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-        </select>{" "}
-        sides, so it{" "}
-        <select className="answer" style={{ width: 300, ...fieldStyle(okVerdict, checked) }} value={verdict} onChange={(e) => setVerdict(e.target.value)}>
-          <option value="" disabled>
-            ?
-          </option>
-          <option value="not-quad">does NOT count — it isn't a quadrilateral at all</option>
-          <option value="counts">counts — it isn't a rhombus, rectangle, or square</option>
-        </select>
-        .
-      </p>
-      <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-        Check Answer
-      </button>
-      {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Right — it avoids the three special kinds, but with 5 sides it isn't a quadrilateral, so it doesn't answer the question."
-            : "Count Maya's sides again. Avoiding the special kinds only counts if the shape is still a quadrilateral."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>2.</b> Maya was asked to draw a quadrilateral that isn't a rhombus, rectangle, or square. She was so busy avoiding those that she drew this:
         </p>
-      )}
-    </div>
+        <QuadCanvas width={110} height={110} label="Maya's shape: a pentagon">
+          <QuadTile kind="pentagon" cx={55} cy={58} size={40} rotation={8} color={SHAPE_COLORS[4]} />
+        </QuadCanvas>
+        <p>
+          Maya's shape has{" "}
+          <select className="answer" style={{ width: 70, ...fieldStyle(okSides, checked) }} value={sides} onChange={(e) => setSides(e.target.value)}>
+            <option value="" disabled>
+              ?
+            </option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>{" "}
+          sides, so it{" "}
+          <select className="answer" style={{ width: 300, ...fieldStyle(okVerdict, checked) }} value={verdict} onChange={(e) => setVerdict(e.target.value)}>
+            <option value="" disabled>
+              ?
+            </option>
+            <option value="not-quad">does NOT count — it isn't a quadrilateral at all</option>
+            <option value="counts">counts — it isn't a rhombus, rectangle, or square</option>
+          </select>
+          .
+        </p>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+          Check Answer
+        </button>
+        {checked && allFilled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Right — it avoids the three special kinds, but with 5 sides it isn't a quadrilateral, so it doesn't answer the question."
+              : "Count Maya's sides again. Avoiding the special kinds only counts if the shape is still a quadrilateral."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -130,26 +137,28 @@ function RotatedRectangleQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>3.</b> Leo drew this tilted shape and says: "It doesn't look like a rectangle, so it's outside the named kinds." Is he right?
-      </p>
-      <QuadCanvas width={130} height={120} label="A rectangle tilted at an angle">
-        <QuadTile kind="rectangle" cx={65} cy={60} size={28} rotation={32} rectAspect={2} color={SHAPE_COLORS[2]} />
-      </QuadCanvas>
-      <div className="choices" role="group">
-        {options.map((o, i) => (
-          <button key={i} className="choice" onClick={() => setPicked(i)} disabled={ok} style={fieldStyle(i === 0, picked === i)}>
-            {o}
-          </button>
-        ))}
-      </div>
-      {picked !== null && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Right — tilting a shape never changes its corners. 4 right angles means it's still a rectangle." : "Check its corners, not its tilt. Are all 4 still square corners?"}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>3.</b> Leo drew this tilted shape and says: "It doesn't look like a rectangle, so it's outside the named kinds." Is he right?
         </p>
-      )}
-    </div>
+        <QuadCanvas width={130} height={120} label="A rectangle tilted at an angle">
+          <QuadTile kind="rectangle" cx={65} cy={60} size={28} rotation={32} rectAspect={2} color={SHAPE_COLORS[2]} />
+        </QuadCanvas>
+        <div className="choices" role="group">
+          {options.map((o, i) => (
+            <button key={i} className="choice" onClick={() => setPicked(i)} disabled={ok} style={fieldStyle(i === 0, picked === i)}>
+              {o}
+            </button>
+          ))}
+        </div>
+        {picked !== null && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok ? "Right — tilting a shape never changes its corners. 4 right angles means it's still a rectangle." : "Check its corners, not its tilt. Are all 4 still square corners?"}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -161,25 +170,27 @@ function NotSquareTrapQuestion({ onComplete }: { onComplete?: () => void }) {
     if (ok) onComplete?.();
   }, [ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>4.</b> True or False: any 4-sided shape that isn't a square automatically avoids all three named kinds (rhombus, rectangle, square).
-      </p>
-      <div style={{ display: "flex", gap: 10 }}>
-        {(["true", "false"] as const).map((v) => (
-          <button key={v} type="button" className="choice" disabled={ok} onClick={() => setPicked(v)} style={fieldStyle(v === "false", picked === v)}>
-            {v === "true" ? "True" : "False"}
-          </button>
-        ))}
-      </div>
-      {picked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "False — a long rectangle or a slanted rhombus isn't a square, but it's still one of the named kinds."
-            : "Think of a long, thin rectangle. It isn't a square — but is it outside all three named kinds?"}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>4.</b> True or False: any 4-sided shape that isn't a square automatically avoids all three named kinds (rhombus, rectangle, square).
         </p>
-      )}
-    </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          {(["true", "false"] as const).map((v) => (
+            <button key={v} type="button" className="choice" disabled={ok} onClick={() => setPicked(v)} style={fieldStyle(v === "false", picked === v)}>
+              {v === "true" ? "True" : "False"}
+            </button>
+          ))}
+        </div>
+        {picked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "False — a long rectangle or a slanted rhombus isn't a square, but it's still one of the named kinds."
+              : "Think of a long, thin rectangle. It isn't a square — but is it outside all three named kinds?"}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -190,13 +201,15 @@ function DrawingCheck({ onComplete }: { onComplete?: () => void }) {
     if (allDone) onComplete?.();
   }, [allDone, onComplete]);
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure you know what DOES and DOESN'T count before you start building shapes.</p>
-      <BaselineQuestion onComplete={() => setDone((d) => ({ ...d, q1: true }))} />
-      <WorkedNonExampleQuestion onComplete={() => setDone((d) => ({ ...d, q2: true }))} />
-      <RotatedRectangleQuestion onComplete={() => setDone((d) => ({ ...d, q3: true }))} />
-      <NotSquareTrapQuestion onComplete={() => setDone((d) => ({ ...d, q4: true }))} />
-    </div>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Quick check: let's make sure you know what DOES and DOESN'T count before you start building shapes.</p>
+        <BaselineQuestion onComplete={() => setDone((d) => ({ ...d, q1: true }))} />
+        <WorkedNonExampleQuestion onComplete={() => setDone((d) => ({ ...d, q2: true }))} />
+        <RotatedRectangleQuestion onComplete={() => setDone((d) => ({ ...d, q3: true }))} />
+        <NotSquareTrapQuestion onComplete={() => setDone((d) => ({ ...d, q4: true }))} />
+      </div>
+    </MathText>
   );
 }
 
@@ -210,25 +223,27 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && (
-        <button
-          type="button"
-          className="btn ghost"
-          style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
-          onClick={() => setShowCheck((v) => !v)}
-        >
-          Quick Check
-        </button>
-      )}
-      <p className="muted small">
-        This shape starts as a square, which is a rectangle AND a rhombus. Drag its corners and watch the checklist change. Can you make a quadrilateral that's
-        none of the three named kinds? What about one with a pair of parallel sides that still isn't a rectangle?
-      </p>
-      <QuadBuilder requirement={EXPLORE_REQ} />
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <DrawingCheck onComplete={onIntroDone} />}
-    </div>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Quick Check
+          </button>
+        )}
+        <p className="muted small">
+          This shape starts as a square, which is a rectangle AND a rhombus. Drag its corners and watch the checklist change. Can you make a quadrilateral that's
+          none of the three named kinds? What about one with a pair of parallel sides that still isn't a rectangle?
+        </p>
+        <QuadBuilder requirement={EXPLORE_REQ} />
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <DrawingCheck onComplete={onIntroDone} />}
+      </div>
+    </MathText>
   );
 }
 
@@ -428,14 +443,16 @@ function selfCheckProblem(): Problem {
 /** Static snapshot for the cover page's preview carousel. */
 function Preview() {
   return (
-    <div style={{ display: "flex", gap: 12 }}>
-      <QuadCanvas width={90} height={90} label="An irregular quadrilateral">
-        <QuadTile kind="genericQuad" cx={45} cy={45} size={34} color={SHAPE_COLORS[4]} />
-      </QuadCanvas>
-      <QuadCanvas width={100} height={90} label="A quadrilateral with one pair of parallel sides">
-        <QuadTile kind="trapezoidLike" cx={50} cy={45} size={38} color={SHAPE_COLORS[5]} />
-      </QuadCanvas>
-    </div>
+    <MathText>
+      <div style={{ display: "flex", gap: 12 }}>
+        <QuadCanvas width={90} height={90} label="An irregular quadrilateral">
+          <QuadTile kind="genericQuad" cx={45} cy={45} size={34} color={SHAPE_COLORS[4]} />
+        </QuadCanvas>
+        <QuadCanvas width={100} height={90} label="A quadrilateral with one pair of parallel sides">
+          <QuadTile kind="trapezoidLike" cx={50} cy={45} size={38} color={SHAPE_COLORS[5]} />
+        </QuadCanvas>
+      </div>
+    </MathText>
   );
 }
 

@@ -288,6 +288,18 @@ an explicit `min-height` and position the caption `absolute` inside it —
 don't reach for a negative margin to cancel out its height; that silently
 breaks the moment anything else on the row changes size.
 
+**Fractions are always written the handwritten way (user requirement).**
+Every fraction a student sees is stacked: numerator, fraction bar,
+denominator. Mixed numbers are a whole number followed by a stacked
+fraction. Never show "1/2" or "2 3/4" as slash text in prompts, stories,
+hints, feedback, choices, CFUs, Explore text, Tests, or diagram labels.
+Use the shared renderer in `shared/components/MathText.tsx`: wrap the lab's
+content in `<StackedFractions>` and hand-written text (Explore, CFU, Key
+Idea, goals) in `<MathText>` (details in `MATH_TSX_STYLE_GUIDE.txt`; MG10
+is the reference). Fraction choices are tap buttons, not dropdowns. Check
+in the browser that no visible text matches `\d+\s*/\s*\d+`; write scores
+as "9 out of 10".
+
 **Use the standard model, drawn the standard way, every time.** Young
 students learn to read a picture by seeing the same shape repeatedly, so a
 model drawn loosely teaches nothing. Established shapes in this codebase:
@@ -591,6 +603,73 @@ earned a star). Check this in the progressive-reveal browser check
 - **Breadth inside one problem:** where the skill is matching or naming,
   put several items in one problem (match 4 word–numeral pairs by dragging,
   not one pair), so a few problems cover the range.
+- **Someone else's answer in a story** ("Ana says 1/8 + 1/3 = 2/11. Is she
+  right?") must never equal a number a later typed step asks for, or the
+  student just copies it. If her answer can be right, the typed step asks
+  for different work (e.g. "rewrite both with the LCD"). A wrong answer is
+  shown exactly as the mistake makes it (adding across 1/2 + 1/4 shows 2/6,
+  not 1/3), so the mistake the explanation names can be seen in the number.
+
+**Every Practice step is taught before it's asked (user requirement).** A
+skill a Practice step asks for must already be shown in that unit's
+Explore (or earlier), and a hint may use only words taught in this unit or
+an earlier one. When a later fix adds a step, add the teaching too. (MG10
+Unit 1 added "Which pieces can you cut both bars into?" before Explore ever
+showed how to choose them, and its hint used "go into", which Unit 2
+teaches.)
+
+**The Test never helps; Practice helps only when asked (user requirement).**
+Whatever the Test asks, Practice must also ask without help: no piece
+size, multiples list, expression or other scaffold that Practice always
+shows but the Test leaves out. In Practice, help appears only when the
+student asks for it (hint, Show me / Show answer) or after a wrong try,
+and any help makes the solve not clean and triggers the same-type retry.
+(MG10 Unit 1 Practice always said "cut both bars into twelfths" while its
+Test asked 3/5 + 1/7 with nothing, so students never practiced choosing.)
+
+**Word problems: the student decides the operation (user requirement).**
+Connecting a story to + or − is the point of a word problem. Every story
+problem has a step where the student chooses or writes the operation
+(e.g. "Which matches the story?" with A + B, A − B, B − A). Prompts,
+titles and problem-type labels must not name the operation or print the
+expression before that step is done. Story templates vary their wording
+and the order of the amounts, so no keyword ("in total") or position
+("first minus second") decides it, and the reversed-order choice is right
+in some stories.
+
+**Balanced choices by construction.** When a choice step's answer depends
+on which generated problems are kept or thrown out (e.g. "Does it make
+sense? Yes / too small / too big"), decide the right answer first, with
+each choice equally likely, then build a problem that fits it. Count the
+split in the brute-force script; no choice should be right much more often
+than the others. (MG10's "Yes" was right 69% of the time before this.)
+
+**A learning target can have a fixed answer; the button can't (user
+decision).** Some facts are the lesson and always come out the same way
+(adding across always gives a number that is too small). That's fine.
+But don't let the student get it right by tapping the same button every
+time. Instead, have them state the reason with this problem's numbers, as
+a fill-in-the-blank sentence or as choices that name this problem's
+fractions. For example: "2/5 is [less] than [1/2]. Adding should make a
+[bigger] number." The fraction they pick changes from problem to problem.
+Also mix up where the deciding number sits: the order of the two addends
+(1/2 + 1/3 vs. 1/3 + 1/2) and the order of the choice buttons. Then a
+student on "Try one like it" can't pass by remembering a position.
+
+**Pictures in choices.**
+- **A picture may show an earlier step's answer once the student has moved
+  past it.** It must never show the value a later step asks for. A finished
+  picture choice stays on screen, so label pictures neutrally ("the twelfths
+  picture"), not with the amount a later typed step asks for.
+- **The right picture must not stand out by anything except the amount
+  asked.** Most pieces, finest cut and most shading all give it away. Draw
+  every choice with the same piece lines, or with none.
+
+**The retry lock survives leaving the unit (user requirement).** The
+"Try one like it" debt is kept per unit in lab-level state mirrored to
+`sessionStorage` (`shared/engine/retryDebt.ts`), so switching units,
+going to Home or reloading doesn't clear it. "Reset progress" clears it
+along with the stars, which is fine.
 
 **Generators stay in range by construction.** Draw numbers so the result is
 already inside the unit's range (e.g. within 20: `a = randInt(1, 11); b =

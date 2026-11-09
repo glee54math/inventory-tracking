@@ -1,10 +1,15 @@
 import React, { useEffect, useId, useRef, useState } from "react";
 import { autoRead, ReadAloud } from "../tts/ReadAloud";
 import { getState, sayText, stopIfPlaying } from "../tts/speechEngine";
-import { tappedList, type Problem, type SentenceBlank, type Step, type TapCountStep, type VisualHelp } from "./types";
+import { sentenceBlanksOf, tappedList, type FractionStep, type Problem, type SentenceBlank, type Step, type TapCountStep, type VisualHelp } from "./types";
 import { fmt, fracText, gcd, numbersMatch, parseAnswer, rawFraction, verticalMultiplyBreakdown } from "../lib/math";
 import { numberPadProps, useEarlyLearner } from "./audience";
 import { InlineNumberPad } from "../components/NumberPad";
+import { hasFraction, MathText, useStackedFractions } from "../components/MathText";
+import { TapSelect } from "../components/TapSelect";
+import { answerBorder } from "../lib/answerChecks";
+import { FormPicker } from "../components/AnswerForm";
+import { formBoxes, formFilled, formLabel, formName, formOfValue, isAnswerForm, keepFitting, useAnswerFormPick, type AnswerForm } from "../components/answerKinds";
 
 /** Exported so the end-of-unit test (engine/UnitTest.tsx) can type its own
  *  per-question answer state the same shape StepInput expects. */
@@ -18,6 +23,18 @@ export interface StepState {
   showMe: boolean;
   /** Choice steps: indexes already picked wrong (early learners can't re-pick them). */
   tried: number[];
+  /**
+   * A FractionStep with `simplest` got an equal answer that wasn't in simplest
+   * form at least once. Counts against a clean solve (see isClean). Only ever
+   * set by steps that opt in, so other steps are unaffected.
+   */
+  formMiss?: boolean;
+  /**
+   * Labs with <AnswerFormPick> (MG10): how the last Check marked a fraction
+   * answer — `form` colors the picked kind button green/red, `boxes` (when
+   * set) colors the number boxes. Cleared as soon as anything changes.
+   */
+  formMark?: { form: boolean; boxes?: boolean };
 }
 
 export const fresh = (): StepState => ({ inputs: ["", ""], wrong: 0, hint: false, revealed: false, feedback: null, showMe: false, tried: [] });
@@ -32,12 +49,16 @@ export const answerText = (s: Step): string => {
   if (s.kind === "number") {
     if (s.frac && s.fracAnswer) return `${s.prefix ?? ""}${fracText(s.fracAnswer[0], s.fracAnswer[1])}${s.suffix ? " " + s.suffix : ""}`;
     const val = s.padTo !== undefined ? s.answer.toFixed(s.padTo) : s.money ? (s.answer % 1 ? s.answer.toFixed(2) : String(s.answer)) : fmt(s.answer);
-    return `${s.prefix ?? ""}${val}${s.suffix ? " " + s.suffix : ""}`;
+    return `${s.prefix ?? ""}${val}${s.overDen !== undefined ? `/${s.overDen}` : ""}${s.suffix ? " " + s.suffix : ""}`;
   }
-  if (s.kind === "ratio") return `${s.answer[0]} : ${s.answer[1]}`;
+  if (s.kind === "ratio") return s.stacked ? `${s.frame?.[0] ?? ""}${s.answer[0]}/${s.answer[1]}${s.frame?.[2] ?? ""}` : `${s.answer[0]} : ${s.answer[1]}`;
   if (s.kind === "coordinate") return `(${s.answer[0]}, ${s.answer[1]})`;
   if (s.kind === "sentence") {
-    return `${s.parts[0]}${sentenceBlankText(s.blanks[0])}${s.parts[1]}${sentenceBlankText(s.blanks[1])}${s.parts[2]}`;
+    const over = (i: 0 | 1) => (s.overDen?.[i] !== undefined ? `/${s.overDen[i]}` : "");
+    // SentenceStep.stacked: the two blanks are one fraction's top and bottom.
+    if (s.stacked) return `${s.parts[0]}${sentenceBlankText(s.blanks[0])}/${sentenceBlankText(s.blanks[1])}${s.parts[2]}`;
+    const more = (s.more ?? []).map((m) => `${sentenceBlankText(m.blank)}${m.after}`).join("");
+    return `${s.parts[0]}${sentenceBlankText(s.blanks[0])}${over(0)}${s.parts[1]}${sentenceBlankText(s.blanks[1])}${over(1)}${s.parts[2]}${more}`;
   }
   if (s.kind === "fracMultiply") {
     let i = 0;
@@ -49,6 +70,7 @@ export const answerText = (s: Step): string => {
     return `${wholeTop} × ${wholeBottom} = ${partials.join(" + ")} = ${finalWhole}`;
   }
   if (s.kind === "custom") return s.resultText;
+  if (s.kind === "fraction") return fractionAnswerText(s);
   if (s.kind === "tapCount") return `${s.answer} counter${s.answer === 1 ? "" : "s"}`;
   return s.choices[s.correct];
 };
@@ -68,10 +90,116 @@ const sentenceBlankOk = (b: SentenceBlank, raw: string): boolean => {
   return true;
 };
 
+/** Canonical text for a FractionStep's answer: simplest form when the step
+ *  asks for it ("1 5/12", "1"), otherwise exactly as given ("9/12"). */
+const fractionAnswerText = (s: FractionStep): string => {
+  const [n, d] = s.answer;
+  if (s.simplest) return fracText(n, d, !!s.mixed);
+  if (s.mixed && n >= d) {
+    const w = Math.floor(n / d);
+    const r = n - w * d;
+    return r === 0 ? String(w) : `${w} ${r}/${d}`;
+  }
+  return `${n}/${d}`;
+};
+
+export const SIMPLEST_FORM_MSG = "That's equal, but it's not in simplest form. Simplify it.";
+
+type CheckResult = { ok: boolean; msg: string; formMiss?: boolean; formMark?: StepState["formMark"] };
+
+/** True when this step shows the answer-kind buttons (inside <AnswerFormPick>). */
+const usesFormPick = (s: Step, on: boolean): boolean => on && s.kind === "fraction" && !!s.mixed && s.den === undefined;
+
+/** A typed fraction answer as the student wrote it ("4", "2/2", "1 3/5"), for FractionStep.diagnose's `typed`. `show` = [whole, top, bottom] boxes in use. */
+const typedText = (show: readonly boolean[], w: number, n: number, d: number): string =>
+  [show[0] ? String(w) : "", show[1] ? `${n}/${d}` : ""].filter(Boolean).join(" ");
+
+/** Why an equal answer isn't in simplest form, for the picked kind (see checkFormFraction). */
+const notSimplestWhy = (form: AnswerForm, w: number, n: number, d: number): string => {
+  if (form === "mixed" && w === 0 && n < d) return " There are 0 wholes, so it is not a mixed number.";
+  if (n === 0) return " The top is 0, so there is no fraction part.";
+  if (n >= d) return " The top is as big as the bottom or bigger. Write it as a whole number or a mixed number.";
+  if (gcd(n, d) !== 1) return ` ${n} and ${d} can both be divided by ${gcd(n, d)}.`;
+  return "";
+};
+
+/**
+ * Grades a FractionStep answered with a picked kind (inputs[3] = "whole" |
+ * "mixed" | "proper"; only the boxes that kind shows count). Says whether the
+ * kind was right as well as the value. Any wrong Check here counts against a
+ * clean solve (formMiss): the kind is a 1-in-3 pick, and "Mixed number is
+ * right" is help. `tries` = wrong tries before this one: from the second
+ * wrong try on, a wrong-kind message names the right kind.
+ */
+const checkFormFraction = (s: FractionStep, inputs: string[], form: AnswerForm, tries: number): CheckResult => {
+  const values: [string, string, string] = [(inputs[0] ?? "").trim(), (inputs[1] ?? "").trim(), (inputs[2] ?? "").trim()];
+  const [wRaw, nRaw, dRaw] = keepFitting(values, form);
+  if (!formFilled(form, values)) return { ok: false, msg: "Fill in every box." };
+  if ([wRaw, nRaw, dRaw].some((v) => v !== "" && !/^\d+$/.test(v))) return { ok: false, msg: "Use only whole numbers in the boxes." };
+  const show = formBoxes(form);
+  const w = show[0] ? Number(wRaw) : 0;
+  const n = show[1] ? Number(nRaw) : 0;
+  const d = show[2] ? Number(dRaw) : 1;
+  if (d === 0) return { ok: false, msg: "The bottom number can't be 0." };
+  const [an, ad] = s.answer;
+  const want = formOfValue(an, ad);
+  const typedN = w * d + n;
+  const equal = typedN * ad === an * d;
+  if (form !== want) {
+    if (equal) return { ok: false, msg: SIMPLEST_FORM_MSG + notSimplestWhy(form, w, n, d), formMiss: true, formMark: { form: false } };
+    // "The correct answer", not "The answer": right after a named mistake
+    // about the student's own number, "The answer" read as theirs (MG10 E5-09).
+    const kindMsg = tries === 0 ? `The correct answer is not a ${formName(form)}. Is it more than 1, less than 1, or a whole number?` : `The correct answer is not a ${formName(form)}. It is a ${formName(want)}.`;
+    // A named mistake (e.g. "You added across") comes first: it is why the
+    // value AND the kind are off (adding across 3/4 + 1/2 gives a proper
+    // fraction, but the sum is a mixed number). Then one plain sentence, no question.
+    const named = s.diagnose?.(typedN, d, typedText(show, w, n, d));
+    return { ok: false, msg: named ? `${named} The correct answer is not a ${formName(form)}.${tries > 0 ? ` It is a ${formName(want)}.` : ""}` : kindMsg, formMiss: true, formMark: { form: false } };
+  }
+  if (!equal) return { ok: false, msg: `${formLabel(form)} is right. ${s.diagnose?.(typedN, d, typedText(show, w, n, d)) ?? "Check the numbers."}`, formMiss: true, formMark: { form: true, boxes: false } };
+  // Right kind, equal value: a whole number is always simplest; a fraction part must be in lowest terms and less than 1.
+  if (show[1] && (n === 0 || n >= d || gcd(n, d) !== 1)) {
+    return { ok: false, msg: SIMPLEST_FORM_MSG + notSimplestWhy(form, w, n, d), formMiss: true, formMark: { form: true, boxes: false } };
+  }
+  return { ok: true, msg: "" };
+};
+
+/** Grades a FractionStep (see its doc comment in types.ts). */
+const checkFraction = (s: FractionStep, inputs: string[], tries = 0): CheckResult => {
+  if (s.mixed && s.den === undefined && isAnswerForm(inputs[3])) return checkFormFraction(s, inputs, inputs[3], tries);
+  const wRaw = s.mixed ? (inputs[0] ?? "").trim() : "";
+  const nRaw = (inputs[1] ?? "").trim();
+  const dRaw = s.den !== undefined ? String(s.den) : (inputs[2] ?? "").trim();
+  const dTyped = s.den === undefined && dRaw !== "";
+  if (!wRaw && !nRaw && !dTyped) return { ok: false, msg: s.mixed ? "Type your answer in the boxes." : "Type the missing number." };
+  if ([wRaw, nRaw, s.den === undefined ? dRaw : ""].some((v) => v !== "" && !/^\d+$/.test(v))) return { ok: false, msg: "Use only whole numbers in the boxes." };
+  if (!nRaw && dTyped) return { ok: false, msg: "Fill in the top of the fraction too." };
+  if (nRaw && !dRaw) return { ok: false, msg: "Fill in the bottom of the fraction too." };
+  const w = wRaw ? Number(wRaw) : 0;
+  const n = nRaw ? Number(nRaw) : 0;
+  const d = nRaw ? Number(dRaw) : 1;
+  if (d === 0) return { ok: false, msg: "The bottom number can't be 0." };
+  const [an, ad] = s.answer;
+  const typedN = w * d + n;
+  if (typedN * ad !== an * d) {
+    return { ok: false, msg: s.diagnose?.(typedN, d, typedText([!!wRaw, !!nRaw, !!nRaw], w, n, d)) ?? "Not yet. Check your work and try again." };
+  }
+  if (s.simplest) {
+    const hasFrac = nRaw !== "";
+    const notSimplest = hasFrac && (n === 0 || gcd(n, d) !== 1 || (s.mixed && n >= d) || d === 1);
+    if (notSimplest) {
+      const why = s.mixed && n >= d ? " The top is as big as the bottom or bigger. Write it as a whole number or a mixed number." :n !== 0 && gcd(n, d) !== 1 ? ` ${n} and ${d} can both be divided by ${gcd(n, d)}.` : "";
+      return { ok: false, msg: SIMPLEST_FORM_MSG + why, formMiss: true };
+    }
+  }
+  return { ok: true, msg: "" };
+};
+
 /** Check one step. Returns null when right, or a targeted message when wrong.
  *  Exported for reuse by the end-of-unit test, so test questions are graded
  *  with the exact same logic as practice steps — see engine/UnitTest.tsx. */
-export const check = (s: Step, inputs: string[], opts: { early?: boolean } = {}): { ok: boolean; msg: string } => {
+export const check = (s: Step, inputs: string[], opts: { early?: boolean; tries?: number } = {}): CheckResult => {
+  if (s.kind === "fraction") return checkFraction(s, inputs, opts.tries);
   if (s.kind === "choice") {
     if (inputs[0] === "") return { ok: false, msg: "Pick one of the choices." };
     return Number(inputs[0]) === s.correct
@@ -131,6 +259,8 @@ export const check = (s: Step, inputs: string[], opts: { early?: boolean } = {})
       }
       return { ok: true, msg: "" };
     }
+    const named = s.diagnose?.(v);
+    if (named) return { ok: false, msg: named };
     if (s.answer !== 0 && numbersMatch(v, 1 / s.answer)) return { ok: false, msg: "That's the flip of the answer. Check which quantity you divided by which." };
     if (numbersMatch(v * 10, s.answer) || numbersMatch(v / 10, s.answer)) return { ok: false, msg: "Close: the digits are right but the size is off by a factor of 10." };
     return { ok: false, msg: "Not yet. Look at the diagram and try again." };
@@ -148,9 +278,13 @@ export const check = (s: Step, inputs: string[], opts: { early?: boolean } = {})
     return { ok: false, msg: "Not yet. Check each number against the marked point." };
   }
   if (s.kind === "sentence") {
-    if (inputs[0] === "" || inputs[1] === "") return { ok: false, msg: "Fill in both blanks." };
-    const ok = sentenceBlankOk(s.blanks[0], inputs[0]) && sentenceBlankOk(s.blanks[1], inputs[1]);
-    return ok ? { ok: true, msg: "" } : { ok: false, msg: "One of the blanks isn't right yet — check both against the problem." };
+    // SentenceStep.more (MG10): 3 or more blanks. Without it, exactly as before.
+    const all = sentenceBlanksOf(s);
+    const vals = all.map((_, k) => inputs[k] ?? "");
+    if (vals.some((v) => v === "")) return { ok: false, msg: all.length > 2 ? "Fill in every blank." : "Fill in both blanks." };
+    const ok = all.every((b, k) => sentenceBlankOk(b, vals[k]));
+    if (ok) return { ok: true, msg: "" };
+    return { ok: false, msg: s.diagnose?.(vals) ?? (all.length > 2 ? "One of the blanks isn't right yet. Check each one against the problem." : "One of the blanks isn't right yet — check both against the problem.") };
   }
   if (s.kind === "fracMultiply") {
     const n = s.answer.length;
@@ -220,6 +354,8 @@ export interface StepProblemProps {
  */
 export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped }: StepProblemProps) {
   const early = useEarlyLearner();
+  // Labs with <AnswerFormPick>: Check waits until a kind is picked and its boxes are filled.
+  const formPick = useAnswerFormPick();
   const [current, setCurrent] = useState(0);
   const [states, setStates] = useState<StepState[]>(() => problem.steps.map(fresh));
   const reported = useRef(false);
@@ -289,10 +425,14 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
   const isClean = (all: StepState[]) => {
     const hints = all.filter((s) => s.hint).length;
     const reveals = all.filter((s) => s.revealed).length;
-    const guessed = all.some((s, k) => problem.steps[k].kind === "choice" && s.wrong > 0);
+    // A "fill in the reason" sentence (SentenceStep.checkEach) is tap picks too, so a wrong Check is a guess.
+    const picks = (st: Step) => st.kind === "choice" || (st.kind === "sentence" && !!st.checkEach);
+    const guessed = all.some((s, k) => picks(problem.steps[k]) && s.wrong > 0);
     // Early learners: two wrong tries on any step is trial and error, not a solve by themselves.
     const triedAndErred = early && all.some((s) => s.wrong >= 2);
-    return reveals === 0 && hints <= 1 && !guessed && !triedAndErred;
+    // A FractionStep that asks for simplest form was answered equal-but-unsimplified.
+    const formMissed = all.some((s) => s.formMiss);
+    return reveals === 0 && hints <= 1 && !guessed && !triedAndErred && !formMissed;
   };
 
   useEffect(() => {
@@ -322,14 +462,14 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
 
   const submit = (i: number, inputs = states[i].inputs) => {
     const step = problem.steps[i];
-    const res = check(step, inputs, { early });
+    const res = check(step, inputs, { early, tries: states[i].wrong });
     if (res.ok) {
-      update(i, { inputs, feedback: null });
+      update(i, { inputs, feedback: null, formMark: undefined });
       setCurrent(i + 1);
     } else {
       const wrong = states[i].wrong + 1;
       const tried = step.kind === "choice" && inputs[0] !== "" ? [...states[i].tried, Number(inputs[0])] : states[i].tried;
-      update(i, { inputs, wrong, tried, feedback: res.msg, hint: states[i].hint || wrong >= (early ? 1 : 2) });
+      update(i, { inputs, wrong, tried, feedback: res.msg, hint: states[i].hint || wrong >= (early ? 1 : 2), formMark: res.formMark, ...(res.formMiss ? { formMiss: true } : {}) });
     }
   };
 
@@ -341,7 +481,9 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
   const openShowMe = (i: number) => update(i, { revealed: true, showMe: true, feedback: null });
 
   const clean = isClean(states);
-  const help: VisualHelp | undefined = cur ? { step: current, wrong: cur.wrong, hint: cur.hint, showMe: cur.showMe } : undefined;
+  const help: VisualHelp | undefined = cur
+    ? { step: current, wrong: cur.wrong, hint: cur.hint, showMe: cur.showMe, lastTry: cur.wrong > 0 && cur.feedback !== null ? cur.inputs : undefined }
+    : undefined;
   // While "Show me" is open the picture shows this step already done.
   const visualDone = cur?.showMe ? current + 1 : current;
   const lookHere = !!cur && (cur.showMe || (cur.wrong > 0 && cur.feedback !== null));
@@ -349,7 +491,7 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
   return (
     <div className="problem" ref={rootRef}>
       <div className={`problem-visual${lookHere ? " look-here" : ""}`} aria-live="polite">
-        {problem.visual(visualDone, help)}
+        <MathText>{problem.visual(visualDone, help)}</MathText>
         {lookHere && (
           // Keyed on the try count so the pulse replays on every wrong try.
           <span key={`${current}-${cur!.wrong}-${cur!.showMe}`} className="look-here-ring" aria-hidden>
@@ -359,8 +501,12 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
       </div>
       <div className="problem-work">
         <ReadAloud className="story">
-          <h3>{problem.title}</h3>
-          <div>{problem.story}</div>
+          <h3>
+            <MathText>{problem.title}</MathText>
+          </h3>
+          <div>
+            <MathText>{problem.story}</MathText>
+          </div>
         </ReadAloud>
 
         <ol className="steps">
@@ -375,21 +521,39 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
                 </div>
                 {done ? (
                   <ReadAloud className="step-body">
-                    <div className="step-prompt">{step.prompt}</div>
+                    <div className="step-prompt">
+                      <MathText>{step.prompt}</MathText>
+                    </div>
                     <div className="step-result">
-                      <span className={`answer-chip ${st.revealed ? "revealed" : ""}`}>{answerText(step)}</span>
-                      <div className="explain">{step.explain}</div>
+                      <span className={`answer-chip ${st.revealed ? "revealed" : ""}`}>
+                        <MathText>{answerText(step)}</MathText>
+                      </span>
+                      <div className="explain">
+                        <MathText>{step.explain}</MathText>
+                      </div>
                     </div>
                   </ReadAloud>
                 ) : st.showMe ? (
                   <div className="step-body">
-                    <ReadAloud className="step-prompt">{step.prompt}</ReadAloud>
+                    <ReadAloud className="step-prompt">
+                      <MathText>{step.prompt}</MathText>
+                    </ReadAloud>
                     <ReadAloud className="show-me" role="status" autoPlay={false}>
                       <div className="show-me-title">Here's how:</div>
-                      {step.showMe && <div className="show-me-extra">{step.showMe}</div>}
-                      <div className="explain">{step.explain}</div>
+                      {step.showMe && (
+                        <div className="show-me-extra">
+                          <MathText>{step.showMe}</MathText>
+                        </div>
+                      )}
+                      <div className="explain">
+                        <MathText>{step.explain}</MathText>
+                      </div>
                       <div>
-                        The answer is <span className="answer-chip revealed">{answerText(step)}</span>.
+                        The answer is{" "}
+                        <span className="answer-chip revealed">
+                          <MathText>{answerText(step)}</MathText>
+                        </span>
+                        .
                       </div>
                     </ReadAloud>
                     <div className="step-tools" data-readaloud-part>
@@ -401,30 +565,38 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
                 ) : (
                   <div className="step-body">
                     <ReadAloud className="step-prompt" alsoRead={[inputRef, toolsRef]}>
-                      {step.prompt}
+                      <MathText>{step.prompt}</MathText>
                     </ReadAloud>
                     <div ref={inputRef} data-readaloud-part>
                       <StepInput
                         step={step}
                         state={st}
-                        onChange={(inputs) => update(i, { inputs, feedback: null })}
+                        onChange={(inputs) => update(i, { inputs, feedback: null, formMark: undefined })}
                         onSubmit={(inputs) => submit(i, inputs)}
                         onWrong={() => wrongTry(i)}
                       />
                     </div>
                     {st.feedback && (
                       <ReadAloud as="p" className="feedback bad" role="alert" autoPlay={false}>
-                        {st.feedback}
+                        <MathText>{st.feedback}</MathText>
                       </ReadAloud>
                     )}
                     {st.hint && (
                       <ReadAloud as="p" className="hint">
-                        💡 {step.hint}
+                        💡 <MathText>{step.hint}</MathText>
                       </ReadAloud>
                     )}
                     <div className="step-tools" ref={toolsRef} data-readaloud-part>
                       {step.kind !== "choice" && step.kind !== "custom" && (
-                        <button className="btn primary" onClick={() => submit(i)}>
+                        <button
+                          className="btn primary"
+                          disabled={
+                            (usesFormPick(step, formPick) && !formFilled(st.inputs[3], [st.inputs[0] ?? "", st.inputs[1] ?? "", st.inputs[2] ?? ""])) ||
+                            // SentenceStep.checkEach: Check waits until every blank is filled.
+                            (step.kind === "sentence" && !!step.checkEach && sentenceBlanksOf(step).some((_, k) => !st.inputs[k]))
+                          }
+                          onClick={() => submit(i)}
+                        >
                           Check
                         </button>
                       )}
@@ -461,10 +633,19 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
         {finished && (
           <ReadAloud className="wrapup" role="status">
             <div className="wrapup-title">{clean ? "Solved it! ⭐" : "Solved, with help."}</div>
-            <p>{problem.wrapUp}</p>
+            <p>
+              <MathText>{problem.wrapUp}</MathText>
+            </p>
             {!clean && (
               <p className="muted">
-                {early && onRetrySame ? "Now try one like it by yourself." : "Solve one with no wrong guesses and at most one hint to earn a mastery star."}
+                {/* Every lab that passes onRetrySame locks "Next problem" until a
+                    same-type retry is solved cleanly; older-grade labs (no
+                    EarlyLearnerProvider) get older-grade wording for it. */}
+                {onRetrySame
+                  ? early
+                    ? "Now try one like it by yourself."
+                    : "Now solve one like it on your own. Then you can move on."
+                  : "Solve one with no wrong guesses and at most one hint to earn a mastery star."}
               </p>
             )}
             <div className="step-tools" data-readaloud-part>
@@ -506,6 +687,11 @@ export function StepInput({
   onWrong?: () => void;
 }) {
   const early = useEarlyLearner();
+  // Labs with <StackedFractions> (MG10): fraction options become tap buttons (a
+  // native dropdown can't draw a stacked fraction), and a blank can sit over
+  // a printed denominator (SentenceStep.overDen).
+  const stacked = useStackedFractions();
+  const formPick = useAnswerFormPick();
   // Early learners type with on-screen number pads (their "Check" key presses Enter).
   const pad = numberPadProps(early, "enter");
   const answerRef = useRef<HTMLInputElement>(null);
@@ -529,7 +715,7 @@ export function StepInput({
               data-tts-say={pic ? c : undefined}
               onClick={() => onSubmit([String(k), ""])}
             >
-              {pic ?? c}
+              {pic ?? <MathText>{c}</MathText>}
             </button>
           );
         })}
@@ -543,13 +729,34 @@ export function StepInput({
     return <div className="custom-step">{step.render(() => onSubmit(["done"]), () => onWrong?.())}</div>;
   }
   if (step.kind === "sentence") {
-    const renderBlank = (i: 0 | 1) => {
-      const b = step.blanks[i];
-      const val = state.inputs[i];
-      const set = (v: string) => onChange(i === 0 ? [v, state.inputs[1]] : [state.inputs[0], v]);
+    // SentenceStep.more (MG10): blanks 3+ follow parts[2]. checkEach: tap buttons for every
+    // select blank, and after a wrong Check each blank's pick turns green or red.
+    const allBlanks = sentenceBlanksOf(step);
+    const marked = !!step.checkEach && state.wrong > 0 && state.feedback !== null;
+    const blankName = (i: number) => (i === 0 ? "First blank" : i === 1 ? "Second blank" : `Blank ${i + 1}`);
+    const renderBlank = (i: number) => {
+      const b = allBlanks[i];
+      const val = state.inputs[i] ?? "";
+      const set = (v: string) => {
+        const next = allBlanks.map((_, k) => state.inputs[k] ?? "");
+        next[i] = v;
+        onChange(next);
+      };
+      const mark = marked ? answerBorder(sentenceBlankOk(b, val), true) : undefined;
       if (b.kind === "select") {
+        if ((stacked && b.choices.some(hasFraction)) || step.checkEach) {
+          return (
+            <TapSelect aria-label={blankName(i)} value={val} style={mark} onChange={(e) => set(e.target.value)}>
+              {b.choices.map((c, k) => (
+                <option key={k} value={k}>
+                  {c}
+                </option>
+              ))}
+            </TapSelect>
+          );
+        }
         return (
-          <select className="sentence-select" aria-label={i === 0 ? "First blank" : "Second blank"} value={val} onChange={(e) => set(e.target.value)}>
+          <select className="sentence-select" aria-label={blankName(i)} value={val} style={mark} onChange={(e) => set(e.target.value)}>
             <option value="" disabled>
               choose
             </option>
@@ -561,29 +768,146 @@ export function StepInput({
           </select>
         );
       }
-      return (
-        <span className="sentence-number">
-          <input
-            className="answer sentence-input-box"
-            inputMode="decimal"
-            {...pad}
-            autoComplete="off"
-            aria-label={i === 0 ? "First blank" : "Second blank"}
-            placeholder={b.money ? "0.00" : undefined}
-            value={val}
-            onChange={(e) => set(e.target.value)}
-            onKeyDown={enter}
-          />
-        </span>
+      const den = i < 2 ? step.overDen?.[i as 0 | 1] : undefined;
+      const box = (
+        <input
+          className={`answer sentence-input-box${den !== undefined ? " frac-entry-box" : ""}`}
+          inputMode="decimal"
+          {...pad}
+          autoComplete="off"
+          aria-label={den !== undefined ? `${i === 0 ? "First" : "Second"} blank, the top of a fraction over ${den}` : blankName(i)}
+          placeholder={b.money ? "0.00" : undefined}
+          style={mark}
+          value={val}
+          onChange={(e) => set(e.target.value)}
+          onKeyDown={enter}
+        />
       );
+      if (den !== undefined) {
+        return (
+          <span className="frac-entry-stack sentence-over-den">
+            {box}
+            <span className="frac-entry-bar" aria-hidden />
+            <span className="frac-entry-fixed">{den}</span>
+          </span>
+        );
+      }
+      return <span className="sentence-number">{box}</span>;
     };
+    if (step.stacked) {
+      // SentenceStep.stacked (MG9): blank 1 over a bar over blank 2, one handwritten fraction.
+      return (
+        <div className="answer-row sentence-input">
+          <span>
+            <MathText>{step.parts[0]}</MathText>
+          </span>
+          <span className="frac-entry-stack sentence-over-den">
+            {renderBlank(0)}
+            <span className="frac-entry-bar" aria-hidden />
+            {renderBlank(1)}
+          </span>
+          <span>
+            <MathText>{step.parts[2]}</MathText>
+          </span>
+        </div>
+      );
+    }
     return (
-      <div className="answer-row sentence-input">
-        <span>{step.parts[0]}</span>
+      // checkEach: "sentence-frame" wraps the sentence like text, word by word (lab-base.css).
+      <div className={`answer-row sentence-input${step.checkEach ? " sentence-frame" : ""}`}>
+        <span>
+          <MathText>{step.parts[0]}</MathText>
+        </span>
         {renderBlank(0)}
-        <span>{step.parts[1]}</span>
+        <span>
+          <MathText>{step.parts[1]}</MathText>
+        </span>
         {renderBlank(1)}
-        <span>{step.parts[2]}</span>
+        <span>
+          <MathText>{step.parts[2]}</MathText>
+        </span>
+        {(step.more ?? []).map((m, k) => (
+          <React.Fragment key={k}>
+            {renderBlank(k + 2)}
+            <span>
+              <MathText>{m.after}</MathText>
+            </span>
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  }
+  if (usesFormPick(step, formPick)) {
+    return <FormFractionInput state={state} onChange={onChange} onSubmit={onSubmit} />;
+  }
+  if (step.kind === "fraction") {
+    const set = (idx: number, v: string) => {
+      const next = [state.inputs[0] ?? "", state.inputs[1] ?? "", state.inputs[2] ?? ""];
+      next[idx] = v;
+      onChange(next);
+    };
+    const box = (idx: number, label: string, cls: string) => (
+      <input
+        className={`answer ${cls}`}
+        inputMode="numeric"
+        {...numberPadProps(early, "enter")}
+        autoComplete="off"
+        aria-label={label}
+        value={state.inputs[idx] ?? ""}
+        onChange={(e) => set(idx, e.target.value)}
+        onKeyDown={enter}
+      />
+    );
+    return (
+      <div className="answer-row frac-entry-row">
+        <span className="frac-entry">
+          {step.mixed && box(0, "whole number", "frac-entry-whole")}
+          <span className="frac-entry-stack">
+            {box(1, "numerator", "frac-entry-box")}
+            <span className="frac-entry-bar" aria-hidden />
+            {step.den !== undefined ? <span className="frac-entry-fixed">{step.den}</span> : box(2, "denominator", "frac-entry-box")}
+          </span>
+        </span>
+        {step.mixed && <span className="muted small frac-entry-note">Leave a box empty if you don't need it.</span>}
+      </div>
+    );
+  }
+  if (step.kind === "number" && step.fracBoxes) {
+    // NumberStep.fracBoxes: [whole] top over bottom. inputs[0] is the joined
+    // answer text the grader reads; inputs[1..3] keep each box's own value.
+    const parts = [state.inputs[1] ?? "", state.inputs[2] ?? "", state.inputs[3] ?? ""];
+    const set = (idx: number, v: string) => {
+      const next = [...parts];
+      next[idx] = v;
+      const [w, t, b] = next.map((x) => x.trim());
+      const frac = b ? `${t}/${b}` : t;
+      onChange([w && frac ? `${w} ${frac}` : w || frac, ...next]);
+    };
+    const box = (idx: number, label: string, cls: string) => (
+      <input
+        ref={idx === (step.fracBoxes === "mixed" ? 0 : 1) ? answerRef : undefined}
+        className={`answer ${cls}`}
+        inputMode="decimal"
+        autoComplete="off"
+        aria-label={label}
+        value={parts[idx]}
+        onChange={(e) => set(idx, e.target.value)}
+        onKeyDown={enter}
+      />
+    );
+    return (
+      <div className="answer-row frac-entry-row">
+        {step.prefix && <span className="affix">{step.prefix}</span>}
+        <span className="frac-entry">
+          {step.fracBoxes === "mixed" && box(0, "whole number", "frac-entry-whole")}
+          <span className="frac-entry-stack">
+            {box(1, "top of the fraction", "frac-entry-box")}
+            <span className="frac-entry-bar" aria-hidden />
+            {box(2, "bottom of the fraction", "frac-entry-box")}
+          </span>
+        </span>
+        {step.suffix && <span className="affix">{step.suffix}</span>}
+        {step.fracBoxes === "mixed" && <span className="muted small frac-entry-note">Leave a box empty if you don't need it.</span>}
       </div>
     );
   }
@@ -591,18 +915,38 @@ export function StepInput({
     return (
       <div className="answer-row">
         {step.prefix && <span className="affix">{step.prefix}</span>}
-        <input
-          ref={answerRef}
-          className={`answer${step.tone ? ` q${step.tone}` : ""}`}
-          inputMode="decimal"
-          {...numberPadProps(early, "inline")}
-          autoComplete="off"
-          aria-label="Your answer"
-          placeholder={step.money ? "0.00" : step.frac ? "n/d" : undefined}
-          value={state.inputs[0]}
-          onChange={(e) => onChange([e.target.value, ""])}
-          onKeyDown={enter}
-        />
+        {step.overDen !== undefined ? (
+          // NumberStep.overDen (MG9): the box is the top of a stacked fraction over a printed denominator.
+          <span className="frac-entry-stack sentence-over-den number-over-den">
+            <input
+              ref={answerRef}
+              className={`answer frac-entry-box${step.tone ? ` q${step.tone}` : ""}`}
+              inputMode="decimal"
+              {...numberPadProps(early, "inline")}
+              autoComplete="off"
+              aria-label={`Your answer, the top of a fraction over ${step.overDen}`}
+              placeholder={step.money ? "0.00" : step.frac ? "n/d" : undefined}
+              value={state.inputs[0]}
+              onChange={(e) => onChange([e.target.value, ""])}
+              onKeyDown={enter}
+            />
+            <span className="frac-entry-bar" aria-hidden />
+            <span className="frac-entry-fixed">{step.overDen}</span>
+          </span>
+        ) : (
+          <input
+            ref={answerRef}
+            className={`answer${step.tone ? ` q${step.tone}` : ""}`}
+            inputMode="decimal"
+            {...numberPadProps(early, "inline")}
+            autoComplete="off"
+            aria-label="Your answer"
+            placeholder={step.money ? "0.00" : step.frac ? "n/d" : undefined}
+            value={state.inputs[0]}
+            onChange={(e) => onChange([e.target.value, ""])}
+            onKeyDown={enter}
+          />
+        )}
         {step.suffix && <span className="affix">{step.suffix}</span>}
         {early && <InlineNumberPad inputRef={answerRef} />}
       </div>
@@ -726,6 +1070,28 @@ export function StepInput({
     const tones = step.tones ?? ["a", "b"];
     return `ratio-box q${tones[i]}`;
   };
+  if (step.stacked) {
+    // RatioStep.stacked: box 1 over a bar over box 2, one handwritten fraction.
+    return (
+      <div className="answer-row sentence-input">
+        {before && (
+          <span>
+            <MathText>{before}</MathText>
+          </span>
+        )}
+        <span className="frac-entry-stack sentence-over-den">
+          <input className="answer sentence-input-box" inputMode="decimal" autoComplete="off" value={state.inputs[0]} aria-label={step.labels?.[0] ?? "top of the fraction"} onChange={(e) => onChange([e.target.value, state.inputs[1]])} onKeyDown={enter} />
+          <span className="frac-entry-bar" aria-hidden />
+          <input className="answer sentence-input-box" inputMode="decimal" autoComplete="off" value={state.inputs[1]} aria-label={step.labels?.[1] ?? "bottom of the fraction"} onChange={(e) => onChange([state.inputs[0], e.target.value])} onKeyDown={enter} />
+        </span>
+        {after && (
+          <span>
+            <MathText>{after}</MathText>
+          </span>
+        )}
+      </div>
+    );
+  }
   return (
     <div className="answer-row ratio-row">
       {before && <span className="affix">{before}</span>}
@@ -739,6 +1105,64 @@ export function StepInput({
         {step.labels && <small>{step.labels[1]}</small>}
       </label>
       {after && <span className="affix">{after}</span>}
+    </div>
+  );
+}
+
+/**
+ * A FractionStep answer inside <AnswerFormPick>: pick the kind first (no kind
+ * is picked at the start, so the boxes don't give the answer's kind away),
+ * then type into the boxes that kind shows. Switching kinds keeps the numbers
+ * that still fit. inputs: [whole, top, bottom, kind].
+ */
+function FormFractionInput({ state, onChange, onSubmit }: { state: StepState; onChange: (v: string[]) => void; onSubmit: (v: string[]) => void }) {
+  const early = useEarlyLearner();
+  const rowRef = useRef<HTMLSpanElement>(null);
+  const values: [string, string, string] = [state.inputs[0] ?? "", state.inputs[1] ?? "", state.inputs[2] ?? ""];
+  const form: AnswerForm | "" = isAnswerForm(state.inputs[3]) ? state.inputs[3] : "";
+  const show = form ? formBoxes(form) : [false, false, false];
+  const mark = state.formMark;
+  const pickForm = (f: AnswerForm) => {
+    onChange([...keepFitting(values, f), f]);
+    // Put the cursor in the first box the new kind shows.
+    window.setTimeout(() => rowRef.current?.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true }), 0);
+  };
+  const set = (idx: number, v: string) => {
+    const next = [...values];
+    next[idx] = v;
+    onChange([...next, form]);
+  };
+  const boxStyle = mark?.boxes === undefined ? undefined : { borderColor: mark.boxes ? "var(--good)" : "var(--bad)" };
+  const box = (idx: number, label: string, cls: string) => (
+    <input
+      className={`answer ${cls}`}
+      inputMode="numeric"
+      {...numberPadProps(early, "enter")}
+      autoComplete="off"
+      aria-label={label}
+      value={values[idx]}
+      style={boxStyle}
+      onChange={(e) => set(idx, e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && formFilled(form, values)) onSubmit(state.inputs);
+      }}
+    />
+  );
+  return (
+    <div className="answer-row frac-entry-row form-entry-row">
+      <FormPicker value={form} onPick={pickForm} mark={mark ? (mark.form ? "good" : "bad") : undefined} />
+      {form && (
+        <span className="frac-entry" ref={rowRef}>
+          {show[0] && box(0, "whole number", "frac-entry-whole")}
+          {show[1] && (
+            <span className="frac-entry-stack">
+              {box(1, "numerator", "frac-entry-box")}
+              <span className="frac-entry-bar" aria-hidden />
+              {box(2, "denominator", "frac-entry-box")}
+            </span>
+          )}
+        </span>
+      )}
     </div>
   );
 }

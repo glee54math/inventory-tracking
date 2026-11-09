@@ -3,6 +3,7 @@ import { gcd, pick, randInt, simplify } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
 import { Frac, QA, QB, Quotient } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
+import { MathText } from "../../../shared/components/MathText";
 
 function properFraction(): [number, number] {
   const d = randInt(2, 9);
@@ -43,10 +44,12 @@ function amountToFraction({ whole, n, d }: TestAmount): [number, number] {
 /** A TestAmount in "regular" fraction style, for use inside a prompt/story. */
 function AmountText({ value }: { value: TestAmount }) {
   return (
-    <>
-      {value.whole !== undefined && <>{value.whole} </>}
-      {value.n !== undefined && value.d !== undefined && <Frac n={value.n} d={value.d} />}
-    </>
+    <MathText>
+      <>
+        {value.whole !== undefined && <>{value.whole} </>}
+        {value.n !== undefined && value.d !== undefined && <Frac n={value.n} d={value.d} />}
+      </>
+    </MathText>
   );
 }
 
@@ -100,7 +103,7 @@ function areaQuestion(): TestQuestion[] {
       difficulty: "medium",
       step: {
         kind: "number",
-        frac: true,
+        fracBoxes: "fraction", frac: true,
         fracAnswer: [qn, qd],
         suffix: "sq mi",
         prompt: <>A rectangular strip of land has a length of <QA><Frac n={ln} d={ld} /></QA> miles and a width of <QB><Frac n={wn} d={wd} /></QB> miles. What is its area?</>,
@@ -124,7 +127,7 @@ function sharingQuestion(): TestQuestion[] {
       difficulty: "easy",
       step: {
         kind: "number",
-        frac: true,
+        fracBoxes: "fraction", frac: true,
         fracAnswer: [qn, qd],
         suffix: "lb",
         prompt: <>{n} people share <QA><Frac n={an} d={bd} /></QA> lb of trail mix equally. How much does each person get?</>,
@@ -147,7 +150,7 @@ function widthQuestion(): TestQuestion[] {
       difficulty: "hard",
       step: {
         kind: "number",
-        frac: true,
+        fracBoxes: "fraction", frac: true,
         fracAnswer: [qn, qd],
         suffix: "mi",
         prompt: <>A rectangular strip of land has area <QA><Frac n={an} d={bd} /></QA> square miles and length <QB><Frac n={cn} d={dd} /></QB> miles. How wide is it?</>,
@@ -170,7 +173,7 @@ function simpleComputeQuestion(): TestQuestion[] {
       difficulty: "easy",
       step: {
         kind: "number",
-        frac: true,
+        fracBoxes: "fraction", frac: true,
         fracAnswer: [qn, qd],
         prompt: <>What is <QA><Frac n={an} d={bd} /></QA> ÷ <QB><Frac n={cn} d={dd} /></QB>?</>,
         hint: "Multiply by the reciprocal of the second fraction, then simplify.",
@@ -196,7 +199,7 @@ function mixedComputeQuestion(): TestQuestion[] {
       difficulty: "hard",
       step: {
         kind: "number",
-        frac: true,
+        fracBoxes: "fraction", frac: true,
         fracAnswer: [qn, qd],
         prompt: <>Compute: <AmountText value={left} /> ÷ <AmountText value={right} /></>,
         hint: "First rewrite each mixed number as an improper fraction, then multiply by the reciprocal of the second.",
@@ -218,7 +221,7 @@ function chocolateQuestion(): TestQuestion[] {
       difficulty: "easy",
       step: {
         kind: "number",
-        frac: true,
+        fracBoxes: "fraction", frac: true,
         fracAnswer: [qn, qd],
         suffix: "lb",
         prompt: <>{n} people share <Frac n={an} d={bd} /> lb of chocolate equally. How much chocolate does each person get?</>,
@@ -263,7 +266,7 @@ function recipeVisualQuestion(): TestQuestion[] {
       difficulty: "medium",
       step: {
         kind: "number",
-        frac: true,
+        fracBoxes: "fraction", frac: true,
         fracAnswer: [qn, qd],
         suffix: target.unit,
         prompt: <>What quantity of <QA>{target.name}</QA> would you need to make a {scale.word} of this recipe?</>,
@@ -290,6 +293,7 @@ function proveItQuestion(): TestQuestion[] {
       step: {
         kind: "ratio",
         tones: "none",
+        stacked: true,
         frame: [`${cn}/${dd} × `, "/", ` = ${an}/${bd}`],
         labels: ["numerator", "denominator"],
         prompt: <>Since <QA><Frac n={an} d={bd} /></QA> ÷ <QB><Frac n={cn} d={dd} /></QB> = <Quotient n={qn} d={qd} /> in simplest form, fill in the multiplication fact that proves it.</>,

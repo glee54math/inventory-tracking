@@ -323,14 +323,23 @@ const genMistake = (): Question => {
   };
 };
 
+/** 1/10 written the handwritten way (numerator over a bar over the
+ *  denominator), never as slash text. Read aloud and by screen readers as words. */
+const OneTenth = () => (
+  <span role="math" aria-label="1 over 10" data-tts-say="1/10" className="mx-0.5 inline-flex flex-col items-center align-middle text-[0.8em] leading-[1.05]">
+    <span aria-hidden className="border-b-[1.5px] border-current px-0.5">1</span>
+    <span aria-hidden className="px-0.5">10</span>
+  </span>
+);
+
 /* ---------- Word problems ---------- */
 type WordProblem = { prompt: ReactNode; answer: string; unit: string; hint: ReactNode; explain: ReactNode };
 
 const WORD_PROBLEMS: WordProblem[] = [
   {
-    prompt: 'The United States has about 320,000,000 people. Canada has about 1/10 as many people. About how many people live in Canada?',
+    prompt: <>The United States has about 320,000,000 people. Canada has about <OneTenth /> as many people. About how many people live in Canada?</>,
     answer: '32,000,000', unit: 'people',
-    hint: '"1/10 as many" means divide by 10.',
+    hint: <>"<OneTenth /> as many" means divide by 10.</>,
     explain: '320,000,000 ÷ 10 = 32,000,000. Each digit moves 1 place right, so the answer has one fewer zero (7 zeros become 6).',
   },
   {

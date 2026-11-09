@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { elapsedTimeAndIntervalsTest } from "./ElapsedTimeAndIntervalsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
@@ -48,33 +49,35 @@ function ElapsedMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>1.</b> Maya started reading at 3:15 and finished at 3:50.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          How much time ELAPSED while she read?{" "}
-          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="350">3:50 — the time she finished</option>
-            <option value="35">35 minutes — the DIFFERENCE between when she started and finished</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — \"elapsed time\" always means how much time passed (a DURATION), never a clock reading itself. 3:50 minus 3:15 is 35 minutes."
-            : "Not quite — 3:50 is just when she finished, not how long she took. Elapsed time is the DIFFERENCE: 3:50 minus 3:15 is 35 minutes."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>1.</b> Maya started reading at 3:15 and finished at 3:50.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            How much time ELAPSED while she read?{" "}
+            <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="350">3:50 — the time she finished</option>
+              <option value="35">35 minutes — the DIFFERENCE between when she started and finished</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — \"elapsed time\" always means how much time passed (a DURATION), never a clock reading itself. 3:50 minus 3:15 is 35 minutes."
+              : "Not quite — 3:50 is just when she finished, not how long she took. Elapsed time is the DIFFERENCE: 3:50 minus 3:15 is 35 minutes."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -88,36 +91,38 @@ function BorrowMinutesQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>2.</b> Jamal needs the elapsed time from 2:50 to 3:15. He tries subtracting the minutes straight across — 15 minus 50 — and gets stuck
-        because you can't take 50 away from 15.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What SHOULD Jamal do, and what's the real elapsed time?{" "}
-          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="65">Just write "65" since that's 15 + 50 — 65 minutes elapsed</option>
-            <option value="25">
-              Borrow 60 minutes (ONE hour), not 100 — from 2:50 to 3:00 is 10 minutes, then 3:00 to 3:15 is 15 more: 25 minutes in all
-            </option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — time isn't base-10, so you never borrow 100. An hour is 60 minutes: 10 minutes gets Jamal to 3:00, then 15 more gets him to 3:15 — 25 minutes total."
-            : "Not quite — time is grouped in 60s, not 100s. Break the trip into two pieces instead: 2:50 to 3:00 is 10 minutes, then 3:00 to 3:15 is 15 more minutes — 25 minutes total."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>2.</b> Jamal needs the elapsed time from 2:50 to 3:15. He tries subtracting the minutes straight across — 15 minus 50 — and gets stuck
+          because you can't take 50 away from 15.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            What SHOULD Jamal do, and what's the real elapsed time?{" "}
+            <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="65">Just write "65" since that's 15 + 50 — 65 minutes elapsed</option>
+              <option value="25">
+                Borrow 60 minutes (ONE hour), not 100 — from 2:50 to 3:00 is 10 minutes, then 3:00 to 3:15 is 15 more: 25 minutes in all
+              </option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — time isn't base-10, so you never borrow 100. An hour is 60 minutes: 10 minutes gets Jamal to 3:00, then 15 more gets him to 3:15 — 25 minutes total."
+              : "Not quite — time is grouped in 60s, not 100s. Break the trip into two pieces instead: 2:50 to 3:00 is 10 minutes, then 3:00 to 3:15 is 15 more minutes — 25 minutes total."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -131,22 +136,24 @@ function HourFactQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>3.</b> Fill in the blank: 1 hour = _____ minutes.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <input className="answer" inputMode="numeric" style={{ ...fieldOk(ok, checked), width: 70 }} value={typed} onChange={(e) => setTyped(e.target.value)} />
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — 1 hour is always 60 minutes. Memorize this; you'll use it on every elapsed-time problem." : "Not quite — 1 hour is 60 minutes. This is worth memorizing cold; you'll use it on every elapsed-time problem."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>3.</b> Fill in the blank: 1 hour = _____ minutes.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <input className="answer" inputMode="numeric" style={{ ...fieldOk(ok, checked), width: 70 }} value={typed} onChange={(e) => setTyped(e.target.value)} />
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok ? "Correct — 1 hour is always 60 minutes. Memorize this; you'll use it on every elapsed-time problem." : "Not quite — 1 hour is 60 minutes. This is worth memorizing cold; you'll use it on every elapsed-time problem."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -160,31 +167,33 @@ function SubtractionTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>4.</b> True or false: you can always find elapsed time by subtracting the hours and the minutes separately, no matter what the two
-        times are.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — that only works when the minutes don't need to cross an hour. Remember Jamal's 2:50-to-3:15 problem: once the minutes would go negative, you have to borrow 60, not just subtract straight across."
-            : "Not quite — remember Jamal's 2:50-to-3:15 problem. Straight subtraction broke down there because it crossed an hour; you had to borrow 60 minutes instead."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>4.</b> True or false: you can always find elapsed time by subtracting the hours and the minutes separately, no matter what the two
+          times are.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="true">True</option>
+            <option value="false">False</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — that only works when the minutes don't need to cross an hour. Remember Jamal's 2:50-to-3:15 problem: once the minutes would go negative, you have to borrow 60, not just subtract straight across."
+              : "Not quite — remember Jamal's 2:50-to-3:15 problem. Straight subtraction broke down there because it crossed an hour; you had to borrow 60 minutes instead."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -197,13 +206,15 @@ function ElapsedCheckForUnderstanding({ onComplete }: { onComplete?: () => void 
   const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure elapsed time makes sense before you try practice problems.</p>
-      <ElapsedMeaningQuestion onComplete={mark("meaning")} />
-      <BorrowMinutesQuestion onComplete={mark("borrow")} />
-      <HourFactQuestion onComplete={mark("fact")} />
-      <SubtractionTrapQuestion onComplete={mark("trap")} />
-    </div>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: let's make sure elapsed time makes sense before you try practice problems.</p>
+        <ElapsedMeaningQuestion onComplete={mark("meaning")} />
+        <BorrowMinutesQuestion onComplete={mark("borrow")} />
+        <HourFactQuestion onComplete={mark("fact")} />
+        <SubtractionTrapQuestion onComplete={mark("trap")} />
+      </div>
+    </MathText>
   );
 }
 
@@ -220,34 +231,36 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const crossed = end.hour !== start.hour;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
-        <Stepper label="Start hour" value={start.hour} min={1} max={12} onChange={(h) => setStart((s) => ({ ...s, hour: h }))} tone="a" />
-        <Stepper label="Start minute" value={start.minute} min={0} max={59} onChange={(m) => setStart((s) => ({ ...s, minute: m }))} tone="a" />
-        <Stepper label="Minutes later" value={addMin} min={0} max={90} step={5} onChange={setAddMin} tone="b" />
-        {!introActive && (
-          <button
-            type="button"
-            className="btn ghost"
-            style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
-            onClick={() => setShowCheck((v) => !v)}
-          >
-            Check for Understanding
-          </button>
-        )}
-      </div>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="control-row">
+          <Stepper label="Start hour" value={start.hour} min={1} max={12} onChange={(h) => setStart((s) => ({ ...s, hour: h }))} tone="a" />
+          <Stepper label="Start minute" value={start.minute} min={0} max={59} onChange={(m) => setStart((s) => ({ ...s, minute: m }))} tone="a" />
+          <Stepper label="Minutes later" value={addMin} min={0} max={90} step={5} onChange={setAddMin} tone="b" />
+          {!introActive && (
+            <button
+              type="button"
+              className="btn ghost"
+              style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
+              onClick={() => setShowCheck((v) => !v)}
+            >
+              Check for Understanding
+            </button>
+          )}
+        </div>
 
-      <div className="control-row">
-        <Clock time={start} tone="a" />
-        <Clock time={end} tone="b" />
+        <div className="control-row">
+          <Clock time={start} tone="a" />
+          <Clock time={end} tone="b" />
+        </div>
+        <p className="feedback good" style={{ minHeight: 24 }}>
+          Start at <b>{clockLabel(start)}</b>, add <b>{addMin}</b> minutes, and you land on <b>{clockLabel(end)}</b>.
+          {crossed ? " Notice the hour changed partway through — the minutes rolled past 60 and carried into a new hour." : " The hour stayed the same this time."}
+        </p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <ElapsedCheckForUnderstanding onComplete={onIntroDone} />}
       </div>
-      <p className="feedback good" style={{ minHeight: 24 }}>
-        Start at <b>{clockLabel(start)}</b>, add <b>{addMin}</b> minutes, and you land on <b>{clockLabel(end)}</b>.
-        {crossed ? " Notice the hour changed partway through — the minutes rolled past 60 and carried into a new hour." : " The hour stayed the same this time."}
-      </p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <ElapsedCheckForUnderstanding onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 

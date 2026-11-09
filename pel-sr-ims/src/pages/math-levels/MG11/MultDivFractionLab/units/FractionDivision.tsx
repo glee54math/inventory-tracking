@@ -5,6 +5,7 @@ import { choice, fracMultiply, type Problem, type Step } from "../../../shared/e
 import { Frac, QA, QB, Quotient } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { fractionDivisionTest } from "./FractionDivisionTest";
+import { MathText } from "../../../shared/components/MathText";
 
 /** A random proper fraction with denominator in [2,9], already in lowest terms. */
 function properFraction(): [number, number] {
@@ -21,15 +22,17 @@ function properFraction(): [number, number] {
 /** A compact −/value/+ control, sized for sitting right inside a fraction instead of a full-width row. */
 function MiniStepper({ value, min, max, onChange, ariaLabel }: { value: number; min: number; max: number; onChange: (v: number) => void; ariaLabel: string }) {
   return (
-    <span className="mini-stepper">
-      <button type="button" aria-label={`decrease ${ariaLabel}`} disabled={value <= min} onClick={() => onChange(value - 1)}>
-        −
-      </button>
-      <output>{value}</output>
-      <button type="button" aria-label={`increase ${ariaLabel}`} disabled={value >= max} onClick={() => onChange(value + 1)}>
-        +
-      </button>
-    </span>
+    <MathText>
+      <span className="mini-stepper">
+        <button type="button" aria-label={`decrease ${ariaLabel}`} disabled={value <= min} onClick={() => onChange(value - 1)}>
+          −
+        </button>
+        <output>{value}</output>
+        <button type="button" aria-label={`increase ${ariaLabel}`} disabled={value >= max} onClick={() => onChange(value + 1)}>
+          +
+        </button>
+      </span>
+    </MathText>
   );
 }
 
@@ -54,11 +57,13 @@ function FracStepperGroup({
   label: string;
 }) {
   return (
-    <span className={`frac-stepper tone-${tone}`}>
-      <MiniStepper value={n} min={1} max={nMax} onChange={onN} ariaLabel={`${label} numerator`} />
-      <span className="frac-stepper-bar" />
-      <MiniStepper value={d} min={2} max={dMax} onChange={onD} ariaLabel={`${label} denominator`} />
-    </span>
+    <MathText>
+      <span className={`frac-stepper tone-${tone}`}>
+        <MiniStepper value={n} min={1} max={nMax} onChange={onN} ariaLabel={`${label} numerator`} />
+        <span className="frac-stepper-bar" />
+        <MiniStepper value={d} min={2} max={dMax} onChange={onD} ariaLabel={`${label} denominator`} />
+      </span>
+    </MathText>
   );
 }
 
@@ -100,12 +105,14 @@ function FlipStep({
   const reducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reducedMotion) return <>{back}</>;
   return (
-    <span className="flip-swap">
-      <span className="flip-inner" onAnimationEnd={() => setSettled(true)}>
-        <span className="flip-face flip-front">{front}</span>
-        <span className="flip-face flip-back">{back}</span>
+    <MathText>
+      <span className="flip-swap">
+        <span className="flip-inner" onAnimationEnd={() => setSettled(true)}>
+          <span className="flip-face flip-front">{front}</span>
+          <span className="flip-face flip-back">{back}</span>
+        </span>
       </span>
-    </span>
+    </MathText>
   );
 }
 
@@ -184,51 +191,53 @@ function KeepChangeFlipSteps({
   const [qn, qd] = showResult ? simplify(an * dd, bd * cn) : [0, 1];
 
   return (
-    <span className="kcf2">
-      {step >= keepAppear && (
-        <span className="kcf2-part kcf2-reveal">
-          <span className="kcf2-content"><span className="explore-op">=</span></span>
-        </span>
-      )}
-      {step >= keepAppear && (
-        <span className="kcf2-part kcf2-reveal">
-          <span className="kcf2-content"><span className="qa-text"><Frac n={an} d={bd} /></span></span>
-          <span className="kcf-label kcf-keep">{keepCaption}</span>
-        </span>
-      )}
-      {step >= changeAppear && (
-        <span className="kcf2-part kcf2-reveal">
-          <span className="kcf2-content">
-            <FlipStep step={step} appearAt={changeAppear} flipAt={changeFlip} front={<span className="kcf2-op">÷</span>} back={<span className="kcf2-op kcf2-op-new">×</span>} />
+    <MathText>
+      <span className="kcf2">
+        {step >= keepAppear && (
+          <span className="kcf2-part kcf2-reveal">
+            <span className="kcf2-content"><span className="explore-op">=</span></span>
           </span>
-          <span className="kcf-label kcf-change">Change</span>
-        </span>
-      )}
-      {step >= flipAppear && (
-        <span className="kcf2-part kcf2-reveal">
-          <span className="kcf2-content">
-            <FlipStep
-              step={step}
-              appearAt={flipAppear}
-              flipAt={flipFlip}
-              front={<span className="qb-text"><Frac n={cn} d={dd} /></span>}
-              back={<span className="kcf2-flipped"><Frac n={dd} d={cn} /></span>}
-            />
+        )}
+        {step >= keepAppear && (
+          <span className="kcf2-part kcf2-reveal">
+            <span className="kcf2-content"><span className="qa-text"><Frac n={an} d={bd} /></span></span>
+            <span className="kcf-label kcf-keep">{keepCaption}</span>
           </span>
-          <span className="kcf-label kcf-flip">{flipCaption}</span>
-        </span>
-      )}
-      {showResult && step >= resultStep && (
-        <span className="kcf2-part kcf2-reveal">
-          <span className="kcf2-content"><span className="explore-op">=</span></span>
-        </span>
-      )}
-      {showResult && step >= resultStep && (
-        <span className="kcf2-part kcf2-reveal">
-          <span className="kcf2-content"><Quotient n={qn} d={qd} /></span>
-        </span>
-      )}
-    </span>
+        )}
+        {step >= changeAppear && (
+          <span className="kcf2-part kcf2-reveal">
+            <span className="kcf2-content">
+              <FlipStep step={step} appearAt={changeAppear} flipAt={changeFlip} front={<span className="kcf2-op">÷</span>} back={<span className="kcf2-op kcf2-op-new">×</span>} />
+            </span>
+            <span className="kcf-label kcf-change">Change</span>
+          </span>
+        )}
+        {step >= flipAppear && (
+          <span className="kcf2-part kcf2-reveal">
+            <span className="kcf2-content">
+              <FlipStep
+                step={step}
+                appearAt={flipAppear}
+                flipAt={flipFlip}
+                front={<span className="qb-text"><Frac n={cn} d={dd} /></span>}
+                back={<span className="kcf2-flipped"><Frac n={dd} d={cn} /></span>}
+              />
+            </span>
+            <span className="kcf-label kcf-flip">{flipCaption}</span>
+          </span>
+        )}
+        {showResult && step >= resultStep && (
+          <span className="kcf2-part kcf2-reveal">
+            <span className="kcf2-content"><span className="explore-op">=</span></span>
+          </span>
+        )}
+        {showResult && step >= resultStep && (
+          <span className="kcf2-part kcf2-reveal">
+            <span className="kcf2-content"><Quotient n={qn} d={qd} /></span>
+          </span>
+        )}
+      </span>
+    </MathText>
   );
 }
 
@@ -243,11 +252,13 @@ interface NumValue {
  *  FracStepperGroup, just without the pill buttons, for display-only examples. */
 function BigFraction({ n, d }: { n: number; d: number }) {
   return (
-    <span className="frac-stepper">
-      <span className="example-number">{n}</span>
-      <span className="frac-stepper-bar" />
-      <span className="example-number">{d}</span>
-    </span>
+    <MathText>
+      <span className="frac-stepper">
+        <span className="example-number">{n}</span>
+        <span className="frac-stepper-bar" />
+        <span className="example-number">{d}</span>
+      </span>
+    </MathText>
   );
 }
 
@@ -259,10 +270,12 @@ function BigFraction({ n, d }: { n: number; d: number }) {
 function NumberDisplay({ value }: { value: NumValue }) {
   const hasFrac = value.n !== undefined && value.d !== undefined;
   return (
-    <span className="example-value">
-      {value.whole !== undefined && <span className="example-number">{value.whole}</span>}
-      {hasFrac && <BigFraction n={value.n!} d={value.d!} />}
-    </span>
+    <MathText>
+      <span className="example-value">
+        {value.whole !== undefined && <span className="example-number">{value.whole}</span>}
+        {hasFrac && <BigFraction n={value.n!} d={value.d!} />}
+      </span>
+    </MathText>
   );
 }
 
@@ -272,20 +285,24 @@ function NumberDisplay({ value }: { value: NumValue }) {
 function CancelNumber({ original, reduced }: { original: number; reduced: number }) {
   if (original === reduced) return <span className="example-number">{original}</span>;
   return (
-    <span className="cancel-number">
-      <span className="example-number cancel-original">{original}</span>
-      <span className="cancel-reduced">{reduced}</span>
-    </span>
+    <MathText>
+      <span className="cancel-number">
+        <span className="example-number cancel-original">{original}</span>
+        <span className="cancel-reduced">{reduced}</span>
+      </span>
+    </MathText>
   );
 }
 
 function CancelFraction({ n, nReduced, d, dReduced }: { n: number; nReduced: number; d: number; dReduced: number }) {
   return (
-    <span className="frac-stepper">
-      <CancelNumber original={n} reduced={nReduced} />
-      <span className="frac-stepper-bar" />
-      <CancelNumber original={d} reduced={dReduced} />
-    </span>
+    <MathText>
+      <span className="frac-stepper">
+        <CancelNumber original={n} reduced={nReduced} />
+        <span className="frac-stepper-bar" />
+        <CancelNumber original={d} reduced={dReduced} />
+      </span>
+    </MathText>
   );
 }
 
@@ -309,17 +326,19 @@ function CancelSteps({ n1, d1, n2, d2, step }: { n1: number; d1: number; n2: num
   const [qn, qd] = simplify(redN1 * redN2, redD1 * redD2);
 
   return (
-    <div className="explore-equation kcf2-reveal">
-      <span className="qa-text"><CancelFraction n={n1} nReduced={redN1} d={d1} dReduced={redD1} /></span>
-      <span className="explore-op">×</span>
-      <span className="qb-text"><CancelFraction n={n2} nReduced={redN2} d={d2} dReduced={redD2} /></span>
-      {step >= 2 && (
-        <>
-          <span className="explore-op kcf2-reveal">=</span>
-          <span className="kcf2-reveal"><Quotient n={qn} d={qd} /></span>
-        </>
-      )}
-    </div>
+    <MathText>
+      <div className="explore-equation kcf2-reveal">
+        <span className="qa-text"><CancelFraction n={n1} nReduced={redN1} d={d1} dReduced={redD1} /></span>
+        <span className="explore-op">×</span>
+        <span className="qb-text"><CancelFraction n={n2} nReduced={redN2} d={d2} dReduced={redD2} /></span>
+        {step >= 2 && (
+          <>
+            <span className="explore-op kcf2-reveal">=</span>
+            <span className="kcf2-reveal"><Quotient n={qn} d={qd} /></span>
+          </>
+        )}
+      </div>
+    </MathText>
   );
 }
 /** How many local steps CancelSteps has (see above). */
@@ -345,17 +364,19 @@ interface Stage {
  */
 function StageList({ stages, step }: { stages: Stage[]; step: number }) {
   return (
-    <ol className="stage-list">
-      {stages.map((s, i) => {
-        const state = step > s.to ? "done" : step >= s.from ? "active" : "upcoming";
-        return (
-          <li key={s.label} className={`stage-list-item ${state}`}>
-            <span className="stage-list-num">{i + 1}</span>
-            <span className="stage-list-label">{s.label}</span>
-          </li>
-        );
-      })}
-    </ol>
+    <MathText>
+      <ol className="stage-list">
+        {stages.map((s, i) => {
+          const state = step > s.to ? "done" : step >= s.from ? "active" : "upcoming";
+          return (
+            <li key={s.label} className={`stage-list-item ${state}`}>
+              <span className="stage-list-num">{i + 1}</span>
+              <span className="stage-list-label">{s.label}</span>
+            </li>
+          );
+        })}
+      </ol>
+    </MathText>
   );
 }
 
@@ -414,56 +435,66 @@ function useStepPlayer(maxStep: number, intervalMs = 2200) {
 
 function IconPlay() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <polygon points="7 4 20 12 7 20" />
-    </svg>
+    <MathText>
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <polygon points="7 4 20 12 7 20" />
+      </svg>
+    </MathText>
   );
 }
 function IconPause() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <rect x="6" y="4" width="4" height="16" rx="1" />
-      <rect x="14" y="4" width="4" height="16" rx="1" />
-    </svg>
+    <MathText>
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <rect x="6" y="4" width="4" height="16" rx="1" />
+        <rect x="14" y="4" width="4" height="16" rx="1" />
+      </svg>
+    </MathText>
   );
 }
 function IconToStart() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <rect x="4" y="4" width="3" height="16" rx="1" />
-      <polygon points="20 4 20 20 8 12" />
-    </svg>
+    <MathText>
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <rect x="4" y="4" width="3" height="16" rx="1" />
+        <polygon points="20 4 20 20 8 12" />
+      </svg>
+    </MathText>
   );
 }
 function IconToEnd() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <rect x="17" y="4" width="3" height="16" rx="1" />
-      <polygon points="4 4 4 20 16 12" />
-    </svg>
+    <MathText>
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <rect x="17" y="4" width="3" height="16" rx="1" />
+        <polygon points="4 4 4 20 16 12" />
+      </svg>
+    </MathText>
   );
 }
 
 /** The media-player-style control bar: beginning / back a step / play-pause / forward a step / end. */
 function StepPlayerControls({ step, maxStep, playing, toBeginning, back, togglePlay, forward, toEnd }: ReturnType<typeof useStepPlayer>) {
   return (
-    <div className="step-player" role="group" aria-label="Animation controls">
-      <button type="button" onClick={toBeginning} disabled={step === 0} aria-label="Beginning">
-        <IconToStart />
-      </button>
-      <button type="button" onClick={back} disabled={step === 0} aria-label="Back one step">
-        <Chevron direction="left" />
-      </button>
-      <button type="button" onClick={togglePlay} aria-label={playing ? "Pause" : "Play"}>
-        {playing ? <IconPause /> : <IconPlay />}
-      </button>
-      <button type="button" onClick={forward} disabled={step === maxStep} aria-label="Forward one step">
-        <Chevron direction="right" />
-      </button>
-      <button type="button" onClick={toEnd} disabled={step === maxStep} aria-label="End">
-        <IconToEnd />
-      </button>
-    </div>
+    <MathText>
+      <div className="step-player" role="group" aria-label="Animation controls">
+        <button type="button" onClick={toBeginning} disabled={step === 0} aria-label="Beginning">
+          <IconToStart />
+        </button>
+        <button type="button" onClick={back} disabled={step === 0} aria-label="Back one step">
+          <Chevron direction="left" />
+        </button>
+        <button type="button" onClick={togglePlay} aria-label={playing ? "Pause" : "Play"}>
+          {playing ? <IconPause /> : <IconPlay />}
+        </button>
+        <button type="button" onClick={forward} disabled={step === maxStep} aria-label="Forward one step">
+          <Chevron direction="right" />
+        </button>
+        <button type="button" onClick={toEnd} disabled={step === maxStep} aria-label="End">
+          <IconToEnd />
+        </button>
+      </div>
+    </MathText>
   );
 }
 
@@ -483,37 +514,39 @@ function ExploreProperFraction() {
   const player = useStepPlayer(PROPER_KCF_STEPS);
 
   return (
-    <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
-      <StageList stages={PROPER_STAGES} step={player.step} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 20, flex: 1, minWidth: 0 }}>
-        <div className="explore-equation">
-          <FracStepperGroup
-            n={an}
-            d={bd}
-            onN={setAn}
-            onD={(v) => { setBd(v); if (an >= v) setAn(v - 1); }}
-            nMax={bd - 1}
-            dMax={9}
-            tone="a"
-            label="dividend"
-          />
-          <span className="explore-op">÷</span>
-          <FracStepperGroup
-            n={cn}
-            d={dd}
-            onN={setCn}
-            onD={(v) => { setDd(v); if (cn >= v) setCn(v - 1); }}
-            nMax={dd - 1}
-            dMax={9}
-            tone="b"
-            label="divisor"
-          />
-          <KeepChangeFlipSteps an={an} bd={bd} cn={cn} dd={dd} step={player.step} showResult />
-        </div>
+    <MathText>
+      <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+        <StageList stages={PROPER_STAGES} step={player.step} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, flex: 1, minWidth: 0 }}>
+          <div className="explore-equation">
+            <FracStepperGroup
+              n={an}
+              d={bd}
+              onN={setAn}
+              onD={(v) => { setBd(v); if (an >= v) setAn(v - 1); }}
+              nMax={bd - 1}
+              dMax={9}
+              tone="a"
+              label="dividend"
+            />
+            <span className="explore-op">÷</span>
+            <FracStepperGroup
+              n={cn}
+              d={dd}
+              onN={setCn}
+              onD={(v) => { setDd(v); if (cn >= v) setCn(v - 1); }}
+              nMax={dd - 1}
+              dMax={9}
+              tone="b"
+              label="divisor"
+            />
+            <KeepChangeFlipSteps an={an} bd={bd} cn={cn} dd={dd} step={player.step} showResult />
+          </div>
 
-        <StepPlayerControls {...player} />
+          <StepPlayerControls {...player} />
+        </div>
       </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -557,21 +590,23 @@ function ExploreMixedByProper() {
   const cancelStep = Math.max(0, Math.min(CANCEL_STEPS, player.step - kcfSteps));
 
   return (
-    <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
-      <StageList stages={stages} step={player.step} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 20, flex: 1, minWidth: 0 }}>
-        <div className="explore-equation">
-          <span className="qa-text"><NumberDisplay value={{ whole, n: mixedN, d: mixedD }} /></span>
-          <span className="explore-op">÷</span>
-          <span className="qb-text"><NumberDisplay value={{ n: cn, d: dd }} /></span>
-          <KeepChangeFlipSteps an={improperN} bd={improperD} cn={cn} dd={dd} step={player.step} dividendNeedsConvert />
+    <MathText>
+      <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+        <StageList stages={stages} step={player.step} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, flex: 1, minWidth: 0 }}>
+          <div className="explore-equation">
+            <span className="qa-text"><NumberDisplay value={{ whole, n: mixedN, d: mixedD }} /></span>
+            <span className="explore-op">÷</span>
+            <span className="qb-text"><NumberDisplay value={{ n: cn, d: dd }} /></span>
+            <KeepChangeFlipSteps an={improperN} bd={improperD} cn={cn} dd={dd} step={player.step} dividendNeedsConvert />
+          </div>
+
+          <StepPlayerControls {...player} />
+
+          <CancelSteps n1={improperN} d1={improperD} n2={dd} d2={cn} step={cancelStep} />
         </div>
-
-        <StepPlayerControls {...player} />
-
-        <CancelSteps n1={improperN} d1={improperD} n2={dd} d2={cn} step={cancelStep} />
       </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -608,21 +643,23 @@ function ExploreMixedByMixed() {
   const cancelStep = Math.max(0, Math.min(CANCEL_STEPS, player.step - kcfSteps));
 
   return (
-    <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
-      <StageList stages={stages} step={player.step} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 20, flex: 1, minWidth: 0 }}>
-        <div className="explore-equation">
-          <span className="qa-text"><NumberDisplay value={{ whole: dWhole, n: dN, d: dD }} /></span>
-          <span className="explore-op">÷</span>
-          <span className="qb-text"><NumberDisplay value={{ whole: vWhole, n: vN, d: vD }} /></span>
-          <KeepChangeFlipSteps an={improperAn} bd={improperBd} cn={improperCn} dd={improperDd} step={player.step} dividendNeedsConvert divisorNeedsConvert />
+    <MathText>
+      <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+        <StageList stages={stages} step={player.step} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, flex: 1, minWidth: 0 }}>
+          <div className="explore-equation">
+            <span className="qa-text"><NumberDisplay value={{ whole: dWhole, n: dN, d: dD }} /></span>
+            <span className="explore-op">÷</span>
+            <span className="qb-text"><NumberDisplay value={{ whole: vWhole, n: vN, d: vD }} /></span>
+            <KeepChangeFlipSteps an={improperAn} bd={improperBd} cn={improperCn} dd={improperDd} step={player.step} dividendNeedsConvert divisorNeedsConvert />
+          </div>
+
+          <StepPlayerControls {...player} />
+
+          <CancelSteps n1={improperAn} d1={improperBd} n2={improperDd} d2={improperCn} step={cancelStep} />
         </div>
-
-        <StepPlayerControls {...player} />
-
-        <CancelSteps n1={improperAn} d1={improperBd} n2={improperDd} d2={improperCn} step={cancelStep} />
       </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -658,21 +695,23 @@ function ExploreWholeByProper() {
   const cancelStep = Math.max(0, Math.min(CANCEL_STEPS, player.step - kcfSteps));
 
   return (
-    <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
-      <StageList stages={stages} step={player.step} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 20, flex: 1, minWidth: 0 }}>
-        <div className="explore-equation">
-          <span className="qa-text"><NumberDisplay value={{ whole }} /></span>
-          <span className="explore-op">÷</span>
-          <span className="qb-text"><NumberDisplay value={{ n: cn, d: dd }} /></span>
-          <KeepChangeFlipSteps an={improperN} bd={improperD} cn={cn} dd={dd} step={player.step} dividendNeedsConvert />
+    <MathText>
+      <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+        <StageList stages={stages} step={player.step} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, flex: 1, minWidth: 0 }}>
+          <div className="explore-equation">
+            <span className="qa-text"><NumberDisplay value={{ whole }} /></span>
+            <span className="explore-op">÷</span>
+            <span className="qb-text"><NumberDisplay value={{ n: cn, d: dd }} /></span>
+            <KeepChangeFlipSteps an={improperN} bd={improperD} cn={cn} dd={dd} step={player.step} dividendNeedsConvert />
+          </div>
+
+          <StepPlayerControls {...player} />
+
+          <CancelSteps n1={improperN} d1={improperD} n2={dd} d2={cn} step={cancelStep} />
         </div>
-
-        <StepPlayerControls {...player} />
-
-        <CancelSteps n1={improperN} d1={improperD} n2={dd} d2={cn} step={cancelStep} />
       </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -696,9 +735,11 @@ const EXPLORE_EXAMPLES: { title: string; Component: React.ComponentType }[] = [
 function Chevron({ direction }: { direction: "left" | "right" }) {
   const points = direction === "left" ? "15 18 9 12 15 6" : "9 18 15 12 9 6";
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points={points} />
-    </svg>
+    <MathText>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <polyline points={points} />
+      </svg>
+    </MathText>
   );
 }
 
@@ -715,25 +756,27 @@ function Explore() {
   const { title, Component } = EXPLORE_EXAMPLES[index];
 
   return (
-    <div className="example-carousel">
-      <button type="button" className="example-nav example-nav-left" onClick={() => go(-1)} aria-label="Previous example">
-        <Chevron direction="left" />
-      </button>
-      <div className="example-carousel-viewport">
-        <div key={index} className={direction === 1 ? "example-carousel-body example-slide-in-right" : "example-carousel-body example-slide-in-left"}>
-          <p className="example-kicker">{title}</p>
-          <Component />
+    <MathText>
+      <div className="example-carousel">
+        <button type="button" className="example-nav example-nav-left" onClick={() => go(-1)} aria-label="Previous example">
+          <Chevron direction="left" />
+        </button>
+        <div className="example-carousel-viewport">
+          <div key={index} className={direction === 1 ? "example-carousel-body example-slide-in-right" : "example-carousel-body example-slide-in-left"}>
+            <p className="example-kicker">{title}</p>
+            <Component />
+          </div>
+        </div>
+        <button type="button" className="example-nav example-nav-right" onClick={() => go(1)} aria-label="Next example">
+          <Chevron direction="right" />
+        </button>
+        <div className="example-dots" role="tablist" aria-label="Examples">
+          {EXPLORE_EXAMPLES.map((ex, i) => (
+            <button key={ex.title} role="tab" aria-selected={i === index} aria-label={`Go to ${ex.title}`} className={i === index ? "on" : ""} onClick={() => goTo(i)} />
+          ))}
         </div>
       </div>
-      <button type="button" className="example-nav example-nav-right" onClick={() => go(1)} aria-label="Next example">
-        <Chevron direction="right" />
-      </button>
-      <div className="example-dots" role="tablist" aria-label="Examples">
-        {EXPLORE_EXAMPLES.map((ex, i) => (
-          <button key={ex.title} role="tab" aria-selected={i === index} aria-label={`Go to ${ex.title}`} className={i === index ? "on" : ""} onClick={() => goTo(i)} />
-        ))}
-      </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -837,7 +880,7 @@ function measurementProblem(): Problem {
               ] as Step[])),
         {
           kind: "number",
-          frac: true,
+          fracBoxes: "fraction", frac: true,
           fracAnswer: [areaN, areaD],
           suffix: "sq mi",
           prompt: <>Now multiply straight across: <Frac n={redLn} d={redLd} /> × <Frac n={redWn} d={redWd} />. What's the product?</>,
@@ -967,7 +1010,7 @@ function measurementProblem(): Problem {
             ] as Step[])),
       {
         kind: "number",
-        frac: true,
+        fracBoxes: "fraction", frac: true,
         fracAnswer: [qn, qd],
         suffix: "mi",
         prompt: <>Now multiply straight across: <Frac n={redAn} d={redBd} /> × <Frac n={redDd} d={redCn} />. What's the product?</>,
@@ -1015,7 +1058,7 @@ function sharingProblem(): Problem {
       ),
       {
         kind: "number",
-        frac: true,
+        fracBoxes: "fraction", frac: true,
         fracAnswer: [qn, qd],
         prefix: "",
         suffix: "lb",
@@ -1055,10 +1098,10 @@ function relationshipProblem(): Problem {
     steps: [
       {
         kind: "number",
-        frac: true,
+        fracBoxes: "fraction", frac: true,
         fracAnswer: [qn, qd],
         prompt: <>First, what is <QA><Frac n={an} d={bd} /></QA> ÷ <QB><Frac n={cn} d={dd} /></QB>? (Multiply by the reciprocal, then simplify.)</>,
-        hint: `(a/b) ÷ (c/d) = ad/bc = (${an}×${dd})/(${bd}×${cn}).`,
+        hint: <><Frac n="a" d="b" /> ÷ <Frac n="c" d="d" /> = <Frac n="ad" d="bc" /> = <Frac n={`${an}×${dd}`} d={`${bd}×${cn}`} />.</>,
         explain: <><Frac n={an} d={bd} /> × <Frac n={dd} d={cn} /> = <Frac n={an * dd} d={bd * cn} /> = <Quotient n={qn} d={qd} />.</>,
         answer: quotientVal,
       },
@@ -1192,10 +1235,12 @@ function amountPlainText({ whole, n, d }: RandomAmount): string {
 /** A RandomAmount in "regular" fraction style, for use inside a prompt/story. */
 function AmountText({ value }: { value: RandomAmount }) {
   return (
-    <>
-      {value.whole !== undefined && <>{value.whole} </>}
-      {value.n !== undefined && value.d !== undefined && <Frac n={value.n} d={value.d} />}
-    </>
+    <MathText>
+      <>
+        {value.whole !== undefined && <>{value.whole} </>}
+        {value.n !== undefined && value.d !== undefined && <Frac n={value.n} d={value.d} />}
+      </>
+    </MathText>
   );
 }
 
@@ -1238,7 +1283,7 @@ function recipeProblem(): Problem {
       ),
       {
         kind: "number",
-        frac: true,
+        fracBoxes: "fraction", frac: true,
         fracAnswer: [qn, qd],
         suffix: unitPlural,
         prompt: (
@@ -1285,7 +1330,7 @@ export const fractionDivision: Unit = {
   keyIdea: (
     <>
       <p>
-        To divide fractions, multiply by the reciprocal: (a/b) ÷ (c/d) = (a×d)/(b×c). For example,{" "}
+        To divide fractions, multiply by the reciprocal: <Frac n="a" d="b" /> ÷ <Frac n="c" d="d" /> = <Frac n="a×d" d="b×c" />. For example,{" "}
         <span style={{ whiteSpace: "nowrap" }}>
           <Frac n={2} d={3} /> ÷ <Frac n={3} d={4} /> = <Frac n={2} d={3} /> × <Frac n={4} d={3} /> = <Frac n={8} d={9} />
         </span>{" "}

@@ -2,6 +2,7 @@ import { FractionBar, WholePlusPartBar } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
 import { Frac, QA } from "../../../shared/engine/controls";
+import { MathText } from "../../../shared/components/MathText";
 import type { Unit } from "../../../shared/units/types";
 
 // Own local copies of FractionForms.tsx's generators — not an import, same
@@ -74,7 +75,11 @@ function classifyMixedQuestion(): TestQuestion[] {
         {
           prompt: (
             <>
-              Is <QA>{whole} {leftover}/{den}</QA> a proper fraction, an improper fraction, or a mixed number?
+              Is <QA>
+                <MathText>
+                  {whole} {leftover}/{den}
+                </MathText>
+              </QA> a proper fraction, an improper fraction, or a mixed number?
             </>
           ),
           hint: "It's written as a whole number together with a fraction.",
@@ -121,7 +126,7 @@ function mixedToImproperQuestion(): TestQuestion[] {
       difficulty: "medium",
       step: {
         kind: "number",
-        suffix: `/${den}`,
+        overDen: den,
         prompt: (
           <>
             Write {whole} {leftover}/{den} as an improper fraction. The denominator stays {den} — what's the numerator?

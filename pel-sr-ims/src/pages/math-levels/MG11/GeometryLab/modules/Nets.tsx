@@ -4,6 +4,7 @@ import { randInt } from "../lib/math";
 import { Solid3D, boxFaces, boxLabels, pyramidFaces, pyramidLabels, triPrismFaces, triPrismLabels, type Face3 } from "../shapes/solids";
 import { NetFig, type NetFace, boxNet, pyramidNet, triPrismNet } from "../shapes/nets";
 import { Num, Segmented, Slider, type Step, StepSolver, Toggle } from "../components/ui";
+import { MathText } from "../../../shared/components/MathText";
 
 type SolidId = "box" | "tri" | "pyr";
 const SQ = "sq units";
@@ -105,67 +106,69 @@ export function NetsModule({ onSolved }: { onSolved: (clean: boolean) => void })
   );
 
   return (
-    <section>
-      <div className="module-head">
-        <div>
-          <h2>Nets & surface area</h2>
-          <p className="lede">Unfold a solid into flat faces. Surface area is the total area of every face in the net.</p>
+    <MathText>
+      <section>
+        <div className="module-head">
+          <div>
+            <h2>Nets & surface area</h2>
+            <p className="lede">Unfold a solid into flat faces. Surface area is the total area of every face in the net.</p>
+          </div>
+          <Segmented label="Mode" value={mode} onChange={(m) => { setMode(m); setStepIdx(0); setSelected(null); }}
+            options={[{ id: "explore", label: "Explore" }, { id: "practice", label: "Practice" }]} />
         </div>
-        <Segmented label="Mode" value={mode} onChange={(m) => { setMode(m); setStepIdx(0); setSelected(null); }}
-          options={[{ id: "explore", label: "Explore" }, { id: "practice", label: "Practice" }]} />
-      </div>
-      <div className="shape-picker">
-        {([["box", "Rectangular prism"], ["tri", "Triangular prism"], ["pyr", "Square pyramid"]] as [SolidId, string][]).map(([id, name]) => (
-          <button key={id} className={"shape-chip" + (solid === id ? " on" : "")} aria-pressed={solid === id} onClick={() => choose(id)}>{name}</button>
-        ))}
-      </div>
-      <div className="workbench wide">
-        <div className="board">
-          <div className="board-figure">{figure}</div>
-          <div className="board-caption">
-            {mode === "explore" ? "Tap any face on the solid or the net. Matching colors are matching faces." : prob.intro}
+        <div className="shape-picker">
+          {([["box", "Rectangular prism"], ["tri", "Triangular prism"], ["pyr", "Square pyramid"]] as [SolidId, string][]).map(([id, name]) => (
+            <button key={id} className={"shape-chip" + (solid === id ? " on" : "")} aria-pressed={solid === id} onClick={() => choose(id)}>{name}</button>
+          ))}
+        </div>
+        <div className="workbench wide">
+          <div className="board">
+            <div className="board-figure">{figure}</div>
+            <div className="board-caption">
+              {mode === "explore" ? "Tap any face on the solid or the net. Matching colors are matching faces." : prob.intro}
+            </div>
+          </div>
+          <div className="panel">
+            {mode === "explore" ? (
+              <>
+                <div className="controls">
+                  {solid === "box" && (<>
+                    <Slider label="Length" min={1} max={9} value={p.l} onChange={(v) => set("l", v)} />
+                    <Slider label="Width" min={1} max={7} value={p.w} onChange={(v) => set("w", v)} />
+                    <Slider label="Height" min={1} max={8} value={p.h} onChange={(v) => set("h", v)} />
+                  </>)}
+                  {solid === "tri" && (<>
+                    <Slider label="Triangle" min={0} max={TRI_PRESETS.length - 1} value={p.preset} onChange={(v) => set("preset", v)}
+                      display={`${TRI_PRESETS[p.preset][0]}, ${TRI_PRESETS[p.preset][1]}, ${TRI_PRESETS[p.preset][2]}`} />
+                    <Slider label="Length" min={2} max={10} value={p.L} onChange={(v) => set("L", v)} />
+                  </>)}
+                  {solid === "pyr" && (<>
+                    <Slider label="Base side" min={2} max={8} value={p.a} onChange={(v) => setParams((all) => ({ ...all, pyr: { a: v, sl: Math.max(all.pyr.sl, Math.ceil(v / 2) + 1) } }))} />
+                    <Slider label="Slant height" min={Math.ceil(p.a / 2) + 1} max={10} value={p.sl} onChange={(v) => set("sl", v)} />
+                  </>)}
+                  <Toggle label="Show face areas" on={showAreas} onChange={setShowAreas} />
+                </div>
+                <div className="formula-card">
+                  {sel ? (
+                    <>
+                      <div className="card-title">{selName}</div>
+                      <div className="formula-line">{sel.dims} = <Num value={sel.area} /> sq units</div>
+                    </>
+                  ) : <div className="card-title muted">No face selected</div>}
+                </div>
+                <div className="formula-card">
+                  <div className="card-title">Surface area = sum of all faces</div>
+                  <div className="formula-line small">{built.net.map((f) => f.area).join(" + ")}</div>
+                  <div className="formula-line result">= <Num value={total} /> square units</div>
+                </div>
+              </>
+            ) : (
+              <StepSolver key={prob.key} steps={prob.steps} onStepChange={setStepIdx} onComplete={onSolved} onNext={() => newProblem(solid)} />
+            )}
           </div>
         </div>
-        <div className="panel">
-          {mode === "explore" ? (
-            <>
-              <div className="controls">
-                {solid === "box" && (<>
-                  <Slider label="Length" min={1} max={9} value={p.l} onChange={(v) => set("l", v)} />
-                  <Slider label="Width" min={1} max={7} value={p.w} onChange={(v) => set("w", v)} />
-                  <Slider label="Height" min={1} max={8} value={p.h} onChange={(v) => set("h", v)} />
-                </>)}
-                {solid === "tri" && (<>
-                  <Slider label="Triangle" min={0} max={TRI_PRESETS.length - 1} value={p.preset} onChange={(v) => set("preset", v)}
-                    display={`${TRI_PRESETS[p.preset][0]}, ${TRI_PRESETS[p.preset][1]}, ${TRI_PRESETS[p.preset][2]}`} />
-                  <Slider label="Length" min={2} max={10} value={p.L} onChange={(v) => set("L", v)} />
-                </>)}
-                {solid === "pyr" && (<>
-                  <Slider label="Base side" min={2} max={8} value={p.a} onChange={(v) => setParams((all) => ({ ...all, pyr: { a: v, sl: Math.max(all.pyr.sl, Math.ceil(v / 2) + 1) } }))} />
-                  <Slider label="Slant height" min={Math.ceil(p.a / 2) + 1} max={10} value={p.sl} onChange={(v) => set("sl", v)} />
-                </>)}
-                <Toggle label="Show face areas" on={showAreas} onChange={setShowAreas} />
-              </div>
-              <div className="formula-card">
-                {sel ? (
-                  <>
-                    <div className="card-title">{selName}</div>
-                    <div className="formula-line">{sel.dims} = <Num value={sel.area} /> sq units</div>
-                  </>
-                ) : <div className="card-title muted">No face selected</div>}
-              </div>
-              <div className="formula-card">
-                <div className="card-title">Surface area = sum of all faces</div>
-                <div className="formula-line small">{built.net.map((f) => f.area).join(" + ")}</div>
-                <div className="formula-line result">= <Num value={total} /> square units</div>
-              </div>
-            </>
-          ) : (
-            <StepSolver key={prob.key} steps={prob.steps} onStepChange={setStepIdx} onComplete={onSolved} onNext={() => newProblem(solid)} />
-          )}
-        </div>
-      </div>
-    </section>
+      </section>
+    </MathText>
   );
 }
 

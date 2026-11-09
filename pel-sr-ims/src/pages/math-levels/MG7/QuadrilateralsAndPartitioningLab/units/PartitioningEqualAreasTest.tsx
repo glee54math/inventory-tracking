@@ -62,11 +62,11 @@ export const stripFractionQuestion = (difficulty: "easy" | "medium"): TestQuesti
       difficulty,
       step: {
         kind: "number",
-        prompt: "The parts are equal. What fraction of the whole is ONE part? (Type it like 1/3.)",
+        prompt: "The parts are equal. What fraction of the whole is ONE part? (Type the top and bottom numbers.)",
         hint: "1 on top, the number of equal parts on the bottom.",
         explain: `Each part is 1/${s.b} of the whole.`,
         answer: 1 / s.b,
-        frac: true,
+        fracBoxes: "fraction", frac: true,
         fracAnswer: [1, s.b],
         fracRequired: true,
       },

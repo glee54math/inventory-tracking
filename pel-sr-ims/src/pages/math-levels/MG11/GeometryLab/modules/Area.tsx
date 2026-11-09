@@ -4,6 +4,7 @@ import { clamp, randInt } from "../lib/math";
 import { CompositeFig, HouseFig, ParallelogramFig, RectangleFig, ShapeIcon, TrapezoidFig, TriangleFig } from "../shapes/area";
 import { Num, Segmented, Slider, type Step, StepSolver, Stars, Toggle, Workbench } from "../components/ui";
 import type { UnitProgress } from "../../../../../hooks/useModuleProgress";
+import { MathText } from "../../../shared/components/MathText";
 
 /** Area tracks mastery per shape, not per tab — 3 stars is "mastered" here,
  *  distinct from the sitewide 5-star convention every other tab uses. */
@@ -338,36 +339,38 @@ export function AreaModule({
   ), [shape, progress]);
 
   return (
-    <section>
-      <div className="module-head">
-        <div>
-          <h2>Area</h2>
-          <p className="lede">Find the area of triangles, quadrilaterals and polygons by splitting them into shapes you already know.</p>
+    <MathText>
+      <section>
+        <div className="module-head">
+          <div>
+            <h2>Area</h2>
+            <p className="lede">Find the area of triangles, quadrilaterals and polygons by splitting them into shapes you already know.</p>
+          </div>
+          <Segmented label="Mode" value={mode} onChange={(m) => { setMode(m); setStepIdx(0); }}
+            options={[{ id: "explore", label: "Explore" }, { id: "practice", label: "Practice" }]} />
         </div>
-        <Segmented label="Mode" value={mode} onChange={(m) => { setMode(m); setStepIdx(0); }}
-          options={[{ id: "explore", label: "Explore" }, { id: "practice", label: "Practice" }]} />
-      </div>
-      {picker}
-      {mode === "explore" ? (
-        <Workbench figure={spec.render(p, how)} caption={spec.idea}>
-          <div className="controls">
-            {spec.sliders.map((s) => (
-              <Slider key={s.key} label={s.label} min={s.min} max={s.max} value={p[s.key]}
-                onChange={(v) => setParams((all) => ({ ...all, [shape]: { ...all[shape], [s.key]: v } }))} />
-            ))}
-            <Toggle label={spec.howLabel} on={how} onChange={setHow} />
-          </div>
-          <div className="formula-card">
-            {f.lines.map((l, i) => <div key={i} className="formula-line">{l}</div>)}
-            <div className="formula-line result">A = <Num value={f.area} /> <span className="unit">square units</span></div>
-          </div>
-        </Workbench>
-      ) : (
-        <Workbench figure={problem.figure(focus, stepIdx)} caption={problem.intro}>
-          <StepSolver key={problem.key} steps={problem.steps} onStepChange={setStepIdx} onComplete={(clean) => onSolved(clean, shape)} onNext={next} />
-        </Workbench>
-      )}
-    </section>
+        {picker}
+        {mode === "explore" ? (
+          <Workbench figure={spec.render(p, how)} caption={spec.idea}>
+            <div className="controls">
+              {spec.sliders.map((s) => (
+                <Slider key={s.key} label={s.label} min={s.min} max={s.max} value={p[s.key]}
+                  onChange={(v) => setParams((all) => ({ ...all, [shape]: { ...all[shape], [s.key]: v } }))} />
+              ))}
+              <Toggle label={spec.howLabel} on={how} onChange={setHow} />
+            </div>
+            <div className="formula-card">
+              {f.lines.map((l, i) => <div key={i} className="formula-line">{l}</div>)}
+              <div className="formula-line result">A = <Num value={f.area} /> <span className="unit">square units</span></div>
+            </div>
+          </Workbench>
+        ) : (
+          <Workbench figure={problem.figure(focus, stepIdx)} caption={problem.intro}>
+            <StepSolver key={problem.key} steps={problem.steps} onStepChange={setStepIdx} onComplete={(clean) => onSolved(clean, shape)} onNext={next} />
+          </Workbench>
+        )}
+      </section>
+    </MathText>
   );
 }
 

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { answerBorder } from "../../../shared/lib/answerChecks";
+import { MathText } from "../../../shared/components/MathText";
 
 // Tiny building blocks for this lab's Check-for-Understanding questions, so
 // every multi-box question follows the same rule (shared/lib/answerChecks.ts):
@@ -25,53 +26,59 @@ export function Pick({
   disabled?: boolean;
 }) {
   return (
-    <select className="answer" value={value} aria-label={label} disabled={disabled} style={answerBorder(ok, checked)} onChange={(e) => onChange(e.target.value)}>
-      <option value="" disabled>
-        choose
-      </option>
-      {options.map((o) => (
-        <option key={o.id} value={o.id}>
-          {o.label}
+    <MathText>
+      <select className="answer" value={value} aria-label={label} disabled={disabled} style={answerBorder(ok, checked)} onChange={(e) => onChange(e.target.value)}>
+        <option value="" disabled>
+          choose
         </option>
-      ))}
-    </select>
+        {options.map((o) => (
+          <option key={o.id} value={o.id}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </MathText>
   );
 }
 
 /** The shared Check Answer button + combined feedback line for a multi-box question. */
 export function CheckRow({ filled, checked, ok, done, onCheck, good, bad }: { filled: boolean; checked: boolean; ok: boolean; done: boolean; onCheck: () => void; good: ReactNode; bad: ReactNode }) {
   return (
-    <>
-      <div className="control-row">
-        <button className="btn primary" type="button" disabled={!filled || done} onClick={onCheck}>
-          Check Answer
-        </button>
-      </div>
-      {checked && filled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? good : bad}
-        </p>
-      )}
-    </>
+    <MathText>
+      <>
+        <div className="control-row">
+          <button className="btn primary" type="button" disabled={!filled || done} onClick={onCheck}>
+            Check Answer
+          </button>
+        </div>
+        {checked && filled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok ? good : bad}
+          </p>
+        )}
+      </>
+    </MathText>
   );
 }
 
 /** A single-pick question (one "box"): a row of buttons, feedback right after a pick. */
 export function PickOne({ value, onPick, options, correct, done, good, bad }: { value: string | null; onPick: (id: string) => void; options: { id: string; label: string }[]; correct: string; done: boolean; good: ReactNode; bad: ReactNode }) {
   return (
-    <>
-      <div className="control-row">
-        {options.map((o) => (
-          <button key={o.id} type="button" className={`btn ghost ${value === o.id ? "pressed" : ""}`} disabled={done} onClick={() => onPick(o.id)}>
-            {o.label}
-          </button>
-        ))}
-      </div>
-      {value && (
-        <p className={`feedback ${value === correct ? "good" : "bad"}`} role="alert">
-          {value === correct ? good : bad}
-        </p>
-      )}
-    </>
+    <MathText>
+      <>
+        <div className="control-row">
+          {options.map((o) => (
+            <button key={o.id} type="button" className={`btn ghost ${value === o.id ? "pressed" : ""}`} disabled={done} onClick={() => onPick(o.id)}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+        {value && (
+          <p className={`feedback ${value === correct ? "good" : "bad"}`} role="alert">
+            {value === correct ? good : bad}
+          </p>
+        )}
+      </>
+    </MathText>
   );
 }

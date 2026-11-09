@@ -10,3 +10,9 @@ export { CoordinatePlane, QUADRANT_HIGHLIGHT } from "./CoordinatePlane";
 export type { CoordinatePlaneProps, PlanePoint } from "./CoordinatePlane";
 export { FactorRectangle } from "./FactorRectangle";
 export type { FactorRectangleProps } from "./FactorRectangle";
+// Promoted from MG9/FractionOperationsLab/diagrams/ (2026-11) once
+// MG10_AddingAndSubtractingFractionsLab became their second consumer.
+export { PieceBars } from "./PieceBars";
+export type { PieceBarsProps, PieceSegment, PieceTone } from "./PieceBars";
+export { MixedNumberBars } from "./MixedNumberBars";
+export type { MixedNumberBarsProps } from "./MixedNumberBars";

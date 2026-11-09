@@ -9,6 +9,7 @@ import { amountStep } from "../lib/steps";
 import { fillName, NAMES, TIMES_CONTEXTS, unitFor } from "../lib/words";
 import { CfuToggle, DropdownQuestion, useCfuProgress } from "./cfu";
 import { multiplyFractionByWholeTest } from "./MultiplyFractionByWholeTest";
+import { MathText } from "../../../shared/components/MathText";
 
 /** One colored run per copy, alternating colors, so the n copies stay visible
  *  inside the combined bars. */
@@ -37,73 +38,75 @@ function Copies({ n, a, d, width = 110 }: { n: number; a: number; d: number; wid
 function MultiplyCheck({ onComplete }: { onComplete?: () => void }) {
   const { mark } = useCfuProgress(4, onComplete);
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: answer all four to unlock practice problems.</p>
-      <div className="align-stack-wrap">
-        <p>
-          <b>1.</b> Here is <Frac n={2} d={5} />:
-        </p>
-        <PieceBars den={5} segments={[{ count: 2, tone: "a" }]} cuts={[1]} unitLabels barWidth={220} />
-        <DropdownQuestion
-          blanks={[
-            { options: ["2", "5", "7"], correct: "2", label: "How many copies" },
-            { options: ["1/2", "1/5", "2/5"], correct: "1/5", label: "Of which unit fraction" },
-          ]}
-          render={([a, b]) => (
-            <>
-              <Frac n={2} d={5} /> = {a} × {b}
-            </>
-          )}
-          good="Correct — 2/5 is 2 copies of the unit fraction 1/5: 2/5 = 2 × 1/5."
-          bad="Not quite. The pieces are fifths — what's one piece called, and how many of them are shaded?"
-          onDone={mark(0)}
-        />
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: answer all four to unlock practice problems.</p>
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> Here is <Frac n={2} d={5} />:
+          </p>
+          <PieceBars den={5} segments={[{ count: 2, tone: "a" }]} cuts={[1]} unitLabels barWidth={220} />
+          <DropdownQuestion
+            blanks={[
+              { options: ["2", "5", "7"], correct: "2", label: "How many copies" },
+              { options: ["1/2", "1/5", "2/5"], correct: "1/5", label: "Of which unit fraction" },
+            ]}
+            render={([a, b]) => (
+              <>
+                <Frac n={2} d={5} /> = {a} × {b}
+              </>
+            )}
+            good="Correct — 2/5 is 2 copies of the unit fraction 1/5: 2/5 = 2 × 1/5."
+            bad="Not quite. The pieces are fifths — what's one piece called, and how many of them are shaded?"
+            onDone={mark(0)}
+          />
+        </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>2.</b> Here is 3 × <Frac n={2} d={5} /> — three copies of <Frac n={2} d={5} />:
+          </p>
+          <Copies n={3} a={2} d={5} />
+          <DropdownQuestion
+            blanks={[
+              { options: ["3", "5", "6"], correct: "6", label: "How many fifths" },
+              { options: ["6/15", "6/5", "5/6"], correct: "6/5", label: "The product" },
+            ]}
+            render={([a, b]) => (
+              <>
+                3 × <Frac n={2} d={5} /> is the same as {a} × <Frac n={1} d={5} />, which is {b}.
+              </>
+            )}
+            good="Correct — 3 copies of 2 fifths is 6 fifths: 3 × 2/5 = 6 × 1/5 = 6/5. The pieces are still fifths, so it isn't 6/15."
+            bad="Not quite. Count every shaded piece across all three bars. Did the pieces get smaller (fifteenths), or are they still fifths?"
+            onDone={mark(1)}
+          />
+        </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> True or false: when you multiply a fraction by a whole number, the answer is always still a fraction — never a whole number.
+          </p>
+          <DropdownQuestion
+            blanks={[{ options: ["True", "False"], correct: "False", label: "True or false" }]}
+            render={([a]) => <>That statement is {a}.</>}
+            good="Correct — false! 4 × 3/4 = 12/4 = 3 exactly. When the pieces fill whole bars with none left over, the product is a whole number."
+            bad="Not quite — try 4 × 3/4: that's 12 fourths. How many whole bars do 12 fourths fill?"
+            onDone={mark(2)}
+          />
+        </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>4.</b> "Each lap is <Frac n={3} d={4} /> mile. Kim runs 5 laps. How far does she run?"
+          </p>
+          <DropdownQuestion
+            blanks={[{ options: ["5 + 3/4", "5 × 3/4", "5 × 4/3"], correct: "5 × 3/4", label: "Expression" }]}
+            render={([a]) => <>The expression that solves it is {a}.</>}
+            good="Correct — 5 equal laps of 3/4 mile: 5 × 3/4 = 15/4 = 3 3/4 miles."
+            bad="Not quite — the same distance happens 5 times. Which operation means 'the same amount, 5 times'?"
+            onDone={mark(3)}
+          />
+        </div>
       </div>
-      <div className="align-stack-wrap">
-        <p>
-          <b>2.</b> Here is 3 × <Frac n={2} d={5} /> — three copies of <Frac n={2} d={5} />:
-        </p>
-        <Copies n={3} a={2} d={5} />
-        <DropdownQuestion
-          blanks={[
-            { options: ["3", "5", "6"], correct: "6", label: "How many fifths" },
-            { options: ["6/15", "6/5", "5/6"], correct: "6/5", label: "The product" },
-          ]}
-          render={([a, b]) => (
-            <>
-              3 × <Frac n={2} d={5} /> is the same as {a} × <Frac n={1} d={5} />, which is {b}.
-            </>
-          )}
-          good="Correct — 3 copies of 2 fifths is 6 fifths: 3 × 2/5 = 6 × 1/5 = 6/5. The pieces are still fifths, so it isn't 6/15."
-          bad="Not quite. Count every shaded piece across all three bars. Did the pieces get smaller (fifteenths), or are they still fifths?"
-          onDone={mark(1)}
-        />
-      </div>
-      <div className="align-stack-wrap">
-        <p>
-          <b>3.</b> True or false: when you multiply a fraction by a whole number, the answer is always still a fraction — never a whole number.
-        </p>
-        <DropdownQuestion
-          blanks={[{ options: ["True", "False"], correct: "False", label: "True or false" }]}
-          render={([a]) => <>That statement is {a}.</>}
-          good="Correct — false! 4 × 3/4 = 12/4 = 3 exactly. When the pieces fill whole bars with none left over, the product is a whole number."
-          bad="Not quite — try 4 × 3/4: that's 12 fourths. How many whole bars do 12 fourths fill?"
-          onDone={mark(2)}
-        />
-      </div>
-      <div className="align-stack-wrap">
-        <p>
-          <b>4.</b> "Each lap is <Frac n={3} d={4} /> mile. Kim runs 5 laps. How far does she run?"
-        </p>
-        <DropdownQuestion
-          blanks={[{ options: ["5 + 3/4", "5 × 3/4", "5 × 4/3"], correct: "5 × 3/4", label: "Expression" }]}
-          render={([a]) => <>The expression that solves it is {a}.</>}
-          good="Correct — 5 equal laps of 3/4 mile: 5 × 3/4 = 15/4 = 3 3/4 miles."
-          bad="Not quite — the same distance happens 5 times. Which operation means 'the same amount, 5 times'?"
-          onDone={mark(3)}
-        />
-      </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -121,33 +124,35 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const p = n * aa;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && <CfuToggle on={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
-      <p>
-        <Frac n={aa} d={d} /> is {aa} copies of <Frac n={1} d={d} />. So {n} × <Frac n={aa} d={d} /> is {n} copies of that — {n} × {aa} = {p} copies of{" "}
-        <Frac n={1} d={d} />.
-      </p>
-      <div className="control-row">
-        <Stepper label="How many copies" value={n} min={1} max={10} onChange={setN} tone="c" />
-        <Stepper label="Numerator" value={aa} min={1} max={d} onChange={setA} tone="a" />
-        <Stepper label="Denominator" value={d} min={2} max={10} onChange={setD} tone="b" />
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && <CfuToggle on={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
+        <p>
+          <Frac n={aa} d={d} /> is {aa} copies of <Frac n={1} d={d} />. So {n} × <Frac n={aa} d={d} /> is {n} copies of that — {n} × {aa} = {p} copies of{" "}
+          <Frac n={1} d={d} />.
+        </p>
+        <div className="control-row">
+          <Stepper label="How many copies" value={n} min={1} max={10} onChange={setN} tone="c" />
+          <Stepper label="Numerator" value={aa} min={1} max={d} onChange={setA} tone="a" />
+          <Stepper label="Denominator" value={d} min={2} max={10} onChange={setD} tone="b" />
+        </div>
+        <p className="muted small" style={{ marginBottom: -8 }}>
+          {n} separate copies:
+        </p>
+        <Copies n={n} a={aa} d={d} width={100} />
+        <p className="muted small" style={{ marginBottom: -8 }}>
+          The same pieces, packed into whole bars (colors show each copy):
+        </p>
+        <PieceBars den={d} segments={copiesSegments(n, aa)} barWidth={180} />
+        <p className="says" style={{ fontSize: 18 }}>
+          {n} × <Frac n={aa} d={d} /> = {p} × <Frac n={1} d={d} /> = <Frac n={p} d={d} />
+          {p >= d && <> = {mixedText(p, d)}</>}
+          {p >= d && p % d === 0 && <span className="muted small"> — a whole number!</span>}
+        </p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <MultiplyCheck onComplete={onIntroDone} />}
       </div>
-      <p className="muted small" style={{ marginBottom: -8 }}>
-        {n} separate copies:
-      </p>
-      <Copies n={n} a={aa} d={d} width={100} />
-      <p className="muted small" style={{ marginBottom: -8 }}>
-        The same pieces, packed into whole bars (colors show each copy):
-      </p>
-      <PieceBars den={d} segments={copiesSegments(n, aa)} barWidth={180} />
-      <p className="says" style={{ fontSize: 18 }}>
-        {n} × <Frac n={aa} d={d} /> = {p} × <Frac n={1} d={d} /> = <Frac n={p} d={d} />
-        {p >= d && <> = {mixedText(p, d)}</>}
-        {p >= d && p % d === 0 && <span className="muted small"> — a whole number!</span>}
-      </p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <MultiplyCheck onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 
@@ -178,7 +183,7 @@ function unitTimesProblem(): Problem {
         explain: `${n} times: ${Array.from({ length: Math.min(n, 4) }, () => `1/${d}`).join(" + ")}${n > 4 ? " + …" : ""}.`,
         answer: n,
       },
-      { kind: "number", suffix: `/${d}`, prompt: `So ${n} × 1/${d} = ?`, hint: `${n} pieces of 1/${d}.`, explain: `${n}/${d}.`, answer: n },
+      { kind: "number", overDen: d, prompt: `So ${n} × 1/${d} = ?`, hint: `${n} pieces of 1/${d}.`, explain: `${n}/${d}.`, answer: n },
       n > d
         ? sentence(
             { prompt: `Write ${n}/${d} as a mixed number.`, hint: `${d} pieces fill one whole.`, explain: `${n}/${d} = ${mixedText(n, d)}.` },
@@ -186,7 +191,8 @@ function unitTimesProblem(): Problem {
             numberBlank(Math.floor(n / d)),
             " ",
             numberBlank(n % d),
-            `/${d}`
+            "",
+            [undefined, d]
           )
         : { kind: "number", prompt: `How many more 1/${d} pieces would make one whole?`, hint: `One whole is ${d}/${d}.`, explain: `${d} − ${n} = ${d - n}.`, answer: d - n },
     ],
@@ -284,7 +290,7 @@ function wholeProductProblem(): Problem {
     ),
     visual: (done) => (done >= 1 ? <PieceBars den={d} segments={copiesSegments(n, a)} barWidth={180} /> : <Copies n={n} a={a} d={d} width={90} />),
     steps: [
-      { kind: "number", suffix: `/${d}`, prompt: `${n} × ${a}/${d} = ?`, hint: `${n} × ${a} = ?`, explain: `${p}/${d}.`, answer: p },
+      { kind: "number", overDen: d, prompt: `${n} × ${a}/${d} = ?`, hint: `${n} × ${a} = ?`, explain: `${p}/${d}.`, answer: p },
       { kind: "number", prompt: `${p}/${d} fills how many whole bars exactly?`, hint: `${d} pieces fill one bar.`, explain: `${p} ÷ ${d} = ${p / d}, with nothing left over.`, answer: p / d },
       choice(
         { prompt: "True or false: multiplying a fraction by a whole number always gives a fraction, never a whole number.", hint: "Look at what you just found.", explain: `False — ${n} × ${a}/${d} = ${p / d}.` },

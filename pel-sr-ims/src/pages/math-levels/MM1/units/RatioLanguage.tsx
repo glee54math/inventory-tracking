@@ -8,6 +8,7 @@ import { choice, type Problem } from "../../shared/engine/types";
 import { QA, QB, QC, Says, Segmented, Stepper } from "../../shared/engine/controls";
 import { ratioLanguageTest } from "./RatioLanguageTest";
 import type { Unit } from "../../shared/units/types";
+import { MathText } from "../../shared/components/MathText";
 
 interface Scene {
   id: string;
@@ -59,70 +60,72 @@ function Explore() {
   const total = (a1 + b1) * groups;
 
   return (
-    <div className="explore">
-      <div className="controls">
-        <Segmented label="Scene" options={scenes.map((s) => ({ id: s.id, label: s.name }))} value={sceneId} onChange={choose} />
-        <div className="control-row">
-          <Stepper tone="a" label={<>{scene.a} per group</>} value={a1} min={0} max={6} onChange={setA1} />
-          <Stepper tone="b" label={<>{scene.b} per group</>} value={b1} min={0} max={6} onChange={setB1} />
-          <Stepper tone="c" label="groups" value={groups} min={1} max={8} onChange={setGroups} />
+    <MathText>
+      <div className="explore">
+        <div className="controls">
+          <Segmented label="Scene" options={scenes.map((s) => ({ id: s.id, label: s.name }))} value={sceneId} onChange={choose} />
+          <div className="control-row">
+            <Stepper tone="a" label={<>{scene.a} per group</>} value={a1} min={0} max={6} onChange={setA1} />
+            <Stepper tone="b" label={<>{scene.b} per group</>} value={b1} min={0} max={6} onChange={setB1} />
+            <Stepper tone="c" label="groups" value={groups} min={1} max={8} onChange={setGroups} />
+          </div>
+          <div className="control-row">
+            <button className="btn ghost" onClick={() => setSwap((s) => !s)}>
+              Switch the order
+            </button>
+            <button className={`btn ghost ${showOne ? "pressed" : ""}`} aria-pressed={showOne} onClick={() => setShowOne((s) => !s)}>
+              Highlight one group
+            </button>
+          </div>
         </div>
-        <div className="control-row">
-          <button className="btn ghost" onClick={() => setSwap((s) => !s)}>
-            Switch the order
-          </button>
-          <button className={`btn ghost ${showOne ? "pressed" : ""}`} aria-pressed={showOne} onClick={() => setShowOne((s) => !s)}>
-            Highlight one group
-          </button>
+        <div className="stage">
+          <RatioGroups
+            groups={groups}
+            a={{ count: a1, kind: scene.sa, color: palette.a, label: scene.a }}
+            b={{ count: b1, kind: scene.sb, color: palette.b, label: scene.b }}
+            highlightGroup={showOne ? 0 : null}
+          />
+          <div className="legend">
+            <span className="key qa-bg" /> {scene.a} <span className="key qb-bg" /> {scene.b}
+          </div>
         </div>
-      </div>
-      <div className="stage">
-        <RatioGroups
-          groups={groups}
-          a={{ count: a1, kind: scene.sa, color: palette.a, label: scene.a }}
-          b={{ count: b1, kind: scene.sb, color: palette.b, label: scene.b }}
-          highlightGroup={showOne ? 0 : null}
-        />
-        <div className="legend">
-          <span className="key qa-bg" /> {scene.a} <span className="key qb-bg" /> {scene.b}
-        </div>
-      </div>
-      <div className="sayings">
-        <Says>
-          {scene.where}, the ratio of <W1>{first.name}</W1> to <W2>{second.name}</W2> is{" "}
-          <b>
-            {first.n * groups}:{second.n * groups}
-          </b>
-          .
-        </Says>
-        {a1 > 0 && b1 > 0 && (
+        <div className="sayings">
           <Says>
-            For every <W1>{first.n} {first.n === 1 ? first.one : first.name}</W1> there {second.n === 1 ? "is" : "are"} <W2>{second.n} {second.n === 1 ? second.one : second.name}</W2>. That's the same as{" "}
+            {scene.where}, the ratio of <W1>{first.name}</W1> to <W2>{second.name}</W2> is{" "}
             <b>
-              {first.n}:{second.n}
+              {first.n * groups}:{second.n * groups}
             </b>
-            {gcd(first.n, second.n) > 1 ? (
-              <>
-                , or{" "}
-                <b>
-                  {swap ? sb : sa}:{swap ? sa : sb}
-                </b>{" "}
-                in simplest form
-              </>
-            ) : null}
             .
           </Says>
-        )}
-        <Says>
-          Part to whole: <QA>{scene.a}</QA> to <QC>all {total} objects</QC> is{" "}
-          <b>
-            {a1 * groups}:{total}
-          </b>
-          .
-        </Says>
-        {swap && <p className="muted small">Notice the numbers switched places when the words did. Order matters.</p>}
+          {a1 > 0 && b1 > 0 && (
+            <Says>
+              For every <W1>{first.n} {first.n === 1 ? first.one : first.name}</W1> there {second.n === 1 ? "is" : "are"} <W2>{second.n} {second.n === 1 ? second.one : second.name}</W2>. That's the same as{" "}
+              <b>
+                {first.n}:{second.n}
+              </b>
+              {gcd(first.n, second.n) > 1 ? (
+                <>
+                  , or{" "}
+                  <b>
+                    {swap ? sb : sa}:{swap ? sa : sb}
+                  </b>{" "}
+                  in simplest form
+                </>
+              ) : null}
+              .
+            </Says>
+          )}
+          <Says>
+            Part to whole: <QA>{scene.a}</QA> to <QC>all {total} objects</QC> is{" "}
+            <b>
+              {a1 * groups}:{total}
+            </b>
+            .
+          </Says>
+          {swap && <p className="muted small">Notice the numbers switched places when the words did. Order matters.</p>}
+        </div>
       </div>
-    </div>
+    </MathText>
   );
 }
 

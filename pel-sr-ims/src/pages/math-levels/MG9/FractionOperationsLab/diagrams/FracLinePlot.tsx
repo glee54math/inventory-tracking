@@ -1,5 +1,7 @@
 import { palette, diagramFont } from "../../../shared/lib/palette";
 import { eighthsText, plotTicks, type PlotDen } from "../lib/fractions";
+import { SvgMath } from "../../../shared/components/SvgMath";
+import { spokenFractions } from "../../../shared/components/MathText";
 
 export interface FracLinePlotProps {
   /** Axis tick spacing: halves, fourths or eighths ONLY (4.MD.4's own set). */
@@ -47,7 +49,8 @@ export function FracLinePlot({ den, minWhole, maxWhole, data, unit = "units", to
   for (const v of data) if (ticks.includes(v)) counts.set(v, (counts.get(v) ?? 0) + 1);
   const maxStack = Math.max(4, ...counts.values());
   const axisY = 16 + maxStack * DOT_GAP;
-  const height = axisY + 44;
+  // Room under the axis for a stacked (handwritten) tick label.
+  const height = axisY + 52;
   const xFor = (e: number) => PAD_X + ((e - minWhole * 8) / (8 / den)) * step;
   const good = new Set(goodTicks);
   const bad = new Set(badTicks);
@@ -56,7 +59,7 @@ export function FracLinePlot({ den, minWhole, maxWhole, data, unit = "units", to
     <svg
       viewBox={`0 0 ${width} ${height}`}
       role="img"
-      aria-label={`Line plot from ${minWhole} to ${maxWhole} ${unit}, marked every 1/${den}, with ${data.length} measurement${data.length === 1 ? "" : "s"}`}
+      aria-label={spokenFractions(`Line plot from ${minWhole} to ${maxWhole} ${unit}, marked every 1/${den}, with ${data.length} measurement${data.length === 1 ? "" : "s"}`)}
       style={{ display: "block", width: "100%", maxWidth: width, height: "auto", fontFamily: diagramFont }}
     >
       <line x1={PAD_X - 12} y1={axisY} x2={width - PAD_X + 12} y2={axisY} style={{ stroke: palette.ink, strokeWidth: 2 }} />
@@ -69,18 +72,14 @@ export function FracLinePlot({ den, minWhole, maxWhole, data, unit = "units", to
           <g key={e}>
             {onTickClick && (
               <rect x={x - step / 2} y={0} width={step} height={axisY + 36} style={{ fill: "transparent", cursor: "pointer" }} onClick={() => onTickClick(e)}>
-                <title>{`Add a dot at ${eighthsText(e)}`}</title>
+                <title>{spokenFractions(`Add a dot at ${eighthsText(e)}`)}</title>
               </rect>
             )}
             <line x1={x} y1={axisY} x2={x} y2={axisY + h} style={{ stroke: r === 0 ? palette.ink : palette.muted, strokeWidth: r === 0 ? 2 : 1.25, pointerEvents: "none" }} />
-            <text
-              x={x}
-              y={axisY + 30}
-              textAnchor="middle"
-              style={{ fill: labelColor, fontSize: 12, fontWeight: r === 0 || e === highlight || good.has(e) || bad.has(e) ? 800 : 600, pointerEvents: "none" }}
-            >
-              {eighthsText(e)}
-            </text>
+            {/* Tick labels are drawn stacked, the handwritten way (SvgMath). */}
+            <g style={{ pointerEvents: "none" }}>
+              <SvgMath text={eighthsText(e)} x={x} y={axisY + 32} fontSize={12} weight={r === 0 || e === highlight || good.has(e) || bad.has(e) ? 800 : 600} color={labelColor} />
+            </g>
           </g>
         );
       })}

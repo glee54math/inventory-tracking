@@ -3,6 +3,7 @@ import { randInt, pick, shuffle } from "../../../shared/lib/math";
 import { palette } from "../../../shared/lib/palette";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
+import { MathText } from "../../../shared/components/MathText";
 
 // ---------- end-of-unit test: Drawing Quadrilaterals Outside the Named Kinds ----------
 // 10 single-question generators across the 4 Practice buckets. Self-contained
@@ -24,11 +25,13 @@ const VERDICT_OPTIONS = ["Yes — it's a quadrilateral outside all three named k
 
 function OpenFigure({ color }: { color: string }) {
   return (
-    <QuadCanvas width={120} height={120} label="A 4-segment shape with a gap — it isn't closed">
-      <polyline points="30,30 95,38 88,92 28,85 28,48" style={{ fill: "none", stroke: color, strokeWidth: 4, strokeLinecap: "round" }} />
-      <circle cx={30} cy={30} r={3.5} style={{ fill: palette.ink }} />
-      <circle cx={28} cy={48} r={3.5} style={{ fill: palette.ink }} />
-    </QuadCanvas>
+    <MathText>
+      <QuadCanvas width={120} height={120} label="A 4-segment shape with a gap — it isn't closed">
+        <polyline points="30,30 95,38 88,92 28,85 28,48" style={{ fill: "none", stroke: color, strokeWidth: 4, strokeLinecap: "round" }} />
+        <circle cx={30} cy={30} r={3.5} style={{ fill: palette.ink }} />
+        <circle cx={28} cy={48} r={3.5} style={{ fill: palette.ink }} />
+      </QuadCanvas>
+    </MathText>
   );
 }
 

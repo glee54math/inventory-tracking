@@ -4,6 +4,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper, Segmented, QA, QB, QC } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { evaluatingExpressionsTest } from "./EvaluatingExpressionsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 const fieldStyle = (ok: boolean, checked: boolean): CSSProperties => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
@@ -49,50 +50,52 @@ function MultiplyFirstQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>1.</b> Evaluate 2 + 3 × 4. Do you add first, or multiply first?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={orderPick} onChange={(e) => setOrderPick(e.target.value)} style={fieldStyle(orderOk, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="add first">add first</option>
-          <option value="multiply first">multiply first</option>
-        </select>
-        {orderPick === "multiply first" && (
-          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            2 + 3 × 4 = 2 +{" "}
-            <input
-              className="answer"
-              style={{ width: 45, ...fieldStyle(interOk, checked) }}
-              inputMode="numeric"
-              value={interPick}
-              onChange={(e) => setInterPick(e.target.value)}
-            />{" "}
-            ={" "}
-            <input
-              className="answer"
-              style={{ width: 45, ...fieldStyle(valueOk, checked) }}
-              inputMode="numeric"
-              value={valuePick}
-              onChange={(e) => setValuePick(e.target.value)}
-            />
-          </label>
-        )}
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — multiplication is done before addition: 3 × 4 = 12, then 2 + 12 = 14."
-            : "Not quite — multiplication always comes before addition, no matter which is written first: 3 × 4 = 12, then 2 + 12 = 14."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>1.</b> Evaluate 2 + 3 × 4. Do you add first, or multiply first?
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={orderPick} onChange={(e) => setOrderPick(e.target.value)} style={fieldStyle(orderOk, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="add first">add first</option>
+            <option value="multiply first">multiply first</option>
+          </select>
+          {orderPick === "multiply first" && (
+            <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              2 + 3 × 4 = 2 +{" "}
+              <input
+                className="answer"
+                style={{ width: 45, ...fieldStyle(interOk, checked) }}
+                inputMode="numeric"
+                value={interPick}
+                onChange={(e) => setInterPick(e.target.value)}
+              />{" "}
+              ={" "}
+              <input
+                className="answer"
+                style={{ width: 45, ...fieldStyle(valueOk, checked) }}
+                inputMode="numeric"
+                value={valuePick}
+                onChange={(e) => setValuePick(e.target.value)}
+              />
+            </label>
+          )}
+          <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && allFilled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — multiplication is done before addition: 3 × 4 = 12, then 2 + 12 = 14."
+              : "Not quite — multiplication always comes before addition, no matter which is written first: 3 × 4 = 12, then 2 + 12 = 14."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -106,30 +109,32 @@ function ExponentBeforeMultiplyQuestion({ onComplete }: { onComplete?: () => voi
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>2.</b> Evaluate 5 × 2². Do you square the 2 first, or multiply 5 × 2 first?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="square the 2 first">square the 2 first (2² = 4), then multiply by 5</option>
-          <option value="multiply 5x2 first">multiply 5 × 2 first, then square the result</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — exponents are evaluated BEFORE multiplication: 2² = 4 first, then 5 × 4 = 20. (If you multiplied 5×2 first you'd get 10² = 100, which is wrong.)"
-            : "Not quite — exponents always come before multiplication: 2² = 4 first, then 5 × 4 = 20."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>2.</b> Evaluate 5 × 2². Do you square the 2 first, or multiply 5 × 2 first?
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="square the 2 first">square the 2 first (2² = 4), then multiply by 5</option>
+            <option value="multiply 5x2 first">multiply 5 × 2 first, then square the result</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — exponents are evaluated BEFORE multiplication: 2² = 4 first, then 5 × 4 = 20. (If you multiplied 5×2 first you'd get 10² = 100, which is wrong.)"
+              : "Not quite — exponents always come before multiplication: 2² = 4 first, then 5 × 4 = 20."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -143,30 +148,32 @@ function LeftToRightTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or False: order of operations means you always work strictly left to right through an expression.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="True">True</option>
-          <option value="False">False</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — False. Exponents and multiplication/division always outrank addition/subtraction, no matter where they sit in the expression. 2 + 3 × 4 = 14, not (2+3) × 4 = 20."
-            : "Not quite — try 2 + 3 × 4 (the first question above). Working strictly left to right gives (2+3) × 4 = 20, but the correct order-of-operations answer is 2 + 12 = 14."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>3.</b> True or False: order of operations means you always work strictly left to right through an expression.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="True">True</option>
+            <option value="False">False</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — False. Exponents and multiplication/division always outrank addition/subtraction, no matter where they sit in the expression. 2 + 3 × 4 = 14, not (2+3) × 4 = 20."
+              : "Not quite — try 2 + 3 × 4 (the first question above). Working strictly left to right gives (2+3) × 4 = 20, but the correct order-of-operations answer is 2 + 12 = 14."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -180,30 +187,32 @@ function SubstituteFirstQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>4.</b> Evaluate 3x + 2y when x = 2 and y = 5. Do you substitute the values first, or add the coefficients 3 + 2 first?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="substitute">substitute the values first, then follow order of operations</option>
-          <option value="addCoeffs">add 3 + 2 first, then substitute</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — substitute x=2 and y=5 first: 3(2) + 2(5) = 6 + 10 = 16. The 3 and the 2 are coefficients of DIFFERENT variables, so they can't just be added together."
-            : "Not quite — 3x and 2y are terms with different variables. You can't combine their coefficients; substitute the values first: 3(2) + 2(5) = 16."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>4.</b> Evaluate 3x + 2y when x = 2 and y = 5. Do you substitute the values first, or add the coefficients 3 + 2 first?
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="substitute">substitute the values first, then follow order of operations</option>
+            <option value="addCoeffs">add 3 + 2 first, then substitute</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — substitute x=2 and y=5 first: 3(2) + 2(5) = 6 + 10 = 16. The 3 and the 2 are coefficients of DIFFERENT variables, so they can't just be added together."
+              : "Not quite — 3x and 2y are terms with different variables. You can't combine their coefficients; substitute the values first: 3(2) + 2(5) = 16."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -217,30 +226,32 @@ function ParenthesesFirstQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>5.</b> Evaluate 2 + (6 − 3) × 4. Do you simplify the parentheses first, or multiply first?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="parentheses first">parentheses first (6 − 3 = 3), then multiply by 4</option>
-          <option value="multiply first">multiply 3 × 4 first, then add inside the parentheses</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — parentheses are always simplified first, before exponents or multiplication: (6 − 3) = 3, then 2 + 3 × 4 = 2 + 12 = 14."
-            : "Not quite — whatever is inside parentheses gets simplified first, before anything outside it: (6 − 3) = 3, then 2 + 3 × 4 = 14."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>5.</b> Evaluate 2 + (6 − 3) × 4. Do you simplify the parentheses first, or multiply first?
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="parentheses first">parentheses first (6 − 3 = 3), then multiply by 4</option>
+            <option value="multiply first">multiply 3 × 4 first, then add inside the parentheses</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — parentheses are always simplified first, before exponents or multiplication: (6 − 3) = 3, then 2 + 3 × 4 = 2 + 12 = 14."
+              : "Not quite — whatever is inside parentheses gets simplified first, before anything outside it: (6 − 3) = 3, then 2 + 3 × 4 = 14."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -254,30 +265,32 @@ function MultDivTieQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>6.</b> Evaluate 12 ÷ 3 × 2. Which do you do first — divide, or multiply?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="divide first">divide first (12 ÷ 3 = 4), then multiply by 2</option>
-          <option value="multiply first">multiply 3 × 2 first, then divide 12 by the result</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — multiplication and division are equal rank, so you work left to right: 12 ÷ 3 = 4 first, then 4 × 2 = 8. (Multiplying first would wrongly give 12 ÷ 6 = 2.)"
-            : "Not quite — multiplication doesn't automatically go first. Division and multiplication rank equally, so work left to right: 12 ÷ 3 = 4, then 4 × 2 = 8."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>6.</b> Evaluate 12 ÷ 3 × 2. Which do you do first — divide, or multiply?
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="divide first">divide first (12 ÷ 3 = 4), then multiply by 2</option>
+            <option value="multiply first">multiply 3 × 2 first, then divide 12 by the result</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — multiplication and division are equal rank, so you work left to right: 12 ÷ 3 = 4 first, then 4 × 2 = 8. (Multiplying first would wrongly give 12 ÷ 6 = 2.)"
+              : "Not quite — multiplication doesn't automatically go first. Division and multiplication rank equally, so work left to right: 12 ÷ 3 = 4, then 4 × 2 = 8."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -302,24 +315,26 @@ function EvaluatingCheckForUnderstanding({ part, onComplete }: { part: "1" | "2"
   const mark2 = (key: keyof typeof part2Done) => () => setPart2Done((d) => (d[key] ? d : { ...d, [key]: true }));
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's connect a few ideas before you try practice problems.</p>
-      {part === "1" ? (
-        <>
-          <MultiplyFirstQuestion onComplete={mark1("multiplyFirst")} />
-          <ExponentBeforeMultiplyQuestion onComplete={mark1("exponentFirst")} />
-          <LeftToRightTrapQuestion onComplete={mark1("leftToRight")} />
-          <SubstituteFirstQuestion onComplete={mark1("substituteFirst")} />
-          {part1AllDone && !part2AllDone && <p className="muted small">Nice work — switch to "Parentheses &amp; More" above to finish the check.</p>}
-        </>
-      ) : (
-        <>
-          <ParenthesesFirstQuestion onComplete={mark2("parensFirst")} />
-          <MultDivTieQuestion onComplete={mark2("multDivTie")} />
-          {part2AllDone && !part1AllDone && <p className="muted small">Nice work — switch to "Exponents &amp; Multiplication" above to finish the check.</p>}
-        </>
-      )}
-    </div>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: let's connect a few ideas before you try practice problems.</p>
+        {part === "1" ? (
+          <>
+            <MultiplyFirstQuestion onComplete={mark1("multiplyFirst")} />
+            <ExponentBeforeMultiplyQuestion onComplete={mark1("exponentFirst")} />
+            <LeftToRightTrapQuestion onComplete={mark1("leftToRight")} />
+            <SubstituteFirstQuestion onComplete={mark1("substituteFirst")} />
+            {part1AllDone && !part2AllDone && <p className="muted small">Nice work — switch to "Parentheses &amp; More" above to finish the check.</p>}
+          </>
+        ) : (
+          <>
+            <ParenthesesFirstQuestion onComplete={mark2("parensFirst")} />
+            <MultDivTieQuestion onComplete={mark2("multDivTie")} />
+            {part2AllDone && !part1AllDone && <p className="muted small">Nice work — switch to "Exponents &amp; Multiplication" above to finish the check.</p>}
+          </>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -351,99 +366,101 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const total2 = product2 - d;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ padding: "10px 14px", borderRadius: "var(--radius-sm)", background: "var(--grid)", fontSize: 15 }}>
-        <b>PEMDAS</b> — the order to simplify any expression: <b>P</b>arentheses → <b>E</b>xponents → <b>M</b>ultiplication/<b>D</b>ivision (left to
-        right) → <b>A</b>ddition/<b>S</b>ubtraction (left to right).
-      </div>
-      <div className="control-row">
-        <Stepper label="a" value={a} min={1} max={9} step={1} onChange={setA} tone="a" />
-        <Stepper label="b" value={b} min={1} max={6} step={1} onChange={setB} tone="b" />
-        <Stepper label="c" value={c} min={0} max={20} step={1} onChange={setC} tone="c" />
-        {part === "2" && <Stepper label="d" value={d} min={0} max={Math.max(1, product2)} step={1} onChange={setD} />}
-        {!introActive && (
-          <button
-            type="button"
-            className="btn ghost"
-            style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
-            onClick={() => setShowCheck((v) => !v)}
-          >
-            Check for Understanding
-          </button>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ padding: "10px 14px", borderRadius: "var(--radius-sm)", background: "var(--grid)", fontSize: 15 }}>
+          <b>PEMDAS</b> — the order to simplify any expression: <b>P</b>arentheses → <b>E</b>xponents → <b>M</b>ultiplication/<b>D</b>ivision (left to
+          right) → <b>A</b>ddition/<b>S</b>ubtraction (left to right).
+        </div>
+        <div className="control-row">
+          <Stepper label="a" value={a} min={1} max={9} step={1} onChange={setA} tone="a" />
+          <Stepper label="b" value={b} min={1} max={6} step={1} onChange={setB} tone="b" />
+          <Stepper label="c" value={c} min={0} max={20} step={1} onChange={setC} tone="c" />
+          {part === "2" && <Stepper label="d" value={d} min={0} max={Math.max(1, product2)} step={1} onChange={setD} />}
+          {!introActive && (
+            <button
+              type="button"
+              className="btn ghost"
+              style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
+              onClick={() => setShowCheck((v) => !v)}
+            >
+              Check for Understanding
+            </button>
+          )}
+        </div>
+        <Segmented
+          label="Order of operations example"
+          value={part}
+          onChange={setPart}
+          options={[
+            { id: "1", label: "Exponents & Multiplication" },
+            { id: "2", label: "Parentheses & More" },
+          ]}
+        />
+        {part === "1" ? (
+          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", alignItems: "baseline", rowGap: 10, columnGap: 14, fontSize: 20, fontWeight: 700 }}>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <QC>{c}</QC> + <QA>{a}</QA> × <QB>{b}<sup>2</sup></QB>
+            </div>
+            <span>
+              = <QC>{c}</QC> + <QA>{a}</QA> × <QB>{square}</QB>
+            </span>
+            <span className="muted small" style={{ fontWeight: 400 }}>
+              Step 1 — exponent: <QB>{b}<sup>2</sup></QB> = <QB>{square}</QB>
+            </span>
+            <span>
+              = <QC>{c}</QC> + <QA>{product}</QA>
+            </span>
+            <span className="muted small" style={{ fontWeight: 400 }}>
+              Step 2 — multiply: <QA>{a}</QA> × <QB>{square}</QB> = <QA>{product}</QA>
+            </span>
+            <span>
+              = <span style={{ color: "var(--good)" }}>{total}</span>
+            </span>
+            <span className="muted small" style={{ fontWeight: 400 }}>
+              Step 3 — add: <QC>{c}</QC> + <QA>{product}</QA> = <span style={{ color: "var(--good)", fontWeight: 700 }}>{total}</span>
+            </span>
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", alignItems: "baseline", rowGap: 10, columnGap: 14, fontSize: 20, fontWeight: 700 }}>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <QA>{a}</QA> × (<QB>{b}</QB> + <QC>{c}</QC>)<sup>2</sup> − <QD>{d}</QD>
+            </div>
+            <span>
+              = <QA>{a}</QA> × ({sum2})<sup>2</sup> − <QD>{d}</QD>
+            </span>
+            <span className="muted small" style={{ fontWeight: 400 }}>
+              Step 1 — parentheses: <QB>{b}</QB> + <QC>{c}</QC> = {sum2}
+            </span>
+            <span>
+              = <QA>{a}</QA> × {sq2} − <QD>{d}</QD>
+            </span>
+            <span className="muted small" style={{ fontWeight: 400 }}>
+              Step 2 — exponent: {sum2}<sup>2</sup> = {sq2}
+            </span>
+            <span>
+              = {product2} − <QD>{d}</QD>
+            </span>
+            <span className="muted small" style={{ fontWeight: 400 }}>
+              Step 3 — multiply: <QA>{a}</QA> × {sq2} = {product2}
+            </span>
+            <span>
+              = <span style={{ color: "var(--good)" }}>{total2}</span>
+            </span>
+            <span className="muted small" style={{ fontWeight: 400 }}>
+              Step 4 — subtract: {product2} − <QD>{d}</QD> = <span style={{ color: "var(--good)", fontWeight: 700 }}>{total2}</span>
+            </span>
+          </div>
         )}
+        <p className="muted small">
+          {part === "1"
+            ? "Change a, b, or c above and watch every step update — the exponent is always evaluated first, then multiplication, then addition, no matter what numbers you pick."
+            : "Change a, b, c, or d above and watch every step update — parentheses are always simplified first, then the exponent, then multiplication, then subtraction."}
+        </p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <EvaluatingCheckForUnderstanding part={part} onComplete={onIntroDone} />}
       </div>
-      <Segmented
-        label="Order of operations example"
-        value={part}
-        onChange={setPart}
-        options={[
-          { id: "1", label: "Exponents & Multiplication" },
-          { id: "2", label: "Parentheses & More" },
-        ]}
-      />
-      {part === "1" ? (
-        <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", alignItems: "baseline", rowGap: 10, columnGap: 14, fontSize: 20, fontWeight: 700 }}>
-          <div style={{ gridColumn: "1 / -1" }}>
-            <QC>{c}</QC> + <QA>{a}</QA> × <QB>{b}<sup>2</sup></QB>
-          </div>
-          <span>
-            = <QC>{c}</QC> + <QA>{a}</QA> × <QB>{square}</QB>
-          </span>
-          <span className="muted small" style={{ fontWeight: 400 }}>
-            Step 1 — exponent: <QB>{b}<sup>2</sup></QB> = <QB>{square}</QB>
-          </span>
-          <span>
-            = <QC>{c}</QC> + <QA>{product}</QA>
-          </span>
-          <span className="muted small" style={{ fontWeight: 400 }}>
-            Step 2 — multiply: <QA>{a}</QA> × <QB>{square}</QB> = <QA>{product}</QA>
-          </span>
-          <span>
-            = <span style={{ color: "var(--good)" }}>{total}</span>
-          </span>
-          <span className="muted small" style={{ fontWeight: 400 }}>
-            Step 3 — add: <QC>{c}</QC> + <QA>{product}</QA> = <span style={{ color: "var(--good)", fontWeight: 700 }}>{total}</span>
-          </span>
-        </div>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", alignItems: "baseline", rowGap: 10, columnGap: 14, fontSize: 20, fontWeight: 700 }}>
-          <div style={{ gridColumn: "1 / -1" }}>
-            <QA>{a}</QA> × (<QB>{b}</QB> + <QC>{c}</QC>)<sup>2</sup> − <QD>{d}</QD>
-          </div>
-          <span>
-            = <QA>{a}</QA> × ({sum2})<sup>2</sup> − <QD>{d}</QD>
-          </span>
-          <span className="muted small" style={{ fontWeight: 400 }}>
-            Step 1 — parentheses: <QB>{b}</QB> + <QC>{c}</QC> = {sum2}
-          </span>
-          <span>
-            = <QA>{a}</QA> × {sq2} − <QD>{d}</QD>
-          </span>
-          <span className="muted small" style={{ fontWeight: 400 }}>
-            Step 2 — exponent: {sum2}<sup>2</sup> = {sq2}
-          </span>
-          <span>
-            = {product2} − <QD>{d}</QD>
-          </span>
-          <span className="muted small" style={{ fontWeight: 400 }}>
-            Step 3 — multiply: <QA>{a}</QA> × {sq2} = {product2}
-          </span>
-          <span>
-            = <span style={{ color: "var(--good)" }}>{total2}</span>
-          </span>
-          <span className="muted small" style={{ fontWeight: 400 }}>
-            Step 4 — subtract: {product2} − <QD>{d}</QD> = <span style={{ color: "var(--good)", fontWeight: 700 }}>{total2}</span>
-          </span>
-        </div>
-      )}
-      <p className="muted small">
-        {part === "1"
-          ? "Change a, b, or c above and watch every step update — the exponent is always evaluated first, then multiplication, then addition, no matter what numbers you pick."
-          : "Change a, b, c, or d above and watch every step update — parentheses are always simplified first, then the exponent, then multiplication, then subtraction."}
-      </p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <EvaluatingCheckForUnderstanding part={part} onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 
@@ -809,7 +826,7 @@ function evaluatingProblem(targetBucket?: string): Problem {
           story: "A cube has side length s = 1/2. Find its volume using V = s³.",
           visual: () => <div style={{ fontSize: 22, fontWeight: 700 }}>V = s³, s = 1/2</div>,
           steps: [
-            { kind: "number", prompt: "What is s³ when s = 1/2?", hint: "(1/2) × (1/2) × (1/2).", explain: "(1/2)³ = 1/8.", answer: 1 / 8, frac: true, fracAnswer: [1, 8] },
+            { kind: "number", prompt: "What is s³ when s = 1/2?", hint: "(1/2) × (1/2) × (1/2).", explain: "(1/2)³ = 1/8.", answer: 1 / 8, fracBoxes: "fraction", frac: true, fracAnswer: [1, 8] },
             choice(
               { prompt: "What does this formula represent?", hint: "V stands for...", explain: "V = s³ gives the volume of a cube." },
               "the volume of the cube",
@@ -835,8 +852,8 @@ function evaluatingProblem(targetBucket?: string): Problem {
             "(1/2)²",
             ["6 × 1/2"]
           ),
-          { kind: "number", prompt: "What is s² when s = 1/2?", hint: "(1/2) × (1/2).", explain: "(1/2)² = 1/4.", answer: 0.25, frac: true, fracAnswer: [1, 4] },
-          { kind: "number", prompt: "Now what is A = 6s²?", hint: "Multiply 6 by the s² you just found.", explain: "6 × 1/4 = 3/2.", answer: 1.5, frac: true, fracAnswer: [3, 2] },
+          { kind: "number", prompt: "What is s² when s = 1/2?", hint: "(1/2) × (1/2).", explain: "(1/2)² = 1/4.", answer: 0.25, fracBoxes: "fraction", frac: true, fracAnswer: [1, 4] },
+          { kind: "number", prompt: "Now what is A = 6s²?", hint: "Multiply 6 by the s² you just found.", explain: "6 × 1/4 = 3/2.", answer: 1.5, fracBoxes: "fraction", frac: true, fracAnswer: [3, 2] },
         ],
         wrapUp: "A = 6s² = 6 × 1/4 = 3/2.",
       };

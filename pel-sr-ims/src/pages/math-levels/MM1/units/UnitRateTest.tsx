@@ -167,6 +167,7 @@ const trailMixQuestion = (): TestQuestion[] => {
         kind: "number",
         prompt: <>A trail mix recipe uses {a} cups of nuts for every {b} batches. How many cups of nuts go with 1 batch?</>,
         answer: a / b,
+        fracBoxes: "mixed",
         suffix: "cups",
         hint: `${a} ÷ ${b}. A fraction like 2/3 is fine.`,
         explain: `${a} ÷ ${b} = ${fracText(a, b)} cups per batch.`,

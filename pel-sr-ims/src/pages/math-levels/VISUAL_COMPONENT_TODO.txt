@@ -881,7 +881,9 @@ ELEMENTARY
            Subtracting Fractions and Mixed Numbers (borrow = "unbundle a
            whole"), Fraction Word Problems (incl. a same-whole trap), Multiplying
            a Fraction by a Whole Number, Fraction Line Plots — plus a 25-question
-           Module Test (passScore 20). Styles .fop-lab. Units 1-4 use
+           Module Test (passScore 20). Styles .fop-lab. (2026-11: PieceBars,
+           MixedNumberBars and units/cfu.tsx were promoted to shared/ when MG10
+           became their second consumer; this lab re-exports them unchanged.) Units 1-4 use
            IntroToFractions' 2-10 denominators; Unit 5 uses ONLY {2,4,8}
            (4.MD.4), verified by brute force. Like-denominator answers are never
            simplified (matches IntroToFractions). lib/fractions.ts drives both
@@ -926,7 +928,81 @@ ELEMENTARY
            Tests. Lab-local diagrams: UnitBar, ConversionTable, ScaleLine
            (consolidation candidate with shared NumberLine / MG5 NumberLineMD),
            TapeBar, RectPlot (overlaps MG6 PolygonOutline), Receipt.
-[ ] MG10
+[x] MG10 — AddingAndSubtractingFractionsLab (MG10/MG10_AddingAndSubtractingFractionsLab.tsx) — wired
+           2026-11-06 as a "standalone" skill, MG10's first content (MG10.tsx is
+           still an empty stub; LEVEL_SKILLS gained an MG10 key). Grade 5, 5.NF.1-2,
+           five units: Why You Can't Just Add Across, Finding a Common Denominator
+           (teaches "LCD = least common denominator"), Adding and Subtracting
+           Fractions, Adding and Subtracting Mixed Numbers (teaches "borrow" by
+           name), Word Problems: Benchmarks and Making Sense — every unit gated by a
+           one-time CFU (no reintroEverySolved, per the approved plan), plus a
+           25-question Module Test (passScore 20). Styles scoped .asf-lab (palette
+           copied from MG9 FractionOperationsLab so the two fraction labs match).
+           lib/fractions.ts is the single source for generators, diagram states,
+           and named-mistake feedback; lib/stories.ts holds Unit 5's templates
+           (both imported by units AND Tests, never a unit<->Test cycle).
+
+           Approved-plan rules built into the ENGINE (additive, opt-in):
+             - New "fraction" Step kind (FractionStep: optional whole box +
+               stacked numerator/denominator boxes, or a printed denominator).
+               With `simplest`, an equal-but-unsimplified answer (or improper
+               where a mixed number fits) gets "That's equal, but it's not in
+               simplest form. Simplify it." and sets StepState.formMiss, which
+               makes the solve not clean. The DecimalsLab/FractionOperationsLab
+               notes asked for "a real stacked-fraction entry step" — this is it.
+             - NumberStep.diagnose(value) — named feedback for a predictable wrong
+               value (the MG8 Angles entry's "NumberStep.traps" idea). Used for the
+               LCD: "192 is a common denominator, but not the least…".
+             - The "Try one like it" retry lock now works outside
+               EarlyLearnerProvider: it was already keyed on onRetrySame, only the
+               wrap-up sentence assumed early learners. This shell ports MK1's
+               UnitView lock (lastMakeRef, drawRef, owesRetry, usedTokenRef,
+               disabled type switch, no side doors) WITHOUT lab-early/number pad.
+           Promotions (second consumer = this lab; MG9 verified unchanged in a
+           browser after the move): PieceBars + MixedNumberBars ->
+           shared/diagrams/; MG9 FractionOperationsLab's units/cfu.tsx ->
+           shared/components/CfuQuestion.tsx (DropdownQuestion gained typed boxes
+           and a function form of `bad` for named mistakes; MG9's cfu.tsx is now a
+           re-export). Lab-local diagrams: RecutBars (two fractions as same-width
+           bars, re-cut into LCD pieces with thick lines at the old edges, plus a
+           sum/difference bar — built on PieceBars), MultiplesList (chip rows of
+           multiples; common ones ringed, LCD tagged — kept separate from MG11's
+           MultiplesLine on purpose: a written list is how this lab teaches the
+           LCD search, and MultiplesLine's scaled dots get unreadable past ~60),
+           BenchmarkLine (0…n with every half labeled, staggered point labels,
+           diamond estimate marker — a promotion candidate if a decimals/rounding
+           lab needs labeled half-ticks; shared NumberLine can't label sub-units).
+           Brute force (3,000/bucket + 20,000 re-derivations) caught overlapping
+           Unit 1 number pools that made two Test questions identical; pools are
+           now disjoint.
+           Round 4 (2026-11-07, user request): new opt-in
+           shared/components/AnswerForm.tsx (+ answerKinds.ts) — <AnswerFormPick>
+           puts "Whole number / Mixed number / Proper fraction" buttons above
+           every FractionStep answer (mixed, no printed den) and CFU
+           mixedFraction blank, with kind-aware grading in StepProblem's
+           checkFormFraction; <AnswerFormGuide> teaches the kinds (MG10 Unit 3
+           Explore). Built in shared/ on purpose even with one consumer: it
+           lives inside the shared FractionStep/CfuQuestion, so a lab-local copy
+           would mean forking those. Another lab turns it on by wrapping its
+           content in <AnswerFormPick>; MG9/MG11 don't, and are unchanged.
+           Round 5 (2026-11-08, user request): Unit 1 redesigned (estimate,
+           judge an add-across answer, then the real sum: typed when one
+           denominator fits in the other, "which picture?" when they share no
+           factor). Two new lab-local diagrams on PieceBars: SizeCheckBars
+           (amounts as same-width bars, one per row: the add-across answer
+           beside the bigger fraction) and JoinedBar (both shaded parts end to
+           end in their OWN pieces over a 0-1-2 ruler: "about how much is the
+           sum?" without re-cutting). Local: only this lab adds fractions by
+           picture this way. Shared: FormPicker's "Pick a format to write your
+           answer." line; optional VisualHelp.lastTry (types.ts/StepProblem)
+           so a picture can show a named wrong answer.
+           Round 5 review fixes (2026-11-08): new lab-local AmountBar (a shaded
+           length, whole outlines only, no piece lines) for the "which picture?"
+           choices: with piece lines the right one was always the finest cut.
+           Local: the only picture choice that must hide its pieces. RecutBars
+           gained optional originalLabels (cut bars keep their own fraction's
+           label, so the renamed tops aren't printed). Shared: optional third
+           FractionStep.diagnose argument (the answer as typed).
 [x] MG11 — PowersOf10Practice          (MG11/MG11_PowersOfTen.tsx) — wired 2026-10-01
           as a "standalone" skill (multi-file, same pattern as MG6_BarModel).
           Supporting files: MG11_PowersOfTen_MoveSentence.tsx,

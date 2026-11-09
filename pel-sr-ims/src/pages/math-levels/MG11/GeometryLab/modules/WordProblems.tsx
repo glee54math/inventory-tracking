@@ -5,6 +5,7 @@ import { CompositeFig, TrapezoidFig, TriangleFig } from "../shapes/area";
 import { PrismFig, Solid3D, boxFaces, boxLabels, triPrismFaces, triPrismLabels } from "../shapes/solids";
 import { CoordinatePlane } from "../shapes/coordinate";
 import { type Step, StepSolver, Workbench } from "../components/ui";
+import { MathText } from "../../../shared/components/MathText";
 
 export type WordProblem = {
   id: string;
@@ -148,28 +149,30 @@ export function WordProblemsModule({ onSolved }: { onSolved: (clean: boolean) =>
   const nextWp = WORD_PROBLEMS[(i + 1) % WORD_PROBLEMS.length];
 
   return (
-    <section>
-      <div className="module-head">
-        <div>
-          <h2>Word problems</h2>
-          <p className="lede">Real situations, one step at a time. Decide what's being asked before you calculate.</p>
+    <MathText>
+      <section>
+        <div className="module-head">
+          <div>
+            <h2>Word problems</h2>
+            <p className="lede">Real situations, one step at a time. Decide what's being asked before you calculate.</p>
+          </div>
         </div>
-      </div>
-      <div className="shape-picker">
-        {WORD_PROBLEMS.map((w) => (
-          <button key={w.id} className={"shape-chip" + (w.id === id ? " on" : "")} aria-pressed={w.id === id} onClick={() => { setId(w.id); setStepIdx(0); }}>
-            {solved[w.id] && <span className="chip-check" aria-label="solved">✓</span>}
-            <span>{w.title}</span>
-            <span className="chip-topic">{w.topic}</span>
-          </button>
-        ))}
-      </div>
-      <Workbench figure={wp.figure(focus, stepIdx)}>
-        <div className="story">{wp.story}</div>
-        <StepSolver key={wp.id} steps={wp.steps} onStepChange={setStepIdx}
-          onComplete={(clean) => { setSolved((s) => ({ ...s, [wp.id]: true })); onSolved(clean); }}
-          onNext={() => { setId(nextWp.id); setStepIdx(0); }} nextLabel={`Next: ${nextWp.title}`} />
-      </Workbench>
-    </section>
+        <div className="shape-picker">
+          {WORD_PROBLEMS.map((w) => (
+            <button key={w.id} className={"shape-chip" + (w.id === id ? " on" : "")} aria-pressed={w.id === id} onClick={() => { setId(w.id); setStepIdx(0); }}>
+              {solved[w.id] && <span className="chip-check" aria-label="solved">✓</span>}
+              <span>{w.title}</span>
+              <span className="chip-topic">{w.topic}</span>
+            </button>
+          ))}
+        </div>
+        <Workbench figure={wp.figure(focus, stepIdx)}>
+          <div className="story">{wp.story}</div>
+          <StepSolver key={wp.id} steps={wp.steps} onStepChange={setStepIdx}
+            onComplete={(clean) => { setSolved((s) => ({ ...s, [wp.id]: true })); onSolved(clean); }}
+            onNext={() => { setId(nextWp.id); setStepIdx(0); }} nextLabel={`Next: ${nextWp.title}`} />
+        </Workbench>
+      </section>
+    </MathText>
   );
 }

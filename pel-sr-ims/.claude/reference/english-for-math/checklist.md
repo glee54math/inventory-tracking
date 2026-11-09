@@ -36,7 +36,8 @@ largest numbers the generator can produce.
 | Small words | *each, of, per, between, at least* carrying meaning the student hasn't learned | traps §5 |
 | Setting | Background knowledge a child might not have; hard-to-say names | traps §7 |
 | Synonyms | More than one word for the same idea in one unit | english-learners.md |
-| Giveaways | The answer stated in the story, title or wrong-answer message | builder rules |
+| Giveaways | The answer stated in the story, title or wrong-answer message. This includes a reviewer's own suggested rewrite: a wrong-answer message must not state any box's answer ("The LCD is 12" when a box asks for the LCD) | builder rules |
+| Text vs. picture | A sentence that describes a picture ("the two numbers in both lists") doesn't match what the picture shows at the values used | traps §1 |
 
 ## 4. Check each word problem against the standards
 - Is the **problem type** allowed for this grade (CCSS Table 1 for add and

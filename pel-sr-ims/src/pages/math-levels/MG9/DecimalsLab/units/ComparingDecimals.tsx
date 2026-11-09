@@ -7,6 +7,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { QA, QC, Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingDecimalsTest } from "./ComparingDecimalsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 const SYMBOLS = ["<", ">", "="];
 
@@ -85,97 +86,99 @@ function ComparingCheck({ onComplete }: { onComplete?: () => void }) {
   };
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for Understanding: answer these before you try practice problems.</p>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for Understanding: answer these before you try practice problems.</p>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>1.</b> 0.5 is 5 <Pick value={a1} onChange={edit(setA1, setC1)} options={["ones", "tenths", "hundredths"]} ok={ok1a} show={c1} label="0.5 is 5 what" disabled={done1} />, which is the same amount as{" "}
-          <Pick value={a2} onChange={edit(setA2, setC1)} options={["5", "50", "500"]} ok={ok1b} show={c1} label="How many hundredths" disabled={done1} /> hundredths.
-        </p>
-        <button className="btn primary" type="button" disabled={done1 || !f1} onClick={() => setC1(true)}>
-          Check Answer
-        </button>
-        {c1 && f1 && (
-          <p className={`feedback ${done1 ? "good" : "bad"}`} role="alert">
-            {done1 ? "Correct — each tenth is 10 hundredths, so 0.5 = 50 hundredths = 0.50. Writing a decimal with two digits makes it easy to compare." : "Not quite — the 5 is right after the point. Which place is that, and how many hundredths is each one?"}
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> 0.5 is 5 <Pick value={a1} onChange={edit(setA1, setC1)} options={["ones", "tenths", "hundredths"]} ok={ok1a} show={c1} label="0.5 is 5 what" disabled={done1} />, which is the same amount as{" "}
+            <Pick value={a2} onChange={edit(setA2, setC1)} options={["5", "50", "500"]} ok={ok1b} show={c1} label="How many hundredths" disabled={done1} /> hundredths.
           </p>
-        )}
-      </div>
-
-      <div className="align-stack-wrap">
-        <p>
-          <b>2.</b> True or false: 0.5 is less than 0.36, because 0.5 has fewer digits.{" "}
-          <Pick value={b1} onChange={edit(setB1, setC2)} options={["True", "False"]} ok={ok2a} show={c2} label="True or false" disabled={done2} />
-        </p>
-        <p>
-          On a number line, 0.5 is to the <Pick value={b2} onChange={edit(setB2, setC2)} options={["left", "right"]} ok={ok2b} show={c2} label="Left or right" disabled={done2} /> of 0.36.
-        </p>
-        <button className="btn primary" type="button" disabled={done2 || !f2} onClick={() => setC2(true)}>
-          Check Answer
-        </button>
-        {c2 && f2 && (
-          <>
-            <p className={`feedback ${done2 ? "good" : "bad"}`} role="alert">
-              {done2
-                ? "Correct — it's false. 0.5 = 0.50 = 50 hundredths, and 0.36 is only 36 hundredths. On the line, 0.5 is farther right, so 0.5 > 0.36. More digits doesn't mean bigger."
-                : "Not quite — look at the number line below. Which dot is farther to the right?"}
+          <button className="btn primary" type="button" disabled={done1 || !f1} onClick={() => setC1(true)}>
+            Check Answer
+          </button>
+          {c1 && f1 && (
+            <p className={`feedback ${done1 ? "good" : "bad"}`} role="alert">
+              {done1 ? "Correct — each tenth is 10 hundredths, so 0.5 = 50 hundredths = 0.50. Writing a decimal with two digits makes it easy to compare." : "Not quite — the 5 is right after the point. Which place is that, and how many hundredths is each one?"}
             </p>
-            <DecimalNumberLine
-              fromWhole={0}
-              points={[
-                { hundredths: 36, label: "0.36", tone: "c" },
-                { hundredths: 50, label: "0.5", tone: "a" },
-              ]}
-            />
-          </>
-        )}
-      </div>
-
-      <div className="align-stack-wrap">
-        <p>
-          <b>3.</b> Mia has 0.5 of a 10 cm ribbon. Leo has 0.5 of a 100 cm ribbon.
-        </p>
-        <div className="dec-visual-stack">
-          <FractionBar numerator={5} denominator={10} width={48} height={28} label="Mia: 0.5 of 10 cm" />
-          <FractionBar numerator={5} denominator={10} width={480} height={28} label="Leo: 0.5 of 100 cm" />
+          )}
         </div>
-        <p>Mia says, &ldquo;We have the same amount of ribbon, because 0.5 = 0.5.&rdquo; Is she right?</p>
-        <div className="control-row">
-          {[
-            { id: "yes", label: "Yes — 0.5 = 0.5, so the amounts are equal" },
-            { id: "no", label: "No — the ribbons are different lengths" },
-          ].map((opt) => (
-            <button key={opt.id} type="button" className={`btn ghost ${q3 === opt.id ? "pressed" : ""}`} disabled={done3} onClick={() => setQ3(opt.id)}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        {q3 && (
-          <p className={`feedback ${done3 ? "good" : "bad"}`} role="alert">
-            {done3
-              ? "Correct — two decimals can only be compared when they are parts of the SAME whole. Mia has 5 cm; Leo has 50 cm."
-              : "Not quite — look at the two ribbons themselves. Is half of the short one as long as half of the long one?"}
-          </p>
-        )}
-      </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>4.</b> In 2.45 and 2.49, the ones and the tenths match, so the{" "}
-          <Pick value={d1} onChange={edit(setD1, setC4)} options={["ones", "tenths", "hundredths"]} ok={ok4a} show={c4} label="Which place decides" disabled={done4} /> place decides, and 2.45{" "}
-          <Pick value={d2} onChange={edit(setD2, setC4)} options={SYMBOLS} ok={ok4b} show={c4} label="Symbol" disabled={done4} /> 2.49.
-        </p>
-        <button className="btn primary" type="button" disabled={done4 || !f4} onClick={() => setC4(true)}>
-          Check Answer
-        </button>
-        {c4 && f4 && (
-          <p className={`feedback ${done4 ? "good" : "bad"}`} role="alert">
-            {done4 ? "Correct — go left to right and stop at the first place that's different: 5 hundredths < 9 hundredths, so 2.45 < 2.49." : "Not quite — go left to right: ones (2, 2), tenths (4, 4), hundredths (5, 9). Where do they first differ?"}
+        <div className="align-stack-wrap">
+          <p>
+            <b>2.</b> True or false: 0.5 is less than 0.36, because 0.5 has fewer digits.{" "}
+            <Pick value={b1} onChange={edit(setB1, setC2)} options={["True", "False"]} ok={ok2a} show={c2} label="True or false" disabled={done2} />
           </p>
-        )}
+          <p>
+            On a number line, 0.5 is to the <Pick value={b2} onChange={edit(setB2, setC2)} options={["left", "right"]} ok={ok2b} show={c2} label="Left or right" disabled={done2} /> of 0.36.
+          </p>
+          <button className="btn primary" type="button" disabled={done2 || !f2} onClick={() => setC2(true)}>
+            Check Answer
+          </button>
+          {c2 && f2 && (
+            <>
+              <p className={`feedback ${done2 ? "good" : "bad"}`} role="alert">
+                {done2
+                  ? "Correct — it's false. 0.5 = 0.50 = 50 hundredths, and 0.36 is only 36 hundredths. On the line, 0.5 is farther right, so 0.5 > 0.36. More digits doesn't mean bigger."
+                  : "Not quite — look at the number line below. Which dot is farther to the right?"}
+              </p>
+              <DecimalNumberLine
+                fromWhole={0}
+                points={[
+                  { hundredths: 36, label: "0.36", tone: "c" },
+                  { hundredths: 50, label: "0.5", tone: "a" },
+                ]}
+              />
+            </>
+          )}
+        </div>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> Mia has 0.5 of a 10 cm ribbon. Leo has 0.5 of a 100 cm ribbon.
+          </p>
+          <div className="dec-visual-stack">
+            <FractionBar numerator={5} denominator={10} width={48} height={28} label="Mia: 0.5 of 10 cm" />
+            <FractionBar numerator={5} denominator={10} width={480} height={28} label="Leo: 0.5 of 100 cm" />
+          </div>
+          <p>Mia says, &ldquo;We have the same amount of ribbon, because 0.5 = 0.5.&rdquo; Is she right?</p>
+          <div className="control-row">
+            {[
+              { id: "yes", label: "Yes — 0.5 = 0.5, so the amounts are equal" },
+              { id: "no", label: "No — the ribbons are different lengths" },
+            ].map((opt) => (
+              <button key={opt.id} type="button" className={`btn ghost ${q3 === opt.id ? "pressed" : ""}`} disabled={done3} onClick={() => setQ3(opt.id)}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {q3 && (
+            <p className={`feedback ${done3 ? "good" : "bad"}`} role="alert">
+              {done3
+                ? "Correct — two decimals can only be compared when they are parts of the SAME whole. Mia has 5 cm; Leo has 50 cm."
+                : "Not quite — look at the two ribbons themselves. Is half of the short one as long as half of the long one?"}
+            </p>
+          )}
+        </div>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>4.</b> In 2.45 and 2.49, the ones and the tenths match, so the{" "}
+            <Pick value={d1} onChange={edit(setD1, setC4)} options={["ones", "tenths", "hundredths"]} ok={ok4a} show={c4} label="Which place decides" disabled={done4} /> place decides, and 2.45{" "}
+            <Pick value={d2} onChange={edit(setD2, setC4)} options={SYMBOLS} ok={ok4b} show={c4} label="Symbol" disabled={done4} /> 2.49.
+          </p>
+          <button className="btn primary" type="button" disabled={done4 || !f4} onClick={() => setC4(true)}>
+            Check Answer
+          </button>
+          {c4 && f4 && (
+            <p className={`feedback ${done4 ? "good" : "bad"}`} role="alert">
+              {done4 ? "Correct — go left to right and stop at the first place that's different: 5 hundredths < 9 hundredths, so 2.45 < 2.49." : "Not quite — go left to right: ones (2, 2), tenths (4, 4), hundredths (5, 9). Where do they first differ?"}
+            </p>
+          )}
+        </div>
       </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -198,70 +201,72 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const toH = (v: number) => Math.round(v * 100);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && (
-        <button
-          type="button"
-          className="btn ghost"
-          style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
-          onClick={() => setShowCheck((v) => !v)}
-        >
-          Check for Understanding
-        </button>
-      )}
-      <Segmented
-        label="Mode"
-        value={mode}
-        onChange={setMode}
-        options={[
-          { id: "same", label: "Same whole" },
-          { id: "different", label: "Different-size wholes" },
-        ]}
-      />
-      {mode === "same" ? (
-        <>
-          <p>Pick two decimals (or drag the dots). The one farther RIGHT on the number line is bigger — no matter how many digits it has.</p>
-          <div className="control-row">
-            <Stepper label="First decimal" value={a / 100} min={0} max={1} step={0.01} onChange={(v) => setA(toH(v))} tone="a" />
-            <Stepper label="Second decimal" value={b / 100} min={0} max={1} step={0.01} onChange={(v) => setB(toH(v))} tone="c" />
-          </div>
-          <DecimalNumberLine
-            fromWhole={0}
-            points={[
-              { hundredths: a, label: shortDecimal(a), tone: "a", onChange: setA },
-              { hundredths: b, label: shortDecimal(b), tone: "c", onChange: setB },
-            ]}
-          />
-          <div className="control-row">
-            <GridRow size={120} segments={[{ count: a, tone: "a" }]} caption={`${shortDecimal(a)} = ${a} hundredths`} />
-            <GridRow size={120} segments={[{ count: b, tone: "c" }]} caption={`${shortDecimal(b)} = ${b} hundredths`} />
-          </div>
-          <p className="says">
-            <QA>{shortDecimal(a)}</QA> {sym} <QC>{shortDecimal(b)}</QC>
-          </p>
-          <p className="muted small">
-            As hundredths: {decimalText(a, 2)} {sym} {decimalText(b, 2)}. Try 0.5 and 0.36, or 0.5 and 0.49 — the shorter decimal wins.
-          </p>
-        </>
-      ) : (
-        <>
-          <p>Two ribbons that are NOT the same length. Compare how much ribbon each person really has.</p>
-          <div className="control-row">
-            <Stepper label="Mia: tenths of a 10 cm ribbon" value={mia} min={0} max={10} onChange={setMia} tone="a" />
-            <Stepper label="Leo: tenths of a 100 cm ribbon" value={leo} min={0} max={10} onChange={setLeo} tone="c" />
-          </div>
-          <DiffWholeBars s={{ thing: "ribbon", unit: "cm", smallName: "Mia", bigName: "Leo", smallTenths: mia, bigTenths: leo }} />
-          <p className="says">
-            Mia: {mia}/10 of 10 cm = {mia} cm · Leo: {leo}/10 of 100 cm = {10 * leo} cm
-          </p>
-          <p className="muted small">
-            Even when Mia&apos;s decimal is bigger (or the same), Leo can have more ribbon — decimals only compare fairly when they&apos;re parts of the SAME whole.
-          </p>
-        </>
-      )}
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <ComparingCheck onComplete={onIntroDone} />}
-    </div>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Check for Understanding
+          </button>
+        )}
+        <Segmented
+          label="Mode"
+          value={mode}
+          onChange={setMode}
+          options={[
+            { id: "same", label: "Same whole" },
+            { id: "different", label: "Different-size wholes" },
+          ]}
+        />
+        {mode === "same" ? (
+          <>
+            <p>Pick two decimals (or drag the dots). The one farther RIGHT on the number line is bigger — no matter how many digits it has.</p>
+            <div className="control-row">
+              <Stepper label="First decimal" value={a / 100} min={0} max={1} step={0.01} onChange={(v) => setA(toH(v))} tone="a" />
+              <Stepper label="Second decimal" value={b / 100} min={0} max={1} step={0.01} onChange={(v) => setB(toH(v))} tone="c" />
+            </div>
+            <DecimalNumberLine
+              fromWhole={0}
+              points={[
+                { hundredths: a, label: shortDecimal(a), tone: "a", onChange: setA },
+                { hundredths: b, label: shortDecimal(b), tone: "c", onChange: setB },
+              ]}
+            />
+            <div className="control-row">
+              <GridRow size={120} segments={[{ count: a, tone: "a" }]} caption={`${shortDecimal(a)} = ${a} hundredths`} />
+              <GridRow size={120} segments={[{ count: b, tone: "c" }]} caption={`${shortDecimal(b)} = ${b} hundredths`} />
+            </div>
+            <p className="says">
+              <QA>{shortDecimal(a)}</QA> {sym} <QC>{shortDecimal(b)}</QC>
+            </p>
+            <p className="muted small">
+              As hundredths: {decimalText(a, 2)} {sym} {decimalText(b, 2)}. Try 0.5 and 0.36, or 0.5 and 0.49 — the shorter decimal wins.
+            </p>
+          </>
+        ) : (
+          <>
+            <p>Two ribbons that are NOT the same length. Compare how much ribbon each person really has.</p>
+            <div className="control-row">
+              <Stepper label="Mia: tenths of a 10 cm ribbon" value={mia} min={0} max={10} onChange={setMia} tone="a" />
+              <Stepper label="Leo: tenths of a 100 cm ribbon" value={leo} min={0} max={10} onChange={setLeo} tone="c" />
+            </div>
+            <DiffWholeBars s={{ thing: "ribbon", unit: "cm", smallName: "Mia", bigName: "Leo", smallTenths: mia, bigTenths: leo }} />
+            <p className="says">
+              Mia: {mia}/10 of 10 cm = {mia} cm · Leo: {leo}/10 of 100 cm = {10 * leo} cm
+            </p>
+            <p className="muted small">
+              Even when Mia&apos;s decimal is bigger (or the same), Leo can have more ribbon — decimals only compare fairly when they&apos;re parts of the SAME whole.
+            </p>
+          </>
+        )}
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <ComparingCheck onComplete={onIntroDone} />}
+      </div>
+    </MathText>
   );
 }
 

@@ -1,6 +1,7 @@
 import React from "react";
 import { palette } from "../../shared/lib/palette";
 import { fmt } from "../../shared/lib/math";
+import { MathText } from "../../shared/components/MathText";
 
 export interface RatioTableColumn {
   label: string;
@@ -87,31 +88,33 @@ export function RatioTable({ columns, rows, scales, compact = false }: RatioTabl
   };
 
   return (
-    <div style={{ overflowX: "auto", maxWidth: "100%" }}>
-      <table style={{ borderCollapse: "collapse", margin: "0 auto", fontFamily: "inherit" }}>
-        <thead>
-          <tr>
-            {columns.map((c, i) => (
-              <th key={i} style={{ ...th, color: c.color, borderBottomColor: c.color }}>
-                {c.label}
-              </th>
-            ))}
-            {scales && <th style={{ ...th, borderBottomColor: "transparent" }} aria-hidden />}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, r) => (
-            <tr key={r}>
-              {row.map(renderCell)}
-              {scales && (
-                <td style={{ ...td, borderBottom: "none", color: palette.c, fontSize: 14, minWidth: 40, textAlign: "left" }}>
-                  {scales[r] !== null && scales[r] !== undefined && r > 0 ? `×${fmt(scales[r] as number)}` : ""}
-                </td>
-              )}
+    <MathText>
+      <div style={{ overflowX: "auto", maxWidth: "100%" }}>
+        <table style={{ borderCollapse: "collapse", margin: "0 auto", fontFamily: "inherit" }}>
+          <thead>
+            <tr>
+              {columns.map((c, i) => (
+                <th key={i} style={{ ...th, color: c.color, borderBottomColor: c.color }}>
+                  {c.label}
+                </th>
+              ))}
+              {scales && <th style={{ ...th, borderBottomColor: "transparent" }} aria-hidden />}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {rows.map((row, r) => (
+              <tr key={r}>
+                {row.map(renderCell)}
+                {scales && (
+                  <td style={{ ...td, borderBottom: "none", color: palette.c, fontSize: 14, minWidth: 40, textAlign: "left" }}>
+                    {scales[r] !== null && scales[r] !== undefined && r > 0 ? `×${fmt(scales[r] as number)}` : ""}
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </MathText>
   );
 }

@@ -1,6 +1,7 @@
 import { AngleFigure, type FigArc, type FigRay } from "./AngleFigure";
 import { Protractor, type ProtractorMark } from "./Protractor";
 import type { Tone } from "./angleGeometry";
+import { MathText } from "../../../shared/components/MathText";
 
 // Ready-made pictures used by both a unit's Practice file and its Test file
 // (a third module, so neither has to import the other — see the
@@ -9,16 +10,18 @@ import type { Tone } from "./angleGeometry";
 /** One turn from `base`, counter-clockwise by `m` degrees, with the turn shaded. */
 export function TurnPicture({ base, m, label, width = 220, circle = true, len = 90 }: { base: number; m: number; label?: string; width?: number; circle?: boolean; len?: number }) {
   return (
-    <AngleFigure
-      rays={[
-        { dir: base, len },
-        { dir: base + m, len, tone: "a" },
-      ]}
-      arcs={[{ from: base, sweep: m, r: 30, tone: "c", fill: true, label }]}
-      showCircle={circle}
-      width={width}
-      ariaLabel={`An angle that turns ${label ?? "some amount"}`}
-    />
+    <MathText>
+      <AngleFigure
+        rays={[
+          { dir: base, len },
+          { dir: base + m, len, tone: "a" },
+        ]}
+        arcs={[{ from: base, sweep: m, r: 30, tone: "c", fill: true, label }]}
+        showCircle={circle}
+        width={width}
+        ariaLabel={`An angle that turns ${label ?? "some amount"}`}
+      />
+    </MathText>
   );
 }
 
@@ -40,10 +43,12 @@ export function PairPicture({ a, b, labels }: { a: { base: number; m: number; le
     </figure>
   );
   return (
-    <div className="ap-figs">
-      {one(a, labels?.[0], "A")}
-      {one(b, labels?.[1], "B")}
-    </div>
+    <MathText>
+      <div className="ap-figs">
+        {one(a, labels?.[0], "A")}
+        {one(b, labels?.[1], "B")}
+      </div>
+    </MathText>
   );
 }
 

@@ -1,4 +1,5 @@
 import { palette } from "../../../shared/lib/palette";
+import { MathText } from "../../../shared/components/MathText";
 
 export type GridTone = "a" | "b" | "c";
 
@@ -80,7 +81,11 @@ export function GridRow({ segments, size = 150, tenthsOnly, caption }: GridRowPr
           <HundredthsGrid key={i} cells={cells} size={size} tenthsOnly={tenthsOnly} />
         ))}
       </div>
-      {caption && <figcaption className="muted small">{caption}</figcaption>}
+      {caption && (
+        <figcaption className="muted small">
+          <MathText>{caption}</MathText>
+        </figcaption>
+      )}
     </figure>
   );
 }

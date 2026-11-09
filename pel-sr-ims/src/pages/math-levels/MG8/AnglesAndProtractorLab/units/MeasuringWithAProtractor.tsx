@@ -8,6 +8,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { measuringWithAProtractorTest } from "./MeasuringWithAProtractorTest";
+import { MathText } from "../../../shared/components/MathText";
 
 const SCALE_CHOICES = ["the blue inner scale", "the orange outer scale"];
 
@@ -62,92 +63,94 @@ function ProtractorCheck({ onComplete }: { onComplete?: () => void }) {
   ];
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure you can read a protractor before you try practice problems.</p>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Quick check: let's make sure you can read a protractor before you try practice problems.</p>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>1.</b> To measure an angle, put the protractor's center mark on the angle's{" "}
-          <Pick label="Where the center mark goes" value={a1} onChange={(v) => { setA1(v); setC1(false); }} ok={ok1a} checked={c1} disabled={done1} options={[{ id: "tip", label: "arrow tip" }, { id: "vertex", label: "vertex" }, { id: "middle", label: "middle of the opening" }]} />{" "}
-          and line up the 0° line along{" "}
-          <Pick label="What the 0 line lines up with" value={b1} onChange={(v) => { setB1(v); setC1(false); }} ok={ok1b} checked={c1} disabled={done1} options={[{ id: "page", label: "the bottom of the page" }, { id: "ray", label: "one of the angle's rays" }, { id: "longest", label: "the longest thing nearby" }]} />
-          .
-        </p>
-        <CheckRow
-          filled={allFilled(a1, b1)}
-          checked={c1}
-          ok={ok1a && ok1b}
-          done={done1}
-          onCheck={() => setC1(true)}
-          good="Correct — center on the vertex, 0° line on one ray. Then read where the other ray crosses."
-          bad="Not quite — check each red box. The center mark goes where the two rays meet, and the straight 0° line goes right on top of one ray."
-        />
-      </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> To measure an angle, put the protractor's center mark on the angle's{" "}
+            <Pick label="Where the center mark goes" value={a1} onChange={(v) => { setA1(v); setC1(false); }} ok={ok1a} checked={c1} disabled={done1} options={[{ id: "tip", label: "arrow tip" }, { id: "vertex", label: "vertex" }, { id: "middle", label: "middle of the opening" }]} />{" "}
+            and line up the 0° line along{" "}
+            <Pick label="What the 0 line lines up with" value={b1} onChange={(v) => { setB1(v); setC1(false); }} ok={ok1b} checked={c1} disabled={done1} options={[{ id: "page", label: "the bottom of the page" }, { id: "ray", label: "one of the angle's rays" }, { id: "longest", label: "the longest thing nearby" }]} />
+            .
+          </p>
+          <CheckRow
+            filled={allFilled(a1, b1)}
+            checked={c1}
+            ok={ok1a && ok1b}
+            done={done1}
+            onCheck={() => setC1(true)}
+            good="Correct — center on the vertex, 0° line on one ray. Then read where the other ray crosses."
+            bad="Not quite — check each red box. The center mark goes where the two rays meet, and the straight 0° line goes right on top of one ray."
+          />
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>2.</b> This angle's black ray is on the right end of the straight edge.
-        </p>
-        <ReadPicture baseDir={0} rayDir={40} width={340} />
-        <p>
-          The black ray sits on 0 of the{" "}
-          <Pick label="Which scale starts on the black ray" value={a2} onChange={(v) => { setA2(v); setC2(false); }} ok={ok2a} checked={c2} disabled={done2} options={scales} /> scale, so the angle measures{" "}
-          <Pick label="The angle's measure" value={b2} onChange={(v) => { setB2(v); setC2(false); }} ok={ok2b} checked={c2} disabled={done2} options={[{ id: "40", label: "40°" }, { id: "140", label: "140°" }]} />
-          .
-        </p>
-        <CheckRow
-          filled={allFilled(a2, b2)}
-          checked={c2}
-          ok={ok2a && ok2b}
-          done={done2}
-          onCheck={() => setC2(true)}
-          good="Correct — the blue inner scale reads 0 on the black ray, and counts up to 40 at the purple ray. 140 would be far too big for this narrow angle."
-          bad="Not quite — start at the end of the straight edge where the black ray is. Which color says 0 there? Count up on THAT scale."
-        />
-      </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>2.</b> This angle's black ray is on the right end of the straight edge.
+          </p>
+          <ReadPicture baseDir={0} rayDir={40} width={340} />
+          <p>
+            The black ray sits on 0 of the{" "}
+            <Pick label="Which scale starts on the black ray" value={a2} onChange={(v) => { setA2(v); setC2(false); }} ok={ok2a} checked={c2} disabled={done2} options={scales} /> scale, so the angle measures{" "}
+            <Pick label="The angle's measure" value={b2} onChange={(v) => { setB2(v); setC2(false); }} ok={ok2b} checked={c2} disabled={done2} options={[{ id: "40", label: "40°" }, { id: "140", label: "140°" }]} />
+            .
+          </p>
+          <CheckRow
+            filled={allFilled(a2, b2)}
+            checked={c2}
+            ok={ok2a && ok2b}
+            done={done2}
+            onCheck={() => setC2(true)}
+            good="Correct — the blue inner scale reads 0 on the black ray, and counts up to 40 at the purple ray. 140 would be far too big for this narrow angle."
+            bad="Not quite — start at the end of the straight edge where the black ray is. Which color says 0 there? Count up on THAT scale."
+          />
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>3.</b> Now the black ray is on the LEFT end.
-        </p>
-        <ReadPicture baseDir={180} rayDir={50} width={340} />
-        <p>
-          The black ray sits on 0 of the{" "}
-          <Pick label="Which scale starts on the black ray" value={a3} onChange={(v) => { setA3(v); setC3(false); }} ok={ok3a} checked={c3} disabled={done3} options={scales} /> scale. The angle is{" "}
-          <Pick label="Compared with a square corner" value={b3} onChange={(v) => { setB3(v); setC3(false); }} ok={ok3b} checked={c3} disabled={done3} options={[{ id: "smaller", label: "smaller" }, { id: "bigger", label: "bigger" }]} /> than a square corner
-          (90°), so it measures{" "}
-          <Pick label="The angle's measure" value={d3} onChange={(v) => { setD3(v); setC3(false); }} ok={ok3d} checked={c3} disabled={done3} options={[{ id: "50", label: "50°" }, { id: "130", label: "130°" }]} />
-          .
-        </p>
-        <CheckRow
-          filled={allFilled(a3, b3, d3)}
-          checked={c3}
-          ok={ok3a && ok3b && ok3d}
-          done={done3}
-          onCheck={() => setC3(true)}
-          good="Correct — the orange outer scale starts at 0 on the left, the angle is wider than a square corner, so it's 130°. The blue 50 is the trap!"
-          bad="Not quite — the scales disagree here (50 and 130). Find the 0 on the black ray's end, and ask: is this angle wider or narrower than a square corner?"
-        />
-      </div>
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> Now the black ray is on the LEFT end.
+          </p>
+          <ReadPicture baseDir={180} rayDir={50} width={340} />
+          <p>
+            The black ray sits on 0 of the{" "}
+            <Pick label="Which scale starts on the black ray" value={a3} onChange={(v) => { setA3(v); setC3(false); }} ok={ok3a} checked={c3} disabled={done3} options={scales} /> scale. The angle is{" "}
+            <Pick label="Compared with a square corner" value={b3} onChange={(v) => { setB3(v); setC3(false); }} ok={ok3b} checked={c3} disabled={done3} options={[{ id: "smaller", label: "smaller" }, { id: "bigger", label: "bigger" }]} /> than a square corner
+            (90°), so it measures{" "}
+            <Pick label="The angle's measure" value={d3} onChange={(v) => { setD3(v); setC3(false); }} ok={ok3d} checked={c3} disabled={done3} options={[{ id: "50", label: "50°" }, { id: "130", label: "130°" }]} />
+            .
+          </p>
+          <CheckRow
+            filled={allFilled(a3, b3, d3)}
+            checked={c3}
+            ok={ok3a && ok3b && ok3d}
+            done={done3}
+            onCheck={() => setC3(true)}
+            good="Correct — the orange outer scale starts at 0 on the left, the angle is wider than a square corner, so it's 130°. The blue 50 is the trap!"
+            bad="Not quite — the scales disagree here (50 and 130). Find the 0 on the black ray's end, and ask: is this angle wider or narrower than a square corner?"
+          />
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>4.</b> True or false: you should always read the inner scale of a protractor.
-        </p>
-        <PickOne
-          value={q4}
-          onPick={setQ4}
-          correct="false"
-          done={done4}
-          options={[
-            { id: "true", label: "True" },
-            { id: "false", label: "False" },
-          ]}
-          good="Correct — it depends on which end your ray is on. In question 3 the inner scale said 50°, but the angle was really 130°."
-          bad="Not quite — look back at question 3. The inner scale said 50°, but the angle was 130°. Read the scale that starts at 0 on your ray."
-        />
+        <div className="align-stack-wrap">
+          <p>
+            <b>4.</b> True or false: you should always read the inner scale of a protractor.
+          </p>
+          <PickOne
+            value={q4}
+            onPick={setQ4}
+            correct="false"
+            done={done4}
+            options={[
+              { id: "true", label: "True" },
+              { id: "false", label: "False" },
+            ]}
+            good="Correct — it depends on which end your ray is on. In question 3 the inner scale said 50°, but the angle was really 130°."
+            bad="Not quite — look back at question 3. The inner scale said 50°, but the angle was 130°. Read the scale that starts at 0 on your ray."
+          />
+        </div>
       </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -167,69 +170,71 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const scale = correctScale(0, baseDir);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && (
-        <button
-          type="button"
-          className="btn ghost"
-          style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
-          onClick={() => setShowCheck((v) => !v)}
-        >
-          Check for Understanding
-        </button>
-      )}
-      <p>
-        A protractor has <b>two scales</b>. The <span className="ap-blue">blue inner scale</span> starts at 0 on the right; the{" "}
-        <span className="ap-orange">orange outer scale</span> starts at 0 on the left. Drag over the protractor to turn the purple ray.
-      </p>
-      <div className="control-row">
-        <Segmented
-          label="Where the black ray is"
-          value={side}
-          onChange={(v) => setSide(v)}
-          options={[
-            { id: "right", label: "Black ray on the right" },
-            { id: "left", label: "Black ray on the left" },
-          ]}
-        />
-        <button type="button" className="btn ghost" onClick={() => setDir((d) => Math.min(180, d + 1))}>
-          ↺ 1°
-        </button>
-        <button type="button" className="btn ghost" onClick={() => setDir((d) => Math.max(0, d - 1))}>
-          ↻ 1°
-        </button>
-        <button type="button" className={`btn ghost ${hide ? "pressed" : ""}`} onClick={() => setHide((h) => !h)}>
-          {hide ? "Show the readout" : "Hide the readout — let me read it"}
-        </button>
-      </div>
-      <div className="ap-explore">
-        <Protractor
-          rays={[{ dir: baseDir, tone: "ink" }]}
-          dragDir={dir}
-          onDrag={setDir}
-          arc={{ from: Math.min(baseDir, dir), sweep: Math.abs(dir - baseDir) }}
-          highlightScale={hide ? null : scale}
-          width={420}
-          ariaLabel={`Protractor with the purple ray at ${reading} degrees from the black ray`}
-        />
-        {!hide && (
-          <div className="ap-side">
-            <p className="ap-readout">
-              <b>{reading}°</b> {acuteOrObtuse(reading) !== "straight" && reading > 0 && <span className="muted small">({acuteOrObtuse(reading)})</span>}
-            </p>
-            <p>
-              The purple ray crosses <span className="ap-blue">{inner}</span> on the inner scale and <span className="ap-orange">{outer}</span> on the outer scale.
-            </p>
-            <p>
-              The black ray sits on 0 of the <b>{scale === "inner" ? "blue inner" : "orange outer"}</b> scale, so that's the one to read: <b>{reading}°</b>. The other
-              number, {scale === "inner" ? outer : inner}, is 180 minus the answer — the classic wrong-scale mistake.
-            </p>
-          </div>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Check for Understanding
+          </button>
         )}
+        <p>
+          A protractor has <b>two scales</b>. The <span className="ap-blue">blue inner scale</span> starts at 0 on the right; the{" "}
+          <span className="ap-orange">orange outer scale</span> starts at 0 on the left. Drag over the protractor to turn the purple ray.
+        </p>
+        <div className="control-row">
+          <Segmented
+            label="Where the black ray is"
+            value={side}
+            onChange={(v) => setSide(v)}
+            options={[
+              { id: "right", label: "Black ray on the right" },
+              { id: "left", label: "Black ray on the left" },
+            ]}
+          />
+          <button type="button" className="btn ghost" onClick={() => setDir((d) => Math.min(180, d + 1))}>
+            ↺ 1°
+          </button>
+          <button type="button" className="btn ghost" onClick={() => setDir((d) => Math.max(0, d - 1))}>
+            ↻ 1°
+          </button>
+          <button type="button" className={`btn ghost ${hide ? "pressed" : ""}`} onClick={() => setHide((h) => !h)}>
+            {hide ? "Show the readout" : "Hide the readout — let me read it"}
+          </button>
+        </div>
+        <div className="ap-explore">
+          <Protractor
+            rays={[{ dir: baseDir, tone: "ink" }]}
+            dragDir={dir}
+            onDrag={setDir}
+            arc={{ from: Math.min(baseDir, dir), sweep: Math.abs(dir - baseDir) }}
+            highlightScale={hide ? null : scale}
+            width={420}
+            ariaLabel={`Protractor with the purple ray at ${reading} degrees from the black ray`}
+          />
+          {!hide && (
+            <div className="ap-side">
+              <p className="ap-readout">
+                <b>{reading}°</b> {acuteOrObtuse(reading) !== "straight" && reading > 0 && <span className="muted small">({acuteOrObtuse(reading)})</span>}
+              </p>
+              <p>
+                The purple ray crosses <span className="ap-blue">{inner}</span> on the inner scale and <span className="ap-orange">{outer}</span> on the outer scale.
+              </p>
+              <p>
+                The black ray sits on 0 of the <b>{scale === "inner" ? "blue inner" : "orange outer"}</b> scale, so that's the one to read: <b>{reading}°</b>. The other
+                number, {scale === "inner" ? outer : inner}, is 180 minus the answer — the classic wrong-scale mistake.
+              </p>
+            </div>
+          )}
+        </div>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <ProtractorCheck onComplete={onIntroDone} />}
       </div>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <ProtractorCheck onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 

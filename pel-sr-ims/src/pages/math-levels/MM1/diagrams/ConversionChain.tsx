@@ -1,5 +1,6 @@
 import React from "react";
 import { palette } from "../../shared/lib/palette";
+import { MathText } from "../../shared/components/MathText";
 
 export interface UnitAmount {
   value: number | string;
@@ -81,28 +82,30 @@ export function ConversionChain({ start, factors, result, showCancel = true }: C
   );
 
   return (
-    <div style={{ textAlign: "center" }}>
-      <div style={box} role="math">
-        {amt(start, numStruck[0])}
-        {factors.map((f, i) => (
-          <React.Fragment key={i}>
-            <span style={{ color: palette.muted }}>×</span>
-            <span style={frac}>
-              {amt(f.num, numStruck[i + 1])}
-              <span style={bar} />
-              {amt(f.den, denStruck[i])}
-            </span>
-          </React.Fragment>
-        ))}
-        {result && (
-          <>
-            <span style={{ color: palette.muted }}>=</span>
-            <span style={{ color: result.value === "?" ? palette.bad : palette.good, fontWeight: 800 }}>
-              {result.value} {result.unit}
-            </span>
-          </>
-        )}
+    <MathText>
+      <div style={{ textAlign: "center" }}>
+        <div style={box} role="math">
+          {amt(start, numStruck[0])}
+          {factors.map((f, i) => (
+            <React.Fragment key={i}>
+              <span style={{ color: palette.muted }}>×</span>
+              <span style={frac}>
+                {amt(f.num, numStruck[i + 1])}
+                <span style={bar} />
+                {amt(f.den, denStruck[i])}
+              </span>
+            </React.Fragment>
+          ))}
+          {result && (
+            <>
+              <span style={{ color: palette.muted }}>=</span>
+              <span style={{ color: result.value === "?" ? palette.bad : palette.good, fontWeight: 800 }}>
+                {result.value} {result.unit}
+              </span>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </MathText>
   );
 }

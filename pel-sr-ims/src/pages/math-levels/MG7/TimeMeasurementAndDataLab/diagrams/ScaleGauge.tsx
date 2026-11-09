@@ -1,4 +1,5 @@
 import { palette, diagramFont } from "../../../shared/lib/palette";
+import { MathText } from "../../../shared/components/MathText";
 
 export interface ScaleGaugeProps {
   /** Whole units the dial is marked up to (the last major tick). */
@@ -46,38 +47,40 @@ export function ScaleGauge({ maxUnits, valueUnits, majorStep, unitLabel, tone = 
   const needleTip = toPoint(needleDeg, R * 0.86);
 
   return (
-    <svg
-      viewBox={`0 0 ${W} ${H}`}
-      role="img"
-      aria-label={`A scale dial marked up to ${maxUnits} ${unitLabel}, pointing at ${valueUnits} ${unitLabel}`}
-      style={{ display: "block", width: "100%", maxWidth: W, height: "auto", fontFamily: diagramFont }}
-    >
-      <path
-        d={`M ${toPoint(START_DEG, R).x} ${toPoint(START_DEG, R).y} A ${R} ${R} 0 0 1 ${toPoint(END_DEG, R).x} ${toPoint(END_DEG, R).y}`}
-        fill="none"
-        stroke={palette.line}
-        strokeWidth={2.5}
-      />
-      {midTicks.map((v) => {
-        const p1 = toPoint(toDeg(v), R * 0.92);
-        const p2 = toPoint(toDeg(v), R);
-        return <line key={`mid${v}`} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={palette.grid} strokeWidth={1.5} />;
-      })}
-      {majorTicks.map((v) => {
-        const p1 = toPoint(toDeg(v), R * 0.82);
-        const p2 = toPoint(toDeg(v), R);
-        const lp = toPoint(toDeg(v), R * 1.14);
-        return (
-          <g key={`maj${v}`}>
-            <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={palette.muted} strokeWidth={2.5} />
-            <text x={lp.x} y={lp.y} textAnchor="middle" fontSize={11} fontWeight={700} fill={palette.ink}>
-              {v}
-            </text>
-          </g>
-        );
-      })}
-      <line x1={CX} y1={CY} x2={needleTip.x} y2={needleTip.y} stroke={fill} strokeWidth={3.5} strokeLinecap="round" />
-      <circle cx={CX} cy={CY} r={6} fill={palette.ink} />
-    </svg>
+    <MathText>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        role="img"
+        aria-label={`A scale dial marked up to ${maxUnits} ${unitLabel}, pointing at ${valueUnits} ${unitLabel}`}
+        style={{ display: "block", width: "100%", maxWidth: W, height: "auto", fontFamily: diagramFont }}
+      >
+        <path
+          d={`M ${toPoint(START_DEG, R).x} ${toPoint(START_DEG, R).y} A ${R} ${R} 0 0 1 ${toPoint(END_DEG, R).x} ${toPoint(END_DEG, R).y}`}
+          fill="none"
+          stroke={palette.line}
+          strokeWidth={2.5}
+        />
+        {midTicks.map((v) => {
+          const p1 = toPoint(toDeg(v), R * 0.92);
+          const p2 = toPoint(toDeg(v), R);
+          return <line key={`mid${v}`} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={palette.grid} strokeWidth={1.5} />;
+        })}
+        {majorTicks.map((v) => {
+          const p1 = toPoint(toDeg(v), R * 0.82);
+          const p2 = toPoint(toDeg(v), R);
+          const lp = toPoint(toDeg(v), R * 1.14);
+          return (
+            <g key={`maj${v}`}>
+              <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={palette.muted} strokeWidth={2.5} />
+              <text x={lp.x} y={lp.y} textAnchor="middle" fontSize={11} fontWeight={700} fill={palette.ink}>
+                {v}
+              </text>
+            </g>
+          );
+        })}
+        <line x1={CX} y1={CY} x2={needleTip.x} y2={needleTip.y} stroke={fill} strokeWidth={3.5} strokeLinecap="round" />
+        <circle cx={CX} cy={CY} r={6} fill={palette.ink} />
+      </svg>
+    </MathText>
   );
 }

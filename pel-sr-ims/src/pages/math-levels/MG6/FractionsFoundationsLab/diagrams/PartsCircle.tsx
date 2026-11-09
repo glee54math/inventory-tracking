@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { palette } from "../../../shared/lib/palette";
+import { spokenFractions, useStackedFractions } from "../../../shared/components/MathText";
+import { SvgMathLine } from "../../../shared/components/SvgMath";
 
 export interface PartsCircleProps {
   numerator: number;
@@ -43,11 +45,14 @@ export function PartsCircle({ numerator, denominator, radius = 56, label, showNu
   const cx = radius + pad;
   const cy = radius + pad;
   const size = (radius + pad) * 2;
+  // Stacked-fraction labs draw a "3/4" label as a handwritten fraction (taller label row).
+  const stacked = useStackedFractions();
+  const labelH = stacked && typeof label === "string" ? 34 : 22;
   const sliceDeg = 360 / denominator;
   const toRad = (deg: number) => ((deg - 90) * Math.PI) / 180;
 
   return (
-    <svg viewBox={`0 0 ${size} ${size + (label ? 22 : 0)}`} width={size} style={{ maxWidth: "100%" }} role="img" aria-label={typeof label === "string" ? label : `${numerator} of ${denominator} slices shaded`}>
+    <svg viewBox={`0 0 ${size} ${size + (label ? labelH : 0)}`} width={size} style={{ maxWidth: "100%" }} role="img" aria-label={typeof label === "string" ? (stacked ? spokenFractions(label) : label) : `${numerator} of ${denominator} slices shaded`}>
       {Array.from({ length: denominator }, (_, i) => {
         const shaded = i < numerator;
         return (
@@ -72,11 +77,14 @@ export function PartsCircle({ numerator, denominator, radius = 56, label, showNu
           );
         })}
       <circle cx={cx} cy={cy} r={radius} style={{ fill: "none", stroke: palette.ink, strokeWidth: 2 }} />
-      {label && (
-        <text x={cx} y={size + 16} textAnchor="middle" style={{ fill: palette.muted, fontSize: 13 }}>
-          {label}
-        </text>
-      )}
+      {label &&
+        (stacked && typeof label === "string" ? (
+          <SvgMathLine text={label} x={cx} y={size + 24} fontSize={13} color={palette.muted} />
+        ) : (
+          <text x={cx} y={size + 16} textAnchor="middle" style={{ fill: palette.muted, fontSize: 13 }}>
+            {label}
+          </text>
+        ))}
     </svg>
   );
 }

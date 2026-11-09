@@ -34,6 +34,8 @@ math.
 - **Phrasal verbs and idioms:** *take away, add up, give away, pick out,
   left over, in all, altogether, figure out, ballpark.* The meaning isn't
   in the separate words. Teach the few the lab needs; avoid the rest.
+  When a lab teaches a phrasal verb in one unit (e.g. *go into* in Unit 2),
+  earlier units use a word students already know instead (*multiple*).
 - **Several words for one idea in the same unit** (*add, plus, sum, total,
   in all, altogether, combined*). Pick one; add the others one at a time.
 - **Idioms in feedback:** "You nailed it!", "Piece of cake!", "Hang in

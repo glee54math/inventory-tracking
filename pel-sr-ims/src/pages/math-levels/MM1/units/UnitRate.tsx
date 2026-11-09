@@ -4,9 +4,10 @@ import { palette, itemColors } from "../../shared/lib/palette";
 import type { ItemColor } from "../../shared/lib/palette";
 import { fmt, fracText, gcd, money, pick, randInt } from "../../shared/lib/math";
 import { choice, type Problem } from "../../shared/engine/types";
-import { QA, QB, Says, Segmented, Stepper } from "../../shared/engine/controls";
+import { Frac, QA, QB, Says, Segmented, Stepper } from "../../shared/engine/controls";
 import { unitRateTest } from "./UnitRateTest";
 import type { Unit } from "../../shared/units/types";
+import { MathText } from "../../shared/components/MathText";
 
 interface Preset {
   id: string;
@@ -46,50 +47,52 @@ function Explore() {
   const maxA = p.money ? 120 : 24;
 
   return (
-    <div className="explore">
-      <div className="controls">
-        <Segmented label="Situation" options={presets.map((x) => ({ id: x.id, label: x.name }))} value={id} onChange={choose} />
-        <div className="control-row">
-          <Stepper tone="a" label={p.a} value={av} min={1} max={maxA} step={p.money ? 5 : 1} onChange={setAv} />
-          <Stepper tone="b" label={p.b} value={bv} min={1} max={p.money ? 20 : 12} onChange={setBv} />
+    <MathText>
+      <div className="explore">
+        <div className="controls">
+          <Segmented label="Situation" options={presets.map((x) => ({ id: x.id, label: x.name }))} value={id} onChange={choose} />
+          <div className="control-row">
+            <Stepper tone="a" label={p.a} value={av} min={1} max={maxA} step={p.money ? 5 : 1} onChange={setAv} />
+            <Stepper tone="b" label={p.b} value={bv} min={1} max={p.money ? 20 : 12} onChange={setBv} />
+          </div>
+        </div>
+        <div className="stage">
+          <DoubleNumberLine
+            top={{ label: p.aShort, color: palette.a, format: p.money ? (v) => money(v) : (v) => fracText(Math.round(v * bv), bv, true) }}
+            bottom={{ label: p.bShort, color: palette.b }}
+            pairs={[
+              { top: 0, bottom: 0 },
+              { top: rate, bottom: 1, highlight: true },
+              ...(bv > 3 ? [{ top: rate * 2, bottom: 2 }] : []),
+              { top: av, bottom: bv },
+            ]}
+          />
+          {!p.money && (
+            <TapeDiagram
+              tapes={[
+                { label: p.aShort, units: bv, color: palette.a, values: Array(bv).fill(fracText(av, bv)), total: `${av} ${av === 1 ? p.aOne : p.a} shared equally` },
+                { label: p.bShort, units: bv, color: palette.b, values: Array(bv).fill("1"), total: `${bv} ${bv === 1 ? p.bOne : p.b}` },
+              ]}
+              unitWidth={Math.min(56, 460 / bv)}
+            />
+          )}
+        </div>
+        <div className="sayings">
+          <Says>
+            The ratio is <QA>{p.money ? money(av) : `${av} ${av === 1 ? p.aOne : p.a}`}</QA> to <QB>{`${bv} ${bv === 1 ? p.bOne : p.b}`}</QB>.
+          </Says>
+          <Says>
+            Divide to find the amount for one: {fmt(av)} ÷ {bv} = <b>{p.money ? money(rate) : fracText(av, bv, true)}</b>. That's{" "}
+            <QA>{p.money ? money(rate) : amount(av, bv, p.aOne, p.a)}</QA> <b>per</b> <QB>{p.bOne}</QB>. This is the <b>unit rate</b>.
+          </Says>
+          {!p.money && (
+            <Says>
+              Flip it for the other unit rate: {bv} ÷ {av} = <b>{fracText(bv, av, true)}</b>, so <QB>{amount(bv, av, p.bOne, p.b)}</QB> per <QA>{p.aOne}</QA>.
+            </Says>
+          )}
         </div>
       </div>
-      <div className="stage">
-        <DoubleNumberLine
-          top={{ label: p.aShort, color: palette.a, format: p.money ? (v) => money(v) : (v) => fracText(Math.round(v * bv), bv, true) }}
-          bottom={{ label: p.bShort, color: palette.b }}
-          pairs={[
-            { top: 0, bottom: 0 },
-            { top: rate, bottom: 1, highlight: true },
-            ...(bv > 3 ? [{ top: rate * 2, bottom: 2 }] : []),
-            { top: av, bottom: bv },
-          ]}
-        />
-        {!p.money && (
-          <TapeDiagram
-            tapes={[
-              { label: p.aShort, units: bv, color: palette.a, values: Array(bv).fill(fracText(av, bv)), total: `${av} ${av === 1 ? p.aOne : p.a} shared equally` },
-              { label: p.bShort, units: bv, color: palette.b, values: Array(bv).fill("1"), total: `${bv} ${bv === 1 ? p.bOne : p.b}` },
-            ]}
-            unitWidth={Math.min(56, 460 / bv)}
-          />
-        )}
-      </div>
-      <div className="sayings">
-        <Says>
-          The ratio is <QA>{p.money ? money(av) : `${av} ${av === 1 ? p.aOne : p.a}`}</QA> to <QB>{`${bv} ${bv === 1 ? p.bOne : p.b}`}</QB>.
-        </Says>
-        <Says>
-          Divide to find the amount for one: {fmt(av)} ÷ {bv} = <b>{p.money ? money(rate) : fracText(av, bv, true)}</b>. That's{" "}
-          <QA>{p.money ? money(rate) : amount(av, bv, p.aOne, p.a)}</QA> <b>per</b> <QB>{p.bOne}</QB>. This is the <b>unit rate</b>.
-        </Says>
-        {!p.money && (
-          <Says>
-            Flip it for the other unit rate: {bv} ÷ {av} = <b>{fracText(bv, av, true)}</b>, so <QB>{amount(bv, av, p.bOne, p.b)}</QB> per <QA>{p.aOne}</QA>.
-          </Says>
-        )}
-      </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -252,6 +255,7 @@ const fractionRateProblem = (): Problem => {
         kind: "number",
         prompt: <>How many {s.units} of {s.aThing} go with 1 {oneB}? (A fraction like 2/3 is fine.)</>,
         answer: a / b,
+        fracBoxes: "mixed",
         suffix: s.units,
         hint: `${a} ÷ ${b}. Division can be written as a fraction.`,
         explain: `${a} ÷ ${b} = ${fracText(a, b)}. The unit rate is ${qty(a, b, s.aThing)} per ${oneB}.`,
@@ -276,16 +280,18 @@ const fractionRateProblem = (): Problem => {
 /** Static snapshot for the cover page's preview carousel — see shared/components/UnitPreviewCarousel.tsx. */
 function Preview() {
   return (
-    <DoubleNumberLine
-      top={{ label: "dollars", color: palette.a, format: money }}
-      bottom={{ label: "items", color: palette.b }}
-      pairs={[
-        { top: 0, bottom: 0 },
-        { top: 5, bottom: 1, highlight: true },
-        { top: 15, bottom: 3 },
-      ]}
-      width={260}
-    />
+    <MathText>
+      <DoubleNumberLine
+        top={{ label: "dollars", color: palette.a, format: money }}
+        bottom={{ label: "items", color: palette.b }}
+        pairs={[
+          { top: 0, bottom: 0 },
+          { top: 5, bottom: 1, highlight: true },
+          { top: 15, bottom: 3 },
+        ]}
+        width={260}
+      />
+    </MathText>
   );
 }
 
@@ -300,7 +306,7 @@ export const unitRate: Unit = {
         A <b>unit rate</b> tells you how much for <b>one</b>. If a recipe uses <QA>3 cups of flour</QA> for <QB>4 cups of sugar</QB>, each cup of sugar gets 3 ÷ 4 = <b>3/4 cup of flour</b>.
       </p>
       <p>
-        For a ratio a:b, the unit rate is a/b. The word <b>per</b> means “for each one”: $75 for 15 hamburgers is <b>$5 per hamburger</b>.
+        For a ratio a:b, the unit rate is <Frac n="a" d="b" />. The word <b>per</b> means “for each one”: $75 for 15 hamburgers is <b>$5 per hamburger</b>.
       </p>
     </>
   ),

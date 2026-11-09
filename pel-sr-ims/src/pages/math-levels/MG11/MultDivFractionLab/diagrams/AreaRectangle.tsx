@@ -1,5 +1,7 @@
 import { palette } from "../../../shared/lib/palette";
 import { simplify } from "../../../shared/lib/math";
+import { spokenFractions } from "../../../shared/components/MathText";
+import { SvgMathLine } from "../../../shared/components/SvgMath";
 
 export interface AreaRectangleProps {
   /** The rectangle's actual length (top edge), e.g. [2,7] for 2/7. */
@@ -53,35 +55,30 @@ export function AreaRectangle({ length, width, find, unit = "mi", boxWidth = 280
 
   return (
     <svg
-      viewBox={`-90 -34 ${boxWidth + 110} ${boxHeight + 74}`}
+      viewBox={`-120 -50 ${boxWidth + 140} ${boxHeight + 90}`}
       width={boxWidth}
       style={{ maxWidth: "100%" }}
       role="img"
-      aria-label={`A rectangle with length ${find === "length" ? "unknown" : `${ln}/${ld} ${unit}`}, width ${find === "width" ? "unknown" : `${wn}/${wd} ${unit}`}, and area ${find === "area" ? "unknown" : `${an}/${ad} square ${unit}`}`}
+      aria-label={spokenFractions(`A rectangle with length ${find === "length" ? "unknown" : `${ln}/${ld} ${unit}`}, width ${find === "width" ? "unknown" : `${wn}/${wd} ${unit}`}, and area ${find === "area" ? "unknown" : `${an}/${ad} square ${unit}`}`)}
     >
       <g transform={`translate(${offsetX}, ${offsetY})`}>
         <rect x={0} y={0} width={w} height={h} style={{ fill: palette.aSoft, stroke: palette.ink, strokeWidth: 2 }} />
-        <text x={areaLabelInside ? w / 2 : w + 16} y={h / 2 - 4} textAnchor={areaLabelInside ? "middle" : "start"} style={{ fill: palette.a, fontSize: 17, fontWeight: 700 }}>
-          {find === "area" ? "Area = ?" : <>Area = {an}/{ad}</>}
-        </text>
+        {/* Fractions are drawn stacked (handwritten), so the area line sits a little higher. */}
+        <SvgMathLine text={find === "area" ? "Area = ?" : `Area = ${an}/${ad}`} x={areaLabelInside ? w / 2 : w + 16} y={find === "area" ? h / 2 - 4 : h / 2 - 6} anchor={areaLabelInside ? "middle" : "start"} fontSize={17} weight={700} color={palette.a} />
         {find !== "area" && (
-          <text x={areaLabelInside ? w / 2 : w + 16} y={h / 2 + 16} textAnchor={areaLabelInside ? "middle" : "start"} style={{ fill: palette.a, fontSize: 13 }}>
+          <text x={areaLabelInside ? w / 2 : w + 16} y={h / 2 + 22} textAnchor={areaLabelInside ? "middle" : "start"} style={{ fill: palette.a, fontSize: 13 }}>
             sq {unit}
           </text>
         )}
 
         {/* length: top edge */}
-        <text x={w / 2} y={-16} textAnchor="middle" style={{ fill: palette.b, fontSize: 14, fontWeight: 700 }}>
-          {find === "length" ? "length = ?" : <>length = {ln}/{ld} {unit}</>}
-        </text>
+        <SvgMathLine text={find === "length" ? "length = ?" : `length = ${ln}/${ld} ${unit}`} x={w / 2} y={find === "length" ? -16 : -22} fontSize={14} weight={700} color={palette.b} />
         <line x1={0} y1={-6} x2={w} y2={-6} style={{ stroke: palette.b, strokeWidth: 2 }} />
         <line x1={0} y1={-10} x2={0} y2={-2} style={{ stroke: palette.b, strokeWidth: 2 }} />
         <line x1={w} y1={-10} x2={w} y2={-2} style={{ stroke: palette.b, strokeWidth: 2 }} />
 
         {/* width: left edge */}
-        <text x={-14} y={h / 2} textAnchor="end" dominantBaseline="middle" style={{ fill: palette.c, fontSize: 14, fontWeight: 700 }}>
-          {find === "width" ? "width = ?" : <>width = {wn}/{wd} {unit}</>}
-        </text>
+        <SvgMathLine text={find === "width" ? "width = ?" : `width = ${wn}/${wd} ${unit}`} x={-14} y={h / 2 + 5} anchor="end" fontSize={14} weight={700} color={palette.c} />
         <line x1={-6} y1={0} x2={-6} y2={h} style={{ stroke: palette.c, strokeWidth: 2 }} />
         <line x1={-10} y1={0} x2={-2} y2={0} style={{ stroke: palette.c, strokeWidth: 2 }} />
         <line x1={-10} y1={h} x2={-2} y2={h} style={{ stroke: palette.c, strokeWidth: 2 }} />

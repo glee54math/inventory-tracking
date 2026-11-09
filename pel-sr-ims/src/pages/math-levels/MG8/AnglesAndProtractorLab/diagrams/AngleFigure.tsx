@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { palette, diagramFont } from "../../../shared/lib/palette";
 import { angleBetween, arcPath, dirPoint, norm360, pointerDir, toneColor, type Tone } from "./angleGeometry";
+import { MathText } from "../../../shared/components/MathText";
 
 export interface FigRay {
   dir: number;
@@ -130,52 +131,66 @@ export function AngleFigure({ rays, arcs = [], onDragRay, snap = 1, width = 260,
   const circleR = showCircle ? Math.max(...rays.map((ry) => ry.len ?? DEFAULT_LEN)) * 0.62 : 0;
 
   return (
-    <svg
-      ref={svgRef}
-      viewBox={`${minX.toFixed(1)} ${minY.toFixed(1)} ${vbW.toFixed(1)} ${vbH.toFixed(1)}`}
-      width={width}
-      style={{ display: "block", maxWidth: "100%", height: "auto", fontFamily: diagramFont, touchAction: draggable ? "none" : undefined, cursor: draggable ? "grab" : undefined }}
-      role="img"
-      aria-label={ariaLabel}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
-    >
-      {grid && (
-        <g style={{ stroke: palette.grid }} strokeWidth={1}>
-          {Array.from({ length: Math.ceil(vbW / 25) + 1 }, (_, i) => {
-            const x = Math.floor(minX / 25) * 25 + i * 25;
-            return <line key={`gx${i}`} x1={x} y1={minY} x2={x} y2={maxY} />;
-          })}
-          {Array.from({ length: Math.ceil(vbH / 25) + 1 }, (_, i) => {
-            const y = Math.floor(minY / 25) * 25 + i * 25;
-            return <line key={`gy${i}`} x1={minX} y1={y} x2={maxX} y2={y} />;
-          })}
-        </g>
-      )}
-      {showCircle && (
-        <g>
-          <circle cx={0} cy={0} r={circleR} fill="none" style={{ stroke: palette.line }} strokeWidth={1.5} strokeDasharray="4 4" />
-          {[0, 90, 180, 270].map((d) => {
-            const p0 = dirPoint(d, circleR - 5);
-            const p1 = dirPoint(d, circleR + 5);
-            return <line key={d} x1={p0.x} y1={p0.y} x2={p1.x} y2={p1.y} style={{ stroke: palette.muted }} strokeWidth={2} />;
-          })}
-        </g>
-      )}
-      {arcs.map((a, i) => {
-        const r = a.r ?? 26;
-        const color = toneColor(a.tone ?? "a");
-        if (a.square && Math.abs(a.sweep - 90) < 1e-6) {
-          const s = r * 0.62;
-          const p1 = dirPoint(a.from, s);
-          const p3 = dirPoint(a.from + 90, s);
-          const p2 = { x: p1.x + p3.x, y: p1.y + p3.y };
-          const mid = dirPoint(a.from + 45, s * 1.41 + 14);
+    <MathText>
+      <svg
+        ref={svgRef}
+        viewBox={`${minX.toFixed(1)} ${minY.toFixed(1)} ${vbW.toFixed(1)} ${vbH.toFixed(1)}`}
+        width={width}
+        style={{ display: "block", maxWidth: "100%", height: "auto", fontFamily: diagramFont, touchAction: draggable ? "none" : undefined, cursor: draggable ? "grab" : undefined }}
+        role="img"
+        aria-label={ariaLabel}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+      >
+        {grid && (
+          <g style={{ stroke: palette.grid }} strokeWidth={1}>
+            {Array.from({ length: Math.ceil(vbW / 25) + 1 }, (_, i) => {
+              const x = Math.floor(minX / 25) * 25 + i * 25;
+              return <line key={`gx${i}`} x1={x} y1={minY} x2={x} y2={maxY} />;
+            })}
+            {Array.from({ length: Math.ceil(vbH / 25) + 1 }, (_, i) => {
+              const y = Math.floor(minY / 25) * 25 + i * 25;
+              return <line key={`gy${i}`} x1={minX} y1={y} x2={maxX} y2={y} />;
+            })}
+          </g>
+        )}
+        {showCircle && (
+          <g>
+            <circle cx={0} cy={0} r={circleR} fill="none" style={{ stroke: palette.line }} strokeWidth={1.5} strokeDasharray="4 4" />
+            {[0, 90, 180, 270].map((d) => {
+              const p0 = dirPoint(d, circleR - 5);
+              const p1 = dirPoint(d, circleR + 5);
+              return <line key={d} x1={p0.x} y1={p0.y} x2={p1.x} y2={p1.y} style={{ stroke: palette.muted }} strokeWidth={2} />;
+            })}
+          </g>
+        )}
+        {arcs.map((a, i) => {
+          const r = a.r ?? 26;
+          const color = toneColor(a.tone ?? "a");
+          if (a.square && Math.abs(a.sweep - 90) < 1e-6) {
+            const s = r * 0.62;
+            const p1 = dirPoint(a.from, s);
+            const p3 = dirPoint(a.from + 90, s);
+            const p2 = { x: p1.x + p3.x, y: p1.y + p3.y };
+            const mid = dirPoint(a.from + 45, s * 1.41 + 14);
+            return (
+              <g key={`arc${i}`}>
+                <path d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y} L ${p3.x} ${p3.y}`} fill="none" style={{ stroke: color }} strokeWidth={2.5} />
+                {a.label && (
+                  <text x={mid.x} y={mid.y + 5} textAnchor="middle" fontSize={14} fontWeight={700} style={{ fill: color }}>
+                    {a.label}
+                  </text>
+                )}
+              </g>
+            );
+          }
+          const mid = dirPoint(a.from + a.sweep / 2, r + 15);
           return (
             <g key={`arc${i}`}>
-              <path d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y} L ${p3.x} ${p3.y}`} fill="none" style={{ stroke: color }} strokeWidth={2.5} />
+              {a.fill && <path d={arcPath(a.from, a.sweep, r, true)} style={{ fill: color }} opacity={0.16} />}
+              <path d={arcPath(a.from, a.sweep, r)} fill="none" style={{ stroke: color }} strokeWidth={2.5} />
               {a.label && (
                 <text x={mid.x} y={mid.y + 5} textAnchor="middle" fontSize={14} fontWeight={700} style={{ fill: color }}>
                   {a.label}
@@ -183,42 +198,30 @@ export function AngleFigure({ rays, arcs = [], onDragRay, snap = 1, width = 260,
               )}
             </g>
           );
-        }
-        const mid = dirPoint(a.from + a.sweep / 2, r + 15);
-        return (
-          <g key={`arc${i}`}>
-            {a.fill && <path d={arcPath(a.from, a.sweep, r, true)} style={{ fill: color }} opacity={0.16} />}
-            <path d={arcPath(a.from, a.sweep, r)} fill="none" style={{ stroke: color }} strokeWidth={2.5} />
-            {a.label && (
-              <text x={mid.x} y={mid.y + 5} textAnchor="middle" fontSize={14} fontWeight={700} style={{ fill: color }}>
-                {a.label}
-              </text>
-            )}
-          </g>
-        );
-      })}
-      {rays.map((r, i) => {
-        const len = r.len ?? DEFAULT_LEN;
-        const tip = dirPoint(r.dir, len);
-        const color = toneColor(r.tone ?? "ink");
-        const left = dirPoint(r.dir + 150, 9);
-        const right = dirPoint(r.dir - 150, 9);
-        const lab = dirPoint(r.dir, len + 16);
-        return (
-          <g key={`ray${i}`}>
-            <line x1={0} y1={0} x2={tip.x} y2={tip.y} style={{ stroke: color }} strokeWidth={3} strokeLinecap="round" />
-            <path d={`M ${tip.x} ${tip.y} L ${tip.x + left.x} ${tip.y + left.y} M ${tip.x} ${tip.y} L ${tip.x + right.x} ${tip.y + right.y}`} style={{ stroke: color }} strokeWidth={3} strokeLinecap="round" fill="none" />
-            {r.draggable && draggable && <circle cx={tip.x} cy={tip.y} r={8} style={{ fill: color }} opacity={0.35} />}
-            {r.label && (
-              <text x={lab.x} y={lab.y + 5} textAnchor="middle" fontSize={14} fontWeight={700} style={{ fill: color }}>
-                {r.label}
-              </text>
-            )}
-          </g>
-        );
-      })}
-      <circle cx={0} cy={0} r={4.5} style={{ fill: palette.ink }} />
-      {draggable && <title>Drag a ray with a dot on its tip to turn it.</title>}
-    </svg>
+        })}
+        {rays.map((r, i) => {
+          const len = r.len ?? DEFAULT_LEN;
+          const tip = dirPoint(r.dir, len);
+          const color = toneColor(r.tone ?? "ink");
+          const left = dirPoint(r.dir + 150, 9);
+          const right = dirPoint(r.dir - 150, 9);
+          const lab = dirPoint(r.dir, len + 16);
+          return (
+            <g key={`ray${i}`}>
+              <line x1={0} y1={0} x2={tip.x} y2={tip.y} style={{ stroke: color }} strokeWidth={3} strokeLinecap="round" />
+              <path d={`M ${tip.x} ${tip.y} L ${tip.x + left.x} ${tip.y + left.y} M ${tip.x} ${tip.y} L ${tip.x + right.x} ${tip.y + right.y}`} style={{ stroke: color }} strokeWidth={3} strokeLinecap="round" fill="none" />
+              {r.draggable && draggable && <circle cx={tip.x} cy={tip.y} r={8} style={{ fill: color }} opacity={0.35} />}
+              {r.label && (
+                <text x={lab.x} y={lab.y + 5} textAnchor="middle" fontSize={14} fontWeight={700} style={{ fill: color }}>
+                  {r.label}
+                </text>
+              )}
+            </g>
+          );
+        })}
+        <circle cx={0} cy={0} r={4.5} style={{ fill: palette.ink }} />
+        {draggable && <title>Drag a ray with a dot on its tip to turn it.</title>}
+      </svg>
+    </MathText>
   );
 }

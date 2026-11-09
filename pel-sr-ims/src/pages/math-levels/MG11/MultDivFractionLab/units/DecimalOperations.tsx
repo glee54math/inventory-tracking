@@ -7,6 +7,7 @@ import { choice, customStep, verticalMultiply, type Problem, type Step } from ".
 import { QA, QB, Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { decimalOperationsTest } from "./DecimalOperationsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const randMoney2 = (min: number, max: number) => randInt(min * 100, max * 100) / 100; // 2 decimal places
@@ -51,20 +52,22 @@ const ALIGN_BOTTOM = 5.027;
  */
 function PlaceholderZeroExample() {
   return (
-    <div className="placeholder-zero-example" role="img" aria-label="2.5 equals 2.50 — the extra zero is a placeholder and doesn't change the value">
-      <div className="pz-equation">
-        <span className="pz-value">2.5</span>
-        <span className="pz-eq">=</span>
-        <span className="pz-value-group">
+    <MathText>
+      <div className="placeholder-zero-example" role="img" aria-label="2.5 equals 2.50 — the extra zero is a placeholder and doesn't change the value">
+        <div className="pz-equation">
           <span className="pz-value">2.5</span>
-          <span className="pz-zero-wrap">
-            <span className="pz-zero">0</span>
-            <span className="pz-zero-caption">placeholder</span>
+          <span className="pz-eq">=</span>
+          <span className="pz-value-group">
+            <span className="pz-value">2.5</span>
+            <span className="pz-zero-wrap">
+              <span className="pz-zero">0</span>
+              <span className="pz-zero-caption">placeholder</span>
+            </span>
           </span>
-        </span>
+        </div>
+        <p className="pz-caption">Same value — the extra zero doesn't add anything, it just fills the empty place.</p>
       </div>
-      <p className="pz-caption">Same value — the extra zero doesn't add anything, it just fills the empty place.</p>
-    </div>
+    </MathText>
   );
 }
 
@@ -170,90 +173,92 @@ function AlignDecimalsDrill({
     });
 
   return (
-    <div className="align-drill">
-      <div className="align-drill-top">
-        <div className="align-drill-text">
-          <p className="intro-gate-title">Before lining anything up, notice a few key details about these two numbers:</p>
-          <p>
-            <b>{ALIGN_TOP}</b> and <b>{ALIGN_BOTTOM}</b>
+    <MathText>
+      <div className="align-drill">
+        <div className="align-drill-top">
+          <div className="align-drill-text">
+            <p className="intro-gate-title">Before lining anything up, notice a few key details about these two numbers:</p>
+            <p>
+              <b>{ALIGN_TOP}</b> and <b>{ALIGN_BOTTOM}</b>
+            </p>
+            <div className="controls">
+              <div className="control-row">
+                <label>
+                  Digits after the decimal point in {ALIGN_TOP}?{" "}
+                  <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok1, checked) }} value={a1} onChange={(e) => setA1(e.target.value)} />
+                </label>
+              </div>
+              <div className="control-row">
+                <label>
+                  Digits after the decimal point in {ALIGN_BOTTOM}?{" "}
+                  <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok2, checked) }} value={a2} onChange={(e) => setA2(e.target.value)} />
+                </label>
+              </div>
+              <div className="control-row">
+                <label>
+                  {ALIGN_BOTTOM} has more decimal places. Rewrite {ALIGN_TOP} with the same number of decimal places, using placeholder zeros:{" "}
+                  <input className="answer" autoComplete="off" style={{ width: 90, ...fieldStyle(ok3, checked) }} value={a3} onChange={(e) => setA3(e.target.value)} />
+                </label>
+              </div>
+            </div>
+          </div>
+          <PlaceholderZeroExample />
+        </div>
+        <button className="btn primary" disabled={!filled1} onClick={() => setChecked(true)}>
+          Check my work
+        </button>
+        {checked && filled1 && (
+          <p className={`feedback ${allOk ? "good" : "bad"}`} role="alert">
+            {allOk
+              ? `Exactly — ${paddedTop} is equivalent to ${ALIGN_TOP}; placeholder zeros never change a number's value. Now build the lined-up columns yourself, one digit at a time:`
+              : "Not quite yet — check each answer above against the two numbers."}
           </p>
-          <div className="controls">
-            <div className="control-row">
-              <label>
-                Digits after the decimal point in {ALIGN_TOP}?{" "}
-                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok1, checked) }} value={a1} onChange={(e) => setA1(e.target.value)} />
-              </label>
+        )}
+        {checked && allOk && (
+          <div className="align-stack-wrap">
+            <div className="align-columns">
+              <div className="align-row">{renderSlots(topStr, topVals, setTopVals)}</div>
+              <div className="align-row">
+                <span className="align-slot align-slot-sign">{opSign}</span>
+                {renderSlots(bottomStr, bottomVals, setBottomVals)}
+              </div>
+              <div className="align-rule" style={{ width: `${width}em` }} />
             </div>
-            <div className="control-row">
-              <label>
-                Digits after the decimal point in {ALIGN_BOTTOM}?{" "}
-                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok2, checked) }} value={a2} onChange={(e) => setA2(e.target.value)} />
-              </label>
-            </div>
-            <div className="control-row">
-              <label>
-                {ALIGN_BOTTOM} has more decimal places. Rewrite {ALIGN_TOP} with the same number of decimal places, using placeholder zeros:{" "}
-                <input className="answer" autoComplete="off" style={{ width: 90, ...fieldStyle(ok3, checked) }} value={a3} onChange={(e) => setA3(e.target.value)} />
-              </label>
-            </div>
+            <button className="btn primary" disabled={!filled2} onClick={() => setChecked2(true)}>
+              Check my setup
+            </button>
+            {checked2 && filled2 && (
+              <p className={`feedback ${allOk2 ? "good" : "bad"}`} role="alert">
+                {allOk2 ? `Lined up perfectly — every digit is in the right place-value column. Now ${opWord} them:` : "Not quite — check that every digit sits in the same column as the matching place value above it."}
+              </p>
+            )}
           </div>
-        </div>
-        <PlaceholderZeroExample />
+        )}
+        {checked2 && allOk2 && (
+          <div className="align-stack-wrap">
+            <label>
+              {ALIGN_TOP} {opSign} {ALIGN_BOTTOM} ={" "}
+              <input
+                className="answer"
+                autoComplete="off"
+                style={{ width: 90, ...fieldStyle(sumOk, checked3) }}
+                value={sumInput}
+                onChange={(e) => setSumInput(e.target.value)}
+              />
+            </label>
+            <button className="btn primary" style={{ marginLeft: 14 }} onClick={() => setChecked3(true)}>
+              Check my answer
+            </button>
+            {checked3 && (
+              <p className={`feedback ${sumOk ? "good" : "bad"}`} role="alert">
+                {sumOk ? `Correct — ${sumTarget}.` : `Not quite — ${opWord} column by column, ${operation === "add" ? "carrying when a column totals 10 or more" : "borrowing from the next column when you need to"}.`}
+              </p>
+            )}
+          </div>
+        )}
+        {checked3 && sumOk && <PlaceValueColumns operation={operation} top={ALIGN_TOP} bottom={ALIGN_BOTTOM} done={1} />}
       </div>
-      <button className="btn primary" disabled={!filled1} onClick={() => setChecked(true)}>
-        Check my work
-      </button>
-      {checked && filled1 && (
-        <p className={`feedback ${allOk ? "good" : "bad"}`} role="alert">
-          {allOk
-            ? `Exactly — ${paddedTop} is equivalent to ${ALIGN_TOP}; placeholder zeros never change a number's value. Now build the lined-up columns yourself, one digit at a time:`
-            : "Not quite yet — check each answer above against the two numbers."}
-        </p>
-      )}
-      {checked && allOk && (
-        <div className="align-stack-wrap">
-          <div className="align-columns">
-            <div className="align-row">{renderSlots(topStr, topVals, setTopVals)}</div>
-            <div className="align-row">
-              <span className="align-slot align-slot-sign">{opSign}</span>
-              {renderSlots(bottomStr, bottomVals, setBottomVals)}
-            </div>
-            <div className="align-rule" style={{ width: `${width}em` }} />
-          </div>
-          <button className="btn primary" disabled={!filled2} onClick={() => setChecked2(true)}>
-            Check my setup
-          </button>
-          {checked2 && filled2 && (
-            <p className={`feedback ${allOk2 ? "good" : "bad"}`} role="alert">
-              {allOk2 ? `Lined up perfectly — every digit is in the right place-value column. Now ${opWord} them:` : "Not quite — check that every digit sits in the same column as the matching place value above it."}
-            </p>
-          )}
-        </div>
-      )}
-      {checked2 && allOk2 && (
-        <div className="align-stack-wrap">
-          <label>
-            {ALIGN_TOP} {opSign} {ALIGN_BOTTOM} ={" "}
-            <input
-              className="answer"
-              autoComplete="off"
-              style={{ width: 90, ...fieldStyle(sumOk, checked3) }}
-              value={sumInput}
-              onChange={(e) => setSumInput(e.target.value)}
-            />
-          </label>
-          <button className="btn primary" style={{ marginLeft: 14 }} onClick={() => setChecked3(true)}>
-            Check my answer
-          </button>
-          {checked3 && (
-            <p className={`feedback ${sumOk ? "good" : "bad"}`} role="alert">
-              {sumOk ? `Correct — ${sumTarget}.` : `Not quite — ${opWord} column by column, ${operation === "add" ? "carrying when a column totals 10 or more" : "borrowing from the next column when you need to"}.`}
-            </p>
-          )}
-        </div>
-      )}
-      {checked3 && sumOk && <PlaceValueColumns operation={operation} top={ALIGN_TOP} bottom={ALIGN_BOTTOM} done={1} />}
-    </div>
+    </MathText>
   );
 }
 
@@ -309,35 +314,37 @@ function DecimalPointHop({ digits, places, placeholderCount = 0 }: { digits: str
   const frac = digits.slice(L - places);
 
   return (
-    <div className="decimal-hop">
-      <div className="decimal-hop-track" style={{ width: L * HOP_BOX_W }} role="img" aria-label={`Counting ${places} place${places === 1 ? "" : "s"} from the right of ${digits} places the decimal point, giving ${whole}.${frac}`}>
-        {digits.split("").map((d, i) => (
-          <span key={i} className={i < placeholderCount ? "decimal-hop-digit decimal-hop-placeholder" : "decimal-hop-digit"}>
-            {d}
-          </span>
-        ))}
-        {Array.from({ length: places }, (_, i) => {
-          const h = i + 1;
-          return (
-            <span key={h} className={hop >= h ? "decimal-hop-mark passed" : "decimal-hop-mark"} style={{ left: gapX(h) }}>
-              {h}
+    <MathText>
+      <div className="decimal-hop">
+        <div className="decimal-hop-track" style={{ width: L * HOP_BOX_W }} role="img" aria-label={`Counting ${places} place${places === 1 ? "" : "s"} from the right of ${digits} places the decimal point, giving ${whole}.${frac}`}>
+          {digits.split("").map((d, i) => (
+            <span key={i} className={i < placeholderCount ? "decimal-hop-digit decimal-hop-placeholder" : "decimal-hop-digit"}>
+              {d}
             </span>
-          );
-        })}
-        <span className="decimal-hop-point" style={{ left: gapX(hop) }}>
-          .
-        </span>
+          ))}
+          {Array.from({ length: places }, (_, i) => {
+            const h = i + 1;
+            return (
+              <span key={h} className={hop >= h ? "decimal-hop-mark passed" : "decimal-hop-mark"} style={{ left: gapX(h) }}>
+                {h}
+              </span>
+            );
+          })}
+          <span className="decimal-hop-point" style={{ left: gapX(hop) }}>
+            .
+          </span>
+        </div>
+        <p className="decimal-hop-caption">
+          {settled ? (
+            <>
+              = <b>{whole}.{frac}</b>
+            </>
+          ) : (
+            `Counting ${hop} of ${places} place${places === 1 ? "" : "s"}…`
+          )}
+        </p>
       </div>
-      <p className="decimal-hop-caption">
-        {settled ? (
-          <>
-            = <b>{whole}.{frac}</b>
-          </>
-        ) : (
-          `Counting ${hop} of ${places} place${places === 1 ? "" : "s"}…`
-        )}
-      </p>
-    </div>
+    </MathText>
   );
 }
 
@@ -356,23 +363,25 @@ function MultiplyPlaceholderExample() {
   const product = 6;
   const places = 2; // decA and decB each have 1 decimal place
   return (
-    <div className="placeholder-zero-example">
-      <p className="pz-caption" style={{ margin: "0 0 10px" }}>
-        {decA} × {decB} — ignore the points:
-      </p>
-      {/* A standalone, individually-true fact (3 × 2 = 6) first, THEN the
-          padding-and-hopping illustration below — stating them as one line
-          ("3 × 2 = 006") would read as a wrong multiplication fact. */}
-      <div className="pz-equation" style={{ fontSize: 22, marginBottom: 4 }}>
-        <span className="pz-value">
-          {wholeA} × {wholeB} = {product}
-        </span>
+    <MathText>
+      <div className="placeholder-zero-example">
+        <p className="pz-caption" style={{ margin: "0 0 10px" }}>
+          {decA} × {decB} — ignore the points:
+        </p>
+        {/* A standalone, individually-true fact (3 × 2 = 6) first, THEN the
+            padding-and-hopping illustration below — stating them as one line
+            ("3 × 2 = 006") would read as a wrong multiplication fact. */}
+        <div className="pz-equation" style={{ fontSize: 22, marginBottom: 4 }}>
+          <span className="pz-value">
+            {wholeA} × {wholeB} = {product}
+          </span>
+        </div>
+        <p className="pz-caption" style={{ margin: "0 0 4px" }}>
+          {product} needs {places} decimal places but is only 1 digit long, so a placeholder zero (highlighted) is added to the front. Watch the point count over:
+        </p>
+        <DecimalPointHop digits="06" places={places} placeholderCount={1} />
       </div>
-      <p className="pz-caption" style={{ margin: "0 0 4px" }}>
-        {product} needs {places} decimal places but is only 1 digit long, so a placeholder zero (highlighted) is added to the front. Watch the point count over:
-      </p>
-      <DecimalPointHop digits="06" places={places} placeholderCount={1} />
-    </div>
+    </MathText>
   );
 }
 
@@ -460,164 +469,166 @@ function MultiplyDecimalsDrill({
   const fieldStyle = (ok: boolean, isChecked: boolean): CSSProperties => (isChecked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
   return (
-    <div className="align-drill">
-      <div className="align-drill-top">
-        <div className="align-drill-text">
-          <p className="intro-gate-title">Step 1: Multiply as whole numbers</p>
-          <p>
-            Ignore the decimal points completely — multiply <b>{MULT_A}</b> and <b>{MULT_B}</b> like regular whole numbers: <b>{wholeA}</b> × <b>{wholeB}</b>. You do not need to line up the decimal points at all.
-          </p>
-          <div className="controls">
-            <div className="control-row">
-              <label>
-                Break {wholeB} into {bTens} + {bOnes}. What is {wholeA} × {bOnes}?{" "}
-                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 60, ...fieldStyle(okP1, checked1) }} value={p1} onChange={(e) => setP1(e.target.value)} />
-              </label>
-            </div>
-            <div className="control-row">
-              <label>
-                What is {wholeA} × {bTens}?{" "}
-                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 70, ...fieldStyle(okP2, checked1) }} value={p2} onChange={(e) => setP2(e.target.value)} />
-              </label>
-            </div>
-            <div className="control-row">
-              <label>
-                Add your two answers above together — what's {wholeA} × {wholeB}?{" "}
-                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 70, ...fieldStyle(ok1, checked1) }} value={s1} onChange={(e) => setS1(e.target.value)} />
-              </label>
-            </div>
-          </div>
-          <button className="btn primary" disabled={!filled1} onClick={() => setChecked1(true)}>
-            Check my work
-          </button>
-          {checked1 && filled1 && (
-            <p className={`feedback ${allOk1 ? "good" : "bad"}`} role="alert">
-              {allOk1
-                ? `Exactly — ${wholeA} × ${bOnes} = ${partialOnes}, ${wholeA} × ${bTens} = ${partialTens}, and ${partialOnes} + ${partialTens} = ${wholeProduct}.`
-                : `Not quite — multiply ${wholeA} by each part of ${wholeB} (${bOnes} and ${bTens}) separately, then add those two results together.`}
+    <MathText>
+      <div className="align-drill">
+        <div className="align-drill-top">
+          <div className="align-drill-text">
+            <p className="intro-gate-title">Step 1: Multiply as whole numbers</p>
+            <p>
+              Ignore the decimal points completely — multiply <b>{MULT_A}</b> and <b>{MULT_B}</b> like regular whole numbers: <b>{wholeA}</b> × <b>{wholeB}</b>. You do not need to line up the decimal points at all.
             </p>
-          )}
+            <div className="controls">
+              <div className="control-row">
+                <label>
+                  Break {wholeB} into {bTens} + {bOnes}. What is {wholeA} × {bOnes}?{" "}
+                  <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 60, ...fieldStyle(okP1, checked1) }} value={p1} onChange={(e) => setP1(e.target.value)} />
+                </label>
+              </div>
+              <div className="control-row">
+                <label>
+                  What is {wholeA} × {bTens}?{" "}
+                  <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 70, ...fieldStyle(okP2, checked1) }} value={p2} onChange={(e) => setP2(e.target.value)} />
+                </label>
+              </div>
+              <div className="control-row">
+                <label>
+                  Add your two answers above together — what's {wholeA} × {wholeB}?{" "}
+                  <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 70, ...fieldStyle(ok1, checked1) }} value={s1} onChange={(e) => setS1(e.target.value)} />
+                </label>
+              </div>
+            </div>
+            <button className="btn primary" disabled={!filled1} onClick={() => setChecked1(true)}>
+              Check my work
+            </button>
+            {checked1 && filled1 && (
+              <p className={`feedback ${allOk1 ? "good" : "bad"}`} role="alert">
+                {allOk1
+                  ? `Exactly — ${wholeA} × ${bOnes} = ${partialOnes}, ${wholeA} × ${bTens} = ${partialTens}, and ${partialOnes} + ${partialTens} = ${wholeProduct}.`
+                  : `Not quite — multiply ${wholeA} by each part of ${wholeB} (${bOnes} and ${bTens}) separately, then add those two results together.`}
+              </p>
+            )}
+          </div>
+          <MultiplyPlaceholderExample />
         </div>
-        <MultiplyPlaceholderExample />
+
+        {checked1 && allOk1 && (
+          <div className="align-stack-wrap">
+            <p className="intro-gate-title">Step 2: Count the decimal places</p>
+            <p>Look at the ORIGINAL numbers (before you ignored the points) and count the digits to the right of each decimal point.</p>
+            <div className="controls">
+              <div className="control-row">
+                <label>
+                  Decimal places in {MULT_A}?{" "}
+                  <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok2a, checked2) }} value={s2a} onChange={(e) => setS2a(e.target.value)} />
+                </label>
+              </div>
+              <div className="control-row">
+                <label>
+                  Decimal places in {MULT_B}?{" "}
+                  <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok2b, checked2) }} value={s2b} onChange={(e) => setS2b(e.target.value)} />
+                </label>
+              </div>
+              <div className="control-row">
+                <label>
+                  Total decimal places needed?{" "}
+                  <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok2c, checked2) }} value={s2c} onChange={(e) => setS2c(e.target.value)} />
+                </label>
+              </div>
+            </div>
+            <button className="btn primary" disabled={!filled2} onClick={() => setChecked2(true)}>
+              Check my work
+            </button>
+            {checked2 && filled2 && (
+              <p className={`feedback ${allOk2 ? "good" : "bad"}`} role="alert">
+                {allOk2
+                  ? `Right — ${placesA} + ${placesB} = ${totalPlaces} decimal places total. Now place the decimal point in your product:`
+                  : "Not quite — count the digits after the decimal point in each ORIGINAL number, then add the two counts together."}
+              </p>
+            )}
+          </div>
+        )}
+
+        {checked2 && allOk2 && (
+          <div className="align-stack-wrap">
+            <p className="intro-gate-title">Step 3: Place the decimal point</p>
+            <label>
+              Start at the far right of {wholeProduct} and count {totalPlaces} place{totalPlaces === 1 ? "" : "s"} to the left. What's the final product?{" "}
+              <input className="answer" autoComplete="off" style={{ width: 90, ...fieldStyle(ok3, checked3) }} value={s3} onChange={(e) => setS3(e.target.value)} />
+            </label>
+            <button className="btn primary" style={{ marginLeft: 14 }} onClick={() => setChecked3(true)}>
+              Check my answer
+            </button>
+            {checked3 && (
+              <p className={`feedback ${ok3 ? "good" : "bad"}`} role="alert">
+                {ok3 ? `Correct — ${MULT_A} × ${MULT_B} = ${finalProduct}.` : `Not quite — counting ${totalPlaces} places from the right of ${wholeProduct} gives ${finalProduct}.`}
+              </p>
+            )}
+          </div>
+        )}
+        {/* A capstone, not a new numbered guide step — the same two partial
+            products and final answer from steps 1-3, just rewritten in the
+            standard vertical form a student would actually use on paper,
+            decimal points and all, so the sentence-based steps above and the
+            written form connect as the same procedure instead of two
+            different-looking things. */}
+        {checked3 && ok3 && (
+          <div className="align-stack-wrap">
+            <p className="intro-gate-title">Now try it the way you'd write it on paper</p>
+            <div className="vmult-stack">
+              <div className="vmult-row vmult-given">{MULT_A}</div>
+              <div className="vmult-row vmult-given">
+                <span className="vmult-op">×</span> {MULT_B}
+              </div>
+              <div className="vmult-rule" />
+              <div className="vmult-row">
+                <input
+                  className="answer"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  aria-label={`${wholeA} times ${bOnes}`}
+                  style={{ width: 90, textAlign: "right", fontFamily: "'Courier New', monospace", fontSize: 20, ...fieldStyle(okV1, checked4) }}
+                  value={v1}
+                  onChange={(e) => setV1(e.target.value)}
+                />
+              </div>
+              <div className="vmult-row">
+                <input
+                  className="answer"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  aria-label={`${wholeA} times ${bTens}`}
+                  style={{ width: 90, textAlign: "right", fontFamily: "'Courier New', monospace", fontSize: 20, ...fieldStyle(okV2, checked4) }}
+                  value={v2}
+                  onChange={(e) => setV2(e.target.value)}
+                />
+              </div>
+              <div className="vmult-rule" />
+              <div className="vmult-row">
+                <input
+                  className="answer"
+                  autoComplete="off"
+                  aria-label={`${MULT_A} times ${MULT_B}, with the decimal point`}
+                  style={{ width: 90, textAlign: "right", fontFamily: "'Courier New', monospace", fontSize: 20, ...fieldStyle(okV3, checked4) }}
+                  value={v3}
+                  onChange={(e) => setV3(e.target.value)}
+                />
+              </div>
+            </div>
+            <button className="btn primary" disabled={!filled4} onClick={() => setChecked4(true)}>
+              Check my work
+            </button>
+            {checked4 && filled4 && (
+              <p className={`feedback ${allOk4 ? "good" : "bad"}`} role="alert">
+                {allOk4
+                  ? `Exactly — the same two partial products and final answer as before, just written the standard way.`
+                  : `Not quite — these are the same two partial products and final answer from steps 1-3, written in the standard vertical form: ${wholeA} × ${bOnes}, then ${wholeA} × ${bTens} shifted one place left, then their sum with the point placed.`}
+              </p>
+            )}
+          </div>
+        )}
+        {checked4 && allOk4 && <PlaceValueColumns operation="multiply" top={MULT_A} bottom={MULT_B} done={1} />}
       </div>
-
-      {checked1 && allOk1 && (
-        <div className="align-stack-wrap">
-          <p className="intro-gate-title">Step 2: Count the decimal places</p>
-          <p>Look at the ORIGINAL numbers (before you ignored the points) and count the digits to the right of each decimal point.</p>
-          <div className="controls">
-            <div className="control-row">
-              <label>
-                Decimal places in {MULT_A}?{" "}
-                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok2a, checked2) }} value={s2a} onChange={(e) => setS2a(e.target.value)} />
-              </label>
-            </div>
-            <div className="control-row">
-              <label>
-                Decimal places in {MULT_B}?{" "}
-                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok2b, checked2) }} value={s2b} onChange={(e) => setS2b(e.target.value)} />
-              </label>
-            </div>
-            <div className="control-row">
-              <label>
-                Total decimal places needed?{" "}
-                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok2c, checked2) }} value={s2c} onChange={(e) => setS2c(e.target.value)} />
-              </label>
-            </div>
-          </div>
-          <button className="btn primary" disabled={!filled2} onClick={() => setChecked2(true)}>
-            Check my work
-          </button>
-          {checked2 && filled2 && (
-            <p className={`feedback ${allOk2 ? "good" : "bad"}`} role="alert">
-              {allOk2
-                ? `Right — ${placesA} + ${placesB} = ${totalPlaces} decimal places total. Now place the decimal point in your product:`
-                : "Not quite — count the digits after the decimal point in each ORIGINAL number, then add the two counts together."}
-            </p>
-          )}
-        </div>
-      )}
-
-      {checked2 && allOk2 && (
-        <div className="align-stack-wrap">
-          <p className="intro-gate-title">Step 3: Place the decimal point</p>
-          <label>
-            Start at the far right of {wholeProduct} and count {totalPlaces} place{totalPlaces === 1 ? "" : "s"} to the left. What's the final product?{" "}
-            <input className="answer" autoComplete="off" style={{ width: 90, ...fieldStyle(ok3, checked3) }} value={s3} onChange={(e) => setS3(e.target.value)} />
-          </label>
-          <button className="btn primary" style={{ marginLeft: 14 }} onClick={() => setChecked3(true)}>
-            Check my answer
-          </button>
-          {checked3 && (
-            <p className={`feedback ${ok3 ? "good" : "bad"}`} role="alert">
-              {ok3 ? `Correct — ${MULT_A} × ${MULT_B} = ${finalProduct}.` : `Not quite — counting ${totalPlaces} places from the right of ${wholeProduct} gives ${finalProduct}.`}
-            </p>
-          )}
-        </div>
-      )}
-      {/* A capstone, not a new numbered guide step — the same two partial
-          products and final answer from steps 1-3, just rewritten in the
-          standard vertical form a student would actually use on paper,
-          decimal points and all, so the sentence-based steps above and the
-          written form connect as the same procedure instead of two
-          different-looking things. */}
-      {checked3 && ok3 && (
-        <div className="align-stack-wrap">
-          <p className="intro-gate-title">Now try it the way you'd write it on paper</p>
-          <div className="vmult-stack">
-            <div className="vmult-row vmult-given">{MULT_A}</div>
-            <div className="vmult-row vmult-given">
-              <span className="vmult-op">×</span> {MULT_B}
-            </div>
-            <div className="vmult-rule" />
-            <div className="vmult-row">
-              <input
-                className="answer"
-                inputMode="numeric"
-                autoComplete="off"
-                aria-label={`${wholeA} times ${bOnes}`}
-                style={{ width: 90, textAlign: "right", fontFamily: "'Courier New', monospace", fontSize: 20, ...fieldStyle(okV1, checked4) }}
-                value={v1}
-                onChange={(e) => setV1(e.target.value)}
-              />
-            </div>
-            <div className="vmult-row">
-              <input
-                className="answer"
-                inputMode="numeric"
-                autoComplete="off"
-                aria-label={`${wholeA} times ${bTens}`}
-                style={{ width: 90, textAlign: "right", fontFamily: "'Courier New', monospace", fontSize: 20, ...fieldStyle(okV2, checked4) }}
-                value={v2}
-                onChange={(e) => setV2(e.target.value)}
-              />
-            </div>
-            <div className="vmult-rule" />
-            <div className="vmult-row">
-              <input
-                className="answer"
-                autoComplete="off"
-                aria-label={`${MULT_A} times ${MULT_B}, with the decimal point`}
-                style={{ width: 90, textAlign: "right", fontFamily: "'Courier New', monospace", fontSize: 20, ...fieldStyle(okV3, checked4) }}
-                value={v3}
-                onChange={(e) => setV3(e.target.value)}
-              />
-            </div>
-          </div>
-          <button className="btn primary" disabled={!filled4} onClick={() => setChecked4(true)}>
-            Check my work
-          </button>
-          {checked4 && filled4 && (
-            <p className={`feedback ${allOk4 ? "good" : "bad"}`} role="alert">
-              {allOk4
-                ? `Exactly — the same two partial products and final answer as before, just written the standard way.`
-                : `Not quite — these are the same two partial products and final answer from steps 1-3, written in the standard vertical form: ${wholeA} × ${bOnes}, then ${wholeA} × ${bTens} shifted one place left, then their sum with the point placed.`}
-            </p>
-          )}
-        </div>
-      )}
-      {checked4 && allOk4 && <PlaceValueColumns operation="multiply" top={MULT_A} bottom={MULT_B} done={1} />}
-    </div>
+    </MathText>
   );
 }
 
@@ -698,11 +709,13 @@ function DecimalShiftHop({ top, bottom, places }: { top: number; bottom: number;
   };
 
   return (
-    <div className="decimal-hop">
-      {renderTrack(top, "top")}
-      {renderTrack(bottom, "bottom")}
-      <p className="decimal-hop-caption">{settled ? <>× {Math.pow(10, places)} — now both are whole numbers</> : "Watch both decimal points move…"}</p>
-    </div>
+    <MathText>
+      <div className="decimal-hop">
+        {renderTrack(top, "top")}
+        {renderTrack(bottom, "bottom")}
+        <p className="decimal-hop-caption">{settled ? <>× {Math.pow(10, places)} — now both are whole numbers</> : "Watch both decimal points move…"}</p>
+      </div>
+    </MathText>
   );
 }
 
@@ -716,27 +729,29 @@ function DecimalShiftHop({ top, bottom, places }: { top: number; bottom: number;
  */
 function DividePlaceholderExample() {
   return (
-    <div className="placeholder-zero-example">
-      <p className="pz-caption" style={{ margin: "0 0 10px" }}>
-        0.5 ÷ 0.4 — shift both by 10:
-      </p>
-      <div className="pz-equation" style={{ fontSize: 20, marginBottom: 4 }}>
-        <span className="pz-value">5 ÷ 4 = 1 R1</span>
+    <MathText>
+      <div className="placeholder-zero-example">
+        <p className="pz-caption" style={{ margin: "0 0 10px" }}>
+          0.5 ÷ 0.4 — shift both by 10:
+        </p>
+        <div className="pz-equation" style={{ fontSize: 20, marginBottom: 4 }}>
+          <span className="pz-value">5 ÷ 4 = 1 R1</span>
+        </div>
+        <p className="pz-caption" style={{ margin: "0 0 4px" }}>
+          There's a remainder, and no digits left to bring down — so bring down a <b>placeholder zero</b> instead (and put a point in the quotient):
+        </p>
+        <div className="pz-equation" style={{ fontSize: 20, marginBottom: 4 }}>
+          <span className="pz-value">10 ÷ 4 = 2 R2</span>
+        </div>
+        <p className="pz-caption" style={{ margin: "0 0 4px" }}>Still a remainder — bring down another zero:</p>
+        <div className="pz-equation" style={{ fontSize: 20, marginBottom: 4 }}>
+          <span className="pz-value">20 ÷ 4 = 5 R0</span>
+        </div>
+        <p className="pz-caption">
+          No remainder — done: <b>0.5 ÷ 0.4 = 1.25</b>.
+        </p>
       </div>
-      <p className="pz-caption" style={{ margin: "0 0 4px" }}>
-        There's a remainder, and no digits left to bring down — so bring down a <b>placeholder zero</b> instead (and put a point in the quotient):
-      </p>
-      <div className="pz-equation" style={{ fontSize: 20, marginBottom: 4 }}>
-        <span className="pz-value">10 ÷ 4 = 2 R2</span>
-      </div>
-      <p className="pz-caption" style={{ margin: "0 0 4px" }}>Still a remainder — bring down another zero:</p>
-      <div className="pz-equation" style={{ fontSize: 20, marginBottom: 4 }}>
-        <span className="pz-value">20 ÷ 4 = 5 R0</span>
-      </div>
-      <p className="pz-caption">
-        No remainder — done: <b>0.5 ÷ 0.4 = 1.25</b>.
-      </p>
-    </div>
+    </MathText>
   );
 }
 
@@ -782,83 +797,85 @@ function DivideDecimalsDrill({ onComplete, prefilled }: { onComplete?: () => voi
   const fieldStyle = (ok: boolean, isChecked: boolean): CSSProperties => (isChecked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
   return (
-    <div className="align-drill">
-      <p style={{ fontSize: 17, fontWeight: 700, margin: "0 0 14px" }}>
-        Divide {DIV_DIVIDEND} ÷ {DIV_DIVISOR}
-      </p>
-      <div className="align-drill-top">
-        <div className="align-drill-text">
-          <p className="intro-gate-title">Step 1: Make the divisor a whole number</p>
-          <p>
-            To divide by <b>{DIV_DIVISOR}</b>, first turn it into a whole number. How many decimal places does {DIV_DIVISOR} have?
-          </p>
-          <div className="controls">
-            <div className="control-row">
-              <label>
-                Decimal places in {DIV_DIVISOR}?{" "}
-                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok1, checked1) }} value={s1} onChange={(e) => setS1(e.target.value)} />
-              </label>
-            </div>
-          </div>
-          <button className="btn primary" onClick={() => setChecked1(true)}>
-            Check my work
-          </button>
-          {checked1 && (
-            <p className={`feedback ${ok1 ? "good" : "bad"}`} role="alert">
-              {ok1 ? `Right — ${DIV_DIVISOR} has ${places} decimal place${places === 1 ? "" : "s"}, so both numbers shift ${places} place${places === 1 ? "" : "s"}.` : `Count the digits after the decimal point in ${DIV_DIVISOR}.`}
+    <MathText>
+      <div className="align-drill">
+        <p style={{ fontSize: 17, fontWeight: 700, margin: "0 0 14px" }}>
+          Divide {DIV_DIVIDEND} ÷ {DIV_DIVISOR}
+        </p>
+        <div className="align-drill-top">
+          <div className="align-drill-text">
+            <p className="intro-gate-title">Step 1: Make the divisor a whole number</p>
+            <p>
+              To divide by <b>{DIV_DIVISOR}</b>, first turn it into a whole number. How many decimal places does {DIV_DIVISOR} have?
             </p>
-          )}
+            <div className="controls">
+              <div className="control-row">
+                <label>
+                  Decimal places in {DIV_DIVISOR}?{" "}
+                  <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 50, ...fieldStyle(ok1, checked1) }} value={s1} onChange={(e) => setS1(e.target.value)} />
+                </label>
+              </div>
+            </div>
+            <button className="btn primary" onClick={() => setChecked1(true)}>
+              Check my work
+            </button>
+            {checked1 && (
+              <p className={`feedback ${ok1 ? "good" : "bad"}`} role="alert">
+                {ok1 ? `Right — ${DIV_DIVISOR} has ${places} decimal place${places === 1 ? "" : "s"}, so both numbers shift ${places} place${places === 1 ? "" : "s"}.` : `Count the digits after the decimal point in ${DIV_DIVISOR}.`}
+              </p>
+            )}
+          </div>
+          <DividePlaceholderExample />
         </div>
-        <DividePlaceholderExample />
+
+        {checked1 && ok1 && (
+          <div className="align-stack-wrap">
+            <p className="intro-gate-title">Step 2: Shift both numbers</p>
+            <p>
+              Multiply <b>both</b> {DIV_DIVIDEND} and {DIV_DIVISOR} by 10 — multiplying both by the same amount doesn't change what the division equals, but it makes the divisor a whole number.
+            </p>
+            <DecimalShiftHop top={DIV_DIVIDEND} bottom={DIV_DIVISOR} places={places} />
+            <div className="controls">
+              <div className="control-row">
+                <label>
+                  {DIV_DIVIDEND} × 10 ={" "}
+                  <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 70, ...fieldStyle(ok2a, checked2) }} value={s2a} onChange={(e) => setS2a(e.target.value)} />
+                </label>
+              </div>
+              <div className="control-row">
+                <label>
+                  {DIV_DIVISOR} × 10 ={" "}
+                  <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 70, ...fieldStyle(ok2b, checked2) }} value={s2b} onChange={(e) => setS2b(e.target.value)} />
+                </label>
+              </div>
+            </div>
+            <button className="btn primary" disabled={!filled2} onClick={() => setChecked2(true)}>
+              Check my work
+            </button>
+            {checked2 && filled2 && (
+              <p className={`feedback ${allOk2 ? "good" : "bad"}`} role="alert">
+                {allOk2 ? `Right — ${shiftedDividend} ÷ ${shiftedDivisor} now, same value as ${DIV_DIVIDEND} ÷ ${DIV_DIVISOR}. Now divide:` : `Multiply each number by 10 — move the decimal point one place to the right.`}
+              </p>
+            )}
+          </div>
+        )}
+
+        {checked2 && allOk2 && (
+          <div className="align-stack-wrap">
+            <p className="intro-gate-title">Step 3: Divide</p>
+            <p className="muted small" style={{ margin: "0 0 10px" }}>
+              Write the equivalent whole-number division, then work it out the way you would on paper — quotient digit, subtract, bring down the next digit, repeat. Each box confirms as soon as it's right.
+            </p>
+            <ManualDivisionLadder dividend={shiftedDividend} divisor={shiftedDivisor} cycles={cycles} onComplete={handleDivideComplete} />
+            {divideDone && (
+              <p className="feedback good" role="alert" style={{ marginTop: 10 }}>
+                Correct — {DIV_DIVIDEND} ÷ {DIV_DIVISOR} = {cycles.map((c) => c.qDigit).join("")}.
+              </p>
+            )}
+          </div>
+        )}
       </div>
-
-      {checked1 && ok1 && (
-        <div className="align-stack-wrap">
-          <p className="intro-gate-title">Step 2: Shift both numbers</p>
-          <p>
-            Multiply <b>both</b> {DIV_DIVIDEND} and {DIV_DIVISOR} by 10 — multiplying both by the same amount doesn't change what the division equals, but it makes the divisor a whole number.
-          </p>
-          <DecimalShiftHop top={DIV_DIVIDEND} bottom={DIV_DIVISOR} places={places} />
-          <div className="controls">
-            <div className="control-row">
-              <label>
-                {DIV_DIVIDEND} × 10 ={" "}
-                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 70, ...fieldStyle(ok2a, checked2) }} value={s2a} onChange={(e) => setS2a(e.target.value)} />
-              </label>
-            </div>
-            <div className="control-row">
-              <label>
-                {DIV_DIVISOR} × 10 ={" "}
-                <input className="answer" inputMode="numeric" autoComplete="off" style={{ width: 70, ...fieldStyle(ok2b, checked2) }} value={s2b} onChange={(e) => setS2b(e.target.value)} />
-              </label>
-            </div>
-          </div>
-          <button className="btn primary" disabled={!filled2} onClick={() => setChecked2(true)}>
-            Check my work
-          </button>
-          {checked2 && filled2 && (
-            <p className={`feedback ${allOk2 ? "good" : "bad"}`} role="alert">
-              {allOk2 ? `Right — ${shiftedDividend} ÷ ${shiftedDivisor} now, same value as ${DIV_DIVIDEND} ÷ ${DIV_DIVISOR}. Now divide:` : `Multiply each number by 10 — move the decimal point one place to the right.`}
-            </p>
-          )}
-        </div>
-      )}
-
-      {checked2 && allOk2 && (
-        <div className="align-stack-wrap">
-          <p className="intro-gate-title">Step 3: Divide</p>
-          <p className="muted small" style={{ margin: "0 0 10px" }}>
-            Write the equivalent whole-number division, then work it out the way you would on paper — quotient digit, subtract, bring down the next digit, repeat. Each box confirms as soon as it's right.
-          </p>
-          <ManualDivisionLadder dividend={shiftedDividend} divisor={shiftedDivisor} cycles={cycles} onComplete={handleDivideComplete} />
-          {divideDone && (
-            <p className="feedback good" role="alert" style={{ marginTop: 10 }}>
-              Correct — {DIV_DIVIDEND} ÷ {DIV_DIVISOR} = {cycles.map((c) => c.qDigit).join("")}.
-            </p>
-          )}
-        </div>
-      )}
-    </div>
+    </MathText>
   );
 }
 
@@ -892,83 +909,85 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const sandboxCycles = shiftedBottom !== 0 ? computeLongDivision(shiftedTop, shiftedBottom).cycles : [];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <Segmented
-        label="Operation"
-        value={op}
-        onChange={setOp}
-        options={[
-          { id: "add", label: "Add" },
-          { id: "subtract", label: "Subtract" },
-          { id: "multiply", label: "Multiply" },
-          { id: "divide", label: "Divide" },
-        ]}
-      />
-      {/* Add/subtract hide this while their own gate is still due, since
-          AlignDecimalsDrill is shown mandatorily instead in that case (see
-          below). Multiply and divide have no mandatory variant, so their
-          toggle stays visible regardless of introActive — otherwise
-          switching to either while the add/subtract gate is still due shows
-          no drill AND no way to reach one, which is what this condition used
-          to do. */}
-      {((!introActive && (op === "add" || op === "subtract")) || op === "multiply" || op === "divide") && (
-        <button className="btn ghost" style={{ width: "fit-content" }} onClick={() => setShowDrill((v) => !v)}>
-          {showDrill ? "Hide the" : "Show the"} {op === "add" || op === "subtract" ? "lining-up drill" : "step-by-step guide"}
-        </button>
-      )}
-      {op === "divide" ? (
-        shiftedBottom === 0 ? (
-          <p className="muted small">Enter a non-zero second number to divide by.</p>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <Segmented
+          label="Operation"
+          value={op}
+          onChange={setOp}
+          options={[
+            { id: "add", label: "Add" },
+            { id: "subtract", label: "Subtract" },
+            { id: "multiply", label: "Multiply" },
+            { id: "divide", label: "Divide" },
+          ]}
+        />
+        {/* Add/subtract hide this while their own gate is still due, since
+            AlignDecimalsDrill is shown mandatorily instead in that case (see
+            below). Multiply and divide have no mandatory variant, so their
+            toggle stays visible regardless of introActive — otherwise
+            switching to either while the add/subtract gate is still due shows
+            no drill AND no way to reach one, which is what this condition used
+            to do. */}
+        {((!introActive && (op === "add" || op === "subtract")) || op === "multiply" || op === "divide") && (
+          <button className="btn ghost" style={{ width: "fit-content" }} onClick={() => setShowDrill((v) => !v)}>
+            {showDrill ? "Hide the" : "Show the"} {op === "add" || op === "subtract" ? "lining-up drill" : "step-by-step guide"}
+          </button>
+        )}
+        {op === "divide" ? (
+          shiftedBottom === 0 ? (
+            <p className="muted small">Enter a non-zero second number to divide by.</p>
+          ) : (
+            // Reuses the same hands-on, fill-every-digit component as the
+            // guide's own Step 3, instead of a passively-already-solved
+            // display — so trying your own numbers here is practice too, not
+            // just a readout.
+            <ManualDivisionLadder key={`${topText}-${bottomText}`} dividend={shiftedTop} divisor={shiftedBottom} cycles={sandboxCycles} />
+          )
         ) : (
-          // Reuses the same hands-on, fill-every-digit component as the
-          // guide's own Step 3, instead of a passively-already-solved
-          // display — so trying your own numbers here is practice too, not
-          // just a readout.
-          <ManualDivisionLadder key={`${topText}-${bottomText}`} dividend={shiftedTop} divisor={shiftedBottom} cycles={sandboxCycles} />
-        )
-      ) : (
-        <PlaceValueColumns operation={op} top={top} bottom={bottom} done={1} />
-      )}
-      <p className="muted small">
-        Try editing the two decimal numbers below to see how {op === "divide" ? "shifting the decimal point" : "lining up the decimal point"} changes the layout.
-      </p>
-      <div className="controls">
-        <label>
-          First number{" "}
-          <input className="answer" style={{ width: 80 }} value={topText} onChange={(e) => setTopText(e.target.value)} />
-        </label>
-        <label>
-          Second number{" "}
-          <input className="answer" style={{ width: 80 }} value={bottomText} onChange={(e) => setBottomText(e.target.value)} />
-        </label>
+          <PlaceValueColumns operation={op} top={top} bottom={bottom} done={1} />
+        )}
+        <p className="muted small">
+          Try editing the two decimal numbers below to see how {op === "divide" ? "shifting the decimal point" : "lining up the decimal point"} changes the layout.
+        </p>
+        <div className="controls">
+          <label>
+            First number{" "}
+            <input className="answer" style={{ width: 80 }} value={topText} onChange={(e) => setTopText(e.target.value)} />
+          </label>
+          <label>
+            Second number{" "}
+            <input className="answer" style={{ width: 80 }} value={bottomText} onChange={(e) => setBottomText(e.target.value)} />
+          </label>
+        </div>
+        {/* Below the picture, so students explore first, then check. */}
+        {/* Mandatory (and always shown) when the parent says the gate is
+            currently due — first visit, or every reintroEverySolved problems
+            after that; see Unit.requiresIntro on the decimalOperations export.
+            Once satisfied, it's optional — shown only if the student opened it
+            with the toggle above. key={op} forces a full remount (not just a
+            prop update) when switching between Add and Subtract, so every
+            stage of the drill — which digits are typed, how far the student
+            has progressed — resets instead of carrying over a now-irrelevant
+            addition answer into subtraction. */}
+        {(introActive || showDrill) && (op === "add" || op === "subtract") && (
+          <AlignDecimalsDrill key={op} operation={op} onComplete={onIntroDone} prefilled={!introActive} />
+        )}
+        {/* Multiply's step-by-step guide is never shown MANDATORILY (that only
+            ever covers whichever of add/subtract is active by default) — it's
+            always just the optional toggle above. But finishing it still
+            satisfies the same gate add/subtract's drill does: a student who
+            goes straight to Multiply and completes it has just as validly
+            proven they can do the required activity, and Practice unlocking
+            only for whoever happened to click Add or Subtract first — while
+            Multiply shows every sign of being "the activity" too, down to its
+            own Check-my-work buttons and completion feedback — was confusing,
+            not intentional gatekeeping. */}
+        {showDrill && op === "multiply" && <MultiplyDecimalsDrill key={op} onComplete={onIntroDone} prefilled={!introActive} />}
+        {/* Same non-mandatory-but-still-gate-satisfying treatment as Multiply. */}
+        {showDrill && op === "divide" && <DivideDecimalsDrill key={op} onComplete={onIntroDone} prefilled={!introActive} />}
       </div>
-      {/* Below the picture, so students explore first, then check. */}
-      {/* Mandatory (and always shown) when the parent says the gate is
-          currently due — first visit, or every reintroEverySolved problems
-          after that; see Unit.requiresIntro on the decimalOperations export.
-          Once satisfied, it's optional — shown only if the student opened it
-          with the toggle above. key={op} forces a full remount (not just a
-          prop update) when switching between Add and Subtract, so every
-          stage of the drill — which digits are typed, how far the student
-          has progressed — resets instead of carrying over a now-irrelevant
-          addition answer into subtraction. */}
-      {(introActive || showDrill) && (op === "add" || op === "subtract") && (
-        <AlignDecimalsDrill key={op} operation={op} onComplete={onIntroDone} prefilled={!introActive} />
-      )}
-      {/* Multiply's step-by-step guide is never shown MANDATORILY (that only
-          ever covers whichever of add/subtract is active by default) — it's
-          always just the optional toggle above. But finishing it still
-          satisfies the same gate add/subtract's drill does: a student who
-          goes straight to Multiply and completes it has just as validly
-          proven they can do the required activity, and Practice unlocking
-          only for whoever happened to click Add or Subtract first — while
-          Multiply shows every sign of being "the activity" too, down to its
-          own Check-my-work buttons and completion feedback — was confusing,
-          not intentional gatekeeping. */}
-      {showDrill && op === "multiply" && <MultiplyDecimalsDrill key={op} onComplete={onIntroDone} prefilled={!introActive} />}
-      {/* Same non-mandatory-but-still-gate-satisfying treatment as Multiply. */}
-      {showDrill && op === "divide" && <DivideDecimalsDrill key={op} onComplete={onIntroDone} prefilled={!introActive} />}
-    </div>
+    </MathText>
   );
 }
 

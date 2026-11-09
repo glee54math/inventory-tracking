@@ -5,6 +5,8 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { linePlotsWithFractionalDataTest } from "./LinePlotsWithFractionalDataTest";
+import { MathText } from "../../../shared/components/MathText";
+import { TapSelect } from "../../../shared/components/TapSelect";
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
@@ -44,34 +46,36 @@ function DotMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>1.</b> A class measured some crayons and made this line plot.
-      </p>
-      <LinePlot minWhole={2} maxWhole={4} data={CFU_DATA} tone="a" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What does each dot stand for?{" "}
-          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="one">One crayon that was measured — placed above its length</option>
-            <option value="inch">One inch of length</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — every dot is one measured crayon, stacked above the length it measured. Taller stacks mean more crayons had that length."
-            : "Not quite — each dot is one crayon that was measured, placed above that crayon's length. The number line itself shows the inches."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>1.</b> A class measured some crayons and made this line plot.
         </p>
-      )}
-    </div>
+        <LinePlot minWhole={2} maxWhole={4} data={CFU_DATA} tone="a" />
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            What does each dot stand for?{" "}
+            <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="one">One crayon that was measured — placed above its length</option>
+              <option value="inch">One inch of length</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — every dot is one measured crayon, stacked above the length it measured. Taller stacks mean more crayons had that length."
+              : "Not quite — each dot is one crayon that was measured, placed above that crayon's length. The number line itself shows the inches."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -84,35 +88,37 @@ function QuarterPlacementQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>2.</b> A new crayon measures 3 1/4 inches. Where does its dot go?
-      </p>
-      <LinePlot minWhole={2} maxWhole={4} data={[]} tone="b" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Place it...{" "}
-          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="whole">Above the tall "3" tick — round to the nearest whole inch</option>
-            <option value="half">Above the medium tick halfway between 3 and 4</option>
-            <option value="quarter">Above the FIRST short tick after 3 — exactly 3 1/4</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — between 3 and 4 there are three ticks: short (3 1/4), medium (3 1/2), short (3 3/4). The dot goes exactly at 3 1/4, not rounded to a labeled number."
-            : "Not quite — the plot is marked in quarter inches, so don't round. Between 3 and 4: the first short tick is 3 1/4, the medium tick is 3 1/2, the next short tick is 3 3/4."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>2.</b> A new crayon measures 3 1/4 inches. Where does its dot go?
         </p>
-      )}
-    </div>
+        <LinePlot minWhole={2} maxWhole={4} data={[]} tone="b" />
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            Place it...{" "}
+            <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="whole">Above the tall "3" tick — round to the nearest whole inch</option>
+              <option value="half">Above the medium tick halfway between 3 and 4</option>
+              <option value="quarter">Above the FIRST short tick after 3 — exactly 3 1/4</option>
+            </TapSelect>
+          </label>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — between 3 and 4 there are three ticks: short (3 1/4), medium (3 1/2), short (3 3/4). The dot goes exactly at 3 1/4, not rounded to a labeled number."
+              : "Not quite — the plot is marked in quarter inches, so don't round. Between 3 and 4: the first short tick is 3 1/4, the medium tick is 3 1/2, the next short tick is 3 3/4."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -125,34 +131,36 @@ function FrequencyVsValueQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>3.</b> Same line plot as question 1. Theo is asked "How many crayons measured 2 1/2 inches?" and answers "2 1/2."
-      </p>
-      <LinePlot minWhole={2} maxWhole={4} data={CFU_DATA} tone="c" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What's the right answer?{" "}
-          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="2.5">2 1/2 — that's the length</option>
-            <option value="4">4 — count the dots stacked above 2 1/2</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — Theo repeated the LENGTH. \"How many crayons\" asks for a count: there are 4 dots above 2 1/2, so 4 crayons."
-            : "Not quite — 2 1/2 is the length being asked about, not how many. Count the dots stacked above 2 1/2: there are 4, so 4 crayons."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>3.</b> Same line plot as question 1. Theo is asked "How many crayons measured 2 1/2 inches?" and answers "2 1/2."
         </p>
-      )}
-    </div>
+        <LinePlot minWhole={2} maxWhole={4} data={CFU_DATA} tone="c" />
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            What's the right answer?{" "}
+            <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="2.5">2 1/2 — that's the length</option>
+              <option value="4">4 — count the dots stacked above 2 1/2</option>
+            </TapSelect>
+          </label>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — Theo repeated the LENGTH. \"How many crayons\" asks for a count: there are 4 dots above 2 1/2, so 4 crayons."
+              : "Not quite — 2 1/2 is the length being asked about, not how many. Count the dots stacked above 2 1/2: there are 4, so 4 crayons."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -165,30 +173,32 @@ function RoundingTrapQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>4.</b> True or false: since only the whole numbers are labeled on a line plot, it's fine to put a 3 3/4-inch measurement above the 4.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — unlabeled ticks are still real positions. 3 3/4 goes on the short tick just before 4, not on the 4 itself."
-            : "Not quite — the unlabeled ticks still count. 3 3/4 has its own tick (the short one just before 4); moving it to 4 changes the data."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>4.</b> True or false: since only the whole numbers are labeled on a line plot, it's fine to put a 3 3/4-inch measurement above the 4.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="true">True</option>
+            <option value="false">False</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — unlabeled ticks are still real positions. 3 3/4 goes on the short tick just before 4, not on the 4 itself."
+              : "Not quite — the unlabeled ticks still count. 3 3/4 has its own tick (the short one just before 4); moving it to 4 changes the data."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -200,13 +210,15 @@ function LinePlotCheckForUnderstanding({ onComplete }: { onComplete?: () => void
   }, [allDone, onComplete]);
   const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure line plots make sense before you try practice problems.</p>
-      <DotMeaningQuestion onComplete={mark("dot")} />
-      <QuarterPlacementQuestion onComplete={mark("quarter")} />
-      <FrequencyVsValueQuestion onComplete={mark("freq")} />
-      <RoundingTrapQuestion onComplete={mark("trap")} />
-    </div>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: let's make sure line plots make sense before you try practice problems.</p>
+        <DotMeaningQuestion onComplete={mark("dot")} />
+        <QuarterPlacementQuestion onComplete={mark("quarter")} />
+        <FrequencyVsValueQuestion onComplete={mark("freq")} />
+        <RoundingTrapQuestion onComplete={mark("trap")} />
+      </div>
+    </MathText>
   );
 }
 
@@ -221,36 +233,38 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [data, setData] = useState<number[]>([2.5, 3, 3.25]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
-        <Stepper label="Crayon length (in)" value={len} min={2} max={4} step={0.25} onChange={setLen} tone="a" />
-        <button className="btn primary" type="button" onClick={() => setData((d) => [...d, len])}>
-          Add a dot at {inchText(len)}"
-        </button>
-        <button className="btn ghost" type="button" onClick={() => setData([])}>
-          Clear plot
-        </button>
-        {!introActive && (
-          <button
-            type="button"
-            className="btn ghost"
-            style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
-            onClick={() => setShowCheck((v) => !v)}
-          >
-            Check for Understanding
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="control-row">
+          <Stepper label="Crayon length (in)" value={len} min={2} max={4} step={0.25} onChange={setLen} tone="a" />
+          <button className="btn primary" type="button" onClick={() => setData((d) => [...d, len])}>
+            Add a dot at {inchText(len)}"
           </button>
-        )}
-      </div>
+          <button className="btn ghost" type="button" onClick={() => setData([])}>
+            Clear plot
+          </button>
+          {!introActive && (
+            <button
+              type="button"
+              className="btn ghost"
+              style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
+              onClick={() => setShowCheck((v) => !v)}
+            >
+              Check for Understanding
+            </button>
+          )}
+        </div>
 
-      <InchRuler maxInches={4} lengthQuarter={len} glyph="🖍️" tone="a" />
-      <LinePlot minWhole={2} maxWhole={4} data={data} tone="b" />
-      <p className="feedback good" style={{ minHeight: 24 }}>
-        This crayon is {inchText(len)} inches. The plot has {data.length} measurement{data.length === 1 ? "" : "s"}
-        {data.length > 0 ? `; ${countAt(data, len)} of them at ${inchText(len)}".` : "."}
-      </p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <LinePlotCheckForUnderstanding onComplete={onIntroDone} />}
-    </div>
+        <InchRuler maxInches={4} lengthQuarter={len} glyph="🖍️" tone="a" />
+        <LinePlot minWhole={2} maxWhole={4} data={data} tone="b" />
+        <p className="feedback good" style={{ minHeight: 24 }}>
+          This crayon is {inchText(len)} inches. The plot has {data.length} measurement{data.length === 1 ? "" : "s"}
+          {data.length > 0 ? `; ${countAt(data, len)} of them at ${inchText(len)}".` : "."}
+        </p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <LinePlotCheckForUnderstanding onComplete={onIntroDone} />}
+      </div>
+    </MathText>
   );
 }
 
@@ -288,7 +302,8 @@ function measureAndPlaceProblem(): Problem {
     steps: [
       {
         kind: "number",
-        prompt: `How long is the ${obj.name}, to the nearest 1/4 inch? (Type like 2 1/4.)`,
+        prompt: `How long is the ${obj.name}, to the nearest 1/4 inch? (Type the whole number and the fraction.)`,
+        fracBoxes: "mixed",
         hint: "Find the tick mark closest to the end of the object. Short ticks are quarters, medium ticks are halves.",
         explain: `The ${obj.name} is about ${inchText(len)} inches.`,
         answer: len,

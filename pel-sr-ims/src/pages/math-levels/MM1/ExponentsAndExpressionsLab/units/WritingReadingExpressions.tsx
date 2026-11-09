@@ -4,6 +4,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { writingReadingExpressionsTest } from "./WritingReadingExpressionsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 const NAMES = ["x", "y", "n", "m", "k"] as const;
 const fieldStyle = (ok: boolean, checked: boolean): CSSProperties => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
@@ -27,44 +28,46 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>1.</b> In the expression {EXPR}:
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          The coefficient of x is:{" "}
-          <select className="answer" value={coefPick} onChange={(e) => setCoefPick(e.target.value)} style={fieldStyle(coefOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="3">3</option>
-            <option value="x">x</option>
-            <option value="7">7</option>
-          </select>
-        </label>
-        <label>
-          A term with no variable is:{" "}
-          <select className="answer" value={termPick} onChange={(e) => setTermPick(e.target.value)} style={fieldStyle(termOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="3x">3x</option>
-            <option value="7">7</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — the coefficient (3) is the number multiplying the variable, and 7 is a term on its own (a constant term, with no variable attached)."
-            : "Not quite — the coefficient multiplies the variable; a term is one of the parts separated by + or −."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>1.</b> In the expression {EXPR}:
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            The coefficient of x is:{" "}
+            <select className="answer" value={coefPick} onChange={(e) => setCoefPick(e.target.value)} style={fieldStyle(coefOk, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="3">3</option>
+              <option value="x">x</option>
+              <option value="7">7</option>
+            </select>
+          </label>
+          <label>
+            A term with no variable is:{" "}
+            <select className="answer" value={termPick} onChange={(e) => setTermPick(e.target.value)} style={fieldStyle(termOk, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="3x">3x</option>
+              <option value="7">7</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && allFilled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — the coefficient (3) is the number multiplying the variable, and 7 is a term on its own (a constant term, with no variable attached)."
+              : "Not quite — the coefficient multiplies the variable; a term is one of the parts separated by + or −."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -82,42 +85,44 @@ function SubtractFromTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>2.</b> Which expression represents "subtract y from 5"?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={exprPick} onChange={(e) => setExprPick(e.target.value)} style={fieldStyle(exprOk, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="5-y">5 − y</option>
-          <option value="y-5">y − 5</option>
-        </select>
-      </div>
-      <p>
-        In general, "subtract A from B" means...
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={rulePick} onChange={(e) => setRulePick(e.target.value)} style={fieldStyle(ruleOk, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="A - B">A − B</option>
-          <option value="B - A">B − A</option>
-        </select>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — \"subtract A from B\" always means B − A. The number you start FROM comes first, even though \"A\" is named first in the sentence."
-            : "Not quite — \"subtract y from 5\" starts at 5 and takes away y: 5 − y, not y − 5. The word order and the math order don't match here."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>2.</b> Which expression represents "subtract y from 5"?
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={exprPick} onChange={(e) => setExprPick(e.target.value)} style={fieldStyle(exprOk, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="5-y">5 − y</option>
+            <option value="y-5">y − 5</option>
+          </select>
+        </div>
+        <p>
+          In general, "subtract A from B" means...
+        </p>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={rulePick} onChange={(e) => setRulePick(e.target.value)} style={fieldStyle(ruleOk, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="A - B">A − B</option>
+            <option value="B - A">B − A</option>
+          </select>
+          <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && allFilled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — \"subtract A from B\" always means B − A. The number you start FROM comes first, even though \"A\" is named first in the sentence."
+              : "Not quite — \"subtract y from 5\" starts at 5 and takes away y: 5 − y, not y − 5. The word order and the math order don't match here."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -131,30 +136,32 @@ function OrderMattersTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or False: "x minus 5" and "5 minus x" always represent the same value.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="True">True</option>
-          <option value="False">False</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — False. x − 5 and 5 − x give opposite values (unless x = 5 exactly) — subtraction isn't commutative, so order really matters."
-            : "Not quite — try x = 8: x − 5 = 3, but 5 − x = −3. Those aren't the same, so order matters in subtraction."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>3.</b> True or False: "x minus 5" and "5 minus x" always represent the same value.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="True">True</option>
+            <option value="False">False</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — False. x − 5 and 5 − x give opposite values (unless x = 5 exactly) — subtraction isn't commutative, so order really matters."
+              : "Not quite — try x = 8: x − 5 = 3, but 5 − x = −3. Those aren't the same, so order matters in subtraction."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -172,43 +179,45 @@ function ParenDualQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>4.</b> Look at 2(8+7).
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          (8+7) by itself is:{" "}
-          <select className="answer" value={sumPick} onChange={(e) => setSumPick(e.target.value)} style={fieldStyle(sumOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="a sum">a sum of two terms</option>
-            <option value="a product">a product of two factors</option>
-          </select>
-        </label>
-        <label>
-          The whole expression 2(8+7) is:{" "}
-          <select className="answer" value={wholePick} onChange={(e) => setWholePick(e.target.value)} style={fieldStyle(wholeOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="a sum">a sum of two terms</option>
-            <option value="a product">a product of two factors</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — (8+7) is a sum of two terms (8 and 7), but once you multiply it by 2, the WHOLE expression 2(8+7) is a product of two factors: 2 and (8+7). A parenthesized group can be both at once, depending on what you're looking at."
-            : "Not quite — look INSIDE the parentheses first (8 and 7 are added — a sum), then at the WHOLE expression (2 times that sum — a product)."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>4.</b> Look at 2(8+7).
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            (8+7) by itself is:{" "}
+            <select className="answer" value={sumPick} onChange={(e) => setSumPick(e.target.value)} style={fieldStyle(sumOk, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="a sum">a sum of two terms</option>
+              <option value="a product">a product of two factors</option>
+            </select>
+          </label>
+          <label>
+            The whole expression 2(8+7) is:{" "}
+            <select className="answer" value={wholePick} onChange={(e) => setWholePick(e.target.value)} style={fieldStyle(wholeOk, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="a sum">a sum of two terms</option>
+              <option value="a product">a product of two factors</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && allFilled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — (8+7) is a sum of two terms (8 and 7), but once you multiply it by 2, the WHOLE expression 2(8+7) is a product of two factors: 2 and (8+7). A parenthesized group can be both at once, depending on what you're looking at."
+              : "Not quite — look INSIDE the parentheses first (8 and 7 are added — a sum), then at the WHOLE expression (2 times that sum — a product)."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -221,13 +230,15 @@ function WritingReadingCheckForUnderstanding({ onComplete }: { onComplete?: () =
   const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's connect a few ideas before you try practice problems.</p>
-      <VocabQuestion onComplete={mark("vocab")} />
-      <SubtractFromTrapQuestion onComplete={mark("subtractFrom")} />
-      <OrderMattersTrapQuestion onComplete={mark("orderMatters")} />
-      <ParenDualQuestion onComplete={mark("parenDual")} />
-    </div>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: let's connect a few ideas before you try practice problems.</p>
+        <VocabQuestion onComplete={mark("vocab")} />
+        <SubtractFromTrapQuestion onComplete={mark("subtractFrom")} />
+        <OrderMattersTrapQuestion onComplete={mark("orderMatters")} />
+        <ParenDualQuestion onComplete={mark("parenDual")} />
+      </div>
+    </MathText>
   );
 }
 
@@ -245,87 +256,89 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const v = "y";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
-        <Segmented
-          label="Explore mode"
-          value={mode}
-          onChange={setMode}
-          options={[
-            { id: "wordToExpr", label: "Words → Expression" },
-            { id: "parts", label: "Parts of an Expression" },
-          ]}
-        />
-        {!introActive && (
-          <button
-            type="button"
-            className="btn ghost"
-            style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
-            onClick={() => setShowCheck((v2) => !v2)}
-          >
-            Check for Understanding
-          </button>
-        )}
-      </div>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="control-row">
+          <Segmented
+            label="Explore mode"
+            value={mode}
+            onChange={setMode}
+            options={[
+              { id: "wordToExpr", label: "Words → Expression" },
+              { id: "parts", label: "Parts of an Expression" },
+            ]}
+          />
+          {!introActive && (
+            <button
+              type="button"
+              className="btn ghost"
+              style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
+              onClick={() => setShowCheck((v2) => !v2)}
+            >
+              Check for Understanding
+            </button>
+          )}
+        </div>
 
-      {mode === "wordToExpr" ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div className="control-row">
-            <label className="stepper">
-              <span className="stepper-label">Number</span>
-              <input
-                className="answer"
-                style={{ width: 70 }}
-                type="number"
-                value={n}
-                onChange={(e) => setN(Math.max(1, Math.min(20, Number(e.target.value) || 1)))}
-              />
-            </label>
+        {mode === "wordToExpr" ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div className="control-row">
+              <label className="stepper">
+                <span className="stepper-label">Number</span>
+                <input
+                  className="answer"
+                  style={{ width: 70 }}
+                  type="number"
+                  value={n}
+                  onChange={(e) => setN(Math.max(1, Math.min(20, Number(e.target.value) || 1)))}
+                />
+              </label>
+            </div>
+            <div style={{ display: "grid", gap: 8, fontSize: 17 }}>
+              <div>
+                "{n} more than {v}" → <b>{v} + {n}</b>
+              </div>
+              <div>
+                "subtract {v} from {n}" → <b>{n} − {v}</b> (NOT {v} − {n} — the order flips!)
+              </div>
+              <div>
+                "{n} divided into {v}" → <b>{v} / {n}</b>
+              </div>
+            </div>
+            <p className="muted small">
+              Change the number and watch how each phrase translates. Notice "subtract ___ from ___" and "___ divided into ___" don't follow the
+              same left-to-right order the words are spoken in — the thing you START from always comes first in the expression.
+            </p>
           </div>
-          <div style={{ display: "grid", gap: 8, fontSize: 17 }}>
-            <div>
-              "{n} more than {v}" → <b>{v} + {n}</b>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ fontSize: 26, fontWeight: 700, display: "flex", gap: 4, alignItems: "baseline" }}>
+              <span style={{ color: "var(--qa-text)" }}>{n}</span>
+              <span>{v}</span>
+              <span>+</span>
+              <span style={{ color: "var(--qb-text)" }}>7</span>
             </div>
-            <div>
-              "subtract {v} from {n}" → <b>{n} − {v}</b> (NOT {v} − {n} — the order flips!)
+            <div style={{ display: "grid", gap: 6, fontSize: 15 }}>
+              <div>
+                <span style={{ color: "var(--qa-text)", fontWeight: 700 }}>{n}</span> is the <b>coefficient</b> of {v}.
+              </div>
+              <div>
+                <span style={{ color: "var(--qa-text)", fontWeight: 700 }}>{n}{v}</span> and <span style={{ color: "var(--qb-text)", fontWeight: 700 }}>7</span> are each a <b>term</b>.
+              </div>
+              <div>
+                The whole expression <b>{n}{v} + 7</b> is a <b>sum</b> of those two terms.
+              </div>
             </div>
-            <div>
-              "{n} divided into {v}" → <b>{v} / {n}</b>
-            </div>
+            <p className="muted small">
+              A factor is anything multiplied together inside a term — in {n}{v}, {n} and {v} are both factors of that term. Change the number
+              above and see that the coefficient always updates, but the vocabulary names stay the same.
+            </p>
           </div>
-          <p className="muted small">
-            Change the number and watch how each phrase translates. Notice "subtract ___ from ___" and "___ divided into ___" don't follow the
-            same left-to-right order the words are spoken in — the thing you START from always comes first in the expression.
-          </p>
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ fontSize: 26, fontWeight: 700, display: "flex", gap: 4, alignItems: "baseline" }}>
-            <span style={{ color: "var(--qa-text)" }}>{n}</span>
-            <span>{v}</span>
-            <span>+</span>
-            <span style={{ color: "var(--qb-text)" }}>7</span>
-          </div>
-          <div style={{ display: "grid", gap: 6, fontSize: 15 }}>
-            <div>
-              <span style={{ color: "var(--qa-text)", fontWeight: 700 }}>{n}</span> is the <b>coefficient</b> of {v}.
-            </div>
-            <div>
-              <span style={{ color: "var(--qa-text)", fontWeight: 700 }}>{n}{v}</span> and <span style={{ color: "var(--qb-text)", fontWeight: 700 }}>7</span> are each a <b>term</b>.
-            </div>
-            <div>
-              The whole expression <b>{n}{v} + 7</b> is a <b>sum</b> of those two terms.
-            </div>
-          </div>
-          <p className="muted small">
-            A factor is anything multiplied together inside a term — in {n}{v}, {n} and {v} are both factors of that term. Change the number
-            above and see that the coefficient always updates, but the vocabulary names stay the same.
-          </p>
-        </div>
-      )}
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <WritingReadingCheckForUnderstanding onComplete={onIntroDone} />}
-    </div>
+        )}
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <WritingReadingCheckForUnderstanding onComplete={onIntroDone} />}
+      </div>
+    </MathText>
   );
 }
 

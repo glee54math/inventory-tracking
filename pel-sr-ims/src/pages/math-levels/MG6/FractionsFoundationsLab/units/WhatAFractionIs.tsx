@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { whatAFractionIsTest } from "./WhatAFractionIsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 /** The only denominators this whole lab ever uses — 3.NF's own narrower set,
  *  and the hard scope line against MG9_IntroToFractionsLab (which ranges up
@@ -49,106 +50,108 @@ function WhatIsAFractionCheck({ onComplete }: { onComplete?: () => void }) {
   }, [allDone, onComplete]);
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure "fraction" makes sense before you try practice problems.</p>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Quick check: let's make sure "fraction" makes sense before you try practice problems.</p>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>1.</b> Look at this picture of <FractionBar numerator={3} denominator={4} width={180} />
-        </p>
-        <p>
-          In the fraction 3/4, the bottom number (4) tells you{" "}
-          <select className="answer" value={bottomGuess} onChange={(e) => setBottomGuess(e.target.value)} aria-label="What the bottom number means" disabled={q1Done} style={answerBorder(bottomGuess === "parts", q1Checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="parts">how many equal parts the whole is split into</option>
-            <option value="shaded">how many parts are shaded</option>
-            <option value="biggest">the biggest number you're allowed to shade</option>
-          </select>
-          , and the top number (3) tells you{" "}
-          <select className="answer" value={topGuess} onChange={(e) => setTopGuess(e.target.value)} aria-label="What the top number means" disabled={q1Done} style={answerBorder(topGuess === "shaded", q1Checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="shaded">how many of those equal parts are shaded</option>
-            <option value="parts">how many equal parts the whole is split into</option>
-            <option value="wholes">how many whole pizzas there are</option>
-          </select>
-          .
-          <button className="btn primary" type="button" style={{ marginLeft: 10 }} disabled={q1Done || !q1Filled} onClick={() => setQ1Checked(true)}>
-            Check Answer
-          </button>
-        </p>
-        {q1Checked && q1Filled && (
-          <p className={`feedback ${q1Done ? "good" : "bad"}`} role="alert">
-            {q1Done
-              ? "Correct — the bottom number (denominator) is how many equal parts the whole is split into; the top number (numerator) is how many of those parts are shaded."
-              : "Not quite — the bottom number is about the SPLITTING of the whole; the top number is about how many of those parts are SHADED. Try again."}
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> Look at this picture of <FractionBar numerator={3} denominator={4} width={180} />
           </p>
-        )}
-      </div>
-
-      <div className="align-stack-wrap">
-        <p>
-          <b>2.</b> This whole is split into 4 parts, and 1 is shaded:
-        </p>
-        <UnequalPartsBar segments={[1, 2.6, 0.6, 1.4]} shadedIndices={[0]} label="1 of 4 parts shaded — but are the parts equal?" />
-        <p>Does this picture correctly show 1/4?</p>
-        <div className="control-row">
-          {[
-            { id: "no", label: "No — the 4 parts aren't the same size" },
-            { id: "yes", label: "Yes — 1 out of 4 parts is shaded, so it's 1/4" },
-          ].map((opt) => (
-            <button
-              key={opt.id}
-              type="button"
-              className={`btn ghost ${q2 === opt.id ? "pressed" : ""}`}
-              disabled={q2Done}
-              onClick={() => setQ2(opt.id)}
-            >
-              {opt.label}
+          <p>
+            In the fraction 3/4, the bottom number (4) tells you{" "}
+            <select className="answer" value={bottomGuess} onChange={(e) => setBottomGuess(e.target.value)} aria-label="What the bottom number means" disabled={q1Done} style={answerBorder(bottomGuess === "parts", q1Checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="parts">how many equal parts the whole is split into</option>
+              <option value="shaded">how many parts are shaded</option>
+              <option value="biggest">the biggest number you're allowed to shade</option>
+            </select>
+            , and the top number (3) tells you{" "}
+            <select className="answer" value={topGuess} onChange={(e) => setTopGuess(e.target.value)} aria-label="What the top number means" disabled={q1Done} style={answerBorder(topGuess === "shaded", q1Checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="shaded">how many of those equal parts are shaded</option>
+              <option value="parts">how many equal parts the whole is split into</option>
+              <option value="wholes">how many whole pizzas there are</option>
+            </select>
+            .
+            <button className="btn primary" type="button" style={{ marginLeft: 10 }} disabled={q1Done || !q1Filled} onClick={() => setQ1Checked(true)}>
+              Check Answer
             </button>
-          ))}
-        </div>
-        {q2 && (
-          <p className={`feedback ${q2Done ? "good" : "bad"}`} role="alert">
-            {q2Done
-              ? "Correct — a fraction's parts must all be the SAME size. Here they aren't, so this picture doesn't show a true fraction, no matter how many are shaded."
-              : "Not quite — look at the sizes of the 4 parts, not just how many are colored in. Are they really all the same size?"}
           </p>
-        )}
-      </div>
+          {q1Checked && q1Filled && (
+            <p className={`feedback ${q1Done ? "good" : "bad"}`} role="alert">
+              {q1Done
+                ? "Correct — the bottom number (denominator) is how many equal parts the whole is split into; the top number (numerator) is how many of those parts are shaded."
+                : "Not quite — the bottom number is about the SPLITTING of the whole; the top number is about how many of those parts are SHADED. Try again."}
+            </p>
+          )}
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>3.</b> True or False: As long as you shade <i>some</i> parts of a shape, you can call the shaded amount a fraction.
-        </p>
-        <div className="control-row">
-          {[
-            { id: "false", label: "False" },
-            { id: "true", label: "True" },
-          ].map((opt) => (
-            <button
-              key={opt.id}
-              type="button"
-              className={`btn ghost ${q3 === opt.id ? "pressed" : ""}`}
-              disabled={q3Done}
-              onClick={() => setQ3(opt.id)}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        {q3 && (
-          <p className={`feedback ${q3Done ? "good" : "bad"}`} role="alert">
-            {q3Done
-              ? "Correct — the shape has to be split into EQUAL parts first. Shading some unequal parts doesn't name a fraction."
-              : "Not quite — think back to question 2. Shading some parts isn't enough by itself."}
+        <div className="align-stack-wrap">
+          <p>
+            <b>2.</b> This whole is split into 4 parts, and 1 is shaded:
           </p>
-        )}
+          <UnequalPartsBar segments={[1, 2.6, 0.6, 1.4]} shadedIndices={[0]} label="1 of 4 parts shaded — but are the parts equal?" />
+          <p>Does this picture correctly show 1/4?</p>
+          <div className="control-row">
+            {[
+              { id: "no", label: "No — the 4 parts aren't the same size" },
+              { id: "yes", label: "Yes — 1 out of 4 parts is shaded, so it's 1/4" },
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`btn ghost ${q2 === opt.id ? "pressed" : ""}`}
+                disabled={q2Done}
+                onClick={() => setQ2(opt.id)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {q2 && (
+            <p className={`feedback ${q2Done ? "good" : "bad"}`} role="alert">
+              {q2Done
+                ? "Correct — a fraction's parts must all be the SAME size. Here they aren't, so this picture doesn't show a true fraction, no matter how many are shaded."
+                : "Not quite — look at the sizes of the 4 parts, not just how many are colored in. Are they really all the same size?"}
+            </p>
+          )}
+        </div>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> True or False: As long as you shade <i>some</i> parts of a shape, you can call the shaded amount a fraction.
+          </p>
+          <div className="control-row">
+            {[
+              { id: "false", label: "False" },
+              { id: "true", label: "True" },
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`btn ghost ${q3 === opt.id ? "pressed" : ""}`}
+                disabled={q3Done}
+                onClick={() => setQ3(opt.id)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {q3 && (
+            <p className={`feedback ${q3Done ? "good" : "bad"}`} role="alert">
+              {q3Done
+                ? "Correct — the shape has to be split into EQUAL parts first. Shading some unequal parts doesn't name a fraction."
+                : "Not quite — think back to question 2. Shading some parts isn't enough by itself."}
+            </p>
+          )}
+        </div>
       </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -164,41 +167,43 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [showUnequal, setShowUnequal] = useState(false);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && (
-        <button
-          type="button"
-          className="btn ghost"
-          style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
-          onClick={() => setShowCheck((v) => !v)}
-        >
-          Quick Check
-        </button>
-      )}
-      <p>
-        A fraction names an amount by splitting a whole into <b>equal-size</b> parts, then counting how many of those parts you have. Try different
-        splits and shading below.
-      </p>
-      <Segmented label="Split the whole into" value={String(den)} onChange={(v) => { const d = Number(v); setDen(d); if (num > d) setNum(d); }} options={DENOMS.map((d) => ({ id: String(d), label: `${d} parts` }))} />
-      <div className="control-row">
-        <Stepper label="Parts shaded" value={num} min={0} max={den} onChange={setNum} tone="a" />
-      </div>
-      <div style={{ display: "flex", gap: 28, flexWrap: "wrap", alignItems: "flex-end" }}>
-        <FractionBar numerator={num} denominator={den} label={num === 0 ? `0 of ${den} shaded` : `${num}/${den}`} />
-        <PartsCircle numerator={num} denominator={den} showNumbers label={num === 0 ? `0 of ${den} shaded` : `${num}/${den}`} />
-      </div>
-      <button type="button" className="btn ghost" style={{ width: "fit-content" }} onClick={() => setShowUnequal((v) => !v)}>
-        {showUnequal ? "Hide the unequal-parts example" : "What if the parts AREN'T equal?"}
-      </button>
-      {showUnequal && (
-        <div>
-          <UnequalPartsBar segments={[1, 2, 0.5, 1.5].slice(0, den)} shadedIndices={Array.from({ length: Math.min(num, den) }, (_, i) => i)} label="Same count shaded, but the parts are different sizes — NOT a valid fraction picture" />
-          <p className="muted small">Compare the width of each part above — they're not the same, so this picture can't be named as a fraction the normal way.</p>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Quick Check
+          </button>
+        )}
+        <p>
+          A fraction names an amount by splitting a whole into <b>equal-size</b> parts, then counting how many of those parts you have. Try different
+          splits and shading below.
+        </p>
+        <Segmented label="Split the whole into" value={String(den)} onChange={(v) => { const d = Number(v); setDen(d); if (num > d) setNum(d); }} options={DENOMS.map((d) => ({ id: String(d), label: `${d} parts` }))} />
+        <div className="control-row">
+          <Stepper label="Parts shaded" value={num} min={0} max={den} onChange={setNum} tone="a" />
         </div>
-      )}
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <WhatIsAFractionCheck onComplete={onIntroDone} />}
-    </div>
+        <div style={{ display: "flex", gap: 28, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <FractionBar numerator={num} denominator={den} label={num === 0 ? `0 of ${den} shaded` : `${num}/${den}`} />
+          <PartsCircle numerator={num} denominator={den} showNumbers label={num === 0 ? `0 of ${den} shaded` : `${num}/${den}`} />
+        </div>
+        <button type="button" className="btn ghost" style={{ width: "fit-content" }} onClick={() => setShowUnequal((v) => !v)}>
+          {showUnequal ? "Hide the unequal-parts example" : "What if the parts AREN'T equal?"}
+        </button>
+        {showUnequal && (
+          <div>
+            <UnequalPartsBar segments={[1, 2, 0.5, 1.5].slice(0, den)} shadedIndices={Array.from({ length: Math.min(num, den) }, (_, i) => i)} label="Same count shaded, but the parts are different sizes — NOT a valid fraction picture" />
+            <p className="muted small">Compare the width of each part above — they're not the same, so this picture can't be named as a fraction the normal way.</p>
+          </div>
+        )}
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <WhatIsAFractionCheck onComplete={onIntroDone} />}
+      </div>
+    </MathText>
   );
 }
 
@@ -376,7 +381,7 @@ export const whatAFractionIs: Unit = {
   requiredBuckets: ["unit", "nonunit", "build", "trap"],
   problems: [
     { label: "Name it (1/b)", make: unitFractionProblem, buckets: ["unit"] },
-    { label: "Name it (a/b)", make: nonUnitFractionProblem, buckets: ["nonunit"] },
+    { label: "Name the fraction", make: nonUnitFractionProblem, buckets: ["nonunit"] },
     { label: "Shade a fraction", make: buildFractionProblem, buckets: ["build"] },
     { label: "Equal parts check", make: unequalPartsTrapProblem, buckets: ["trap"] },
   ],

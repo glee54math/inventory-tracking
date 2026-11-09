@@ -171,3 +171,81 @@
   --bad-soft: #45202a;
   --on-q: #140f26;
 }
+
+/* Stacked fractions — the shared Frac component has no styling in lab-base.css
+   (same rule as MG9_IntroToFractionsLab_styles.css). */
+.eae-lab .frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  margin: 0 0.15em;
+  font-size: 0.88em;
+  line-height: 1.05;
+}
+.eae-lab .frac-n,
+.eae-lab .frac-d {
+  padding: 0 0.12em;
+}
+.eae-lab .frac-n {
+  border-bottom: 1.5px solid currentColor;
+}
+
+/* Every fraction in this lab's text is stacked, the handwritten way (shared
+   MathText inside <StackedFractions>; user requirement, same rules as
+   MG10_AddingAndSubtractingFractionsLab_styles.css). A mixed number keeps
+   its whole number and fraction together on one line, and text blocks get a
+   taller line height so a line with a fraction is no taller than one without. */
+.eae-lab .frac-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.eae-lab .frac-text .frac {
+  margin: 0 0.1em;
+}
+.eae-lab .panel p,
+.eae-lab .panel li,
+.eae-lab .key-idea p,
+.eae-lab .goal,
+.eae-lab .story,
+.eae-lab .step-prompt,
+.eae-lab .step-result,
+.eae-lab .explain,
+.eae-lab .show-me,
+.eae-lab .feedback,
+.eae-lab .cfu-line,
+.eae-lab .test-prompt,
+.eae-lab .test-review li {
+  line-height: 1.9;
+}
+.eae-lab .path-goal,
+.eae-lab .unit-carousel-goal {
+  line-height: 1.8;
+}
+/* Small print keeps its fractions readable on an iPad. */
+.eae-lab .small .frac,
+.eae-lab .path-goal .frac,
+.eae-lab .unit-carousel-goal .frac {
+  font-size: 0.92em;
+}
+/* A typed top over a printed denominator (NumberStep/SentenceStep overDen,
+   or a CFU box written as the top of a fraction). */
+.eae-lab .sentence-over-den {
+  vertical-align: middle;
+  margin: 0 4px;
+  line-height: 1.2;
+}
+.eae-lab .sentence-over-den .frac-entry-fixed {
+  line-height: 1.6;
+}
+.eae-lab .answer-row .number-over-den {
+  display: inline-flex;
+}
+.eae-lab .frac .frac-n select.answer,
+.eae-lab .frac .frac-n .tap-select {
+  margin: 0 0 3px;
+}

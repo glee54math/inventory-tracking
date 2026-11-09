@@ -23,8 +23,15 @@ picture, and avoid using the everyday meaning in the same lab.
 | table | furniture | rows of data | 3+ |
 | right, degree | correct / side; temperature | 90° angle; angle unit | 4 |
 | multiple, prime | many; best | multiple of a number; only 1 and itself | 4 |
+| mixed | a mix of problem types (a practice-mode label) | mixed number | 4–5 |
+| top, bottom | position on the screen ("the top fraction") | numerator, denominator | 3–5 |
 | base, power, origin, plot | baseball; strength; beginning; story | prism base; exponent; (0,0); place a point | 5 |
 | mean, range, rate, interest, similar, function | unkind; stove; speed; curiosity; kind of alike; party | statistics; ratio; same shape; rule | 6–8 |
+
+Check on-screen labels too (practice modes, buttons, tabs): a label must not
+reuse a math word with a different meaning. If a lab says *top/bottom* for
+numerator/denominator, link them once ("the top number is the numerator")
+and never use *top/bottom* for a position on the screen in that lab.
 
 ## 2. Homophones the voice can't tell apart
 In read-aloud labs the student *hears* the word. These sound identical:

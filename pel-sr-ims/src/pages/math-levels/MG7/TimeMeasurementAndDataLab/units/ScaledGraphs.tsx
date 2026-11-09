@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { scaledGraphsTest } from "./ScaledGraphsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 const TONES = ["a", "b", "c"] as const;
@@ -63,34 +64,36 @@ function KeyMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>1.</b> This picture graph's key says "each icon = 5."
-      </p>
-      <ScaledPictureGraph keyValue={5} categories={[{ label: "Cats", glyph: "🐱", value: 15 }, { label: "Dogs", glyph: "🐶", value: 10 }]} />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What does ONE 🐱 stand for?{" "}
-          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="one">1 cat</option>
-            <option value="five">5 cats</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — the key tells you every icon stands for 5 real cats. So 3 cat icons means 3 × 5 = 15 cats."
-            : "Not quite — on a SCALED graph one icon isn't one item. The key says each icon = 5, so one 🐱 stands for 5 cats, and 3 icons means 15."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>1.</b> This picture graph's key says "each icon = 5."
         </p>
-      )}
-    </div>
+        <ScaledPictureGraph keyValue={5} categories={[{ label: "Cats", glyph: "🐱", value: 15 }, { label: "Dogs", glyph: "🐶", value: 10 }]} />
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            What does ONE 🐱 stand for?{" "}
+            <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="one">1 cat</option>
+              <option value="five">5 cats</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — the key tells you every icon stands for 5 real cats. So 3 cat icons means 3 × 5 = 15 cats."
+              : "Not quite — on a SCALED graph one icon isn't one item. The key says each icon = 5, so one 🐱 stands for 5 cats, and 3 icons means 15."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -103,35 +106,37 @@ function GridlineCountQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>2.</b> The Apples bar reaches labeled line 3. Lena says, "So 3 people picked apples."
-      </p>
-      <ScaledBarChart categories={CFU_CATS} scale={5} axisMax={30} keyMode />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          How many people really picked apples?{" "}
-          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="3">3 — the bar reaches line 3</option>
-            <option value="15">15 — line 3, and each line is worth 5, so 3 × 5</option>
-            <option value="8">8 — 3 + 5</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — Lena read the LINE NUMBER as the count. The key says each line is worth 5, so line 3 means 3 × 5 = 15 people."
-            : "Not quite — \"3\" is only which line the bar reaches. The key says each line is worth 5, so you multiply: 3 × 5 = 15 people picked apples."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>2.</b> The Apples bar reaches labeled line 3. Lena says, "So 3 people picked apples."
         </p>
-      )}
-    </div>
+        <ScaledBarChart categories={CFU_CATS} scale={5} axisMax={30} keyMode />
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            How many people really picked apples?{" "}
+            <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="3">3 — the bar reaches line 3</option>
+              <option value="15">15 — line 3, and each line is worth 5, so 3 × 5</option>
+              <option value="8">8 — 3 + 5</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — Lena read the LINE NUMBER as the count. The key says each line is worth 5, so line 3 means 3 × 5 = 15 people."
+              : "Not quite — \"3\" is only which line the bar reaches. The key says each line is worth 5, so you multiply: 3 × 5 = 15 people picked apples."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -144,35 +149,37 @@ function HalfIconQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>3.</b> Here each icon = 4 books. Ben's row has 2 whole icons and a HALF icon.
-      </p>
-      <ScaledPictureGraph keyValue={4} categories={[{ label: "Ana", glyph: "📕", value: 12 }, { label: "Ben", glyph: "📗", value: 10 }]} />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          How many books did Ben read?{" "}
-          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="9">9 — 2 icons is 8, and a half icon is just 1 more</option>
-            <option value="10">10 — 2 icons is 8, and half an icon is half of 4, which is 2</option>
-            <option value="3">3 — 2 icons plus 1 half icon</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — in this lab, half an icon always means half the key's value. Half of 4 is 2, so Ben read 8 + 2 = 10 books."
-            : "Not quite — half an icon is worth HALF of what a whole icon is worth. A whole icon is 4, so half is 2: 4 + 4 + 2 = 10 books."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>3.</b> Here each icon = 4 books. Ben's row has 2 whole icons and a HALF icon.
         </p>
-      )}
-    </div>
+        <ScaledPictureGraph keyValue={4} categories={[{ label: "Ana", glyph: "📕", value: 12 }, { label: "Ben", glyph: "📗", value: 10 }]} />
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            How many books did Ben read?{" "}
+            <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="9">9 — 2 icons is 8, and a half icon is just 1 more</option>
+              <option value="10">10 — 2 icons is 8, and half an icon is half of 4, which is 2</option>
+              <option value="3">3 — 2 icons plus 1 half icon</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — in this lab, half an icon always means half the key's value. Half of 4 is 2, so Ben read 8 + 2 = 10 books."
+              : "Not quite — half an icon is worth HALF of what a whole icon is worth. A whole icon is 4, so half is 2: 4 + 4 + 2 = 10 books."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -185,31 +192,33 @@ function GridlineTrapQuestion({ onComplete }: { onComplete?: () => void }) {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>4.</b> True or false: on any bar graph, counting how many lines tall a bar is always tells you how many items it shows — you never need to
-        look at the key.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — that only works when each line is worth exactly 1. On a scaled graph you always check the key and multiply, like Lena's apples (line 3 × 5 = 15)."
-            : "Not quite — remember Lena's apples: the bar was 3 lines tall but showed 15, because each line was worth 5. Always check the key first."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>4.</b> True or false: on any bar graph, counting how many lines tall a bar is always tells you how many items it shows — you never need to
+          look at the key.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="true">True</option>
+            <option value="false">False</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — that only works when each line is worth exactly 1. On a scaled graph you always check the key and multiply, like Lena's apples (line 3 × 5 = 15)."
+              : "Not quite — remember Lena's apples: the bar was 3 lines tall but showed 15, because each line was worth 5. Always check the key first."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -221,13 +230,15 @@ function GraphsCheckForUnderstanding({ onComplete }: { onComplete?: () => void }
   }, [allDone, onComplete]);
   const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure reading a scaled graph makes sense before you try practice problems.</p>
-      <KeyMeaningQuestion onComplete={mark("key")} />
-      <GridlineCountQuestion onComplete={mark("gridline")} />
-      <HalfIconQuestion onComplete={mark("half")} />
-      <GridlineTrapQuestion onComplete={mark("trap")} />
-    </div>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: let's make sure reading a scaled graph makes sense before you try practice problems.</p>
+        <KeyMeaningQuestion onComplete={mark("key")} />
+        <GridlineCountQuestion onComplete={mark("gridline")} />
+        <HalfIconQuestion onComplete={mark("half")} />
+        <GridlineTrapQuestion onComplete={mark("trap")} />
+      </div>
+    </MathText>
   );
 }
 
@@ -247,51 +258,53 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const axisMax = Math.max(k * 6, axisMaxFor(values, k));
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
-        <Segmented
-          label="Key: each icon / line is worth"
-          value={key}
-          onChange={setKey}
-          options={[{ id: "2", label: "2" }, { id: "4", label: "4" }, { id: "10", label: "10" }]}
-        />
-        {!introActive && (
-          <button
-            type="button"
-            className="btn ghost"
-            style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
-            onClick={() => setShowCheck((v) => !v)}
-          >
-            Check for Understanding
-          </button>
-        )}
-      </div>
-
-      <div className="control-row">
-        {theme.cats.map((c, i) => (
-          <Stepper
-            key={c.label}
-            label={`${c.label} (${values[i]})`}
-            value={counts[i] / 2}
-            min={0}
-            max={6}
-            step={0.5}
-            onChange={(v) => setCounts((arr) => arr.map((x, j) => (j === i ? Math.round(v * 2) : x)))}
-            tone={TONES[i]}
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="control-row">
+          <Segmented
+            label="Key: each icon / line is worth"
+            value={key}
+            onChange={setKey}
+            options={[{ id: "2", label: "2" }, { id: "4", label: "4" }, { id: "10", label: "10" }]}
           />
-        ))}
+          {!introActive && (
+            <button
+              type="button"
+              className="btn ghost"
+              style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
+              onClick={() => setShowCheck((v) => !v)}
+            >
+              Check for Understanding
+            </button>
+          )}
+        </div>
+
+        <div className="control-row">
+          {theme.cats.map((c, i) => (
+            <Stepper
+              key={c.label}
+              label={`${c.label} (${values[i]})`}
+              value={counts[i] / 2}
+              min={0}
+              max={6}
+              step={0.5}
+              onChange={(v) => setCounts((arr) => arr.map((x, j) => (j === i ? Math.round(v * 2) : x)))}
+              tone={TONES[i]}
+            />
+          ))}
+        </div>
+        <p className="muted small">Each stepper counts ICONS (half an icon at a time). Watch both graphs show the same numbers two different ways.</p>
+        <div className="control-row" style={{ alignItems: "flex-start" }}>
+          <ScaledPictureGraph keyValue={k} categories={pictureCats} />
+          <ScaledBarChart categories={barCats(theme, values)} scale={k} axisMax={axisMax} keyMode minorStep={k === 10 ? 5 : 1} />
+        </div>
+        <p className="feedback good" style={{ minHeight: 24 }}>
+          {theme.cats.map((c, i) => `${c.label}: ${counts[i] / 2} icons × ${k} = ${values[i]}`).join(" · ")}
+        </p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <GraphsCheckForUnderstanding onComplete={onIntroDone} />}
       </div>
-      <p className="muted small">Each stepper counts ICONS (half an icon at a time). Watch both graphs show the same numbers two different ways.</p>
-      <div className="control-row" style={{ alignItems: "flex-start" }}>
-        <ScaledPictureGraph keyValue={k} categories={pictureCats} />
-        <ScaledBarChart categories={barCats(theme, values)} scale={k} axisMax={axisMax} keyMode minorStep={k === 10 ? 5 : 1} />
-      </div>
-      <p className="feedback good" style={{ minHeight: 24 }}>
-        {theme.cats.map((c, i) => `${c.label}: ${counts[i] / 2} icons × ${k} = ${values[i]}`).join(" · ")}
-      </p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <GraphsCheckForUnderstanding onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 

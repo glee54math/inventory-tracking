@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Frac, Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingFractionsTest } from "./ComparingFractionsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 function properFraction(maxD = 9): [number, number] {
   const d = randInt(2, maxD);
@@ -52,57 +53,59 @@ function Explore() {
   const [cross] = useState(crossPair);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <p>
-        Before comparing two fractions, it helps to know where they sit against a few benchmarks: 0, 1/2, and 1.
-      </p>
-      <NumberLine min={0} max={1} points={[{ value: 0.5, label: "1/2", tone: "c" }]} minorTicksPerUnit={4} />
-      <Segmented label="Comparison" value={frame} onChange={setFrame} options={[
-        { id: "same-denom", label: "Same denominator" },
-        { id: "same-num", label: "Same numerator" },
-        { id: "cross", label: "Different everything" },
-      ]} />
-      {frame === "same-denom" && (
-        <>
-          <p>
-            Same denominator — same-size pieces. Just compare how many are shaded: <Frac n={n1} d={d} /> vs <Frac n={n2} d={d} />.
-          </p>
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <FractionBar numerator={n1} denominator={d} width={160} />
-            <FractionBar numerator={n2} denominator={d} width={160} />
-          </div>
-        </>
-      )}
-      {frame === "same-num" && (
-        <>
-          <p>
-            Same numerator — the SAME number of pieces shaded, but cutting a whole into more pieces makes each piece smaller. Fewer, bigger pieces
-            wins: <Frac n={n} d={d1} /> vs <Frac n={n} d={d2} />.
-          </p>
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <FractionBar numerator={n} denominator={d1} width={160} />
-            <FractionBar numerator={n} denominator={d2} width={160} />
-          </div>
-        </>
-      )}
-      {frame === "cross" && (
-        <>
-          <p>
-            Nothing matches — the number line settles it: whichever point is further right is bigger. A benchmark can help too — is each one closer to
-            0, 1/2, or 1?
-          </p>
-          <NumberLine
-            min={0}
-            max={1}
-            points={[
-              { value: cross.n1 / cross.d1, label: `${cross.n1}/${cross.d1}`, tone: "a" },
-              { value: cross.n2 / cross.d2, label: `${cross.n2}/${cross.d2}`, tone: "b" },
-            ]}
-            minorTicksPerUnit={cross.d1 === cross.d2 ? cross.d1 : undefined}
-          />
-        </>
-      )}
-    </div>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <p>
+          Before comparing two fractions, it helps to know where they sit against a few benchmarks: 0, 1/2, and 1.
+        </p>
+        <NumberLine min={0} max={1} points={[{ value: 0.5, label: "1/2", tone: "c" }]} minorTicksPerUnit={4} />
+        <Segmented label="Comparison" value={frame} onChange={setFrame} options={[
+          { id: "same-denom", label: "Same denominator" },
+          { id: "same-num", label: "Same numerator" },
+          { id: "cross", label: "Different everything" },
+        ]} />
+        {frame === "same-denom" && (
+          <>
+            <p>
+              Same denominator — same-size pieces. Just compare how many are shaded: <Frac n={n1} d={d} /> vs <Frac n={n2} d={d} />.
+            </p>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <FractionBar numerator={n1} denominator={d} width={160} />
+              <FractionBar numerator={n2} denominator={d} width={160} />
+            </div>
+          </>
+        )}
+        {frame === "same-num" && (
+          <>
+            <p>
+              Same numerator — the SAME number of pieces shaded, but cutting a whole into more pieces makes each piece smaller. Fewer, bigger pieces
+              wins: <Frac n={n} d={d1} /> vs <Frac n={n} d={d2} />.
+            </p>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <FractionBar numerator={n} denominator={d1} width={160} />
+              <FractionBar numerator={n} denominator={d2} width={160} />
+            </div>
+          </>
+        )}
+        {frame === "cross" && (
+          <>
+            <p>
+              Nothing matches — the number line settles it: whichever point is further right is bigger. A benchmark can help too — is each one closer to
+              0, 1/2, or 1?
+            </p>
+            <NumberLine
+              min={0}
+              max={1}
+              points={[
+                { value: cross.n1 / cross.d1, label: `${cross.n1}/${cross.d1}`, tone: "a" },
+                { value: cross.n2 / cross.d2, label: `${cross.n2}/${cross.d2}`, tone: "b" },
+              ]}
+              minorTicksPerUnit={cross.d1 === cross.d2 ? cross.d1 : undefined}
+            />
+          </>
+        )}
+      </div>
+    </MathText>
   );
 }
 

@@ -6,6 +6,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingFractionsTest } from "./ComparingFractionsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 // Own local copy of the lab-wide denominator set — see
 // FractionsOnANumberLine.tsx's comment on why every unit file keeps its own.
@@ -84,115 +85,117 @@ function ComparingCheck({ onComplete }: { onComplete?: () => void }) {
   }, [allDone, onComplete]);
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Quick check: let's make sure comparing fractions makes sense before you try practice problems.</p>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Quick check: let's make sure comparing fractions makes sense before you try practice problems.</p>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>1.</b> Compare 1/3 and 1/6, each on the same-size whole:
-        </p>
-        <div className="control-row">
-          <FractionBar numerator={1} denominator={3} width={200} label="1/3" />
-          <FractionBar numerator={1} denominator={6} width={200} label="1/6" />
-        </div>
-        <p>
-          A whole cut into 6 parts has{" "}
-          <select className="answer" value={pieces} onChange={(e) => setPieces(e.target.value)} aria-label="Bigger or smaller pieces" disabled={q1Done} style={answerBorder(pieces === "smaller", q1Checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="bigger">bigger</option>
-            <option value="smaller">smaller</option>
-          </select>{" "}
-          pieces than a whole cut into 3 parts, so 1/6 is{" "}
-          <select className="answer" value={which} onChange={(e) => setWhich(e.target.value)} aria-label="Greater or less" disabled={q1Done} style={answerBorder(which === "less", q1Checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="greater">greater than</option>
-            <option value="less">less than</option>
-          </select>{" "}
-          1/3.
-          <button className="btn primary" type="button" style={{ marginLeft: 10 }} disabled={q1Done || !q1Filled} onClick={() => setQ1Checked(true)}>
-            Check Answer
-          </button>
-        </p>
-        {q1Checked && q1Filled && (
-          <p className={`feedback ${q1Done ? "good" : "bad"}`} role="alert">
-            {q1Done
-              ? "Correct — more pieces means each piece is smaller, so 1/6 < 1/3, even though 6 is bigger than 3."
-              : "Not quite — look at the bars. Which single shaded piece is bigger? Try again."}
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> Compare 1/3 and 1/6, each on the same-size whole:
           </p>
-        )}
-      </div>
-
-      <div className="align-stack-wrap">
-        <p>
-          <b>2.</b> Maya says 1/4 of the big bar is more than 1/2 of the small bar, so 1/4 &gt; 1/2.
-        </p>
-        <div className="control-row">
-          <FractionBar numerator={1} denominator={4} width={BIG_W} label="1/4 of a BIG whole" />
-          <FractionBar numerator={1} denominator={2} width={110} label="1/2 of a small whole" />
-        </div>
-        <p>Is it fair to compare these two pictures to decide which fraction is bigger?</p>
-        <div className="control-row">
-          {[
-            { id: "no", label: "No — the two wholes aren't the same size" },
-            { id: "yes", label: "Yes — the bigger shaded part is the bigger fraction" },
-          ].map((opt) => (
-            <button key={opt.id} type="button" className={`btn ghost ${q2 === opt.id ? "pressed" : ""}`} disabled={q2Done} onClick={() => setQ2(opt.id)}>
-              {opt.label}
+          <div className="control-row">
+            <FractionBar numerator={1} denominator={3} width={200} label="1/3" />
+            <FractionBar numerator={1} denominator={6} width={200} label="1/6" />
+          </div>
+          <p>
+            A whole cut into 6 parts has{" "}
+            <select className="answer" value={pieces} onChange={(e) => setPieces(e.target.value)} aria-label="Bigger or smaller pieces" disabled={q1Done} style={answerBorder(pieces === "smaller", q1Checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="bigger">bigger</option>
+              <option value="smaller">smaller</option>
+            </select>{" "}
+            pieces than a whole cut into 3 parts, so 1/6 is{" "}
+            <select className="answer" value={which} onChange={(e) => setWhich(e.target.value)} aria-label="Greater or less" disabled={q1Done} style={answerBorder(which === "less", q1Checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="greater">greater than</option>
+              <option value="less">less than</option>
+            </select>{" "}
+            1/3.
+            <button className="btn primary" type="button" style={{ marginLeft: 10 }} disabled={q1Done || !q1Filled} onClick={() => setQ1Checked(true)}>
+              Check Answer
             </button>
-          ))}
-        </div>
-        {q2 && (
-          <p className={`feedback ${q2Done ? "good" : "bad"}`} role="alert">
-            {q2Done
-              ? "Correct — fractions can only be compared this way when they're parts of the SAME-size whole. On the same whole, 1/4 < 1/2."
-              : "Not quite — look at the two wholes themselves. Are they the same size?"}
           </p>
-        )}
-      </div>
+          {q1Checked && q1Filled && (
+            <p className={`feedback ${q1Done ? "good" : "bad"}`} role="alert">
+              {q1Done
+                ? "Correct — more pieces means each piece is smaller, so 1/6 < 1/3, even though 6 is bigger than 3."
+                : "Not quite — look at the bars. Which single shaded piece is bigger? Try again."}
+            </p>
+          )}
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>3.</b> True or False: A fraction with a bigger denominator is always the bigger fraction.
-        </p>
-        <div className="control-row">
-          {[
-            { id: "false", label: "False" },
-            { id: "true", label: "True" },
-          ].map((opt) => (
-            <button key={opt.id} type="button" className={`btn ghost ${q3 === opt.id ? "pressed" : ""}`} disabled={q3Done} onClick={() => setQ3(opt.id)}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        {q3 && (
-          <p className={`feedback ${q3Done ? "good" : "bad"}`} role="alert">
-            {q3Done ? "Correct — think of 1/3 and 1/6 from question 1: the bigger denominator made the SMALLER fraction." : "Not quite — remember question 1. Is it always true?"}
+        <div className="align-stack-wrap">
+          <p>
+            <b>2.</b> Maya says 1/4 of the big bar is more than 1/2 of the small bar, so 1/4 &gt; 1/2.
           </p>
-        )}
-      </div>
+          <div className="control-row">
+            <FractionBar numerator={1} denominator={4} width={BIG_W} label="1/4 of a BIG whole" />
+            <FractionBar numerator={1} denominator={2} width={110} label="1/2 of a small whole" />
+          </div>
+          <p>Is it fair to compare these two pictures to decide which fraction is bigger?</p>
+          <div className="control-row">
+            {[
+              { id: "no", label: "No — the two wholes aren't the same size" },
+              { id: "yes", label: "Yes — the bigger shaded part is the bigger fraction" },
+            ].map((opt) => (
+              <button key={opt.id} type="button" className={`btn ghost ${q2 === opt.id ? "pressed" : ""}`} disabled={q2Done} onClick={() => setQ2(opt.id)}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {q2 && (
+            <p className={`feedback ${q2Done ? "good" : "bad"}`} role="alert">
+              {q2Done
+                ? "Correct — fractions can only be compared this way when they're parts of the SAME-size whole. On the same whole, 1/4 < 1/2."
+                : "Not quite — look at the two wholes themselves. Are they the same size?"}
+            </p>
+          )}
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>4.</b> Which symbol goes in the blank? 4/8 ___ 4/8
-        </p>
-        <div className="control-row">
-          {SYMBOLS.map((s) => (
-            <button key={s} type="button" className={`btn ghost ${q4 === s ? "pressed" : ""}`} disabled={q4Done} onClick={() => setQ4(s)}>
-              {s}
-            </button>
-          ))}
-        </div>
-        {q4 && (
-          <p className={`feedback ${q4Done ? "good" : "bad"}`} role="alert">
-            {q4Done ? "Correct — same numerator and same denominator means the same amount, so they're equal." : "Not quite — is either one actually bigger?"}
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> True or False: A fraction with a bigger denominator is always the bigger fraction.
           </p>
-        )}
+          <div className="control-row">
+            {[
+              { id: "false", label: "False" },
+              { id: "true", label: "True" },
+            ].map((opt) => (
+              <button key={opt.id} type="button" className={`btn ghost ${q3 === opt.id ? "pressed" : ""}`} disabled={q3Done} onClick={() => setQ3(opt.id)}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {q3 && (
+            <p className={`feedback ${q3Done ? "good" : "bad"}`} role="alert">
+              {q3Done ? "Correct — think of 1/3 and 1/6 from question 1: the bigger denominator made the SMALLER fraction." : "Not quite — remember question 1. Is it always true?"}
+            </p>
+          )}
+        </div>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>4.</b> Which symbol goes in the blank? 4/8 ___ 4/8
+          </p>
+          <div className="control-row">
+            {SYMBOLS.map((s) => (
+              <button key={s} type="button" className={`btn ghost ${q4 === s ? "pressed" : ""}`} disabled={q4Done} onClick={() => setQ4(s)}>
+                {s}
+              </button>
+            ))}
+          </div>
+          {q4 && (
+            <p className={`feedback ${q4Done ? "good" : "bad"}`} role="alert">
+              {q4Done ? "Correct — same numerator and same denominator means the same amount, so they're equal." : "Not quite — is either one actually bigger?"}
+            </p>
+          )}
+        </div>
       </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -219,61 +222,63 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const sym = compareSymbol(an, ad, bn, bd);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && (
-        <button
-          type="button"
-          className="btn ghost"
-          style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
-          onClick={() => setShowCheck((v) => !v)}
-        >
-          Quick Check
-        </button>
-      )}
-      <p>Two fractions of the SAME-size whole can be compared by looking at the pieces — as long as they share a top number or a bottom number.</p>
-      <Segmented
-        label="Compare"
-        value={mode}
-        onChange={setMode}
-        options={[
-          { id: "same-denom", label: "Same bottom number" },
-          { id: "same-num", label: "Same top number" },
-        ]}
-      />
-      {mode === "same-denom" ? (
-        <>
-          <Segmented label="Denominator" value={String(d)} onChange={(v) => setD(Number(v))} options={DENOMS.map((x) => ({ id: String(x), label: String(x) }))} />
-          <div className="control-row">
-            <Stepper label="First numerator" value={Math.min(n1, d)} min={0} max={d} onChange={setN1} tone="a" />
-            <Stepper label="Second numerator" value={Math.min(n2, d)} min={0} max={d} onChange={setN2} tone="c" />
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="control-row">
-            <Stepper label="Shared numerator" value={n} min={1} max={2} onChange={setN} tone="b" />
-          </div>
-          <div className="control-row">
-            <Segmented label="First denominator" value={String(d1)} onChange={(v) => setD1(Number(v))} options={DENOMS.map((x) => ({ id: String(x), label: String(x) }))} />
-            <Segmented label="Second denominator" value={String(d2)} onChange={(v) => setD2(Number(v))} options={DENOMS.map((x) => ({ id: String(x), label: String(x) }))} />
-          </div>
-        </>
-      )}
-      <div className="control-row">
-        <FractionBar numerator={an} denominator={ad} width={240} label={`${an}/${ad}`} />
-        <FractionBar numerator={bn} denominator={bd} width={240} label={`${bn}/${bd}`} />
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Quick Check
+          </button>
+        )}
+        <p>Two fractions of the SAME-size whole can be compared by looking at the pieces — as long as they share a top number or a bottom number.</p>
+        <Segmented
+          label="Compare"
+          value={mode}
+          onChange={setMode}
+          options={[
+            { id: "same-denom", label: "Same bottom number" },
+            { id: "same-num", label: "Same top number" },
+          ]}
+        />
+        {mode === "same-denom" ? (
+          <>
+            <Segmented label="Denominator" value={String(d)} onChange={(v) => setD(Number(v))} options={DENOMS.map((x) => ({ id: String(x), label: String(x) }))} />
+            <div className="control-row">
+              <Stepper label="First numerator" value={Math.min(n1, d)} min={0} max={d} onChange={setN1} tone="a" />
+              <Stepper label="Second numerator" value={Math.min(n2, d)} min={0} max={d} onChange={setN2} tone="c" />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="control-row">
+              <Stepper label="Shared numerator" value={n} min={1} max={2} onChange={setN} tone="b" />
+            </div>
+            <div className="control-row">
+              <Segmented label="First denominator" value={String(d1)} onChange={(v) => setD1(Number(v))} options={DENOMS.map((x) => ({ id: String(x), label: String(x) }))} />
+              <Segmented label="Second denominator" value={String(d2)} onChange={(v) => setD2(Number(v))} options={DENOMS.map((x) => ({ id: String(x), label: String(x) }))} />
+            </div>
+          </>
+        )}
+        <div className="control-row">
+          <FractionBar numerator={an} denominator={ad} width={240} label={`${an}/${ad}`} />
+          <FractionBar numerator={bn} denominator={bd} width={240} label={`${bn}/${bd}`} />
+        </div>
+        <p className="says">
+          {an}/{ad} {sym} {bn}/{bd}
+        </p>
+        <p className="muted small">
+          {mode === "same-denom"
+            ? "Same bottom number means same-size pieces — more pieces shaded is more."
+            : "Same top number means the same COUNT of pieces — but a whole cut into more parts has smaller pieces, so the bigger bottom number makes the smaller fraction."}
+        </p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <ComparingCheck onComplete={onIntroDone} />}
       </div>
-      <p className="says">
-        {an}/{ad} {sym} {bn}/{bd}
-      </p>
-      <p className="muted small">
-        {mode === "same-denom"
-          ? "Same bottom number means same-size pieces — more pieces shaded is more."
-          : "Same top number means the same COUNT of pieces — but a whole cut into more parts has smaller pieces, so the bigger bottom number makes the smaller fraction."}
-      </p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <ComparingCheck onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 
@@ -473,10 +478,12 @@ function equalProblem(): Problem {
 /** Static snapshot for the cover page's preview carousel. */
 function Preview() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <FractionBar numerator={1} denominator={3} width={200} />
-      <FractionBar numerator={1} denominator={6} width={200} />
-    </div>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <FractionBar numerator={1} denominator={3} width={200} />
+        <FractionBar numerator={1} denominator={6} width={200} />
+      </div>
+    </MathText>
   );
 }
 

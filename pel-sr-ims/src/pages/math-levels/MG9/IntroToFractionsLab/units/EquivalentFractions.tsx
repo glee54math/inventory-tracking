@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Frac, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { equivalentFractionsTest } from "./EquivalentFractionsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 /** A small proper fraction, denominator in [2,6] — small enough that the
  *  rescaled EquivalentBars bottom tier (denominator × k, k up to 6) still
@@ -24,20 +25,22 @@ function Explore() {
   const [k, setK] = useState(2);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <p>
-        Multiplying (or dividing) the numerator AND denominator of a fraction by the same number never changes its value — it just cuts the same
-        amount into a different number of pieces. Try different multipliers below.
-      </p>
-      <div className="controls">
-        <Stepper label="Multiply both by" value={k} min={2} max={6} onChange={setK} tone="c" />
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <p>
+          Multiplying (or dividing) the numerator AND denominator of a fraction by the same number never changes its value — it just cuts the same
+          amount into a different number of pieces. Try different multipliers below.
+        </p>
+        <div className="controls">
+          <Stepper label="Multiply both by" value={k} min={2} max={6} onChange={setK} tone="c" />
+        </div>
+        <EquivalentBars n={n} d={d} k={k} />
+        <p className="muted small">
+          <Frac n={n} d={d} /> and <Frac n={n * k} d={d * k} /> land on the exact same point — they're the same number, just written two ways.
+        </p>
+        <NumberLine min={0} max={1} points={[{ value: n / d, label: `${n}/${d}`, tone: "a" }]} minorTicksPerUnit={d} />
       </div>
-      <EquivalentBars n={n} d={d} k={k} />
-      <p className="muted small">
-        <Frac n={n} d={d} /> and <Frac n={n * k} d={d * k} /> land on the exact same point — they're the same number, just written two ways.
-      </p>
-      <NumberLine min={0} max={1} points={[{ value: n / d, label: `${n}/${d}`, tone: "a" }]} minorTicksPerUnit={d} />
-    </div>
+    </MathText>
   );
 }
 

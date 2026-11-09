@@ -6,6 +6,7 @@ import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { equivalentExpressionsPropertiesTest } from "./EquivalentExpressionsPropertiesTest";
 import { toSuperscript } from "./formatExponent";
+import { MathText } from "../../../shared/components/MathText";
 
 const fieldStyle = (ok: boolean, checked: boolean): CSSProperties => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
@@ -23,31 +24,33 @@ function LikeTermsQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>1.</b> Look at 3x, 3y, 5x, and 7. Which pair are "like terms"?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="3x and 5x">3x and 5x</option>
-          <option value="3x and 3y">3x and 3y</option>
-          <option value="3y and 7">3y and 7</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — like terms have the exact same variable (both x), so their coefficients can be combined: 3x and 5x. 3x and 3y have DIFFERENT variables, so they can't be combined even though the coefficients match."
-            : "Not quite — like terms need the SAME variable, not the same coefficient. Which two both have an x?"}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>1.</b> Look at 3x, 3y, 5x, and 7. Which pair are "like terms"?
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="3x and 5x">3x and 5x</option>
+            <option value="3x and 3y">3x and 3y</option>
+            <option value="3y and 7">3y and 7</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — like terms have the exact same variable (both x), so their coefficients can be combined: 3x and 5x. 3x and 3y have DIFFERENT variables, so they can't be combined even though the coefficients match."
+              : "Not quite — like terms need the SAME variable, not the same coefficient. Which two both have an x?"}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -65,43 +68,45 @@ function ExpandVsFactorQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>2.</b> Look at 4(x+3).
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          The same expression, written another way:{" "}
-          <select className="answer" value={samePick} onChange={(e) => setSamePick(e.target.value)} style={fieldStyle(sameOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="4x+12">4x + 12</option>
-            <option value="4x+3">4x + 3</option>
-          </select>
-        </label>
-        <label>
-          4(x+3) itself is already in:{" "}
-          <select className="answer" value={formPick} onChange={(e) => setFormPick(e.target.value)} style={fieldStyle(formOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="factored form">factored form</option>
-            <option value="expanded form">expanded form</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — distributing the 4 to BOTH terms gives 4x + 12, not 4x + 3 (that forgets to multiply the 3 by 4). And 4(x+3) is already factored form — a product of two factors."
-            : "Not quite — the 4 has to multiply EVERY term inside the parentheses, including the 3. And 4(x+3) is written as a product already, which is what 'factored form' means."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>2.</b> Look at 4(x+3).
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            The same expression, written another way:{" "}
+            <select className="answer" value={samePick} onChange={(e) => setSamePick(e.target.value)} style={fieldStyle(sameOk, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="4x+12">4x + 12</option>
+              <option value="4x+3">4x + 3</option>
+            </select>
+          </label>
+          <label>
+            4(x+3) itself is already in:{" "}
+            <select className="answer" value={formPick} onChange={(e) => setFormPick(e.target.value)} style={fieldStyle(formOk, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="factored form">factored form</option>
+              <option value="expanded form">expanded form</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && allFilled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — distributing the 4 to BOTH terms gives 4x + 12, not 4x + 3 (that forgets to multiply the 3 by 4). And 4(x+3) is already factored form — a product of two factors."
+              : "Not quite — the 4 has to multiply EVERY term inside the parentheses, including the 3. And 4(x+3) is written as a product already, which is what 'factored form' means."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -115,30 +120,32 @@ function RepeatedAddVsMultiplyTrap({ onComplete }: { onComplete?: () => void }) 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or False: y + y + y always equals y³.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="True">True</option>
-          <option value="False">False</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — False. y + y + y is repeated ADDITION, which equals 3y. y³ is repeated MULTIPLICATION (y × y × y), a completely different operation. They're only equal for y = 0 or y = 3 by coincidence, not in general."
-            : "Not quite — try y = 2. y + y + y = 6, but y³ = 8. Adding y to itself 3 times (3y) is not the same as multiplying y by itself 3 times (y³)."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>3.</b> True or False: y + y + y always equals y³.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldStyle(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="True">True</option>
+            <option value="False">False</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — False. y + y + y is repeated ADDITION, which equals 3y. y³ is repeated MULTIPLICATION (y × y × y), a completely different operation. They're only equal for y = 0 or y = 3 by coincidence, not in general."
+              : "Not quite — try y = 2. y + y + y = 6, but y³ = 8. Adding y to itself 3 times (3y) is not the same as multiplying y by itself 3 times (y³)."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -156,44 +163,46 @@ function FactorGCFQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>4.</b> Factor 12x + 8 by pulling out the GCF.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          GCF of 12 and 8:{" "}
-          <select className="answer" value={gcfPick} onChange={(e) => setGcfPick(e.target.value)} style={fieldStyle(gcfOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="4">4</option>
-            <option value="2">2</option>
-          </select>
-        </label>
-        <label>
-          Factored form:{" "}
-          <select className="answer" value={formPick} onChange={(e) => setFormPick(e.target.value)} style={fieldStyle(formOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="4(3x+2)">4(3x+2)</option>
-            <option value="4(3x+8)">4(3x+8)</option>
-            <option value="2(6x+4)">2(6x+4)</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — the GCF of 12 and 8 is 4: 12x + 8 = 4(3x + 2). (2(6x+4) is also technically true, but 2 isn't the GREATEST common factor, so it's not fully factored.)"
-            : "Not quite — the GCF has to divide evenly into BOTH 12 and 8. Dividing both terms by the GCF gives the factored form."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>4.</b> Factor 12x + 8 by pulling out the GCF.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            GCF of 12 and 8:{" "}
+            <select className="answer" value={gcfPick} onChange={(e) => setGcfPick(e.target.value)} style={fieldStyle(gcfOk, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="4">4</option>
+              <option value="2">2</option>
+            </select>
+          </label>
+          <label>
+            Factored form:{" "}
+            <select className="answer" value={formPick} onChange={(e) => setFormPick(e.target.value)} style={fieldStyle(formOk, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="4(3x+2)">4(3x+2)</option>
+              <option value="4(3x+8)">4(3x+8)</option>
+              <option value="2(6x+4)">2(6x+4)</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && allFilled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — the GCF of 12 and 8 is 4: 12x + 8 = 4(3x + 2). (2(6x+4) is also technically true, but 2 isn't the GREATEST common factor, so it's not fully factored.)"
+              : "Not quite — the GCF has to divide evenly into BOTH 12 and 8. Dividing both terms by the GCF gives the factored form."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -206,13 +215,15 @@ function PropertiesCheckForUnderstanding({ onComplete }: { onComplete?: () => vo
   const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's connect a few ideas before you try practice problems.</p>
-      <LikeTermsQuestion onComplete={mark("likeTerms")} />
-      <ExpandVsFactorQuestion onComplete={mark("expandVsFactor")} />
-      <RepeatedAddVsMultiplyTrap onComplete={mark("repeatedAddTrap")} />
-      <FactorGCFQuestion onComplete={mark("factorGCF")} />
-    </div>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: let's connect a few ideas before you try practice problems.</p>
+        <LikeTermsQuestion onComplete={mark("likeTerms")} />
+        <ExpandVsFactorQuestion onComplete={mark("expandVsFactor")} />
+        <RepeatedAddVsMultiplyTrap onComplete={mark("repeatedAddTrap")} />
+        <FactorGCFQuestion onComplete={mark("factorGCF")} />
+      </div>
+    </MathText>
   );
 }
 
@@ -230,36 +241,38 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const ac = a * c;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
-        <Stepper label="a" value={a} min={2} max={6} step={1} onChange={setA} tone="a" />
-        <Stepper label="b" value={b} min={1} max={9} step={1} onChange={setB} tone="b" />
-        <Stepper label="c" value={c} min={1} max={9} step={1} onChange={setC} tone="c" />
-        {!introActive && (
-          <button
-            type="button"
-            className="btn ghost"
-            style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
-            onClick={() => setShowCheck((v) => !v)}
-          >
-            Check for Understanding
-          </button>
-        )}
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="control-row">
+          <Stepper label="a" value={a} min={2} max={6} step={1} onChange={setA} tone="a" />
+          <Stepper label="b" value={b} min={1} max={9} step={1} onChange={setB} tone="b" />
+          <Stepper label="c" value={c} min={1} max={9} step={1} onChange={setC} tone="c" />
+          {!introActive && (
+            <button
+              type="button"
+              className="btn ghost"
+              style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
+              onClick={() => setShowCheck((v) => !v)}
+            >
+              Check for Understanding
+            </button>
+          )}
+        </div>
+        <div style={{ fontSize: 22, fontWeight: 700 }}>
+          {a}(x+{b}) = {a}x + {ab}
+        </div>
+        <FactorRectangle rows={a} cols={b + c} splitCols={[b, c]} label={`${a} by ${b + c}`} />
+        <p className="muted small">
+          The rectangle shows {a} × ({b}+{c}) split into {a} × {b} and {a} × {c} — the same area either way. Distributing {a} across (x+{b})
+          works the same way: {a} multiplies EVERY term inside the parentheses, not just the first one.
+        </p>
+        <div style={{ fontSize: 18 }}>
+          Going the other direction (factoring): {ab} + {ac} = {a}({b}+{c}) — pulling {a} back out as the greatest common factor.
+        </div>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <PropertiesCheckForUnderstanding onComplete={onIntroDone} />}
       </div>
-      <div style={{ fontSize: 22, fontWeight: 700 }}>
-        {a}(x+{b}) = {a}x + {ab}
-      </div>
-      <FactorRectangle rows={a} cols={b + c} splitCols={[b, c]} label={`${a} by ${b + c}`} />
-      <p className="muted small">
-        The rectangle shows {a} × ({b}+{c}) split into {a} × {b} and {a} × {c} — the same area either way. Distributing {a} across (x+{b})
-        works the same way: {a} multiplies EVERY term inside the parentheses, not just the first one.
-      </p>
-      <div style={{ fontSize: 18 }}>
-        Going the other direction (factoring): {ab} + {ac} = {a}({b}+{c}) — pulling {a} back out as the greatest common factor.
-      </div>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <PropertiesCheckForUnderstanding onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useId } from "react";
 import { palette, diagramFont } from "../../../shared/lib/palette";
+import { MathText } from "../../../shared/components/MathText";
 
 export interface PictureCategory {
   label: string;
@@ -41,64 +42,66 @@ export function ScaledPictureGraph({ categories, keyValue }: ScaledPictureGraphP
   const height = categories.length * ROW_H + PAD + 30;
 
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      role="img"
-      aria-label={`A picture graph where each icon stands for ${keyValue}, with rows for ${categories.map((c) => c.label).join(", ")}`}
-      style={{ display: "block", width: "100%", maxWidth: width, height: "auto", fontFamily: diagramFont }}
-    >
-      <text x={LABEL_W} y={16} fontSize={12} fontWeight={700} fill={palette.muted}>
-        Key: each icon = {keyValue}
-      </text>
-      {categories.map((c, row) => {
-        const y = row * ROW_H + ROW_H / 2 + 28;
-        const fullIcons = Math.floor(c.value / keyValue);
-        const remainder = c.value - fullIcons * keyValue;
-        const hasHalf = remainder > 0; // by construction, remainder is always exactly keyValue/2
-        return (
-          <g key={c.label}>
-            <text x={LABEL_W - 8} y={y + 5} textAnchor="end" fontSize={14} fontWeight={700} fill={palette.ink}>
-              {c.label}
-            </text>
-            <line x1={LABEL_W} y1={y} x2={width} y2={y} stroke={palette.line} strokeWidth={1} />
-            {Array.from({ length: fullIcons }, (_, i) => (
-              <text key={i} x={LABEL_W + PAD + i * ICON + ICON / 2} y={y + 8} textAnchor="middle" fontSize={ICON * 0.8}>
-                {c.glyph}
+    <MathText>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={`A picture graph where each icon stands for ${keyValue}, with rows for ${categories.map((c) => c.label).join(", ")}`}
+        style={{ display: "block", width: "100%", maxWidth: width, height: "auto", fontFamily: diagramFont }}
+      >
+        <text x={LABEL_W} y={16} fontSize={12} fontWeight={700} fill={palette.muted}>
+          Key: each icon = {keyValue}
+        </text>
+        {categories.map((c, row) => {
+          const y = row * ROW_H + ROW_H / 2 + 28;
+          const fullIcons = Math.floor(c.value / keyValue);
+          const remainder = c.value - fullIcons * keyValue;
+          const hasHalf = remainder > 0; // by construction, remainder is always exactly keyValue/2
+          return (
+            <g key={c.label}>
+              <text x={LABEL_W - 8} y={y + 5} textAnchor="end" fontSize={14} fontWeight={700} fill={palette.ink}>
+                {c.label}
               </text>
-            ))}
-            {hasHalf && (
-              <>
-                <clipPath id={`${uid}-half-${row}`}>
-                  {/* Left half of the icon cell only — a real SVG clipPath rect, not CSS inset(), whose reference box on SVG content is the whole viewport. */}
-                  <rect x={LABEL_W + PAD + fullIcons * ICON} y={y - ICON} width={ICON / 2} height={ICON * 2} />
-                </clipPath>
-                <text
-                  x={LABEL_W + PAD + fullIcons * ICON + ICON / 2}
-                  y={y + 8}
-                  textAnchor="middle"
-                  fontSize={ICON * 0.8}
-                  clipPath={`url(#${uid}-half-${row})`}
-                >
+              <line x1={LABEL_W} y1={y} x2={width} y2={y} stroke={palette.line} strokeWidth={1} />
+              {Array.from({ length: fullIcons }, (_, i) => (
+                <text key={i} x={LABEL_W + PAD + i * ICON + ICON / 2} y={y + 8} textAnchor="middle" fontSize={ICON * 0.8}>
                   {c.glyph}
                 </text>
-                <line
-                  x1={LABEL_W + PAD + fullIcons * ICON + ICON / 2}
-                  y1={y - ICON / 2}
-                  x2={LABEL_W + PAD + fullIcons * ICON + ICON / 2}
-                  y2={y + ICON / 2}
-                  stroke={palette.muted}
-                  strokeDasharray="2 2"
-                />
-              </>
-            )}
-            {fullIcons === 0 && !hasHalf && (
-              <text x={LABEL_W + PAD} y={y + 5} fontSize={12} fill={palette.muted}>
-                (none)
-              </text>
-            )}
-          </g>
-        );
-      })}
-    </svg>
+              ))}
+              {hasHalf && (
+                <>
+                  <clipPath id={`${uid}-half-${row}`}>
+                    {/* Left half of the icon cell only — a real SVG clipPath rect, not CSS inset(), whose reference box on SVG content is the whole viewport. */}
+                    <rect x={LABEL_W + PAD + fullIcons * ICON} y={y - ICON} width={ICON / 2} height={ICON * 2} />
+                  </clipPath>
+                  <text
+                    x={LABEL_W + PAD + fullIcons * ICON + ICON / 2}
+                    y={y + 8}
+                    textAnchor="middle"
+                    fontSize={ICON * 0.8}
+                    clipPath={`url(#${uid}-half-${row})`}
+                  >
+                    {c.glyph}
+                  </text>
+                  <line
+                    x1={LABEL_W + PAD + fullIcons * ICON + ICON / 2}
+                    y1={y - ICON / 2}
+                    x2={LABEL_W + PAD + fullIcons * ICON + ICON / 2}
+                    y2={y + ICON / 2}
+                    stroke={palette.muted}
+                    strokeDasharray="2 2"
+                  />
+                </>
+              )}
+              {fullIcons === 0 && !hasHalf && (
+                <text x={LABEL_W + PAD} y={y + 5} fontSize={12} fill={palette.muted}>
+                  (none)
+                </text>
+              )}
+            </g>
+          );
+        })}
+      </svg>
+    </MathText>
   );
 }

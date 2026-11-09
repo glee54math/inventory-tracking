@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Frac, QA, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { fractionFormsTest } from "./FractionFormsTest";
+import { MathText } from "../../../shared/components/MathText";
 
 /** A proper fraction: numerator < denominator. */
 function properFraction(): [number, number] {
@@ -63,88 +64,90 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [formGuess, setFormGuess] = useState("");
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* Fixed, non-randomized anchor pictures — the pizza-slice model most
-          students already have an informal sense of (IES recommendation #1:
-          build on that before the abstract rule). Two examples: an ordinary
-          proper fraction, and the improper/mixed pair the rest of this unit
-          is about — shown as ONE picture read two ways, same idea
-          WholePlusPartBar/WholePlusPartCircles both lean on throughout this
-          unit, just with the more familiar circle instead of a bar first. */}
-      <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
-        <div>
-          <FractionCircle numerator={3} denominator={4} radius={52} showNumbers />
-          <p className="muted small" style={{ maxWidth: 160 }}>
-            <Frac n={3} d={4} /> — a proper fraction: 3 of the 4 equal slices are shaded.
-          </p>
-        </div>
-        <div>
-          <WholePlusPartCircles whole={1} leftoverNum={1} den={3} radius={48} />
-          <p className="muted small" style={{ maxWidth: 260 }}>
-            <Frac n={4} d={3} /> = 1 <Frac n={1} d={3} /> — the same picture, read two ways: 4 shaded thirds in all, or 1 whole pizza plus 1/3 of another.
-          </p>
-        </div>
-      </div>
-      <p>
-        <Frac n={num} d={den} /> is{" "}
-        <select className="answer" value={formGuess} onChange={(e) => setFormGuess(e.target.value)} aria-label="Is this a proper fraction, an improper fraction, or a mixed number?">
-          <option value="" disabled>
-            choose one
-          </option>
-          <option value="proper">a proper fraction</option>
-          <option value="improper">an improper fraction</option>
-          <option value="mixed">a mixed number</option>
-        </select>
-        {formGuess && (
-          <b style={{ color: formGuess === "improper" ? "var(--good)" : "var(--bad)", marginLeft: 8 }}>
-            {formGuess === "improper" ? "✓" : "Not quite — compare the numerator to the denominator."}
-          </b>
-        )}
-        . Its numerator is bigger than its denominator, so it's worth more than one whole. Every improper fraction can also be written as a{" "}
-        <b>mixed number</b>: a whole number plus a proper fraction.
-      </p>
-      {/* Two number lines, same tick positions, two label conventions — the
-          "same number, two names" idea made spatial: every 1/den tick is
-          labeled, first as a raw improper fraction (never simplified, so
-          den/den reads "6/6" not "1"), then as a mixed number (whole numbers
-          bare, the rest as whole + leftover/den). */}
-      <p className="muted small" style={{ marginBottom: -8 }}>
-        As an improper fraction:
-      </p>
-      <FractionNumberLine denominator={den} numerator={num} labelStyle="fraction" />
-      <p className="muted small" style={{ marginBottom: -8 }}>
-        The same points, as mixed numbers:
-      </p>
-      <FractionNumberLine denominator={den} numerator={num} labelStyle="mixed" />
-      {introActive && (
-        <div className="align-drill">
-          <p className="intro-gate-title">
-            Convert <Frac n={num} d={den} /> into a mixed number: how many whole groups of {den}, and what's left over?
-          </p>
-          <div className="controls">
-            <Stepper label="Whole groups" value={whole} min={0} max={correctWhole + 2} onChange={setWhole} tone="a" />
-            <Stepper label="Leftover numerator" value={leftover} min={0} max={den - 1} onChange={setLeftover} tone="b" />
-          </div>
-          <WholePlusPartBar whole={whole} leftoverNum={leftover} den={den} />
-          <button className="btn primary" onClick={() => setChecked(true)}>
-            Check my work
-          </button>
-          {checked && (
-            <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-              {ok
-                ? `Exactly — ${num}/${den} = ${correctWhole} ${correctLeftover}/${den}. Same number, two names.`
-                : `Not quite — ${den} goes into ${num} some whole number of times, with a bit left over. Try again.`}
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {/* Fixed, non-randomized anchor pictures — the pizza-slice model most
+            students already have an informal sense of (IES recommendation #1:
+            build on that before the abstract rule). Two examples: an ordinary
+            proper fraction, and the improper/mixed pair the rest of this unit
+            is about — shown as ONE picture read two ways, same idea
+            WholePlusPartBar/WholePlusPartCircles both lean on throughout this
+            unit, just with the more familiar circle instead of a bar first. */}
+        <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
+          <div>
+            <FractionCircle numerator={3} denominator={4} radius={52} showNumbers />
+            <p className="muted small" style={{ maxWidth: 160 }}>
+              <Frac n={3} d={4} /> — a proper fraction: 3 of the 4 equal slices are shaded.
             </p>
-          )}
-          {checked && ok && onIntroDone && (
-            <button className="btn primary" onClick={onIntroDone}>
-              Continue
-            </button>
-          )}
+          </div>
+          <div>
+            <WholePlusPartCircles whole={1} leftoverNum={1} den={3} radius={48} />
+            <p className="muted small" style={{ maxWidth: 260 }}>
+              <Frac n={4} d={3} /> = 1 <Frac n={1} d={3} /> — the same picture, read two ways: 4 shaded thirds in all, or 1 whole pizza plus 1/3 of another.
+            </p>
+          </div>
         </div>
-      )}
-      {!introActive && <WholePlusPartBar whole={correctWhole} leftoverNum={correctLeftover} den={den} />}
-    </div>
+        <p>
+          <Frac n={num} d={den} /> is{" "}
+          <select className="answer" value={formGuess} onChange={(e) => setFormGuess(e.target.value)} aria-label="Is this a proper fraction, an improper fraction, or a mixed number?">
+            <option value="" disabled>
+              choose one
+            </option>
+            <option value="proper">a proper fraction</option>
+            <option value="improper">an improper fraction</option>
+            <option value="mixed">a mixed number</option>
+          </select>
+          {formGuess && (
+            <b style={{ color: formGuess === "improper" ? "var(--good)" : "var(--bad)", marginLeft: 8 }}>
+              {formGuess === "improper" ? "✓" : "Not quite — compare the numerator to the denominator."}
+            </b>
+          )}
+          . Its numerator is bigger than its denominator, so it's worth more than one whole. Every improper fraction can also be written as a{" "}
+          <b>mixed number</b>: a whole number plus a proper fraction.
+        </p>
+        {/* Two number lines, same tick positions, two label conventions — the
+            "same number, two names" idea made spatial: every 1/den tick is
+            labeled, first as a raw improper fraction (never simplified, so
+            den/den reads "6/6" not "1"), then as a mixed number (whole numbers
+            bare, the rest as whole + leftover/den). */}
+        <p className="muted small" style={{ marginBottom: -8 }}>
+          As an improper fraction:
+        </p>
+        <FractionNumberLine denominator={den} numerator={num} labelStyle="fraction" />
+        <p className="muted small" style={{ marginBottom: -8 }}>
+          The same points, as mixed numbers:
+        </p>
+        <FractionNumberLine denominator={den} numerator={num} labelStyle="mixed" />
+        {introActive && (
+          <div className="align-drill">
+            <p className="intro-gate-title">
+              Convert <Frac n={num} d={den} /> into a mixed number: how many whole groups of {den}, and what's left over?
+            </p>
+            <div className="controls">
+              <Stepper label="Whole groups" value={whole} min={0} max={correctWhole + 2} onChange={setWhole} tone="a" />
+              <Stepper label="Leftover numerator" value={leftover} min={0} max={den - 1} onChange={setLeftover} tone="b" />
+            </div>
+            <WholePlusPartBar whole={whole} leftoverNum={leftover} den={den} />
+            <button className="btn primary" onClick={() => setChecked(true)}>
+              Check my work
+            </button>
+            {checked && (
+              <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+                {ok
+                  ? `Exactly — ${num}/${den} = ${correctWhole} ${correctLeftover}/${den}. Same number, two names.`
+                  : `Not quite — ${den} goes into ${num} some whole number of times, with a bit left over. Try again.`}
+              </p>
+            )}
+            {checked && ok && onIntroDone && (
+              <button className="btn primary" onClick={onIntroDone}>
+                Continue
+              </button>
+            )}
+          </div>
+        )}
+        {!introActive && <WholePlusPartBar whole={correctWhole} leftoverNum={correctLeftover} den={den} />}
+      </div>
+    </MathText>
   );
 }
 
@@ -200,7 +203,11 @@ function classifyProblem(): Problem {
         {
           prompt: (
             <>
-              Is <QA>{whole} {leftover}/{den}</QA> a proper fraction, an improper fraction, or a mixed number?
+              Is <QA>
+                <MathText>
+                  {whole} {leftover}/{den}
+                </MathText>
+              </QA> a proper fraction, an improper fraction, or a mixed number?
             </>
           ),
           hint: "It's written as a whole number together with a fraction.",

@@ -5,6 +5,7 @@ import { choice, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { measuringVolumeAndMassTest } from "./MeasuringVolumeAndMassTest";
+import { MathText } from "../../../shared/components/MathText";
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
@@ -48,32 +49,34 @@ function AttributeQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>1.</b> A scale's needle points to a number in grams or kilograms.
-      </p>
-      <ScaleGauge maxUnits={1000} valueUnits={600} majorStep={200} unitLabel="g" tone="a" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What does a scale measure?{" "}
-          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="mass">Mass — how heavy something is</option>
-            <option value="volume">Volume — how much space it takes up inside a container</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — grams and kilograms measure MASS, how heavy something is. Liters measure volume instead, how much a container holds." : "Not quite — grams and kilograms measure MASS, not volume. Volume (how much a container holds) is measured in liters."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>1.</b> A scale's needle points to a number in grams or kilograms.
         </p>
-      )}
-    </div>
+        <ScaleGauge maxUnits={1000} valueUnits={600} majorStep={200} unitLabel="g" tone="a" />
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            What does a scale measure?{" "}
+            <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="mass">Mass — how heavy something is</option>
+              <option value="volume">Volume — how much space it takes up inside a container</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok ? "Correct — grams and kilograms measure MASS, how heavy something is. Liters measure volume instead, how much a container holds." : "Not quite — grams and kilograms measure MASS, not volume. Volume (how much a container holds) is measured in liters."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -91,44 +94,46 @@ function MassVsVolumeQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>2.</b> A full pitcher of water holds 2 liters AND has a mass of about 2 kilograms. Both numbers happen to be "2," but they describe
-        different things.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          "2 liters" tells you how much the pitcher...{" "}
-          <select className="answer" value={pickedA} onChange={(e) => setPickedA(e.target.value)} style={fieldOk(okA, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="holds">holds (volume)</option>
-            <option value="weighs">weighs (mass)</option>
-          </select>
-        </label>
-        <label>
-          "2 kilograms" tells you how much the pitcher...{" "}
-          <select className="answer" value={pickedB} onChange={(e) => setPickedB(e.target.value)} style={fieldOk(okB, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="holds">holds (volume)</option>
-            <option value="weighs">weighs (mass)</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — liters always describe how much something HOLDS (volume); grams/kilograms always describe how much something WEIGHS (mass). The same object can have both, but they're never interchangeable."
-            : "Not quite — liters describe VOLUME (how much it holds); grams/kilograms describe MASS (how much it weighs). A pitcher can have both numbers, but they're measuring two different things."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>2.</b> A full pitcher of water holds 2 liters AND has a mass of about 2 kilograms. Both numbers happen to be "2," but they describe
+          different things.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            "2 liters" tells you how much the pitcher...{" "}
+            <select className="answer" value={pickedA} onChange={(e) => setPickedA(e.target.value)} style={fieldOk(okA, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="holds">holds (volume)</option>
+              <option value="weighs">weighs (mass)</option>
+            </select>
+          </label>
+          <label>
+            "2 kilograms" tells you how much the pitcher...{" "}
+            <select className="answer" value={pickedB} onChange={(e) => setPickedB(e.target.value)} style={fieldOk(okB, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="holds">holds (volume)</option>
+              <option value="weighs">weighs (mass)</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && allFilled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — liters always describe how much something HOLDS (volume); grams/kilograms always describe how much something WEIGHS (mass). The same object can have both, but they're never interchangeable."
+              : "Not quite — liters describe VOLUME (how much it holds); grams/kilograms describe MASS (how much it weighs). A pitcher can have both numbers, but they're measuring two different things."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -146,43 +151,45 @@ function UnitSizeQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>3.</b> Which unit makes more sense for each object?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          A paperclip's mass: 1{" "}
-          <select className="answer" value={pickedA} onChange={(e) => setPickedA(e.target.value)} style={fieldOk(okA, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="g">gram</option>
-            <option value="kg">kilogram</option>
-          </select>
-        </label>
-        <label>
-          A bicycle's mass: about 11{" "}
-          <select className="answer" value={pickedB} onChange={(e) => setPickedB(e.target.value)} style={fieldOk(okB, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="g">grams</option>
-            <option value="kg">kilograms</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — a paperclip is light enough to measure in grams; a bicycle is heavy enough that kilograms make more sense."
-            : "Not quite — grams suit light things like a paperclip; kilograms suit heavier things like a bicycle. Picking the wrong size unit makes the number either way too huge or way too tiny to make sense."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>3.</b> Which unit makes more sense for each object?
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            A paperclip's mass: 1{" "}
+            <select className="answer" value={pickedA} onChange={(e) => setPickedA(e.target.value)} style={fieldOk(okA, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="g">gram</option>
+              <option value="kg">kilogram</option>
+            </select>
+          </label>
+          <label>
+            A bicycle's mass: about 11{" "}
+            <select className="answer" value={pickedB} onChange={(e) => setPickedB(e.target.value)} style={fieldOk(okB, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="g">grams</option>
+              <option value="kg">kilograms</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && allFilled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — a paperclip is light enough to measure in grams; a bicycle is heavy enough that kilograms make more sense."
+              : "Not quite — grams suit light things like a paperclip; kilograms suit heavier things like a bicycle. Picking the wrong size unit makes the number either way too huge or way too tiny to make sense."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -196,31 +203,33 @@ function SameThingTrapQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>4.</b> True or false: "grams" and "kilograms" are just two different names for the exact same amount, so it never matters which one a
-        problem uses.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — a kilogram is a much bigger amount of mass than a gram. They're related, but they are NOT the same size, so which one is used absolutely matters."
-            : "Not quite — a kilogram is a much bigger amount than a gram (that's why heavy things get measured in kilograms and light things in grams). They are not interchangeable."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>4.</b> True or false: "grams" and "kilograms" are just two different names for the exact same amount, so it never matters which one a
+          problem uses.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="true">True</option>
+            <option value="false">False</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — a kilogram is a much bigger amount of mass than a gram. They're related, but they are NOT the same size, so which one is used absolutely matters."
+              : "Not quite — a kilogram is a much bigger amount than a gram (that's why heavy things get measured in kilograms and light things in grams). They are not interchangeable."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -233,13 +242,15 @@ function MeasuringCheckForUnderstanding({ onComplete }: { onComplete?: () => voi
   const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure mass and volume make sense before you try practice problems.</p>
-      <AttributeQuestion onComplete={mark("attribute")} />
-      <MassVsVolumeQuestion onComplete={mark("massVsVolume")} />
-      <UnitSizeQuestion onComplete={mark("unitSize")} />
-      <SameThingTrapQuestion onComplete={mark("trap")} />
-    </div>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: let's make sure mass and volume make sense before you try practice problems.</p>
+        <AttributeQuestion onComplete={mark("attribute")} />
+        <MassVsVolumeQuestion onComplete={mark("massVsVolume")} />
+        <UnitSizeQuestion onComplete={mark("unitSize")} />
+        <SameThingTrapQuestion onComplete={mark("trap")} />
+      </div>
+    </MathText>
   );
 }
 
@@ -255,38 +266,40 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [massG, setMassG] = useState(400);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
-        <Segmented label="Tool" value={tool} onChange={setTool} options={[{ id: "container", label: "Graduated container" }, { id: "scale", label: "Scale" }]} />
-        {!introActive && (
-          <button
-            type="button"
-            className="btn ghost"
-            style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
-            onClick={() => setShowCheck((v) => !v)}
-          >
-            Check for Understanding
-          </button>
-        )}
-      </div>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="control-row">
+          <Segmented label="Tool" value={tool} onChange={setTool} options={[{ id: "container", label: "Graduated container" }, { id: "scale", label: "Scale" }]} />
+          {!introActive && (
+            <button
+              type="button"
+              className="btn ghost"
+              style={showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined}
+              onClick={() => setShowCheck((v) => !v)}
+            >
+              Check for Understanding
+            </button>
+          )}
+        </div>
 
-      {tool === "container" ? (
-        <>
-          <Stepper label="Fill level (liters)" value={fillL} min={0} max={6} step={0.5} onChange={setFillL} tone="a" />
-          <GraduatedContainer capacityL={6} fillL={fillL} tone="a" />
-          <p className="feedback good">This container is filled to {fillL} liters.</p>
-        </>
-      ) : (
-        <>
-          <Stepper label="Mass (grams)" value={massG} min={0} max={1000} step={50} onChange={setMassG} tone="b" />
-          <ScaleGauge maxUnits={1000} valueUnits={massG} majorStep={200} unitLabel="g" tone="b" />
-          <p className="feedback good">The scale reads {massG} grams.</p>
-        </>
-      )}
-      <p className="muted small">Switch tools and move the stepper — notice the needle or fill line always lands exactly on a tick mark.</p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <MeasuringCheckForUnderstanding onComplete={onIntroDone} />}
-    </div>
+        {tool === "container" ? (
+          <>
+            <Stepper label="Fill level (liters)" value={fillL} min={0} max={6} step={0.5} onChange={setFillL} tone="a" />
+            <GraduatedContainer capacityL={6} fillL={fillL} tone="a" />
+            <p className="feedback good">This container is filled to {fillL} liters.</p>
+          </>
+        ) : (
+          <>
+            <Stepper label="Mass (grams)" value={massG} min={0} max={1000} step={50} onChange={setMassG} tone="b" />
+            <ScaleGauge maxUnits={1000} valueUnits={massG} majorStep={200} unitLabel="g" tone="b" />
+            <p className="feedback good">The scale reads {massG} grams.</p>
+          </>
+        )}
+        <p className="muted small">Switch tools and move the stepper — notice the needle or fill line always lands exactly on a tick mark.</p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <MeasuringCheckForUnderstanding onComplete={onIntroDone} />}
+      </div>
+    </MathText>
   );
 }
 

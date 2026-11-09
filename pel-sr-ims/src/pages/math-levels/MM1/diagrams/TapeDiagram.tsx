@@ -1,5 +1,7 @@
 import React from "react";
 import { palette } from "../../shared/lib/palette";
+import { hasFraction, spokenFractions, useStackedFractions } from "../../shared/components/MathText";
+import { isSvgFraction, SvgMath, SvgMathLine } from "../../shared/components/SvgMath";
 
 export interface TapeRow {
   label: string;
@@ -32,7 +34,11 @@ export function TapeDiagram({ tapes, unitWidth, unitHeight = 40, labelWidth = 92
   const uw = unitWidth ?? Math.max(26, Math.min(64, 460 / maxUnits));
   const rowGap = 14;
   const hasTotals = tapes.some((t) => t.total);
-  const bracketH = hasTotals ? 30 : 0;
+  // Stacked-fraction labs draw "3/4" in a cell or a total the handwritten way;
+  // a stacked total needs a taller row under the bracket.
+  const stacked = useStackedFractions();
+  const fracTotals = stacked && tapes.some((t) => t.total && hasFraction(t.total));
+  const bracketH = hasTotals ? (fracTotals ? 42 : 30) : 0;
   const rowH = unitHeight + bracketH + rowGap;
   const width = labelWidth + maxUnits * uw + 8;
   const height = tapes.length * rowH - rowGap + 4;
@@ -44,7 +50,7 @@ export function TapeDiagram({ tapes, unitWidth, unitHeight = 40, labelWidth = 92
       width="100%"
       style={{ maxWidth: width, display: "block", margin: "0 auto", overflow: "visible" }}
       role="img"
-      aria-label={ariaLabel ?? tapes.map((t) => `${t.label}: ${t.units} units`).join("; ")}
+      aria-label={stacked && ariaLabel ? spokenFractions(ariaLabel) : ariaLabel ?? tapes.map((t) => `${t.label}: ${t.units} units`).join("; ")}
     >
       {tapes.map((t, r) => {
         const y = r * rowH;
@@ -74,7 +80,9 @@ export function TapeDiagram({ tapes, unitWidth, unitHeight = 40, labelWidth = 92
                     }}
                     rx={3}
                   />
-                  {v !== null && v !== undefined && v !== "" && (
+                  {v !== null && v !== undefined && v !== "" && stacked && isSvgFraction(String(v)) ? (
+                    <SvgMath text={String(v)} x={x + uw / 2} y={y + unitHeight / 2} fontSize={fontSize} color={solid ? "var(--on-q, #fff)" : palette.ink} weight={700} />
+                  ) : v !== null && v !== undefined && v !== "" && (
                     <text
                       x={x + uw / 2}
                       y={y + unitHeight / 2 + fontSize * 0.36}
@@ -95,9 +103,13 @@ export function TapeDiagram({ tapes, unitWidth, unitHeight = 40, labelWidth = 92
                   d={`M ${labelWidth + 2} ${y + unitHeight + 6} v 6 H ${labelWidth + t.units * uw - 2} v -6 M ${labelWidth + (t.units * uw) / 2} ${y + unitHeight + 12} v 5`}
                   style={{ fill: "none", stroke: palette.muted, strokeWidth: 1.5 }}
                 />
-                <text x={labelWidth + (t.units * uw) / 2} y={y + unitHeight + 30} textAnchor="middle" style={{ fill: palette.ink, fontWeight: 700, fontSize: 14 }}>
-                  {t.total}
-                </text>
+                {fracTotals ? (
+                  <SvgMathLine text={t.total} x={labelWidth + (t.units * uw) / 2} y={y + unitHeight + 38} fontSize={14} weight={700} color={palette.ink} />
+                ) : (
+                  <text x={labelWidth + (t.units * uw) / 2} y={y + unitHeight + 30} textAnchor="middle" style={{ fill: palette.ink, fontWeight: 700, fontSize: 14 }}>
+                    {t.total}
+                  </text>
+                )}
               </g>
             )}
           </g>

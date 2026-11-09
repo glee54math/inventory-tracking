@@ -73,8 +73,9 @@ path to the checkers.
    fact meant to be memorized long-term rather than re-derived each time
    (a candidate for periodic re-checking, not just one-time proof). If this
    plan adds units to an EXISTING lab rather than a new one, flag that
-   explicitly too — the builder must grandfather students who already have
-   practice history predating any new gate.
+   explicitly too. Students who already have practice history must still
+   pass the new CFU before Practice opens (user requirement: the CFU gates
+   everyone); their stars and solve counts are kept.
 4. State the target audience framing and the **grade** explicitly in the
    plan. Default: the lab's intended grade audience, pitched at its youngest
    first-time student (e.g. MK1–MK4 and MG1 = Kindergarten/1st graders seeing

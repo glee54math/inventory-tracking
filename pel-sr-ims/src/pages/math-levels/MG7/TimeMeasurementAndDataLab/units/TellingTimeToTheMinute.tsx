@@ -5,6 +5,7 @@ import { choice, customStep, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { tellingTimeToTheMinuteTest } from "./TellingTimeToTheMinuteTest";
+import { MathText } from "../../../shared/components/MathText";
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
@@ -46,27 +47,29 @@ function SetClockHandsStep({ target, onDone }: { target: ClockTime; onDone: () =
   const ok = time.hour === target.hour && time.minute === target.minute;
 
   return (
-    <div className="clock-set-stage">
-      <Stepper label="Hour" value={time.hour} min={1} max={12} onChange={(h) => setTime((t) => ({ ...t, hour: h }))} tone="a" />
-      <Clock time={time} onChange={(t) => setTime(t)} tone="a" />
-      <div className="control-row">
-        <button
-          className="btn primary"
-          type="button"
-          onClick={() => {
-            setChecked(true);
-            if (ok) onDone();
-          }}
-        >
-          Check hands
-        </button>
+    <MathText>
+      <div className="clock-set-stage">
+        <Stepper label="Hour" value={time.hour} min={1} max={12} onChange={(h) => setTime((t) => ({ ...t, hour: h }))} tone="a" />
+        <Clock time={time} onChange={(t) => setTime(t)} tone="a" />
+        <div className="control-row">
+          <button
+            className="btn primary"
+            type="button"
+            onClick={() => {
+              setChecked(true);
+              if (ok) onDone();
+            }}
+          >
+            Check hands
+          </button>
+        </div>
+        {checked && !ok && (
+          <p className="feedback bad" role="alert">
+            Not yet — set the hour, then drag the long minute hand until the clock shows {clockLabel(target)}.
+          </p>
+        )}
       </div>
-      {checked && !ok && (
-        <p className="feedback bad" role="alert">
-          Not yet — set the hour, then drag the long minute hand until the clock shows {clockLabel(target)}.
-        </p>
-      )}
-    </div>
+    </MathText>
   );
 }
 
@@ -84,34 +87,36 @@ function MinuteNumberMeaningQuestion({ onComplete }: { onComplete?: () => void }
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>1.</b> The long minute hand is pointing exactly at the number 7 on the clock face.
-      </p>
-      <Clock time={{ hour: 2, minute: 35 }} tone="a" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          How many minutes does that mean?{" "}
-          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="7">7 minutes — that's the number it points to</option>
-            <option value="35">35 minutes — each number is really 5 minutes, so multiply by 5</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — every number on the clock face stands for 5 minutes on the minute hand's trip around, so pointing at 7 means 7 × 5 = 35 minutes."
-            : "Not quite — the minute hand's numbers are each worth 5 minutes, not 1. Pointing at 7 means 7 × 5 = 35 minutes."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>1.</b> The long minute hand is pointing exactly at the number 7 on the clock face.
         </p>
-      )}
-    </div>
+        <Clock time={{ hour: 2, minute: 35 }} tone="a" />
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            How many minutes does that mean?{" "}
+            <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="7">7 minutes — that's the number it points to</option>
+              <option value="35">35 minutes — each number is really 5 minutes, so multiply by 5</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — every number on the clock face stands for 5 minutes on the minute hand's trip around, so pointing at 7 means 7 × 5 = 35 minutes."
+              : "Not quite — the minute hand's numbers are each worth 5 minutes, not 1. Pointing at 7 means 7 × 5 = 35 minutes."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -126,35 +131,37 @@ function CountByOnesQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>2.</b> The minute hand has just passed the "4" (20 minutes) and is sitting 3 small ticks further around, not yet reaching the "5" (25
-        minutes).
-      </p>
-      <Clock time={{ hour: 6, minute: 23 }} tone="b" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What minute is it?{" "}
-          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="23">23 — 20, then count up 3 more ones: 21, 22, 23</option>
-            <option value="25">25 — round up to the next 5-minute mark</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — start at the 5-minute mark the hand already passed (20), then count each small tick one at a time: 21, 22, 23."
-            : "Not quite — the minute hand hasn't reached 25 yet. Start at the mark it already passed (20) and count up by ones: 21, 22, 23."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>2.</b> The minute hand has just passed the "4" (20 minutes) and is sitting 3 small ticks further around, not yet reaching the "5" (25
+          minutes).
         </p>
-      )}
-    </div>
+        <Clock time={{ hour: 6, minute: 23 }} tone="b" />
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            What minute is it?{" "}
+            <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="23">23 — 20, then count up 3 more ones: 21, 22, 23</option>
+              <option value="25">25 — round up to the next 5-minute mark</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — start at the 5-minute mark the hand already passed (20), then count each small tick one at a time: 21, 22, 23."
+              : "Not quite — the minute hand hasn't reached 25 yet. Start at the mark it already passed (20) and count up by ones: 21, 22, 23."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -172,44 +179,46 @@ function NearHourQuestion({ onComplete }: { onComplete?: () => void }) {
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>3.</b> Look closely — the hour hand is sitting almost on top of the 3, but not quite.
-      </p>
-      <Clock time={{ hour: 2, minute: 58 }} tone="c" />
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What HOUR does this time belong to?{" "}
-          <select className="answer" value={whichHour} onChange={(e) => setWhichHour(e.target.value)} style={fieldOk(hourOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="2">2 (it's 2:58)</option>
-            <option value="3">3 (the hour hand looks like it's on the 3)</option>
-          </select>
-        </label>
-        <label>
-          How do you know?{" "}
-          <select className="answer" value={whyPicked} onChange={(e) => setWhyPicked(e.target.value)} style={fieldOk(whyOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="notYet">The minute hand hasn't reached 12 yet, so the hour hasn't changed to 3</option>
-            <option value="closer">Whichever number the hour hand looks closest to is the hour</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — the hour only changes once the minute hand completes its full trip around to 12. At 2:58 the minute hand still has 2 minutes left, so it's still the 2 o'clock hour."
-            : "Not quite — the hour hand creeps toward the next number all through the hour, but the hour itself doesn't change until the minute hand reaches 12. This is 2:58, not 3:58."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>3.</b> Look closely — the hour hand is sitting almost on top of the 3, but not quite.
         </p>
-      )}
-    </div>
+        <Clock time={{ hour: 2, minute: 58 }} tone="c" />
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <label>
+            What HOUR does this time belong to?{" "}
+            <select className="answer" value={whichHour} onChange={(e) => setWhichHour(e.target.value)} style={fieldOk(hourOk, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="2">2 (it's 2:58)</option>
+              <option value="3">3 (the hour hand looks like it's on the 3)</option>
+            </select>
+          </label>
+          <label>
+            How do you know?{" "}
+            <select className="answer" value={whyPicked} onChange={(e) => setWhyPicked(e.target.value)} style={fieldOk(whyOk, checked)}>
+              <option value="" disabled>
+                choose
+              </option>
+              <option value="notYet">The minute hand hasn't reached 12 yet, so the hour hasn't changed to 3</option>
+              <option value="closer">Whichever number the hour hand looks closest to is the hour</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && allFilled && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — the hour only changes once the minute hand completes its full trip around to 12. At 2:58 the minute hand still has 2 minutes left, so it's still the 2 o'clock hour."
+              : "Not quite — the hour hand creeps toward the next number all through the hour, but the hour itself doesn't change until the minute hand reaches 12. This is 2:58, not 3:58."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -223,31 +232,33 @@ function ClosestNumberTrapQuestion({ onComplete }: { onComplete?: () => void }) 
   }, [checked, ok, onComplete]);
 
   return (
-    <div className="align-stack-wrap">
-      <p>
-        <b>4.</b> True or false: whenever the hour hand looks closer to the next number than to its own number, you should read it as that next,
-        later hour.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — the hour hand's exact position doesn't decide the hour. The hour only changes once the minute hand finishes its trip around to 12, no matter how close the hour hand looks to the next number."
-            : "Not quite — remember 2:58. The hour hand looked almost on the 3, but the hour was still 2 because the minute hand hadn't reached 12 yet."}
+    <MathText>
+      <div className="align-stack-wrap">
+        <p>
+          <b>4.</b> True or false: whenever the hour hand looks closer to the next number than to its own number, you should read it as that next,
+          later hour.
         </p>
-      )}
-    </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
+            <option value="" disabled>
+              choose
+            </option>
+            <option value="true">True</option>
+            <option value="false">False</option>
+          </select>
+          <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+            Check Answer
+          </button>
+        </div>
+        {checked && (
+          <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+            {ok
+              ? "Correct — the hour hand's exact position doesn't decide the hour. The hour only changes once the minute hand finishes its trip around to 12, no matter how close the hour hand looks to the next number."
+              : "Not quite — remember 2:58. The hour hand looked almost on the 3, but the hour was still 2 because the minute hand hadn't reached 12 yet."}
+          </p>
+        )}
+      </div>
+    </MathText>
   );
 }
 
@@ -260,13 +271,15 @@ function TimeCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) 
   const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for understanding: let's make sure reading minutes exactly makes sense before you try practice problems.</p>
-      <MinuteNumberMeaningQuestion onComplete={mark("numberMeaning")} />
-      <CountByOnesQuestion onComplete={mark("countByOnes")} />
-      <NearHourQuestion onComplete={mark("nearHour")} />
-      <ClosestNumberTrapQuestion onComplete={mark("trap")} />
-    </div>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: let's make sure reading minutes exactly makes sense before you try practice problems.</p>
+        <MinuteNumberMeaningQuestion onComplete={mark("numberMeaning")} />
+        <CountByOnesQuestion onComplete={mark("countByOnes")} />
+        <NearHourQuestion onComplete={mark("nearHour")} />
+        <ClosestNumberTrapQuestion onComplete={mark("trap")} />
+      </div>
+    </MathText>
   );
 }
 
@@ -280,32 +293,34 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [time, setTime] = useState<ClockTime>({ hour: 12, minute: 0 });
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="control-row">
-        <Stepper label="Hour" value={time.hour} min={1} max={12} onChange={(h) => setTime((t) => ({ ...t, hour: h }))} tone="a" />
-        {!introActive && (
-          <button
-            type="button"
-            className="btn ghost"
-            style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
-            onClick={() => setShowCheck((v) => !v)}
-          >
-            Check for Understanding
-          </button>
-        )}
-      </div>
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="control-row">
+          <Stepper label="Hour" value={time.hour} min={1} max={12} onChange={(h) => setTime((t) => ({ ...t, hour: h }))} tone="a" />
+          {!introActive && (
+            <button
+              type="button"
+              className="btn ghost"
+              style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+              onClick={() => setShowCheck((v) => !v)}
+            >
+              Check for Understanding
+            </button>
+          )}
+        </div>
 
-      <p className="muted small">Drag the long minute hand all the way around. Watch each small tick change the minute by exactly 1.</p>
-      <Clock time={time} onChange={(t) => setTime(t)} tone="a" />
-      <p className="feedback good" style={{ minHeight: 24 }}>
-        This clock shows <b>{clockLabel(time)}</b>
-        {time.minute >= 56 || time.minute <= 4
-          ? " — watch how the short hour hand sits almost on top of a number near the top or bottom of the hour, but the hour itself only changes right as the minute hand crosses 12."
-          : " — notice the short hour hand creeps a little further around as the minute hand moves."}
-      </p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <TimeCheckForUnderstanding onComplete={onIntroDone} />}
-    </div>
+        <p className="muted small">Drag the long minute hand all the way around. Watch each small tick change the minute by exactly 1.</p>
+        <Clock time={time} onChange={(t) => setTime(t)} tone="a" />
+        <p className="feedback good" style={{ minHeight: 24 }}>
+          This clock shows <b>{clockLabel(time)}</b>
+          {time.minute >= 56 || time.minute <= 4
+            ? " — watch how the short hour hand sits almost on top of a number near the top or bottom of the hour, but the hour itself only changes right as the minute hand crosses 12."
+            : " — notice the short hour hand creeps a little further around as the minute hand moves."}
+        </p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <TimeCheckForUnderstanding onComplete={onIntroDone} />}
+      </div>
+    </MathText>
   );
 }
 

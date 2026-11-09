@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
-import { palette, diagramFont } from "../../../shared/lib/palette";
+import { palette, diagramFont } from "../lib/palette";
+import { MathText, useStackedFractions } from "../components/MathText";
+import { SvgMath } from "../components/SvgMath";
 
 export type PieceTone = "a" | "b" | "c" | "gone";
 
@@ -47,6 +49,8 @@ export function PieceBars({ den, segments, minWholes = 1, barWidth = 220, height
   const wholes = Math.max(minWholes, Math.ceil(cells.length / den));
   const cellW = barWidth / den;
   const cutSet = new Set(cuts);
+  // Labs with <StackedFractions> (MG9) draw the "1/den" labels stacked, the handwritten way.
+  const stacked = useStackedFractions();
   const filledCount = cells.filter((t) => t !== "gone").length;
 
   return (
@@ -75,7 +79,10 @@ export function PieceBars({ den, segments, minWholes = 1, barWidth = 220, height
                         <line x1={x + cellW - 4} y1={6} x2={x + 4} y2={height - 6} style={{ stroke: palette.bad, strokeWidth: 2.5 }} />
                       </>
                     )}
-                    {unitLabels && tone && tone !== "gone" && cellW >= 26 && (
+                    {unitLabels && tone && tone !== "gone" && cellW >= 26 && stacked && (
+                      <SvgMath text={`1/${den}`} x={x + cellW / 2} y={height / 2} fontSize={12} weight={700} color="var(--on-q, #fff)" />
+                    )}
+                    {unitLabels && tone && tone !== "gone" && cellW >= 26 && !stacked && (
                       <text x={x + cellW / 2} y={height / 2 + 5} textAnchor="middle" style={{ fill: "var(--on-q, #fff)", fontSize: 12, fontWeight: 700 }}>
                         1/{den}
                       </text>
@@ -95,7 +102,7 @@ export function PieceBars({ den, segments, minWholes = 1, barWidth = 220, height
       </div>
       {caption && (
         <p className="muted small" style={{ marginTop: 6, marginBottom: 0 }}>
-          {caption}
+          <MathText>{caption}</MathText>
         </p>
       )}
     </div>

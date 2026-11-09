@@ -2,6 +2,7 @@ import { FractionBar, NumberLine } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, selectBlank, sentence, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
+import { MathText } from "../../../shared/components/MathText";
 
 // Own local copy — see WhatAFractionIsTest.tsx's comment on why *Test.tsx
 // files never import generators (or shared constants) back from their
@@ -10,11 +11,13 @@ const DENOMS = [2, 3, 4, 6, 8] as const;
 
 function WholeBars({ whole, den }: { whole: number; den: number }) {
   return (
-    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-      {Array.from({ length: whole }, (_, i) => (
-        <FractionBar key={i} numerator={den} denominator={den} width={90} />
-      ))}
-    </div>
+    <MathText>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        {Array.from({ length: whole }, (_, i) => (
+          <FractionBar key={i} numerator={den} denominator={den} width={90} />
+        ))}
+      </div>
+    </MathText>
   );
 }
 

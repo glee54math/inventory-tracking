@@ -354,6 +354,27 @@ or place-value ideas:
   silent copy — a future session with broader scope should do that
   promotion rather than letting a third lab duplicate it again.
 
+Two durable conventions from MG10_AddingAndSubtractingFractionsLab (2026-11),
+for any Unit-engine lab whose answers are fractions:
+  - Type fractions and mixed numbers with the shared "fraction" Step kind
+    (fractionStep() in shared/engine/types.ts: whole box + stacked boxes).
+    Set `simplest: true` when simplest form is part of the skill: an equal
+    but unsimplified answer is then rejected with a named message AND the
+    solve stops counting as clean. Use one layout (whole box shown) for
+    every final answer, so the layout never hints whether the answer is
+    proper, mixed or whole.
+  - The "Try one like it" retry lock is not K-1 only. Any lab can pass
+    onRetrySame/onHelped to StepProblem and copy MK1's UnitView lock
+    (owesRetry, drawRef, usedTokenRef, disabled type switch) without
+    EarlyLearnerProvider; StepProblem words the wrap-up for the grade.
+  - The retry DEBT lives in the lab component, not in UnitView
+    (shared/engine/retryDebt.ts: useRetryDebts + bagItems/debtItem).
+    UnitView is keyed by unit id, so a debt kept in its own state was
+    cleared by switching units or reloading (MG10 review C1-01). The lab
+    keeps one debt per unit, mirrored to sessionStorage
+    (`retryDebt:{MODULE_ID}:{studentId}`); UnitView starts in the owed
+    problem kind with the lock on. MK1-MK4, MG1 and MG10 do this.
+
 ------------------------------------------------------------------
 11. MULTI-FILE SKILLS (exception to section 1's "one file" rule)
 ------------------------------------------------------------------
@@ -416,3 +437,83 @@ package at this scale:
     "succeeds" but prints a warning per occurrence that the import
     doesn't exist at runtime. tsc won't catch this; only an actual
     `vite build` (not just `tsc --noEmit`) surfaces it.
+
+- Stacked ("handwritten") fractions everywhere, opt-in per lab (added
+  2026-11 for MG10, user requirement: "I don't want to see 1/2"). Wrap the
+  lab's content in <StackedFractions> (shared/components/MathText.tsx) and
+  its own hand-written text (Explore, CFU, Key Idea, goals) in <MathText>.
+  The shared engine already runs prompts, stories, hints, feedback,
+  choices, answer chips, test review and captions through MathText, which
+  turns "3/4", "2 3/4" and "?/12" in text into stacked fractions with a
+  screen-reader name ("2 and 3 over 4"); outside the provider it changes
+  nothing. In opt-in labs a dropdown whose options hold fractions becomes a
+  TapSelect, scores read "8 out of 10", a typed top over a printed
+  denominator uses SentenceStep.overDen (never "/12" text after a box), a
+  CFU box that takes a fraction uses CfuBlank.mixedFraction, and SVG labels
+  are drawn stacked by the lab's own helper (MG10 diagrams/SvgMath.tsx) —
+  SVG <text> can't hold the HTML version. Promote SvgMath on its second
+  consumer.
+  Added with MG9 (2026-11): SvgMath is now shared
+  (shared/components/SvgMath.tsx, plus SvgMathLine for a caption with
+  fractions in running text). Inside the provider, the shared PieceBars
+  unit labels, FractionBar label, TwoTierBars captions and NumberLine point
+  labels draw stacked on their own. A typed top over a printed denominator
+  in a NumberStep uses NumberStep.overDen (never suffix "/8"); a "type the
+  top and the bottom" SentenceStep uses SentenceStep.stacked (never " / "
+  between two boxes). MathText doesn't walk into components: text passed as
+  children to QA/QB/Stepper etc. needs its own <MathText>, and a CFU
+  dropdown followed by "/6" becomes <Frac n={box} d={6} />.
+  Added with the all-labs pass (2026-11): every lab except MG9/MG10 is now
+  opted in (score text reads "N out of 10" everywhere). Inside the provider
+  QA/QB/QC, Says, Segmented labels, Slider labels and problem/test
+  `visual`s also run through MathText. A typed fraction answer in a
+  NumberStep uses NumberStep.fracBoxes ("fraction" = top over bottom,
+  "mixed" = whole box + top over bottom; the boxes are joined back into
+  "3/4" / "2 1/4" text, so grading is unchanged) — never "(Type it like
+  1/3)". A RatioStep whose two boxes are one fraction uses
+  RatioStep.stacked. Don't put a letter right after a fraction ("1/3s")
+  or it won't stack; write "copies of 1/3".
+
+- "Pick the kind of answer" for fraction answers, opt-in per lab (added
+  2026-11 for MG10, user request: students didn't know to leave the
+  whole-number box empty for 3/4). Wrap the lab's content in
+  <AnswerFormPick> (shared/components/AnswerForm.tsx; logic in
+  answerKinds.ts). Every FractionStep with `mixed: true` and no printed
+  `den`, and every CfuBlank.mixedFraction, then starts with three tap
+  buttons: Whole number · Mixed number · Proper fraction. Nothing is picked
+  at the start (a default gives the kind away); the boxes appear once a kind
+  is picked, Check stays disabled until every shown box is filled, and
+  switching kinds keeps the numbers that still fit. Grading says whether the
+  kind was right (button green/red; "Mixed number is right. Check the
+  numbers."; a wrong kind's 2nd try names the right kind), and ANY wrong
+  Check on such a step makes the solve not clean (StepState.formMiss). The
+  Test shows the buttons with no feedback, and the review list adds the
+  picked kind: "5/4 (proper fraction)". Teach the kinds once with
+  <AnswerFormGuide /> in Explore. Steps with a printed `den` ("?/12") and
+  labs without the provider are unchanged. Round 5 (user): every set of
+  buttons has the line "Pick a format to write your answer." just above it
+  (FormPicker's `prompt`, FORM_PICK_PROMPT; the user's word "format", keep
+  it), in Practice, CFUs and Tests. A step's `diagnose` message (e.g. "You
+  added across…") is shown even when the picked kind is also wrong, ahead of
+  the kind message, then one plain line: "The correct answer is not a …".
+  Feedback and screen-reader names say "format" too, never "kind of answer".
+
+- FractionStep.diagnose(num, den, typed?) gets the answer exactly as typed
+  ("2/2", "1 3/5"), so a named mistake quotes the student's own number
+  instead of a reduced one. Optional; diagnoses that ignore it are unchanged.
+
+- A "fill in the reason" sentence frame (MG10 round 6, the add-across judge
+  step) is a SentenceStep with three optional fields: `more` (blanks 3+,
+  each followed by its own text), `checkEach` (every select blank is tap
+  buttons, Check stays off until every blank is filled, a wrong Check colors
+  each pick green/red, a wrong Check counts against a clean solve, and the
+  row wraps like text via .sentence-frame), and `diagnose(inputs)` (a short
+  message for the first wrong blank). Use it when a fact always comes out
+  the same way: the student states the reason with this problem's numbers
+  instead of tapping one fixed button. Steps without these fields are
+  unchanged.
+
+- A picture can react to the last wrong answer: VisualHelp.lastTry holds
+  the inputs of the last wrong Check while its feedback is on screen
+  (Practice only). MG10 uses it to draw the "added across" answer's bar next
+  to the bigger fraction's bar (diagrams/SizeCheckBars.tsx).

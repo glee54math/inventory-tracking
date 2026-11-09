@@ -7,6 +7,7 @@ import { choice, numberBlank, sentence, type Problem } from "../../../shared/eng
 import { Frac, QA, QB, QC, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { decimalNotationTest } from "./DecimalNotationTest";
+import { MathText } from "../../../shared/components/MathText";
 
 /** Wholes (tone b), whole tenth strips (tone a), loose hundredths (tone c) —
  *  the same three colors the place-value chart uses for its digits. */
@@ -93,90 +94,92 @@ function NotationCheck({ onComplete }: { onComplete?: () => void }) {
   };
 
   return (
-    <div className="align-drill">
-      <p className="intro-gate-title">Check for Understanding: answer these before you try practice problems.</p>
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for Understanding: answer these before you try practice problems.</p>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>1.</b> In <b>0.47</b>, the 4 is in the{" "}
-          <Pick value={p1} onChange={edit(setP1, setC1)} options={["ones", "tenths", "hundredths"]} ok={ok1a} show={c1} label="Place of the 4" disabled={done1} /> place, and the 7 is in the{" "}
-          <Pick value={p2} onChange={edit(setP2, setC1)} options={["ones", "tenths", "hundredths"]} ok={ok1b} show={c1} label="Place of the 7" disabled={done1} /> place.
-        </p>
-        <button className="btn primary" type="button" disabled={done1 || !f1} onClick={() => setC1(true)}>
-          Check Answer
-        </button>
-        {c1 && f1 && (
-          <p className={`feedback ${done1 ? "good" : "bad"}`} role="alert">
-            {done1 ? "Correct — the first place after the point is tenths, the second is hundredths. 0.47 = 4 tenths + 7 hundredths = 47/100." : "Not quite — count places to the RIGHT of the point: first tenths, then hundredths."}
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> In <b>0.47</b>, the 4 is in the{" "}
+            <Pick value={p1} onChange={edit(setP1, setC1)} options={["ones", "tenths", "hundredths"]} ok={ok1a} show={c1} label="Place of the 4" disabled={done1} /> place, and the 7 is in the{" "}
+            <Pick value={p2} onChange={edit(setP2, setC1)} options={["ones", "tenths", "hundredths"]} ok={ok1b} show={c1} label="Place of the 7" disabled={done1} /> place.
           </p>
-        )}
-      </div>
-
-      <div className="align-stack-wrap">
-        <p>
-          <b>2.</b> Compare <b>0.7</b> and <b>0.07</b>.
-        </p>
-        <div className="control-row">
-          <GridRow size={110} segments={[{ count: 70, tone: "a" }]} caption="0.7" />
-          <GridRow size={110} segments={[{ count: 7, tone: "c" }]} caption="0.07" />
+          <button className="btn primary" type="button" disabled={done1 || !f1} onClick={() => setC1(true)}>
+            Check Answer
+          </button>
+          {c1 && f1 && (
+            <p className={`feedback ${done1 ? "good" : "bad"}`} role="alert">
+              {done1 ? "Correct — the first place after the point is tenths, the second is hundredths. 0.47 = 4 tenths + 7 hundredths = 47/100." : "Not quite — count places to the RIGHT of the point: first tenths, then hundredths."}
+            </p>
+          )}
         </div>
-        <p>
-          0.7 means 7 <Pick value={m1} onChange={edit(setM1, setC2)} options={["tenths", "hundredths"]} ok={ok2a} show={c2} label="0.7 means 7 what" disabled={done2} />, and 0.07 means 7{" "}
-          <Pick value={m2} onChange={edit(setM2, setC2)} options={["tenths", "hundredths"]} ok={ok2b} show={c2} label="0.07 means 7 what" disabled={done2} />. So{" "}
-          <Pick value={big} onChange={edit(setBig, setC2)} options={["0.7", "0.07", "neither — they're equal"]} ok={ok2c} show={c2} label="Which is bigger" disabled={done2} /> is bigger.
-        </p>
-        <button className="btn primary" type="button" disabled={done2 || !f2} onClick={() => setC2(true)}>
-          Check Answer
-        </button>
-        {c2 && f2 && (
-          <p className={`feedback ${done2 ? "good" : "bad"}`} role="alert">
-            {done2
-              ? "Correct — the extra 0 in 0.07 holds the tenths place empty and pushes the 7 into the hundredths place. 7 tenths = 70 hundredths, ten times as much as 7 hundredths."
-              : "Not quite — in each number, which place is the 7 in? Look at the two pictures: 7 strips or 7 tiny squares?"}
-          </p>
-        )}
-      </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>3.</b> Does a zero change a decimal? It depends where it goes.
-        </p>
-        <p>
-          0.5 and 0.50 are <Pick value={z1} onChange={edit(setZ1, setC3)} options={["equal", "not equal"]} ok={ok3a} show={c3} label="0.5 and 0.50" disabled={done3} />. 0.5 and 0.05 are{" "}
-          <Pick value={z2} onChange={edit(setZ2, setC3)} options={["equal", "not equal"]} ok={ok3b} show={c3} label="0.5 and 0.05" disabled={done3} />.
-        </p>
-        <button className="btn primary" type="button" disabled={done3 || !f3} onClick={() => setC3(true)}>
-          Check Answer
-        </button>
-        {c3 && f3 && (
-          <p className={`feedback ${done3 ? "good" : "bad"}`} role="alert">
-            {done3
-              ? "Correct — a zero at the END just says \"0 more hundredths\": 0.5 = 5 tenths = 50 hundredths = 0.50. A zero right AFTER THE POINT pushes the 5 into the hundredths place: 0.05 is only 5 hundredths."
-              : "Not quite — write each one as hundredths: 0.5 = 50 hundredths, 0.50 = ? hundredths, 0.05 = ? hundredths."}
+        <div className="align-stack-wrap">
+          <p>
+            <b>2.</b> Compare <b>0.7</b> and <b>0.07</b>.
           </p>
-        )}
-      </div>
+          <div className="control-row">
+            <GridRow size={110} segments={[{ count: 70, tone: "a" }]} caption="0.7" />
+            <GridRow size={110} segments={[{ count: 7, tone: "c" }]} caption="0.07" />
+          </div>
+          <p>
+            0.7 means 7 <Pick value={m1} onChange={edit(setM1, setC2)} options={["tenths", "hundredths"]} ok={ok2a} show={c2} label="0.7 means 7 what" disabled={done2} />, and 0.07 means 7{" "}
+            <Pick value={m2} onChange={edit(setM2, setC2)} options={["tenths", "hundredths"]} ok={ok2b} show={c2} label="0.07 means 7 what" disabled={done2} />. So{" "}
+            <Pick value={big} onChange={edit(setBig, setC2)} options={["0.7", "0.07", "neither — they're equal"]} ok={ok2c} show={c2} label="Which is bigger" disabled={done2} /> is bigger.
+          </p>
+          <button className="btn primary" type="button" disabled={done2 || !f2} onClick={() => setC2(true)}>
+            Check Answer
+          </button>
+          {c2 && f2 && (
+            <p className={`feedback ${done2 ? "good" : "bad"}`} role="alert">
+              {done2
+                ? "Correct — the extra 0 in 0.07 holds the tenths place empty and pushes the 7 into the hundredths place. 7 tenths = 70 hundredths, ten times as much as 7 hundredths."
+                : "Not quite — in each number, which place is the 7 in? Look at the two pictures: 7 strips or 7 tiny squares?"}
+            </p>
+          )}
+        </div>
 
-      <div className="align-stack-wrap">
-        <p>
-          <b>4.</b> Write each mixed number as a decimal.
-        </p>
-        <p>
-          3 <Frac n={4} d={10} /> = <Pick value={x1} onChange={edit(setX1, setC4)} options={["3.4", "3.04", "0.34", "4.3"]} ok={ok4a} show={c4} label="3 and 4 tenths as a decimal" disabled={done4} />, and 3{" "}
-          <Frac n={4} d={100} /> = <Pick value={x2} onChange={edit(setX2, setC4)} options={["3.4", "3.04", "0.34", "4.3"]} ok={ok4b} show={c4} label="3 and 4 hundredths as a decimal" disabled={done4} />.
-        </p>
-        <button className="btn primary" type="button" disabled={done4 || !f4} onClick={() => setC4(true)}>
-          Check Answer
-        </button>
-        {c4 && f4 && (
-          <p className={`feedback ${done4 ? "good" : "bad"}`} role="alert">
-            {done4
-              ? "Correct — the whole number goes before the point. 4 tenths go in the tenths place (3.4); 4 hundredths need a 0 in the tenths place first (3.04)."
-              : "Not quite — whole number before the point, then tenths, then hundredths. Does 4/100 have any tenths?"}
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> Does a zero change a decimal? It depends where it goes.
           </p>
-        )}
+          <p>
+            0.5 and 0.50 are <Pick value={z1} onChange={edit(setZ1, setC3)} options={["equal", "not equal"]} ok={ok3a} show={c3} label="0.5 and 0.50" disabled={done3} />. 0.5 and 0.05 are{" "}
+            <Pick value={z2} onChange={edit(setZ2, setC3)} options={["equal", "not equal"]} ok={ok3b} show={c3} label="0.5 and 0.05" disabled={done3} />.
+          </p>
+          <button className="btn primary" type="button" disabled={done3 || !f3} onClick={() => setC3(true)}>
+            Check Answer
+          </button>
+          {c3 && f3 && (
+            <p className={`feedback ${done3 ? "good" : "bad"}`} role="alert">
+              {done3
+                ? "Correct — a zero at the END just says \"0 more hundredths\": 0.5 = 5 tenths = 50 hundredths = 0.50. A zero right AFTER THE POINT pushes the 5 into the hundredths place: 0.05 is only 5 hundredths."
+                : "Not quite — write each one as hundredths: 0.5 = 50 hundredths, 0.50 = ? hundredths, 0.05 = ? hundredths."}
+            </p>
+          )}
+        </div>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>4.</b> Write each mixed number as a decimal.
+          </p>
+          <p>
+            3 <Frac n={4} d={10} /> = <Pick value={x1} onChange={edit(setX1, setC4)} options={["3.4", "3.04", "0.34", "4.3"]} ok={ok4a} show={c4} label="3 and 4 tenths as a decimal" disabled={done4} />, and 3{" "}
+            <Frac n={4} d={100} /> = <Pick value={x2} onChange={edit(setX2, setC4)} options={["3.4", "3.04", "0.34", "4.3"]} ok={ok4b} show={c4} label="3 and 4 hundredths as a decimal" disabled={done4} />.
+          </p>
+          <button className="btn primary" type="button" disabled={done4 || !f4} onClick={() => setC4(true)}>
+            Check Answer
+          </button>
+          {c4 && f4 && (
+            <p className={`feedback ${done4 ? "good" : "bad"}`} role="alert">
+              {done4
+                ? "Correct — the whole number goes before the point. 4 tenths go in the tenths place (3.4); 4 hundredths need a 0 in the tenths place first (3.04)."
+                : "Not quite — whole number before the point, then tenths, then hundredths. Does 4/100 have any tenths?"}
+            </p>
+          )}
+        </div>
       </div>
-    </div>
+    </MathText>
   );
 }
 
@@ -202,49 +205,51 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {!introActive && (
-        <button
-          type="button"
-          className="btn ghost"
-          style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
-          onClick={() => setShowCheck((v) => !v)}
-        >
-          Check for Understanding
-        </button>
-      )}
-      <p>
-        A decimal is another way to write tenths and hundredths. The first digit after the point counts <QA>tenths</QA> (strips); the second counts <QC>hundredths</QC> (tiny squares).
-      </p>
-      <div className="control-row">
-        <Stepper label="Ones" value={w} min={0} max={3} onChange={setW} tone="b" />
-        <Stepper label="Tenths" value={t} min={0} max={9} onChange={setT} tone="a" />
-        <Stepper label="Hundredths" value={h} min={0} max={9} onChange={setH} tone="c" />
-      </div>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <PlaceValueChart rows={[{ ones: w, tenths: t, hundredths: h }]} />
-        <p className="says" style={{ margin: 0 }}>
-          <QB>{w}</QB>.<QA>{t}</QA>
-          <QC>{h}</QC> = {w > 0 && <>{w} </>}
-          <Frac n={r} d={100} />
-          {h === 0 && (
-            <>
-              {" "}
-              = {w > 0 && <>{w} </>}
-              <Frac n={t} d={10} />
-            </>
-          )}
+    <MathText>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && (
+          <button
+            type="button"
+            className="btn ghost"
+            style={{ width: "fit-content", ...(showCheck ? { background: "var(--good-soft)", borderColor: "var(--good)" } : undefined) }}
+            onClick={() => setShowCheck((v) => !v)}
+          >
+            Check for Understanding
+          </button>
+        )}
+        <p>
+          A decimal is another way to write tenths and hundredths. The first digit after the point counts <QA>tenths</QA> (strips); the second counts <QC>hundredths</QC> (tiny squares).
         </p>
+        <div className="control-row">
+          <Stepper label="Ones" value={w} min={0} max={3} onChange={setW} tone="b" />
+          <Stepper label="Tenths" value={t} min={0} max={9} onChange={setT} tone="a" />
+          <Stepper label="Hundredths" value={h} min={0} max={9} onChange={setH} tone="c" />
+        </div>
+        <div className="control-row" style={{ alignItems: "center" }}>
+          <PlaceValueChart rows={[{ ones: w, tenths: t, hundredths: h }]} />
+          <p className="says" style={{ margin: 0 }}>
+            <QB>{w}</QB>.<QA>{t}</QA>
+            <QC>{h}</QC> = {w > 0 && <>{w} </>}
+            <Frac n={r} d={100} />
+            {h === 0 && (
+              <>
+                {" "}
+                = {w > 0 && <>{w} </>}
+                <Frac n={t} d={10} />
+              </>
+            )}
+          </p>
+        </div>
+        <p className="muted small">Say it: &ldquo;{decimalWords(total, 2)}&rdquo;</p>
+        <GridRow size={120} segments={amountSegments(total)} />
+        <DecimalNumberLine fromWhole={w} points={[{ hundredths: total, label: decimalText(total, 2), tone: "a", onChange: setFromLine }]} />
+        <p className="muted small">
+          Try tenths = 0 and hundredths = 7: that&apos;s 0.07, and the 0 is what keeps the 7 in the hundredths place. Then try tenths = 7, hundredths = 0 — 0.70 is the same as 0.7.
+        </p>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <NotationCheck onComplete={onIntroDone} />}
       </div>
-      <p className="muted small">Say it: &ldquo;{decimalWords(total, 2)}&rdquo;</p>
-      <GridRow size={120} segments={amountSegments(total)} />
-      <DecimalNumberLine fromWhole={w} points={[{ hundredths: total, label: decimalText(total, 2), tone: "a", onChange: setFromLine }]} />
-      <p className="muted small">
-        Try tenths = 0 and hundredths = 7: that&apos;s 0.07, and the 0 is what keeps the 7 in the hundredths place. Then try tenths = 7, hundredths = 0 — 0.70 is the same as 0.7.
-      </p>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <NotationCheck onComplete={onIntroDone} />}
-    </div>
+    </MathText>
   );
 }
 
@@ -390,7 +395,7 @@ function hiddenZeroProblem(): Problem {
           "ones",
         ]
       ),
-      sentence(
+      { ...sentence(
         {
           prompt: `Write ${dec} as a fraction, using the place of the last digit for the bottom number.`,
           hint: `${h} hundredths — what's the bottom number for hundredths?`,
@@ -401,7 +406,7 @@ function hiddenZeroProblem(): Problem {
         " / ",
         numberBlank(100),
         ""
-      ),
+      ), stacked: true },
       choice(
         {
           prompt: `Which is bigger: 0.${h} or ${dec}?`,
@@ -474,7 +479,7 @@ function mixedProblem(): Problem {
           readStep,
         ]
       : [
-          sentence(
+          { ...sentence(
             {
               prompt: `Write ${dec} as a mixed number, using the place of the last digit for the bottom number.`,
               hint: places === 2 && n < 10 ? "The digit right after the point is 0 — so how many tenths are there?" : "The digits after the point become the top number.",
@@ -485,7 +490,7 @@ function mixedProblem(): Problem {
             " / ",
             numberBlank(d),
             ""
-          ),
+          ), stacked: true },
           readStep,
         ],
     wrapUp: `${w} ${n}/${d} = ${dec} = ${words}.`,

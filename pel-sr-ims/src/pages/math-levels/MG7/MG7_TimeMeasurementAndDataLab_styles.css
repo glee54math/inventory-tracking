@@ -216,3 +216,81 @@
   --bad-soft: #492230;
   --on-q: #0f1815;
 }
+
+/* Stacked fractions — the shared Frac component has no styling in lab-base.css
+   (same rule as MG9_IntroToFractionsLab_styles.css). */
+.tmd3-lab .frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  margin: 0 0.15em;
+  font-size: 0.88em;
+  line-height: 1.05;
+}
+.tmd3-lab .frac-n,
+.tmd3-lab .frac-d {
+  padding: 0 0.12em;
+}
+.tmd3-lab .frac-n {
+  border-bottom: 1.5px solid currentColor;
+}
+
+/* Every fraction in this lab's text is stacked, the handwritten way (shared
+   MathText inside <StackedFractions>; user requirement, same rules as
+   MG10_AddingAndSubtractingFractionsLab_styles.css). A mixed number keeps
+   its whole number and fraction together on one line, and text blocks get a
+   taller line height so a line with a fraction is no taller than one without. */
+.tmd3-lab .frac-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.tmd3-lab .frac-text .frac {
+  margin: 0 0.1em;
+}
+.tmd3-lab .panel p,
+.tmd3-lab .panel li,
+.tmd3-lab .key-idea p,
+.tmd3-lab .goal,
+.tmd3-lab .story,
+.tmd3-lab .step-prompt,
+.tmd3-lab .step-result,
+.tmd3-lab .explain,
+.tmd3-lab .show-me,
+.tmd3-lab .feedback,
+.tmd3-lab .cfu-line,
+.tmd3-lab .test-prompt,
+.tmd3-lab .test-review li {
+  line-height: 1.9;
+}
+.tmd3-lab .path-goal,
+.tmd3-lab .unit-carousel-goal {
+  line-height: 1.8;
+}
+/* Small print keeps its fractions readable on an iPad. */
+.tmd3-lab .small .frac,
+.tmd3-lab .path-goal .frac,
+.tmd3-lab .unit-carousel-goal .frac {
+  font-size: 0.92em;
+}
+/* A typed top over a printed denominator (NumberStep/SentenceStep overDen,
+   or a CFU box written as the top of a fraction). */
+.tmd3-lab .sentence-over-den {
+  vertical-align: middle;
+  margin: 0 4px;
+  line-height: 1.2;
+}
+.tmd3-lab .sentence-over-den .frac-entry-fixed {
+  line-height: 1.6;
+}
+.tmd3-lab .answer-row .number-over-den {
+  display: inline-flex;
+}
+.tmd3-lab .frac .frac-n select.answer,
+.tmd3-lab .frac .frac-n .tap-select {
+  margin: 0 0 3px;
+}
