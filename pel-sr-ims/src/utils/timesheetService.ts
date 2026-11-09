@@ -180,6 +180,35 @@ export async function updateTimesheetEntry(
   await updateDoc(docRef, { entries: updatedEntries });
 }
 
+// Marks the last entry of the given month as Check Sent. Returns false if the worker
+// has no entries that month (nothing to mark).
+export async function markLastEntryCheckSentForMonth(
+  firstName: string,
+  lastName: string,
+  year: number,
+  month: number
+): Promise<boolean> {
+  const docRef = doc(db, "timesheets", timesheetDocId(firstName, lastName));
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) return false;
+
+  const rawEntries = (docSnap.data().entries ?? []) as any[];
+  let lastIndex = -1;
+  let lastTime = -Infinity;
+  rawEntries.forEach((raw, idx) => {
+    const entered: Date = raw.timeEntered.toDate ? raw.timeEntered.toDate() : new Date(raw.timeEntered);
+    if (entered.getFullYear() === year && entered.getMonth() === month && entered.getTime() > lastTime) {
+      lastTime = entered.getTime();
+      lastIndex = idx;
+    }
+  });
+  if (lastIndex === -1) return false;
+
+  const updatedEntries = rawEntries.map((raw, idx) => (idx === lastIndex ? { ...raw, checkSent: true } : raw));
+  await updateDoc(docRef, { entries: updatedEntries });
+  return true;
+}
+
 // Writes a monthly total exactly once per (worker, month), the first time any client
 // notices that month has ended. If a total already exists it's left alone — re-finalizing
 // after a manual edit to a past month is a separate concern to handle later.
