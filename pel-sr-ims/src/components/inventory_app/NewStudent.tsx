@@ -23,6 +23,14 @@ interface NewStudentFormProps {
     onClose: () => void;
 }
 
+// Formats raw digits as (888)456-7890 while typing; caps at 10 digits.
+function formatPhoneNumber(value: string): string {
+    const digits = value.replace(/\D/g, "").slice(0, 10);
+    if (digits.length < 4) return digits;
+    if (digits.length < 7) return `(${digits.slice(0, 3)})${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)})${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 export function NewStudentForm({onClose}:NewStudentFormProps) {
 
     const [firstName, setFirstName] = useState("");
@@ -172,8 +180,8 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
                 <input
                     type="tel"
                     id="mothersPhone"
-                    value={motherPhone}
-                    onChange={(e) => setMotherPhone(e.target.value)}
+                    value={formatPhoneNumber(motherPhone)}
+                    onChange={(e) => setMotherPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                     className="border rounded"
                 />
 
@@ -182,8 +190,8 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
                 <input
                     type="tel"
                     id="fathersPhone"
-                    value={fatherPhone}
-                    onChange={(e) => setFatherPhone(e.target.value)}
+                    value={formatPhoneNumber(fatherPhone)}
+                    onChange={(e) => setFatherPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                     className="border rounded"
                 />
 
