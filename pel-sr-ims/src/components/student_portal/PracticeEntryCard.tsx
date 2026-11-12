@@ -11,14 +11,15 @@ interface PracticeEntryCardProps {
 export default function PracticeEntryCard({ hwkHistory }: PracticeEntryCardProps) {
   const navigate = useNavigate();
 
-  // A level is practiceable once the student has any homework in it AND it has at
-  // least one skill configured (see levelSubsections.ts / WORD_PROBLEM_TOPICS.txt).
+  // A level is practiceable if it's at or below the highest level the student has
+  // homework in (so MK4 unlocks MK1–MK3 too) AND it has at least one skill
+  // configured (see levelSubsections.ts / WORD_PROBLEM_TOPICS.txt).
   const eligibleLevels = useMemo(() => {
-    const levelsWithHomework = new Set(
-      hwkHistory.filter((h) => h.subject === "Math").map((h) => h.level)
-    );
+    const highestIndex = hwkHistory
+      .filter((h) => h.subject === "Math")
+      .reduce((max, h) => Math.max(max, MATH_LEVELS.indexOf(h.level)), -1);
     return MATH_LEVELS.filter(
-      (level) => levelsWithHomework.has(level) && getSkillsForLevel(level).length > 0
+      (level, i) => i <= highestIndex && getSkillsForLevel(level).length > 0
     );
   }, [hwkHistory]);
 

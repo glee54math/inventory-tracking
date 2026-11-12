@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
+import "./LevelFilesPage_styles.css";
 
 export default function LevelsPage() {
     // fileId is optional — used by the admin file browser (/levels/:levelId/:fileId) to
@@ -8,6 +9,13 @@ export default function LevelsPage() {
     // both rely on.
     const { levelId, fileId } = useParams<{ levelId: string; fileId?: string }>();
     const targetFile = fileId ?? levelId;
+    const { pathname } = useLocation();
+    // Every lab and level opens through this page, so the back button lives
+    // here and works for all of them: the student route goes back to the
+    // student portal, the admin routes go back to the level's page.
+    const isStudent = pathname.startsWith("/student-levels/");
+    const backTo = isStudent ? "/student-portal" : `/levels/${levelId}/files`;
+    const backLabel = isStudent ? "Back" : `Back to ${levelId}`;
     const [error, setError] = useState<string | null>(null);
     const [LevelComponent, setLevelComponent] = useState<React.ComponentType | null>(null);
 
@@ -36,8 +44,18 @@ export default function LevelsPage() {
             });
     }, [levelId, targetFile]);
 
+    const backBar = (
+        <div className="level-back-bar">
+            <Link to={backTo} className="level-back-btn">
+                <span aria-hidden="true">←</span> {backLabel}
+            </Link>
+        </div>
+    );
+
     if (error) {
         return (
+            <>
+            {backBar}
             <div className="p-6">
                 <p className="font-semibold">{`Couldn't load ${targetFile}.`}</p>
                 <p className="text-sm text-gray-500 mt-1 whitespace-pre-wrap">{error}</p>
@@ -45,11 +63,22 @@ export default function LevelsPage() {
                     If you just added or changed this file, restart the dev server and hard-refresh (Ctrl+Shift+R).
                 </p>
             </div>
+            </>
         );
     }
     if (!LevelComponent) {
-        return <div>Loading Component...</div>
+        return (
+            <>
+                {backBar}
+                <div>Loading Component...</div>
+            </>
+        );
     }
 
-    return <LevelComponent />
+    return (
+        <>
+            {backBar}
+            <LevelComponent />
+        </>
+    );
 }

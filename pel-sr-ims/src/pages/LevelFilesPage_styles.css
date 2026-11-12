@@ -1,52 +1,398 @@
-/* Scoped under .level-files-page (paired with lab-base, same pattern every
-   math-levels Lab's own _styles.css uses). Only defines the palette lab-base's
-   .unit-carousel-* rules expect (this page has no lab root class of its own
-   to inherit one from) plus the per-Lab card grid wrapping each carousel.
-   Palette copied from MK1_CountingAndCardinalityLab_styles.css, the one most
-   App.css's app-wide primary/tertiary tokens were themselves seeded from. */
+/* The All Levels page (/levels/LevelsPage), the level page
+   (/levels/:levelId/files) and the back bar above every lab (LevelsPage.tsx). Both use the labs' own look (lab-base.css + the MK labs'
+   palette): the warm dotted background, white cards with soft borders, and
+   pill buttons, so moving between a level and its labs feels like one app. */
 
-.level-files-page {
+.level-files-page,
+.level-back-bar {
+  --bg: #fff6ec;
+  --grid: #fbeee0;
   --card: #ffffff;
   --ink: #2a2440;
   --muted: #746a90;
-  --line: #ddd0ee;
+  --line: #e6d5c3;
   --qa: #2f8fd1;
+  --qa-soft: #dcf0fb;
+  --qa-text: #1f6a9e;
+  --qb: #e8972d;
+  --qb-soft: #fdecd0;
   --qc: #9452d6;
+  --qc-soft: #ecdcfb;
+  --on-q: #ffffff;
   --radius-lg: 20px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family: var(--font);
+  color: var(--ink);
 }
 
 @media (prefers-color-scheme: dark) {
-  .level-files-page:not([data-theme="light"]) {
+  .level-files-page:not([data-theme="light"]),
+  .level-back-bar:not([data-theme="light"]) {
+    --bg: #201a14;
+    --grid: #2b231b;
     --card: #271f3f;
     --ink: #f0ebfb;
     --muted: #b6a9d6;
     --line: #473a66;
     --qa: #6fc2ff;
+    --qa-soft: #1d3a52;
+    --qa-text: #9bd4ff;
     --qc: #c69af5;
+    --qc-soft: #3a2a52;
+    --on-q: #10202e;
   }
 }
 
-.level-files-page .level-files-labs {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
+/* ---------- The back button (same shape as the labs' .btn.ghost) ---------- */
+
+.level-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink);
+  background: var(--card);
+  border: 2px solid var(--line);
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.level-back-btn:hover {
+  border-color: var(--qa);
+  color: var(--ink);
+}
+.level-back-btn:focus-visible {
+  outline: 3px solid var(--qc);
+  outline-offset: 2px;
 }
 
-.level-files-page .level-files-lab-card {
+/* The bar above a lab. It matches the lab rail's white and border. */
+.level-back-bar {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 10px clamp(16px, 2vw, 24px);
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+
+/* ---------- The level page ---------- */
+
+.level-files-page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--grid) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  padding: 24px clamp(16px, 4vw, 48px) 64px;
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.level-files-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.level-files-hero {
+  width: 100%;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  padding: clamp(20px, 3vw, 28px);
+  padding: clamp(22px, 3vw, 36px) clamp(22px, 4vw, 44px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 32px;
+}
+
+.level-files-page .level-files-hero h1 {
+  margin: 0;
+  font-size: clamp(40px, 5vw, 56px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+
+.level-files-page .level-files-band {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 17px;
+}
+
+.level-files-count {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 16px;
+  background: var(--qa-soft);
+  color: var(--qa-text);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.level-files-page .level-files-section-title {
+  margin: 0 0 14px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.level-files-labs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 24px;
+}
+
+.level-files-lab-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: clamp(20px, 2.5vw, 28px);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 18px;
+  align-items: stretch;
+  gap: 16px;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.level-files-lab-card:hover {
+  border-color: var(--qa);
+  box-shadow: 0 6px 20px rgba(42, 36, 64, 0.08);
+}
+
+.level-files-lab-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .level-files-page .level-files-lab-card h2 {
   margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.level-files-units {
+  flex: none;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.level-files-lab-card .unit-carousel {
+  align-self: center;
+  width: 100%;
+}
+
+.level-files-page .level-files-open {
+  align-self: center;
+  margin-top: auto; /* line the buttons up along the bottom of a row */
+  border-radius: 999px;
+  padding: 11px 26px;
   font-size: 17px;
+  font-weight: 600;
+  color: var(--on-q);
+  background: var(--qa);
+  border: 2px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+.level-files-page .level-files-open:hover {
+  filter: brightness(1.08);
+}
+.level-files-page .level-files-open:focus-visible {
+  outline: 3px solid var(--qc);
+  outline-offset: 2px;
+}
+
+.level-files-empty {
+  color: var(--muted);
+}
+
+/* The plain file list, for levels that have no labs yet. */
+.level-files-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.level-files-list .level-back-btn {
+  font-weight: 600;
+}
+.level-files-shell-tag {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Stacked fractions in the unit previews (same rule as the labs' own
+   stylesheets: the shared Frac has no styling in lab-base.css). */
+.level-files-page .frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  margin: 0 0.15em;
+  font-size: 0.88em;
+  line-height: 1.05;
+}
+.level-files-page .frac-n,
+.level-files-page .frac-d {
+  padding: 0 0.12em;
+}
+.level-files-page .frac-n {
+  border-bottom: 1.5px solid currentColor;
+}
+.level-files-page .frac-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.level-files-page .unit-carousel-goal {
+  line-height: 1.8;
+}
+
+/* ---------- The All Levels page (AllLevelsPage.tsx) ---------- */
+
+.all-levels-subjects {
+  display: grid;
+  gap: 24px;
+}
+
+.all-levels-subject {
+  --accent: var(--qa);
+  --accent-soft: var(--qa-soft);
+  --accent-text: var(--qa-text);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.all-levels-subject--english {
+  --accent: #289a66;
+  --accent-soft: #ddf3e6;
+  --accent-text: #1d7a50;
+}
+@media (prefers-color-scheme: dark) {
+  .level-files-page:not([data-theme="light"]) .all-levels-subject--english {
+    --accent: #5fd39a;
+    --accent-soft: #1c3a2c;
+    --accent-text: #8be3b6;
+  }
+}
+
+.all-levels-subject-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px clamp(20px, 3vw, 32px);
+  border-bottom: 1px solid var(--line);
+  background: var(--accent-soft);
+}
+.level-files-page .all-levels-subject-head h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  flex: 1;
+}
+.all-levels-subject-head .level-files-count {
+  background: var(--card);
+  color: var(--accent-text);
+}
+.all-levels-subject-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--accent-text);
+}
+
+.all-levels-bands {
+  display: grid;
+  gap: 22px;
+  padding: clamp(20px, 3vw, 32px);
+}
+
+.all-levels-band-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.level-files-page .all-levels-band-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.all-levels-band-icon {
+  color: var(--accent);
+}
+.all-levels-band-count {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.all-levels-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+/* Same pill shape as the labs' buttons. */
+.all-levels-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--ink);
-  text-align: center;
+  background: var(--card);
+  border: 2px solid var(--line);
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+.all-levels-chip:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  transform: translateY(-1px);
+}
+.all-levels-chip:focus-visible {
+  outline: 3px solid var(--qc);
+  outline-offset: 2px;
+}
+.all-levels-chip-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--qb-soft);
+  color: #a56a12;
+  font-size: 12px;
+  font-weight: 700;
 }

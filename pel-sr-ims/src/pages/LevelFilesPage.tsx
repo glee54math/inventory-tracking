@@ -4,6 +4,7 @@ import { MATH_LEVELS } from "../utils/types";
 import { LEVEL_SKILLS } from "../utils/levelSubsections";
 import { previewableFilesForLevel } from "./levelFileHelpers";
 import { UnitPreviewCarousel } from "./math-levels/shared/components/UnitPreviewCarousel";
+import { StackedFractions } from "./math-levels/shared/components/MathText";
 import type { Unit } from "./math-levels/shared/units/types";
 import "./math-levels/shared/styles/lab-base.css";
 import "./LevelFilesPage_styles.css";
@@ -35,6 +36,15 @@ function filesForLevel(levelId: string, isMath: boolean): string[] {
 function humanizeLabFolder(folder: string): string {
     const stripped = folder.endsWith("Lab") ? folder.slice(0, -3) : folder;
     return stripped.replace(/([a-z0-9])([A-Z])/g, "$1 $2").trim();
+}
+
+// Same grade bands as AllLevelsPage's groups.
+function gradeBand(levelId: string): string {
+    if (/^[ME]K/.test(levelId)) return "Kindergarten";
+    if (/^[ME]G/.test(levelId)) return "Elementary School";
+    if (/^[ME]M/.test(levelId)) return "Middle School";
+    if (/^[ME]H/.test(levelId)) return "High School";
+    return "Special Topics";
 }
 
 interface LevelLab {
@@ -103,43 +113,61 @@ export default function LevelFilesPage() {
 
     if (!levelId) return null;
 
+    const subject = isMath ? "Math" : "English";
+    const count = labs && labs.length > 0 ? labs.length : files.length;
+    const countLabel = labs && labs.length > 0 ? (count === 1 ? "1 lab" : `${count} labs`) : count === 1 ? "1 file" : `${count} files`;
+
     return (
-        <div className="p-6 max-w-5xl mx-auto">
-            <Link to="/levels/LevelsPage" className="text-sm text-gray-500 hover:text-gray-700">
-                ← All Levels
-            </Link>
-            <h1 className="text-2xl font-bold mt-2 mb-6">{levelId}</h1>
+        <div className="level-files-page lab-base">
+            <div className="level-files-head">
+                <Link to="/levels/LevelsPage" className="level-back-btn">
+                    <span aria-hidden="true">←</span> All Levels
+                </Link>
+                <div className="level-files-hero">
+                    <div>
+                        <h1>{levelId}</h1>
+                        <p className="level-files-band">
+                            {subject} · {gradeBand(levelId)}
+                        </p>
+                    </div>
+                    {labs !== null && count > 0 && <span className="level-files-count">{countLabel}</span>}
+                </div>
+            </div>
 
             {labs === null ? (
-                <p className="text-gray-400 text-sm">Loading…</p>
+                <p className="level-files-empty">Loading…</p>
             ) : labs.length > 0 ? (
-                <div className="level-files-page lab-base">
+                <StackedFractions>
+                    <h2 className="level-files-section-title">Labs</h2>
                     <div className="level-files-labs">
-                        {labs.map((lab) => (
-                            <section key={lab.componentFile} className="level-files-lab-card">
-                                <h2>{lab.label}</h2>
-                                <UnitPreviewCarousel
-                                    units={lab.units}
-                                    onPick={() => navigate(`/levels/${levelId}/${lab.componentFile}`)}
-                                />
-                            </section>
-                        ))}
+                        {labs.map((lab) => {
+                            const open = () => navigate(`/levels/${levelId}/${lab.componentFile}`);
+                            return (
+                                <section key={lab.componentFile} className="level-files-lab-card">
+                                    <div className="level-files-lab-top">
+                                        <h2>{lab.label}</h2>
+                                        <span className="level-files-units">
+                                            {lab.units.length === 1 ? "1 unit" : `${lab.units.length} units`}
+                                        </span>
+                                    </div>
+                                    <UnitPreviewCarousel units={lab.units} onPick={open} />
+                                    <button type="button" className="level-files-open" onClick={open}>
+                                        Open lab
+                                    </button>
+                                </section>
+                            );
+                        })}
                     </div>
-                </div>
+                </StackedFractions>
             ) : files.length === 0 ? (
-                <p className="text-gray-400 text-sm">No files found for {levelId}.</p>
+                <p className="level-files-empty">No files found for {levelId}.</p>
             ) : (
-                <ul className="space-y-2">
+                <ul className="level-files-list">
                     {files.map((file) => (
                         <li key={file}>
-                            <Link
-                                to={`/levels/${levelId}/${file}`}
-                                className="inline-block px-3 py-2 bg-gray-100 hover:bg-green-200 border border-gray-300 hover:border-green-400 rounded text-sm font-medium text-gray-800 transition-colors"
-                            >
+                            <Link to={`/levels/${levelId}/${file}`} className="level-back-btn">
                                 {file}
-                                {file === levelId && (
-                                    <span className="ml-2 text-xs text-gray-400">(shell)</span>
-                                )}
+                                {file === levelId && <span className="level-files-shell-tag">(shell)</span>}
                             </Link>
                         </li>
                     ))}
