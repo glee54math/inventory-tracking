@@ -104,22 +104,22 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
     }
 
     return (
-        <div className="relative bg-white rounded-lg shadow p-6 space-y-3 max-w-md">
+        <div className="relative bg-white rounded-lg shadow p-6 space-y-3 max-w-md max-h-[90vh] flex flex-col">
             <button
                 onClick={onClose}
-                className=" absolute bg-white rounded-lg shadow p-6 space-y-3 max-w-sm 
+                className=" absolute bg-white rounded-lg shadow p-6 space-y-3 max-w-sm
                             top-2 right-2 !bg-red-200 !hover:bg-red-700
                           "
             >
                 X
             </button>
-            
+
             {/* Add New Student Header */}
             <h1 className="text-large font-semibold pr-10">
                 Add New Student
             </h1>
-            
-            <div className="flex flex-col">
+
+            <div className="flex flex-col overflow-y-auto flex-1 min-h-0">
                 {/* First Name */}
                 <label htmlFor="firstName">First Name: </label>
                 <input 
@@ -289,20 +289,22 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
                     </div>
                 </div>
             </div>
-            <button 
-                type="button"
-                onClick={handleReset}
-                className="border rounded m-1 !bg-red-200"
-            >
-                Reset
-            </button>
-            <button
-                type="submit"
-                onClick={handleSubmit}
-                className="border rounded m-1 !bg-blue-300 !hover:bg-blue-700"
-            >
-                Submit
-            </button>
+            <div className="flex shrink-0">
+                <button
+                    type="button"
+                    onClick={handleReset}
+                    className="border rounded m-1 !bg-red-200"
+                >
+                    Reset
+                </button>
+                <button
+                    type="submit"
+                    onClick={handleSubmit}
+                    className="border rounded m-1 !bg-blue-300 !hover:bg-blue-700"
+                >
+                    Submit
+                </button>
+            </div>
         </div>
     )
 }
