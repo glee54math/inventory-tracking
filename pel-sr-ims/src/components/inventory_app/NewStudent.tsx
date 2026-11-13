@@ -16,6 +16,7 @@
         hwkAssigned: string[]; // This will probably be changed
 */
 import type { Student } from "../../utils/types";
+import { GRADE_OPTIONS } from "../../utils/types";
 import { addNewStudentToDatabase } from "../../utils/inventoryService";
 import { useState } from "react";
 
@@ -39,6 +40,7 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
     const [mother, setMother] = useState("");
     const [dateOfBirth, setDateOfBirth] = useState("");
     const [school, setSchool] = useState("");
+    const [startingGrade, setStartingGrade] = useState("");
     const [motherPhone, setMotherPhone] = useState("");
     const [fatherPhone, setFatherPhone] = useState("");
     const [motherEmail, setMotherEmail] = useState("");
@@ -53,6 +55,7 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
         setMother("");
         setDateOfBirth("");
         setSchool("");
+        setStartingGrade("");
         setMotherPhone("");
         setFatherPhone("");
         setMotherEmail("");
@@ -86,11 +89,12 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
             dateOfBirth, school,
             motherPhone, fatherPhone,
             motherEmail, fatherEmail,
+            ...(startingGrade && { startingGrade }),
             subjects_startDate_Map
         };
 
         try {
-            addNewStudentToDatabase("san-ramon", newStudent);
+            await addNewStudentToDatabase("san-ramon", newStudent);
             handleReset();
             onClose();
             console.log(newStudent.firstName + newStudent.lastName + " was added successfully.");
@@ -174,6 +178,20 @@ export function NewStudentForm({onClose}:NewStudentFormProps) {
                     onChange={(e) => setSchool(e.target.value)}
                     className="border rounded"
                 />
+
+                {/* Starting Grade */}
+                <label htmlFor="startingGrade">Grade (when starting at PEL): </label>
+                <select
+                    id="startingGrade"
+                    value={startingGrade}
+                    onChange={(e) => setStartingGrade(e.target.value)}
+                    className="border rounded"
+                >
+                    <option value="">Select grade...</option>
+                    {GRADE_OPTIONS.map((g) => (
+                        <option key={g.value} value={g.value}>{g.label}</option>
+                    ))}
+                </select>
 
                 {/* Mother's Phone Number */}
                 <label htmlFor="mothersPhone">Mother's Phone Number: </label>

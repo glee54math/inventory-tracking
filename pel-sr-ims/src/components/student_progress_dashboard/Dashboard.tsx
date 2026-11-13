@@ -94,10 +94,10 @@ export default function Dashboard() {
       );
       
       if (historicalData) {
-        setStartingGrade1(historicalData.startingGrade);
+        setStartingGrade1(historicalData.startingGrade || student.startingGrade);
         setGradeSkips1(historicalData.gradeSkips || []);
       } else {
-        setStartingGrade1(undefined);
+        setStartingGrade1(student.startingGrade);
         setGradeSkips1([]);
       }
 
@@ -161,10 +161,10 @@ export default function Dashboard() {
       );
       
       if (historicalData) {
-        setStartingGrade2(historicalData.startingGrade);
+        setStartingGrade2(historicalData.startingGrade || student.startingGrade);
         setGradeSkips2(historicalData.gradeSkips || []);
       } else {
-        setStartingGrade2(undefined);
+        setStartingGrade2(student.startingGrade);
         setGradeSkips2([]);
       }
 

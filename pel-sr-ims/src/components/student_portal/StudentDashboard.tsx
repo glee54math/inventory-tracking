@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStudentContext } from "./StudentContext";
-import { loadStudentProgress, buildHwkHistoryFromAssignments } from "../../utils/progressService";
+import { loadFreshStudentProgress, buildHwkHistoryFromAssignments } from "../../utils/progressService";
 import type { StudentProgress } from "../../utils/types";
 import LevelStatusCard from "./LevelStatusCard";
 import HomeworkQueue from "./HomeworkQueue";
@@ -25,7 +25,7 @@ export default function StudentDashboard() {
     }
     let cancelled = false;
     setLoading(true);
-    loadStudentProgress(currentStudent.firstName, currentStudent.lastName)
+    loadFreshStudentProgress(currentStudent)
       .then((data) => { if (!cancelled) setProgress(data); })
       .catch((err) => console.error("Error loading student progress:", err))
       .finally(() => { if (!cancelled) setLoading(false); });

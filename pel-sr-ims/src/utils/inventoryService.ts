@@ -1,7 +1,8 @@
-import { doc, getDoc, getDocs, setDoc, collection, addDoc, updateDoc, query, where, orderBy, } from "firebase/firestore";
+import { doc, getDoc, getDocs, setDoc, collection, addDoc, updateDoc, query, where, orderBy, runTransaction, } from "firebase/firestore";
 import { db } from "./firebase";
 import type { LogEntry, LogActionData, SubmittedAction } from "./types";
 import type { InventoryData, Subsection, InsufficientSubsection, Worker, Student, HomeworkAssignment} from "./types";
+import { buildStudentProgress, saveStudentProgress } from "./progressService";
 
 // subject_Location = math_back, math_front, english_back, english_front
 // Upload your local JSON to Firestore
@@ -441,6 +442,15 @@ export async function assignHWToStudent(student: Student, hwPackets: HomeworkAss
     });
 
     console.log(`✅ Updated hwkAssigned for ${student.firstName} ${student.lastName}`);
+
+    // Keep the saved progress (dashboard, student + parent portals) in step with the new
+    // homework. A failure here shouldn't undo the assignment; Refresh Progress can redo it.
+    try {
+      const progress = await buildStudentProgress({ ...student, hwkAssigned: updatedHW });
+      await saveStudentProgress(progress);
+    } catch (err) {
+      console.error(`Failed to refresh progress for ${student.firstName} ${student.lastName}:`, err);
+    }
   }
 }
 // Worker Management Functions
@@ -832,6 +842,74 @@ async function reverseInventoryAction(undoData: LogActionData): Promise<void> {
       break;
     }
   }
+}
+
+// Identifies one hwkAssigned entry: its text plus its exact dateAssigned (null for legacy strings)
+export interface HomeworkEntryKey {
+  assignment: string;
+  dateMs: number | null;
+}
+
+export function homeworkEntryKey(entry: string | HomeworkAssignment): HomeworkEntryKey {
+  if (typeof entry === "string") return { assignment: entry, dateMs: null };
+  const date = entry.dateAssigned instanceof Date
+    ? entry.dateAssigned
+    : (entry.dateAssigned as any)?.toDate?.() ?? new Date(entry.dateAssigned as any);
+  return { assignment: entry.assignment, dateMs: date.getTime() };
+}
+
+/**
+ * Remove mis-assigned homework from a student WITHOUT touching inventory or the log
+ * (unlike undoing the log action, which also returns the copies to inventory).
+ * Runs in a transaction against the latest hwkAssigned, removing one matching entry per
+ * key, and appends what was removed to hwkRemoved so a mistake can be traced/restored.
+ * Rebuilds the student's saved progress afterwards. Returns how many entries were removed.
+ */
+export async function removeHomeworkEntries(
+  student: Student,
+  keys: HomeworkEntryKey[]
+): Promise<number> {
+  const location = student.location ?? "san-ramon";
+  if (!student.id) throw new Error("Student has no id");
+  const studentRef = doc(db, "students", location, "students", student.id);
+
+  const { updatedHW, removed } = await runTransaction(db, async (tx) => {
+    const snap = await tx.get(studentRef);
+    if (!snap.exists()) throw new Error("Student not found");
+    const data = snap.data();
+    const remaining = [...((data.hwkAssigned ?? []) as (string | HomeworkAssignment)[])];
+    const removed: (string | HomeworkAssignment)[] = [];
+
+    keys.forEach((key) => {
+      const index = remaining.findIndex((entry) => {
+        const k = homeworkEntryKey(entry);
+        return k.assignment === key.assignment && k.dateMs === key.dateMs;
+      });
+      if (index !== -1) removed.push(...remaining.splice(index, 1));
+    });
+
+    if (removed.length > 0) {
+      const removedAt = new Date();
+      tx.update(studentRef, {
+        hwkAssigned: remaining,
+        hwkRemoved: [
+          ...(data.hwkRemoved ?? []),
+          ...removed.map((entry) => ({ entry, removedAt })),
+        ],
+      });
+    }
+    return { updatedHW: remaining, removed };
+  });
+
+  if (removed.length > 0) {
+    try {
+      const progress = await buildStudentProgress({ ...student, hwkAssigned: updatedHW }, location);
+      await saveStudentProgress(progress, location);
+    } catch (err) {
+      console.error(`Failed to refresh progress for ${student.firstName} ${student.lastName}:`, err);
+    }
+  }
+  return removed.length;
 }
 
 export async function removeHWFromStudent(

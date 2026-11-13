@@ -13,6 +13,8 @@ import {
   updateStudentInfo,
 } from "../../utils/inventoryService";
 import type { Student } from "../../utils/types";
+import { GRADE_OPTIONS } from "../../utils/types";
+import StudentHomeworkEditor from "./StudentHomeworkEditor";
 
 const LOCATIONS = ["san-ramon", "dublin"];
 
@@ -49,6 +51,7 @@ export default function ManageStudents() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditForm | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [homeworkEditorId, setHomeworkEditorId] = useState<string | null>(null);
 
   useEffect(() => {
     loadStudents();
@@ -193,13 +196,20 @@ export default function ManageStudents() {
             </label>
             <label className="text-sm">
               Starting Grade
-              <input
-                type="text"
+              <select
                 value={editForm.startingGrade}
                 onChange={(e) => setEditForm({ ...editForm, startingGrade: e.target.value })}
-                placeholder="K, 1, 2, ..."
                 className="w-full border rounded px-2 py-1 mt-1"
-              />
+              >
+                <option value="">Select grade...</option>
+                {/* Keep any older free-text value visible so it isn't silently dropped */}
+                {editForm.startingGrade && !GRADE_OPTIONS.some((g) => g.value === editForm.startingGrade) && (
+                  <option value={editForm.startingGrade}>{editForm.startingGrade}</option>
+                )}
+                {GRADE_OPTIONS.map((g) => (
+                  <option key={g.value} value={g.value}>{g.label}</option>
+                ))}
+              </select>
             </label>
             <div />
             <label className="text-sm">
@@ -266,12 +276,23 @@ export default function ManageStudents() {
               )}
           </div>
         </div>
-        <button
-          onClick={() => startEditing(student)}
-          className="mt-3 px-3 py-1.5 text-sm rounded !bg-yellow-200 hover:!bg-yellow-300"
-        >
-          Edit Info
-        </button>
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={() => startEditing(student)}
+            className="px-3 py-1.5 text-sm rounded !bg-yellow-200 hover:!bg-yellow-300"
+          >
+            Edit Info
+          </button>
+          <button
+            onClick={() => setHomeworkEditorId((id) => (id === student.id ? null : student.id ?? null))}
+            className="px-3 py-1.5 text-sm rounded !bg-gray-200 hover:!bg-gray-300"
+          >
+            {homeworkEditorId === student.id ? "Hide Homework" : "Manage Homework"}
+          </button>
+        </div>
+        {homeworkEditorId === student.id && (
+          <StudentHomeworkEditor student={student} onChanged={loadStudents} />
+        )}
       </div>
     );
   };

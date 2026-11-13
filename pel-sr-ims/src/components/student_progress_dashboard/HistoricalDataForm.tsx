@@ -2,13 +2,23 @@
 
 import { useState, useEffect } from "react";
 import type { Student } from "../../utils/types";
-import { MATH_LEVELS, ENGLISH_LEVELS } from "../../utils/types";
+import { MATH_LEVELS, ENGLISH_LEVELS, GRADE_OPTIONS } from "../../utils/types";
+import { toDate } from "../../utils/progressService";
 import {
   saveHistoricalProgress,
   loadHistoricalProgress,
   type HistoricalLevelEntry,
   type HistoricalProgressData,
 } from "../../utils/historicalProgressService";
+
+// Enrollment dates are usually "YYYY-MM-DD" strings, but older records may hold Timestamps
+function toDateInputValue(value: unknown): string {
+  if (!value) return "";
+  if (typeof value === "string") return value.slice(0, 10);
+  const d = toDate(value);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
 
 interface HistoricalDataFormProps {
   student: Student;
@@ -59,10 +69,16 @@ export default function HistoricalDataForm({
           student.lastName
         );
 
+        // Anything not yet saved here falls back to what the Add New Student form recorded
+        setStartingGrade(existingData?.startingGrade || student.startingGrade || "");
+        setMathStartDate(
+          existingData?.mathProgramStartDate || toDateInputValue(student.subjects_startDate_Map?.Math)
+        );
+        setEnglishStartDate(
+          existingData?.englishProgramStartDate || toDateInputValue(student.subjects_startDate_Map?.English)
+        );
+
         if (existingData) {
-          setStartingGrade(existingData.startingGrade || "");
-          setMathStartDate(existingData.mathProgramStartDate || "");
-          setEnglishStartDate(existingData.englishProgramStartDate || "");
           setMathLevels(existingData.mathLevels || []);
           setEnglishLevels(existingData.englishLevels || []);
           setGradeSkips(existingData.gradeSkips || []);
@@ -326,19 +342,9 @@ export default function HistoricalDataForm({
             className="px-3 py-2 border border-gray-300 rounded"
           >
             <option value="">Select grade...</option>
-            <option value="K">Kindergarten</option>
-            <option value="1">1st Grade</option>
-            <option value="2">2nd Grade</option>
-            <option value="3">3rd Grade</option>
-            <option value="4">4th Grade</option>
-            <option value="5">5th Grade</option>
-            <option value="6">6th Grade</option>
-            <option value="7">7th Grade</option>
-            <option value="8">8th Grade</option>
-            <option value="9">9th Grade</option>
-            <option value="10">10th Grade</option>
-            <option value="11">11th Grade</option>
-            <option value="12">12th Grade</option>
+            {GRADE_OPTIONS.map((g) => (
+              <option key={g.value} value={g.value}>{g.label}</option>
+            ))}
           </select>
           <span className="text-sm text-gray-600">
             (Grade when they first started at PEL)
