@@ -31,6 +31,11 @@ function isMastered(unit: Unit, p?: UnitProgress): boolean {
   return sharedIsMastered(MASTERY_GOAL, unit.requiredBuckets, p);
 }
 
+/** Whether the unit's end-of-unit test has been passed (at least once). */
+function testPassed(unit: Unit, p?: UnitProgress): boolean {
+  return !!unit.test && p?.testScore !== undefined && p.testScore >= unit.test.passScore;
+}
+
 function starCount(unit: Unit, p?: UnitProgress): number {
   return sharedStarCount(MASTERY_GOAL, unit.requiredBuckets, p);
 }
@@ -269,12 +274,28 @@ function UnitView({
             onComplete={(clean, bucket) => onSolved(clean && typeIdx === "mix", bucket)}
             onNext={() => setSeed((s) => s + 1)}
           />
-          {mastered && onNextUnit && (
+          {mastered && (unit.test || onNextUnit) && (
             <div className="mastered">
-              <span>You've mastered {unit.title.toLowerCase()}.</span>
-              <button className="btn primary" onClick={onNextUnit}>
-                Go to the next unit
-              </button>
+              {unit.test && !testPassed(unit, progress) ? (
+                <>
+                  <span>You've mastered {unit.title.toLowerCase()}. Take the test to finish this unit.</span>
+                  <button className="btn primary" onClick={() => setTab("test")}>
+                    Take the test
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span>
+                    {unit.test && "🔥 "}You've mastered {unit.title.toLowerCase()}
+                    {unit.test ? " and passed the test." : "."}
+                  </span>
+                  {onNextUnit && (
+                    <button className="btn primary" onClick={onNextUnit}>
+                      Go to the next unit
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           )}
         </div>

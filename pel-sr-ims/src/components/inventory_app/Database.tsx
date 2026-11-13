@@ -4,7 +4,18 @@
 // imports
 import { useEffect, useState } from "react";
 import { loadStudentsFromDB } from "../../utils/inventoryService";
+import { SUBSECTIONS } from "../../utils/types";
 import type { Student } from "../../utils/types";
+
+// Parses a level key like "MG7" or "EG1B" into a prefix and a sortable numeric value
+const parseLevelKey = (levelKey: string): { prefix: string; order: number } => {
+    const match = levelKey.match(/^([A-Z]+)(\d+)([A-Z]*)$/);
+    if (!match) return { prefix: levelKey, order: 0 };
+    const [, prefix, num, suffix] = match;
+    // Encode trailing letter (e.g. the "B" in "EG1B") as a fractional tiebreaker
+    const suffixOrder = suffix ? suffix.charCodeAt(0) / 1000 : 0;
+    return { prefix, order: parseInt(num, 10) + suffixOrder };
+};
 
 // Component
 export default function Database() {
@@ -19,7 +30,7 @@ export default function Database() {
         if (!hwkArray || hwkArray.length === 0) return null;
 
         // Group by subject type and level
-        const organized: Record<string, Record<string, Array<{ range: string; date?: string }>>> = {
+        const organized: Record<string, Record<string, Array<{ range: string; date?: string; dateMs?: number }>>> = {
             Math: {},
             English: {}
         };
@@ -27,6 +38,7 @@ export default function Database() {
         hwkArray.forEach((hwk) => {
             let assignment: string;
             let dateStr: string | undefined;
+            let dateMs: number | undefined;
 
             // Handle both string and HomeworkAssignment object formats
             if (typeof hwk === 'string') {
@@ -39,6 +51,7 @@ export default function Database() {
                     const date = hwk.dateAssigned.toDate ? hwk.dateAssigned.toDate() : new Date(hwk.dateAssigned);
                     // Format as M/D/YY
                     dateStr = `${date.getMonth() + 1}/${date.getDate()}/${String(date.getFullYear()).slice(-2)}`;
+                    dateMs = date.getTime();
                 }
             }
 
@@ -52,7 +65,7 @@ export default function Database() {
                 if (!organized[subject][levelKey]) {
                     organized[subject][levelKey] = [];
                 }
-                organized[subject][levelKey].push({ range, date: dateStr });
+                organized[subject][levelKey].push({ range, date: dateStr, dateMs });
             }
         });
 
@@ -74,21 +87,43 @@ export default function Database() {
                         <div key={subject} className="mb-2">
                             <div className="font-semibold text-blue-700">{subject}:</div>
                             {Object.entries(levels)
-                                .sort(([a], [b]) => a.localeCompare(b)) // Sort levels alphabetically
-                                .map(([level, rangesWithDates]) => (
-                                    <div key={level} className="ml-2 mb-1">
-                                        <span className="font-medium text-gray-700">{level}:</span>
-                                        <span className="ml-1 text-gray-600">
-                                            {rangesWithDates.map((item, idx) => (
-                                                <span key={idx}>
-                                                    {idx > 0 && ", "}
-                                                    {item.range}
-                                                    {item.date && ` (${item.date})`}
-                                                </span>
+                                .sort(([a], [b]) => {
+                                    const pa = parseLevelKey(a);
+                                    const pb = parseLevelKey(b);
+                                    if (pa.prefix !== pb.prefix) return pa.prefix.localeCompare(pb.prefix);
+                                    return pa.order - pb.order;
+                                })
+                                .map(([level, rangesWithDates]) => {
+                                    // Group ranges by assignment date so progression within the level is visible
+                                    const byDate = new Map<string, { dateMs: number; ranges: string[] }>();
+                                    rangesWithDates.forEach((item) => {
+                                        const key = item.date ?? "No date";
+                                        const dateMs = item.dateMs ?? Number.POSITIVE_INFINITY; // undated entries sort last
+                                        if (!byDate.has(key)) byDate.set(key, { dateMs, ranges: [] });
+                                        byDate.get(key)!.ranges.push(item.range);
+                                    });
+
+                                    const dateGroups = Array.from(byDate.entries()).sort(
+                                        ([, a], [, b]) => a.dateMs - b.dateMs
+                                    );
+
+                                    return (
+                                        <div key={level} className="ml-2 mb-1">
+                                            <span className="font-medium text-gray-700">{level}:</span>
+                                            {dateGroups.map(([dateLabel, group]) => (
+                                                <div key={dateLabel} className="ml-4 text-gray-600">
+                                                    {dateLabel !== "No date" && (
+                                                        <span className="font-medium">{dateLabel}: </span>
+                                                    )}
+                                                    {group.ranges
+                                                        .slice()
+                                                        .sort((a, b) => SUBSECTIONS.indexOf(a) - SUBSECTIONS.indexOf(b))
+                                                        .join(", ")}
+                                                </div>
                                             ))}
-                                        </span>
-                                    </div>
-                                ))}
+                                        </div>
+                                    );
+                                })}
                         </div>
                     );
                 })}

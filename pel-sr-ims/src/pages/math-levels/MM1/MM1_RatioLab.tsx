@@ -32,6 +32,11 @@ function useFonts() {
   }, []);
 }
 
+/** Whether the unit's end-of-unit test has been passed (at least once). */
+function testPassed(unit: Unit, p?: UnitProgress): boolean {
+  return !!unit.test && p?.testScore !== undefined && p.testScore >= unit.test.passScore;
+}
+
 function Stars({ p, size = "sm" }: { p?: UnitProgress; size?: "sm" | "lg" }) {
   const n = Math.min(MASTERY_GOAL, p?.clean ?? 0);
   return (
@@ -252,12 +257,28 @@ function UnitView({
             </p>
           )}
           <StepProblem key={`${unit.id}-${seed}-${String(typeIdx)}`} problem={problem} onComplete={(clean) => onSolved(clean && typeIdx === "mix")} onNext={() => setSeed((s) => s + 1)} />
-          {mastered && onNextUnit && (
+          {mastered && (unit.test || onNextUnit) && (
             <div className="mastered">
-              <span>You've mastered {unit.title.toLowerCase()}.</span>
-              <button className="btn primary" onClick={onNextUnit}>
-                Go to the next unit
-              </button>
+              {unit.test && !testPassed(unit, progress) ? (
+                <>
+                  <span>You've mastered {unit.title.toLowerCase()}. Take the test to finish this unit.</span>
+                  <button className="btn primary" onClick={() => setTab("test")}>
+                    Take the test
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span>
+                    {unit.test && "🔥 "}You've mastered {unit.title.toLowerCase()}
+                    {unit.test ? " and passed the test." : "."}
+                  </span>
+                  {onNextUnit && (
+                    <button className="btn primary" onClick={onNextUnit}>
+                      Go to the next unit
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           )}
         </div>
