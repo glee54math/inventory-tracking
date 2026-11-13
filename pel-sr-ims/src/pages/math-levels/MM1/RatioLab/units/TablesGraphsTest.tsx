@@ -1,11 +1,11 @@
 import React from "react";
 import { CoordinatePlane, RatioTable } from "../diagrams";
 import type { RatioTableCell } from "../diagrams";
-import { palette } from "../../shared/lib/palette";
-import { gcd, lcm, randInt } from "../../shared/lib/math";
-import { choice, type TestQuestion } from "../../shared/engine/types";
-import { QA, QB, niceMax, niceStep } from "../../shared/engine/controls";
-import type { Unit } from "../../shared/units/types";
+import { palette } from "../../../shared/lib/palette";
+import { gcd, lcm, randInt } from "../../../shared/lib/math";
+import { choice, type TestQuestion } from "../../../shared/engine/types";
+import { QA, QB, niceMax, niceStep } from "../../../shared/engine/controls";
+import type { Unit } from "../../../shared/units/types";
 
 // ---------- end-of-unit test: Tables & graphs ----------
 // 10 questions from 9 generators (trail mix produces a non-leading pair that

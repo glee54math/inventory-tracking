@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { DoubleNumberLine, PercentGrid, TapeDiagram } from "../diagrams";
-import { palette } from "../../shared/lib/palette";
-import { fmt, fracText, pick, randInt } from "../../shared/lib/math";
-import type { Problem } from "../../shared/engine/types";
-import { QA, QC, Says, Stepper } from "../../shared/engine/controls";
-import type { Unit } from "../../shared/units/types";
+import { palette } from "../../../shared/lib/palette";
+import { fmt, fracText, pick, randInt } from "../../../shared/lib/math";
+import type { Problem } from "../../../shared/engine/types";
+import { QA, QC, Says, Stepper } from "../../../shared/engine/controls";
+import type { Unit } from "../../../shared/units/types";
 import { percentTest } from "./PercentTest";
-import { MathText } from "../../shared/components/MathText";
+import { MathText } from "../../../shared/components/MathText";
 
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;

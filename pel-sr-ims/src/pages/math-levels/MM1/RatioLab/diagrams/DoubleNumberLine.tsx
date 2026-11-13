@@ -1,8 +1,8 @@
 import React, { useId } from "react";
-import { palette } from "../../shared/lib/palette";
-import { fmt } from "../../shared/lib/math";
-import { useStackedFractions } from "../../shared/components/MathText";
-import { isSvgFraction, SvgMath } from "../../shared/components/SvgMath";
+import { palette } from "../../../shared/lib/palette";
+import { fmt } from "../../../shared/lib/math";
+import { useStackedFractions } from "../../../shared/components/MathText";
+import { isSvgFraction, SvgMath } from "../../../shared/components/SvgMath";
 
 export interface NumberLineSide {
   label: string;

@@ -1,7 +1,7 @@
 import React from "react";
-import { palette } from "../../shared/lib/palette";
-import { fmt } from "../../shared/lib/math";
-import { MathText } from "../../shared/components/MathText";
+import { palette } from "../../../shared/lib/palette";
+import { fmt } from "../../../shared/lib/math";
+import { MathText } from "../../../shared/components/MathText";
 
 export interface RatioTableColumn {
   label: string;

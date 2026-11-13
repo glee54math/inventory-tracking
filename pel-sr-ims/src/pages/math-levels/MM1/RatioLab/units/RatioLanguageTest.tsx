@@ -1,10 +1,10 @@
 import React from "react";
 import { RatioGroups } from "../diagrams";
-import { palette } from "../../shared/lib/palette";
-import { gcd, randInt } from "../../shared/lib/math";
-import { choice, type TestQuestion } from "../../shared/engine/types";
-import { QA, QB, QC } from "../../shared/engine/controls";
-import type { Unit } from "../../shared/units/types";
+import { palette } from "../../../shared/lib/palette";
+import { gcd, randInt } from "../../../shared/lib/math";
+import { choice, type TestQuestion } from "../../../shared/engine/types";
+import { QA, QB, QC } from "../../../shared/engine/controls";
+import type { Unit } from "../../../shared/units/types";
 
 // ---------- end-of-unit test: Ratio language ----------
 // 10 questions from 8 generators (library and classroom each produce a non-

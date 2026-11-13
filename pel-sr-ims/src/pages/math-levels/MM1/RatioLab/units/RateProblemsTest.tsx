@@ -1,10 +1,10 @@
 import React from "react";
 import { DoubleNumberLine, TapeDiagram } from "../diagrams";
-import { palette } from "../../shared/lib/palette";
-import { fracText, gcd, money, pick, randInt } from "../../shared/lib/math";
-import { choice, type TestQuestion } from "../../shared/engine/types";
-import { QA, QB } from "../../shared/engine/controls";
-import type { Unit } from "../../shared/units/types";
+import { palette } from "../../../shared/lib/palette";
+import { fracText, gcd, money, pick, randInt } from "../../../shared/lib/math";
+import { choice, type TestQuestion } from "../../../shared/engine/types";
+import { QA, QB } from "../../../shared/engine/controls";
+import type { Unit } from "../../../shared/units/types";
 
 // ---------- end-of-unit test: Rate problems ----------
 // 10 questions from 9 generators (lawn crew produces a non-leading pair that

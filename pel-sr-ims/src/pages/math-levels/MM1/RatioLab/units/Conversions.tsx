@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { ConversionChain, DoubleNumberLine, RatioTable } from "../diagrams";
-import { palette } from "../../shared/lib/palette";
-import { fmt, fracText, gcd, pick, randInt, shuffle, simplify } from "../../shared/lib/math";
-import { choice, type Problem } from "../../shared/engine/types";
-import { QA, QB, Says, Stepper } from "../../shared/engine/controls";
-import type { Unit } from "../../shared/units/types";
+import { palette } from "../../../shared/lib/palette";
+import { fmt, fracText, gcd, pick, randInt, shuffle, simplify } from "../../../shared/lib/math";
+import { choice, type Problem } from "../../../shared/engine/types";
+import { QA, QB, Says, Stepper } from "../../../shared/engine/controls";
+import type { Unit } from "../../../shared/units/types";
 import { conversionsTest } from "./ConversionsTest";
-import { MathText } from "../../shared/components/MathText";
+import { MathText } from "../../../shared/components/MathText";
 
 interface Conv {
   id: string;

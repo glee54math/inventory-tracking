@@ -1,11 +1,11 @@
 import React from "react";
 import { ConversionChain, DoubleNumberLine, RatioTable } from "../diagrams";
 import type { RatioTableCell } from "../diagrams";
-import { palette } from "../../shared/lib/palette";
-import { fracText, pick, randInt, simplify } from "../../shared/lib/math";
-import { choice, type TestQuestion } from "../../shared/engine/types";
-import { QA, QB } from "../../shared/engine/controls";
-import type { Unit } from "../../shared/units/types";
+import { palette } from "../../../shared/lib/palette";
+import { fracText, pick, randInt, simplify } from "../../../shared/lib/math";
+import { choice, type TestQuestion } from "../../../shared/engine/types";
+import { QA, QB } from "../../../shared/engine/controls";
+import type { Unit } from "../../../shared/units/types";
 
 // Own local copy of Conversions.tsx's conversion-facts table, not an import —
 // every other MM1 *Test.tsx keeps its own local data rather than importing

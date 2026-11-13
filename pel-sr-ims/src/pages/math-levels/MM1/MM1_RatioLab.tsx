@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import "../shared/styles/lab-base.css";
 import "./MM1_RatioLab_styles.css";
-import { units, type Unit } from "./units";
-import { moduleTest, moduleTestStars, MODULE_TEST_TOTAL } from "./units/ModuleTest";
+import { units, type Unit } from "./RatioLab/units";
+import { moduleTest, moduleTestStars, MODULE_TEST_TOTAL } from "./RatioLab/units/ModuleTest";
 import { StepProblem } from "../shared/engine/StepProblem";
 import { UnitTestView } from "../shared/engine/UnitTest";
 import { UnitPreviewCarousel } from "../shared/components/UnitPreviewCarousel";

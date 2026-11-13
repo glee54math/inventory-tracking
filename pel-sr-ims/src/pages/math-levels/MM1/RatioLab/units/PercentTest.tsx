@@ -1,10 +1,10 @@
 import React from "react";
 import { PercentGrid, TapeDiagram } from "../diagrams";
-import { palette } from "../../shared/lib/palette";
-import { pick, randInt } from "../../shared/lib/math";
-import { choice, type TestQuestion } from "../../shared/engine/types";
-import { QA, QB } from "../../shared/engine/controls";
-import type { Unit } from "../../shared/units/types";
+import { palette } from "../../../shared/lib/palette";
+import { pick, randInt } from "../../../shared/lib/math";
+import { choice, type TestQuestion } from "../../../shared/engine/types";
+import { QA, QB } from "../../../shared/engine/controls";
+import type { Unit } from "../../../shared/units/types";
 
 // ---------- end-of-unit test: Percent ----------
 // 10 questions from 9 generators (the fish tank scenario produces a non-leading

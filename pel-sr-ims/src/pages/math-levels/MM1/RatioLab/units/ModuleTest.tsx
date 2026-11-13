@@ -1,6 +1,6 @@
-import { gcd, money, pick, randInt } from "../../shared/lib/math";
-import { numberBlank, selectBlank, sentence, type TestQuestion } from "../../shared/engine/types";
-import type { Unit } from "../../shared/units/types";
+import { gcd, money, pick, randInt } from "../../../shared/lib/math";
+import { numberBlank, selectBlank, sentence, type TestQuestion } from "../../../shared/engine/types";
+import type { Unit } from "../../../shared/units/types";
 import { classroomQuestions, fishTankQuestion } from "./RatioLanguageTest";
 import { candleShopQuestions } from "./UnitRateTest";
 import { proportionQuestion, simplifyBaseQuestion } from "./TablesGraphsTest";

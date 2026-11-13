@@ -1,7 +1,7 @@
 import React from "react";
-import { palette } from "../../shared/lib/palette";
-import { hasFraction, spokenFractions, useStackedFractions } from "../../shared/components/MathText";
-import { isSvgFraction, SvgMath, SvgMathLine } from "../../shared/components/SvgMath";
+import { palette } from "../../../shared/lib/palette";
+import { hasFraction, spokenFractions, useStackedFractions } from "../../../shared/components/MathText";
+import { isSvgFraction, SvgMath, SvgMathLine } from "../../../shared/components/SvgMath";
 
 export interface TapeRow {
   label: string;

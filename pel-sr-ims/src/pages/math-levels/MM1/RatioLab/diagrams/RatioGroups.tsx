@@ -1,6 +1,6 @@
 import React from "react";
 import { Shape, type ShapeKind } from "./Shape";
-import { palette } from "../../shared/lib/palette";
+import { palette } from "../../../shared/lib/palette";
 
 export interface Quantity {
   /** How many of this item are in ONE group. */

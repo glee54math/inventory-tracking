@@ -1,6 +1,6 @@
 import React from "react";
-import { palette } from "../../shared/lib/palette";
-import { MathText } from "../../shared/components/MathText";
+import { palette } from "../../../shared/lib/palette";
+import { MathText } from "../../../shared/components/MathText";
 
 export interface UnitAmount {
   value: number | string;

@@ -1,6 +1,6 @@
 import React, { useId, useState } from "react";
-import { palette } from "../../shared/lib/palette";
-import { fmt } from "../../shared/lib/math";
+import { palette } from "../../../shared/lib/palette";
+import { fmt } from "../../../shared/lib/math";
 
 export interface PlotPoint {
   x: number;
