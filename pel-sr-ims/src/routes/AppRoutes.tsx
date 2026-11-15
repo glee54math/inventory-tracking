@@ -136,7 +136,7 @@ export default function AppRoutes() {
       <Route
         path="/levels/LevelsPage"
         element={
-          <ProtectedRoute allowedRoles={["admin", "worker"]}>
+          <ProtectedRoute allowedRoles={["admin"]} mrLeeOnly>
             <AllLevelsPage />
           </ProtectedRoute>
         }
@@ -145,7 +145,7 @@ export default function AppRoutes() {
       <Route
         path="/levels/:levelId/files"
         element={
-          <ProtectedRoute allowedRoles={["admin", "worker"]}>
+          <ProtectedRoute allowedRoles={["admin"]} mrLeeOnly>
             <LevelFilesPage />
           </ProtectedRoute>
         }
@@ -154,7 +154,7 @@ export default function AppRoutes() {
       <Route
         path="/levels/:levelId/:fileId"
         element={
-          <ProtectedRoute allowedRoles={["admin", "worker"]}>
+          <ProtectedRoute allowedRoles={["admin"]} mrLeeOnly>
             <LevelsPage />
           </ProtectedRoute>
         }
@@ -163,7 +163,7 @@ export default function AppRoutes() {
       <Route
         path="/levels/:levelId"
         element={
-          <ProtectedRoute allowedRoles={["admin", "worker"]}>
+          <ProtectedRoute allowedRoles={["admin"]} mrLeeOnly>
             <LevelsPage />
           </ProtectedRoute>
         }

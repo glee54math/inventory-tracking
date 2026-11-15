@@ -2,20 +2,27 @@
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../components/AuthContext";
+import { useNameContext } from "../components/inventory_app/NameContext";
 import type { UserRole } from "../utils/authService";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: UserRole[];
   requireAuth?: boolean;
+  // The Firebase admin session stays signed in on a device after Mr. Lee logs
+  // in once (worker logout only clears the worker name), so an admin role alone
+  // doesn't prove it's him. This also requires Mr. Lee to be the active worker.
+  mrLeeOnly?: boolean;
 }
 
 export default function ProtectedRoute({
   children,
   allowedRoles,
   requireAuth = true,
+  mrLeeOnly = false,
 }: ProtectedRouteProps) {
   const { currentUser, userRole, loading } = useAuth();
+  const { nameOfWorker } = useNameContext();
 
   // Show loading state
   if (loading) {
@@ -32,6 +39,10 @@ export default function ProtectedRoute({
   // Redirect to login if authentication is required but user is not logged in
   if (requireAuth && !currentUser) {
     return <Navigate to="/parent-login" replace />;
+  }
+
+  if (mrLeeOnly && nameOfWorker !== "Mr. Lee") {
+    return <Navigate to="/" replace />;
   }
 
   // Check if user has required role
