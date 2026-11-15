@@ -5,6 +5,10 @@ import { hasFraction, MathText, useStackedFractions } from "./MathText";
 import { TapSelect } from "./TapSelect";
 import { FormPicker } from "./AnswerForm";
 import { formBoxes, formFilled, formOfValue, isAnswerForm, keepFitting, useAnswerFormPick, type AnswerForm } from "./answerKinds";
+import { FactorBoxes } from "./FactorBoxes";
+import { FirstQuadrantPlane } from "../diagrams/FirstQuadrantPlane";
+import { palette } from "../lib/palette";
+import { checkFactors, checkPlot, parsePoints, splitFactorBoxes, togglePoint } from "../lib/factors";
 
 // ============================================================================
 // Check-for-Understanding building blocks for 2nd-grade-and-up labs (K–1 labs
@@ -49,6 +53,21 @@ export interface CfuBlank {
    * show, and a wrong kind is marked on its button and counts as wrong.
    */
   mixedFraction?: boolean;
+  /**
+   * Typed factors of this number, one box per factor with "×" between (the
+   * shared FactorBoxes, as in the "factors" Step kind). Graded in any order by
+   * shared/lib/factors.ts checkFactors: primes that multiply to the number, or
+   * with `factorPair`, any two factors other than 1. `correct` is only the
+   * text for the answer key. Added for MG10 Expressions & Patterns.
+   */
+  factorsOf?: number;
+  factorPair?: boolean;
+  /**
+   * Tap points onto a first-quadrant grid (as in the "plot" Step kind),
+   * graded as a set by checkPlot. `correct` is only the text for the answer
+   * key. Added for MG10 Expressions & Patterns.
+   */
+  plot?: { answer: [number, number][]; xMax: number; yMax: number; xLabel: string; yLabel: string };
 }
 
 /**
@@ -85,6 +104,8 @@ const formOfCorrect = (correct: string): AnswerForm | null => {
 const formOk = (b: CfuBlank, raw: string): boolean => formOfMixed(raw) === formOfCorrect(b.correct);
 
 const typedOk = (b: CfuBlank, raw: string): boolean => {
+  if (b.factorsOf !== undefined) return checkFactors(b.factorsOf, splitFactorBoxes(raw), { pair: b.factorPair }).ok;
+  if (b.plot) return checkPlot(b.plot.answer, raw).ok;
   if (b.mixedFraction && formOfMixed(raw) && !formOk(b, raw)) return false;
   if (b.mixedFraction) raw = mixedText(raw);
   if (b.accept) return b.accept(raw);
@@ -116,7 +137,13 @@ export function DropdownQuestion({
   // buttons; it is filled once a kind is picked and every box it shows has a number.
   const formPick = useAnswerFormPick();
   const formBlank = (b: CfuBlank) => formPick && !!b.mixedFraction;
-  const filled = blanks.every((b, i) => (formBlank(b) ? formFilled(formOfMixed(values[i]), splitMixed(values[i])) : allFilled(values[i])));
+  const filled = blanks.every((b, i) =>
+    formBlank(b)
+      ? formFilled(formOfMixed(values[i]), splitMixed(values[i]))
+      : b.factorsOf !== undefined
+        ? splitFactorBoxes(values[i]).every((x) => x.trim() !== "") && (!b.factorPair || splitFactorBoxes(values[i]).length === 2)
+        : allFilled(values[i])
+  );
   const oks = blanks.map((b, i) => (b.options ? values[i] === b.correct : typedOk(b, values[i])));
   const ok = oks.every(Boolean);
   const done = checked && filled && ok;
@@ -159,7 +186,25 @@ export function DropdownQuestion({
   );
 
   const boxes = blanks.map((b, i) =>
-    b.options && stacked && b.options.some(hasFraction) ? (
+    b.factorsOf !== undefined ? (
+      <FactorBoxes key={i} target={b.factorsOf} pair={b.factorPair} raw={values[i]} disabled={done} boxStyle={answerBorder(oks[i], checked)} onChange={(v) => set(i, v)} onEnter={() => filled && setChecked(true)} />
+    ) : b.plot ? (
+      <span key={i} className="cfu-plot" role="group" aria-label={b.label} style={{ display: "block", ...answerBorder(oks[i], checked), borderWidth: checked ? 2 : 0, borderStyle: "solid", borderRadius: 10 }}>
+        <FirstQuadrantPlane
+          xMax={b.plot.xMax}
+          yMax={b.plot.yMax}
+          xLabel={b.plot.xLabel}
+          yLabel={b.plot.yLabel}
+          // The same size as the Practice "plot" step (StepProblem), so rows are as easy to tap.
+          width={520}
+          height={Math.min(520, 140 + b.plot.yMax * 30)}
+          hoverLabel={false}
+          hitPad={14}
+          points={parsePoints(values[i]).map(([x, y]) => ({ x, y, color: palette.c }))}
+          onPlot={done ? undefined : (x, y) => set(i, togglePoint(values[i], x, y))}
+        />
+      </span>
+    ) : b.options && stacked && b.options.some(hasFraction) ? (
       // A native dropdown can't draw a stacked fraction, so labs with
       // <StackedFractions> get tap buttons for fraction options.
       <TapSelect key={i} aria-label={b.label} value={values[i]} style={answerBorder(oks[i], checked)} onChange={(e) => {

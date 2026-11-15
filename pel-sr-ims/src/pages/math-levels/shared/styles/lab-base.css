@@ -1828,3 +1828,125 @@ input.align-slot.align-slot-input {
   font-weight: 700;
   line-height: 1.6;
 }
+
+/* FactorBoxes (shared/components/FactorBoxes.tsx): typed factors, one box per
+   factor with "×" between, for the "factors" Step kind and CFU factorsOf
+   blanks. Added for MG10 Expressions & Patterns. */
+.lab-base .factor-boxes {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.lab-base .factor-boxes-target {
+  font-size: 20px;
+  font-weight: 700;
+  margin-right: 2px;
+}
+.lab-base .factor-boxes-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.lab-base .factor-boxes-times {
+  font-size: 20px;
+  font-weight: 700;
+}
+.lab-base input.answer.factor-box {
+  width: 58px;
+  padding: 7px 6px;
+}
+.lab-base .factor-boxes-tools {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: 6px;
+}
+.lab-base .btn.factor-boxes-btn {
+  padding: 6px 12px;
+  font-size: 14px;
+}
+/* The "plot" Step kind: a first-quadrant grid to tap points onto. Wide enough
+   on iPad that grid columns stay a finger apart (MG10 round 1). */
+.lab-base .plot-step {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 540px;
+}
+
+/* The "buildExpr" Step kind (MG10 Expressions & Patterns): tap where the
+   parentheses go, type the numbers, tap the signs. */
+.lab-base .expr-build {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lab-base .expr-build-label {
+  margin: 0;
+  font-weight: 600;
+}
+.lab-base .expr-build-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.lab-base .choice.expr-build-group {
+  min-height: 48px;
+  min-width: 120px;
+  text-align: center;
+}
+.lab-base .choice.expr-build-group.on {
+  background: var(--qa-soft);
+  border-color: var(--qa);
+  box-shadow: inset 0 0 0 1px var(--qa);
+}
+.lab-base .expr-build-shape {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 24px;
+  font-weight: 700;
+}
+.lab-base .expr-build-slot {
+  display: inline-block;
+  width: 20px;
+  height: 22px;
+  border: 2px solid var(--muted, #888);
+  border-radius: 4px;
+}
+.lab-base .expr-build-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--muted, #888);
+}
+.lab-base .expr-build-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.lab-base input.answer.expr-build-num {
+  width: 64px;
+  text-align: center;
+}
+.lab-base .expr-build-paren {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--qa);
+}
+/* Each sign picker is a small 2 x 2 grid of the 4 signs, so the whole
+   expression stays on one line at iPad portrait (round 2, C2-09). */
+.lab-base .expr-build-row .tap-select {
+  display: inline-grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 4px;
+}
+.lab-base .expr-build-row .tap-option {
+  min-width: 40px;
+  min-height: 38px;
+  font-size: 20px;
+  padding: 2px 8px;
+}

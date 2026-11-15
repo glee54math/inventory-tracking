@@ -227,6 +227,16 @@ For every Problem type, trace the help a stuck student gets:
 - **Does the stuck picture print the answer?** A total label or numeral
   equal to the answer before "Show me" or the step being done is a Major
   finding (copying it earns a clean solve).
+- **Judge Practice help by the self-learning principle (user principle).**
+  The platform is self-learning: a student must be able to get unstuck from
+  what the app shows, with no teacher explaining. In Practice, help after a
+  wrong try that points strongly toward the answer (a worked example, part
+  of the work drawn, a reference to an earlier step or picture) is good,
+  not a finding. Flag only help that gives the finished answer away
+  immediately (before any try, or complete and copyable after one try).
+  Don't recommend removing a helpful picture just because it hints. The
+  Test is different: it gives little to no guidance, and may require every
+  step Practice walked through.
 - **During "Show me," does the picture show the step being asked?** The
   engine draws "Show me" with the step done, so a visual that doesn't
   branch on `help.showMe` jumps to the next step's picture (a "?" on 95

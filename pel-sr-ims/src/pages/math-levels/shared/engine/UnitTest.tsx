@@ -6,6 +6,8 @@ import { tappedList, type Step, type TestQuestion } from "./types";
 import { answerText, check, fresh, StepInput, type StepState } from "./StepProblem";
 import { MathText, useStackedFractions } from "../components/MathText";
 import { formBoxes, formName, isAnswerForm } from "../components/answerKinds";
+import { parsePoints, pointsText, splitFactorBoxes, timesText } from "../lib/factors";
+import { builtInputText } from "../lib/buildExpr";
 
 export interface UnitTestViewProps {
   /** A unit's `test` field — or any other `{questions, passScore}` config, e.g. a cross-unit module test. */
@@ -35,6 +37,11 @@ const studentAnswerText = (step: Step, inputs: string[]): string => {
     return text || "(blank)";
   }
   if (!inputs[0]) return "(blank)";
+  // BuildExprStep (MG10): the expression as built, with "?" for any blank part.
+  if (step.kind === "buildExpr") return builtInputText(inputs);
+  // FactorsStep / PlotStep (MG10 Expressions & Patterns).
+  if (step.kind === "factors") return timesText(splitFactorBoxes(inputs[0]).map((b) => b.trim() || "?"));
+  if (step.kind === "plot") return pointsText(parsePoints(inputs[0]));
   if (step.kind === "choice") return step.choices[Number(inputs[0])] ?? "(blank)";
   if (step.kind === "tapCount") {
     const n = tappedList(inputs[0]).length;

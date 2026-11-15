@@ -338,7 +338,11 @@ or Test problem type adds, the Key Idea can't say "always subtract." State
 what's always true ("A compare story is about the difference. Sometimes you
 add, sometimes you subtract."), never a shortcut that only works for some
 problem types. Don't teach keyword-hunting ("'left' means subtract") — it
-breaks on the first story that doesn't follow it.
+breaks on the first story that doesn't follow it. Likewise, when a step
+asks whether something always, sometimes or never happens ("does moving
+the parentheses change the value?"), the problem pool must include a case
+that breaks the obvious surface rule ((a + b) − c for "mixed signs change
+it"), and no hint may teach a surface rule ("look at the signs").
 
 ### Check for Understanding (CFU) — the mandatory gate
 **Every unit has one, and it gates Practice (user requirement).** No
@@ -592,12 +596,36 @@ numeral" printed "13" under the frames after one wrong try, and copying it
 earned a star). Check this in the progressive-reveal browser check
 (Verification #8).
 
+**Self-learning: help teaches, it doesn't give away (user principle).**
+The platform is self-learning: a student must be able to get unstuck
+from what the app shows them (a hint, an example, an earlier step, a
+picture), without a teacher explaining. So in Practice it is fine, and
+wanted, for help after a wrong try to point strongly toward the answer:
+show a worked example, refer back to an earlier step or picture, draw
+part of the work. What it must not do is hand over the finished answer
+immediately (before any try, or as a complete answer to copy after one
+try). Help gets stronger with each wrong try, and "Show me" / "Show answer"
+is the step that gives the answer. Don't strip helpful pictures out of
+Practice just because they hint; strip only what gives the answer away.
+
 **Practice must not be passable without the math (user requirement):**
 - No choice step whose right answer is the same every time (MK1's "Grid or
   spread out?" was always "the same"; "count them again" always gives the
   same number). Vary it, or make the step typed.
 - A typed step that only copies a number already on screen ("type the other
-  number") does not count as the problem's typed step.
+  number") does not count as the problem's typed step. That includes a
+  number printed in the step's own prompt ("k × (…) is how many times as
+  large as …?" with k shown): pair it with a step that needs the idea
+  (e.g. a ratio of two multipliers).
+- A typed or built step with a two-way part (where the parentheses go)
+  counts as a pick for clean solves: a wrong try on it breaks the clean
+  solve, the same as a `choice` step.
+- **Every wrong choice must be false.** A true statement that "isn't the
+  reason" is never a distractor ("B adds more each time" for a times
+  pattern). Make it false, or ask a question with only one true answer.
+- If the prompt names a number or key word ("{k} times"), at least one
+  wrong choice uses it too, so the right choice can't be found by matching
+  words.
 - Don't ask the same thing twice in two forms (type 2, then tap the numeral
   2). Each step needs its own idea.
 - **Breadth inside one problem:** where the skill is matching or naming,
@@ -626,6 +654,19 @@ student asks for it (hint, Show me / Show answer) or after a wrong try,
 and any help makes the solve not clean and triggers the same-type retry.
 (MG10 Unit 1 Practice always said "cut both bars into twelfths" while its
 Test asked 3/5 + 1/7 with nothing, so students never practiced choosing.)
+Diagram scaffolds the Test doesn't show (group outlines, color boxes,
+rings) are off by default in Practice and appear only as help
+(`pointing(help, i)`); Explore may show them always, since it teaches.
+The Test gives little to no guidance toward the answer, and a Test
+question may require the student to do every step on their own: if
+Practice walks through 3 steps, the Test may ask for just the final
+answer and expect all 3 steps to be done.
+
+**Standards' verbs are done, not just recognized.** When a standard says
+*write*, *place*, *construct* or *draw*, at least one Practice step makes
+the student build it (typed numbers, tapped signs, tapped symbol
+placement), not only pick from finished choices. (MG10 Expressions Unit 3
+only offered three finished expressions for 5.OA.2's "write".)
 
 **Word problems: the student decides the operation (user requirement).**
 Connecting a story to + or − is the point of a word problem. Every story

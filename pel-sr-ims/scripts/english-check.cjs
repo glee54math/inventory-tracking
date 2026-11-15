@@ -52,6 +52,7 @@ const LATER_WORDS = {
 const TRAPS = /\b(left over|in all|altogether|times a (day|week)|even though|difference between|mean|range|figure out|you nailed it|piece of cake|ballpark)\b/i;
 const HOMOPHONES = /\b(sum|whole|cents|weigh|plane|pair)\b/i; // checked for K-3 (read-aloud)
 const CONTEXT = /\b(dozen|allowance|tip|tax|inning|touchdown|quarterback|mileage|mortgage)\b/i;
+const PLURAL_RISK = "⁣"; // invisible marker set by textOf, removed before printing
 
 // ---------- extraction
 const SKIP_PROPS = new Set(["className", "style", "id", "key", "type", "kind", "bucket", "tone", "tones", "href", "src", "fill", "stroke", "d", "viewBox", "arrangement", "difficulty", "skillId", "componentFile", "componentExport", "variant", "mode", "role", "as", "fontFamily", "fontWeight", "textAnchor", "dominantBaseline", "transform", "points", "width", "height", "color", "background", "border"]);
@@ -61,8 +62,18 @@ const TEXT_TAGS = new Set(["p", "aside", "li", "h1", "h2", "h3", "h4", "button",
 function textOf(node) {
   if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
   if (ts.isTemplateExpression(node)) {
+    // A count that can be 1 followed by a fixed plural noun ("You plotted
+    // ${pts.length} points") reads "1 points". Only counts that look like they
+    // can be 1 are marked (.length, or a name like n / count / num / total), so
+    // generator numbers drawn from 2 up don't flood the report. Skipped when
+    // the template handles the singular (=== 1, !== 1, a plural helper).
+    const handlesOne = /[!=]==?\s*1\b|plural/i.test(node.getText());
     let s = node.head.text;
-    for (const sp of node.templateSpans) s += "N" + sp.literal.text;
+    for (const sp of node.templateSpans) {
+      const countLike = /\.length$|^(n|count|num\w*|total\w*|\w*Count|\w*Num)$/.test(sp.expression.getText());
+      const risky = !handlesOne && countLike && /^ [a-z]+s\b/.test(sp.literal.text) && !/^ (is|was|has|does|says|plus|times|minus|less|its|this|as)\b/.test(sp.literal.text);
+      s += "N" + (risky ? PLURAL_RISK : "") + sp.literal.text;
+    }
     return s;
   }
   return null;
@@ -151,6 +162,10 @@ function flagsFor(s) {
   if (G <= 5 && CONTEXT.test(s)) f.push("context");
   if (G <= 1 && /\b(at first|at the start|to start with|in the beginning)\b/i.test(s)) f.push("start-unknown");
   if (G <= 3 && /\btimes as (many|much|long|tall)\b/i.test(s)) f.push("times-as-many(4th)");
+  if (s.includes(PLURAL_RISK)) f.push("plural:possible '1 points'");
+  // A fixed preposition in front of a noun drawn from a pool ("in every ${group}")
+  // breaks for nouns that take a different one ("in every plate").
+  if (/\b(in|on|at|into|onto) (every|each|the|a|one) N\b/.test(s)) f.push("prep:fixed before pooled noun");
   return { f, maxW };
 }
 const KIND = (field) =>
@@ -158,7 +173,7 @@ const KIND = (field) =>
   : ["explain", "wrapUp", "praise", "good", "bad", "feedback", "note", "correctExplain"].includes(field) ? "after-answer"
   : field === "screen" ? "screen (Explore/CFU/shell)" : "other";
 
-const out = rows.map((r) => ({ ...r, kind: KIND(r.field), ...flagsFor(r.text) })).map((r) => ({ ...r, flags: r.f, f: undefined }));
+const out = rows.map((r) => ({ ...r, kind: KIND(r.field), ...flagsFor(r.text) })).map((r) => ({ ...r, text: r.text.split(PLURAL_RISK).join(""), flags: r.f, f: undefined }));
 if (jsonOut) fs.writeFileSync(jsonOut, JSON.stringify(out, null, 1));
 
 // ---------- report

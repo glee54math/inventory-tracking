@@ -43,6 +43,14 @@ export interface VisualHelp {
    * are unchanged. Practice only (the Test passes no VisualHelp).
    */
   lastTry?: string[];
+  /**
+   * Every step's inputs so far (steps before `step` hold the answers the
+   * student got right), so a picture can draw the student's own earlier
+   * answer, e.g. MG10 draws the factor pair the student chose to start a
+   * tree. Optional and additive: pictures that ignore it are unchanged.
+   * Practice only (the Test passes no VisualHelp).
+   */
+  answers?: string[][];
 }
 
 /** True when a picture should point at the part that matters for this step. */
@@ -383,7 +391,77 @@ export interface CustomStep extends BaseStep {
   resultText: string;
 }
 
-export type Step = NumberStep | RatioStep | CoordinateStep | ChoiceStep | TapCountStep | SentenceStep | FracMultiplyStep | VerticalMultiplyStep | CustomStep | FractionStep;
+/**
+ * A list of factors typed one per box, with "×" between the boxes (5.OA.2.1).
+ * The student adds or removes boxes, so the number of boxes never gives away
+ * how many factors there are. Graded by shared/lib/factors.ts checkFactors in
+ * ANY order: by default every factor must be prime and they must multiply to
+ * `target` (a prime number is written as just itself; "1 × 29" is named as a
+ * mistake). With `pair`, it is a factor pair to start a factor tree: exactly
+ * two boxes, neither 1, any pair that multiplies to `target` except the
+ * `exclude`d ones. inputs[0] holds the boxes as "2,2,3". Added for
+ * MG10_NumericalExpressionsAndPatternsLab; other steps are unaffected.
+ */
+export interface FactorsStep extends BaseStep {
+  kind: "factors";
+  target: number;
+  pair?: boolean;
+  exclude?: [number, number][];
+}
+
+/**
+ * Tap points onto a first-quadrant grid (5.OA.3, 5.G.1). Each tap on a grid
+ * point adds a dot there; tapping a dot takes it away. Graded as a SET (order
+ * never matters) by shared/lib/factors.ts checkPlot, with named messages for
+ * switched coordinates and for too few / too many points. The grid does not
+ * show the coordinates under the finger, so finding the spot is the skill.
+ * inputs[0] holds the points as "1,3;2,6". Added for
+ * MG10_NumericalExpressionsAndPatternsLab; other steps are unaffected.
+ */
+export interface PlotStep extends BaseStep {
+  kind: "plot";
+  answer: [number, number][];
+  xMax: number;
+  yMax: number;
+  xLabel: string;
+  yLabel: string;
+  xStep?: number;
+  yStep?: number;
+}
+
+/**
+ * Build a three-number expression with one pair of parentheses (5.OA.2,
+ * "write simple expressions"): the student taps where the parentheses go,
+ * types the three numbers and taps the two signs. Graded by STRUCTURE in
+ * shared/lib/buildExpr.ts checkBuilt: the same grouping, numbers and signs,
+ * with either order allowed on the two sides of a + or a × (so 2 × (8 + 7)
+ * and (7 + 8) × 2 both count). Never by value alone. inputs: [group ("left" =
+ * (a o b) o c, "right" = a o (b o c)), a, sign 1, b, sign 2, c]. Added for
+ * MG10_NumericalExpressionsAndPatternsLab; other steps are unaffected.
+ */
+export interface BuildExprStep extends BaseStep {
+  kind: "buildExpr";
+  answer: BuiltExpr;
+  /** Sign buttons for each sign slot (default + − × ÷). */
+  signs?: string[];
+  /** Named feedback for a wrong build, checked before the generic messages. Return null to fall back. */
+  diagnose?: (built: BuiltExpr) => string | null;
+}
+
+/** A three-number expression with one pair of parentheses (see BuildExprStep). */
+export interface BuiltExpr {
+  group: "left" | "right";
+  nums: [number, number, number];
+  ops: [string, string];
+}
+
+export type Step = NumberStep | RatioStep | CoordinateStep | ChoiceStep | TapCountStep | SentenceStep | FracMultiplyStep | VerticalMultiplyStep | CustomStep | FractionStep | FactorsStep | PlotStep | BuildExprStep;
+
+/** Build a FactorsStep — see its doc comment. */
+export const factorsStep = (base: BaseStep, target: number, opts: Pick<FactorsStep, "pair" | "exclude"> = {}): FactorsStep => ({ ...base, ...opts, kind: "factors", target });
+
+/** Build a PlotStep — see its doc comment. */
+export const plotStep = (base: BaseStep, answer: [number, number][], grid: Omit<PlotStep, keyof BaseStep | "kind" | "answer">): PlotStep => ({ ...base, ...grid, kind: "plot", answer });
 
 /** Build a FractionStep — see its doc comment. */
 export const fractionStep = (base: BaseStep, n: number, d: number, opts: Omit<FractionStep, keyof BaseStep | "kind" | "answer"> = {}): FractionStep => ({

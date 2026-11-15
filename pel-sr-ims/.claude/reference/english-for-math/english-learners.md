@@ -36,6 +36,14 @@ math.
   in the separate words. Teach the few the lab needs; avoid the rest.
   When a lab teaches a phrasal verb in one unit (e.g. *go into* in Unit 2),
   earlier units use a word students already know instead (*multiple*).
+  Others seen in labs: *work out* (calculate), *take off* (a price), *tell
+  apart*, *go into* (divide), *break down*. *Work out* is fine once a lab
+  uses it as its one word for "calculate"; don't also use *work outward*
+  or *work out* meaning "succeed." For *go into*, say "divide evenly."
+- **Echo questions** with the question word in the middle ("12 × (…) is how
+  many times as large as 3 × (…)?"). They're hard to parse and the two
+  sides are easy to swap. Use a sentence frame with a blank ("12 × (…) is
+  __ times as large as 3 × (…).") or put the question word first.
 - **Several words for one idea in the same unit** (*add, plus, sum, total,
   in all, altogether, combined*). Pick one; add the others one at a time.
 - **Idioms in feedback:** "You nailed it!", "Piece of cake!", "Hang in

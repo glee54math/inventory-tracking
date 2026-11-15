@@ -517,3 +517,16 @@ package at this scale:
   the inputs of the last wrong Check while its feedback is on screen
   (Practice only). MG10 uses it to draw the "added across" answer's bar next
   to the bigger fraction's bar (diagrams/SizeCheckBars.tsx).
+
+- Two answer kinds added with MG10_NumericalExpressionsAndPatternsLab (2026-11):
+  a typed list of factors graded in any order ("factors" Step kind, CfuBlank
+  factorsOf; shared/components/FactorBoxes.tsx, shared/lib/factors.ts) and
+  tap-to-plot points on a first-quadrant grid ("plot" Step kind, CfuBlank plot;
+  shared/diagrams/FirstQuadrantPlane.tsx). Use them instead of a CustomStep
+  whenever an answer is a multiset of factors or a set of points: Practice,
+  CFU and Test then share one grader. Let the student add boxes or points
+  themselves; never draw exactly as many boxes as the answer needs.
+- Grade 5 expressions (5.OA.1-2): group every first step with symbols, and
+  keep one expression model per lab that drives both the picture and the
+  graded answer (MG10 NumericalExpressionsAndPatternsLab lib/expr.ts). The
+  "multiply before add" convention belongs to 6.EE.2c, not grade 5.

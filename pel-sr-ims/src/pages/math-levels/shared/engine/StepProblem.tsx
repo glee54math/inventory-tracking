@@ -10,6 +10,12 @@ import { TapSelect } from "../components/TapSelect";
 import { answerBorder } from "../lib/answerChecks";
 import { FormPicker } from "../components/AnswerForm";
 import { formBoxes, formFilled, formLabel, formName, formOfValue, isAnswerForm, keepFitting, useAnswerFormPick, type AnswerForm } from "../components/answerKinds";
+import { FactorBoxes } from "../components/FactorBoxes";
+import { FirstQuadrantPlane } from "../diagrams/FirstQuadrantPlane";
+import { palette } from "../lib/palette";
+import { checkFactors, checkPlot, factorPairsNoOne, parsePoints, pointsText, primeFactors, splitFactorBoxes, timesText, togglePoint } from "../lib/factors";
+import { builtFilled, builtText, checkBuilt } from "../lib/buildExpr";
+import { ExprBuilder } from "../components/ExprBuilder";
 
 /** Exported so the end-of-unit test (engine/UnitTest.tsx) can type its own
  *  per-question answer state the same shape StepInput expects. */
@@ -72,6 +78,14 @@ export const answerText = (s: Step): string => {
   if (s.kind === "custom") return s.resultText;
   if (s.kind === "fraction") return fractionAnswerText(s);
   if (s.kind === "tapCount") return `${s.answer} counter${s.answer === 1 ? "" : "s"}`;
+  if (s.kind === "factors") {
+    if (!s.pair) return timesText(primeFactors(s.target));
+    // Any pair counts; show the first one that isn't excluded.
+    const pairs = factorPairsNoOne(s.target).filter(([a, b]) => !s.exclude?.some(([x, y]) => (x === a && y === b) || (x === b && y === a)));
+    return pairs.length ? `${timesText(pairs[0])}${pairs.length > 1 ? " (or another pair)" : ""}` : "";
+  }
+  if (s.kind === "plot") return pointsText(s.answer);
+  if (s.kind === "buildExpr") return builtText(s.answer);
   return s.choices[s.correct];
 };
 
@@ -200,6 +214,11 @@ const checkFraction = (s: FractionStep, inputs: string[], tries = 0): CheckResul
  *  with the exact same logic as practice steps — see engine/UnitTest.tsx. */
 export const check = (s: Step, inputs: string[], opts: { early?: boolean; tries?: number } = {}): CheckResult => {
   if (s.kind === "fraction") return checkFraction(s, inputs, opts.tries);
+  // FactorsStep / PlotStep (MG10 Expressions & Patterns): graded in shared/lib/factors.ts.
+  if (s.kind === "factors") return checkFactors(s.target, splitFactorBoxes(inputs[0]), { pair: s.pair, exclude: s.exclude });
+  if (s.kind === "plot") return checkPlot(s.answer, inputs[0]);
+  // BuildExprStep (MG10 Expressions & Patterns): graded by structure in shared/lib/buildExpr.ts.
+  if (s.kind === "buildExpr") return checkBuilt(s.answer, inputs, s.diagnose);
   if (s.kind === "choice") {
     if (inputs[0] === "") return { ok: false, msg: "Pick one of the choices." };
     return Number(inputs[0]) === s.correct
@@ -426,7 +445,8 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
     const hints = all.filter((s) => s.hint).length;
     const reveals = all.filter((s) => s.revealed).length;
     // A "fill in the reason" sentence (SentenceStep.checkEach) is tap picks too, so a wrong Check is a guess.
-    const picks = (st: Step) => st.kind === "choice" || (st.kind === "sentence" && !!st.checkEach);
+    // A built expression (BuildExprStep, MG10) has a two-way part (where the parentheses go), so a wrong Check is a guess too.
+    const picks = (st: Step) => st.kind === "choice" || (st.kind === "sentence" && !!st.checkEach) || st.kind === "buildExpr";
     const guessed = all.some((s, k) => picks(problem.steps[k]) && s.wrong > 0);
     // Early learners: two wrong tries on any step is trial and error, not a solve by themselves.
     const triedAndErred = early && all.some((s) => s.wrong >= 2);
@@ -482,7 +502,7 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
 
   const clean = isClean(states);
   const help: VisualHelp | undefined = cur
-    ? { step: current, wrong: cur.wrong, hint: cur.hint, showMe: cur.showMe, lastTry: cur.wrong > 0 && cur.feedback !== null ? cur.inputs : undefined }
+    ? { step: current, wrong: cur.wrong, hint: cur.hint, showMe: cur.showMe, lastTry: cur.wrong > 0 && cur.feedback !== null ? cur.inputs : undefined, answers: states.map((s) => s.inputs) }
     : undefined;
   // While "Show me" is open the picture shows this step already done.
   const visualDone = cur?.showMe ? current + 1 : current;
@@ -593,7 +613,9 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
                           disabled={
                             (usesFormPick(step, formPick) && !formFilled(st.inputs[3], [st.inputs[0] ?? "", st.inputs[1] ?? "", st.inputs[2] ?? ""])) ||
                             // SentenceStep.checkEach: Check waits until every blank is filled.
-                            (step.kind === "sentence" && !!step.checkEach && sentenceBlanksOf(step).some((_, k) => !st.inputs[k]))
+                            (step.kind === "sentence" && !!step.checkEach && sentenceBlanksOf(step).some((_, k) => !st.inputs[k])) ||
+                            // BuildExprStep: Check waits until the parentheses, every number and every sign are in.
+                            (step.kind === "buildExpr" && !builtFilled(st.inputs))
                           }
                           onClick={() => submit(i)}
                         >
@@ -724,6 +746,40 @@ export function StepInput({
   }
   if (step.kind === "tapCount") {
     return <TapCountInput step={step} raw={state.inputs[0]} onChange={(raw) => onChange([raw, ""])} />;
+  }
+  if (step.kind === "factors") {
+    return (
+      <div className="answer-row">
+        <FactorBoxes target={step.target} pair={step.pair} raw={state.inputs[0] ?? ""} onChange={(raw) => onChange([raw, ""])} onEnter={() => onSubmit(state.inputs)} />
+      </div>
+    );
+  }
+  if (step.kind === "plot") {
+    const pts = parsePoints(state.inputs[0]);
+    return (
+      <div className="plot-step">
+        <FirstQuadrantPlane
+          xMax={step.xMax}
+          yMax={step.yMax}
+          xStep={step.xStep}
+          yStep={step.yStep}
+          xLabel={step.xLabel}
+          yLabel={step.yLabel}
+          width={520}
+          height={Math.min(520, 140 + (step.yMax / (step.yStep ?? 1)) * 30)}
+          hoverLabel={false}
+          hitPad={14}
+          points={pts.map(([x, y]) => ({ x, y, color: palette.c }))}
+          onPlot={(x, y) => onChange([togglePoint(state.inputs[0], x, y), ""])}
+        />
+        <p className="muted small">
+          Tap a grid point to plot it. Tap it again to take it away. {pts.length === 0 ? "No points yet." : `${pts.length} point${pts.length === 1 ? "" : "s"} plotted.`}
+        </p>
+      </div>
+    );
+  }
+  if (step.kind === "buildExpr") {
+    return <ExprBuilder inputs={state.inputs} signs={step.signs} onChange={onChange} onEnter={() => onSubmit(state.inputs)} />;
   }
   if (step.kind === "custom") {
     return <div className="custom-step">{step.render(() => onSubmit(["done"]), () => onWrong?.())}</div>;

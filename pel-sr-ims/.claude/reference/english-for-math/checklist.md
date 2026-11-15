@@ -38,6 +38,10 @@ largest numbers the generator can produce.
 | Synonyms | More than one word for the same idea in one unit | english-learners.md |
 | Giveaways | The answer stated in the story, title or wrong-answer message. This includes a reviewer's own suggested rewrite: a wrong-answer message must not state any box's answer ("The LCD is 12" when a box asks for the LCD) | builder rules |
 | Text vs. picture | A sentence that describes a picture ("the two numbers in both lists") doesn't match what the picture shows at the values used | traps §1 |
+| False distractors | A wrong choice that is a true statement, just not the reason ("B adds more each time" for a times pattern). Every wrong choice must be false, not just less complete | builder rules |
+| Loaded questions | "What is wrong?" when "Nothing is wrong" can be the answer. Ask "Is anything wrong?" with the same wording in both cases | grade file → Watch for |
+| Switches | One problem's steps reach opposite results (changes / doesn't change, first numbers / new numbers), and a wrap-up sentence doesn't say which part it means. Name it: "With the new numbers, …" | this checklist |
+| Generated plurals and prepositions | "You plotted ${n} points" with no singular case ("1 points"); a fixed preposition before a pooled noun ("in every ${group}" → "in every plate"). The script flags both as `plural:` and `prep:` | builder rules |
 
 ## 4. Check each word problem against the standards
 - Is the **problem type** allowed for this grade (CCSS Table 1 for add and

@@ -29,7 +29,9 @@
   origin, ordered pair, coordinate (5.G.1); categories of shapes
   ("every square is a rectangle") (5.G.3–4); common denominator, least
   common denominator (LCD), benchmark fraction (0, 1/2, 1), and the
-  mixed-number words *borrow* (also called regroup) and *carry* (5.NF.1–2).
+  mixed-number words *borrow* (also called regroup) and *carry* (5.NF.1–2);
+  *term*, *rule*, matching (corresponding) terms (5.OA.3); *prime
+  factorization*, *factor tree* (5.OA.2.1, CA).
   Pick one word for each idea, and teach it with a picture before a hint
   uses it.
 - **Not yet:** variable (as a formal word, 6th), ratio, rate, per, percent,
@@ -53,7 +55,8 @@
 - **"Power"** (exponent) vs. strength. **"Origin"** vs. where something came
   from. **"Plot"** (a point) vs. a story's plot.
 - **"Evaluate"** vs. "value." Pick one instruction ("Find the value") and
-  keep it.
+  keep it. Keep the verb with "value": "Find the value of the part in
+  parentheses," not "Find the part in parentheses."
 - **Brackets, braces, parentheses:** three new names for marks that look
   alike. Show them side by side once.
 - **Exponents read aloud:** "10 to the third power" / "10 cubed" — the voice

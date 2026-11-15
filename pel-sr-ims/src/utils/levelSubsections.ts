@@ -178,6 +178,13 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       componentFile: "MG10_AddingAndSubtractingFractionsLab",
       componentExport: "AddingAndSubtractingFractionsLab",
     },
+    {
+      type: "standalone",
+      skillId: "NumericalExpressionsAndPatternsLab",
+      label: "Expressions & Patterns",
+      componentFile: "MG10_NumericalExpressionsAndPatternsLab",
+      componentExport: "NumericalExpressionsAndPatternsLab",
+    },
   ],
   MG11: [
     {

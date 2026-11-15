@@ -16,3 +16,7 @@ export { PieceBars } from "./PieceBars";
 export type { PieceBarsProps, PieceSegment, PieceTone } from "./PieceBars";
 export { MixedNumberBars } from "./MixedNumberBars";
 export type { MixedNumberBarsProps } from "./MixedNumberBars";
+// Promoted from MM1/RatioLab/diagrams/CoordinatePlane.tsx (2026-11) once
+// MG10_NumericalExpressionsAndPatternsLab became its second consumer.
+export { FirstQuadrantPlane } from "./FirstQuadrantPlane";
+export type { FirstQuadrantPlaneProps, PlotPoint, PlotLine } from "./FirstQuadrantPlane";

@@ -1003,6 +1003,86 @@ ELEMENTARY
            gained optional originalLabels (cut bars keep their own fraction's
            label, so the renamed tops aren't printed). Shared: optional third
            FractionStep.diagnose argument (the answer as typed).
+         — NumericalExpressionsAndPatternsLab (MG10/MG10_NumericalExpressionsAndPatternsLab.tsx) —
+           wired 2026-11-14 as MG10's SECOND "standalone" skill (after
+           AddingAndSubtractingFractionsLab; label "Expressions & Patterns").
+           Grade 5, 5.OA.1, 5.OA.2, 5.OA.2.1 (CA), 5.OA.3, five units: Why We Need
+           Parentheses, Brackets and Braces (groups inside groups), Reading an
+           Expression Without Solving It, Breaking Numbers into Prime Factors, Two
+           Rules / Two Patterns / One Relationship — every unit gated by a one-time
+           CFU (no reintroEverySolved), plus a 25-question Module Test (passScore 20).
+           Styles scoped .nep-lab (palette copied from the MG10 sibling, plus
+           --item-orange: the sibling's --qb orange was indistinguishable from
+           item-red for apples-and-oranges dots). Shell is a copy of the sibling's
+           (retry lock, retry debt, cfuJustPassed), without <AnswerFormPick>.
+           lib/expr.ts is ONE expression model (grouping symbols, inside-first work
+           steps, the left-to-right misreading) behind every picture, graded value
+           and named mistake. Grade-5 rule used throughout: every expression with
+           two operations groups its first step; nothing relies on "multiply
+           before add" (6.EE.2c). Leaf lib/ modules (expr, steps, stories,
+           reading, primes, primeSteps, patterns, patternSteps) are shared by units
+           and Tests; no unit<->Test imports.
+
+           Engine (additive, opt-in; every existing step/caller unchanged):
+             - New "factors" Step kind (FactorsStep + factorsStep()): one box per
+               factor with "×" between, student adds/removes boxes (so the box
+               count never gives away how many factors), graded IN ANY ORDER by
+               shared/lib/factors.ts checkFactors (primes multiplying to the target;
+               "1 × 29", a composite factor and a wrong product are each named).
+               `pair` mode = any factor pair other than 1 × n (start a factor tree),
+               with optional `exclude`. Input widget: shared/components/FactorBoxes.tsx
+               (shared because it lives inside the shared StepInput and CFU).
+             - New "plot" Step kind (PlotStep + plotStep()): tap points onto a
+               first-quadrant grid; graded as a SET by checkPlot (switched x/y, too
+               few / too many named). The grid hides the hover coordinates.
+             - CfuBlank.factorsOf / factorPair / plot so DropdownQuestion CFUs can use
+               the same two inputs under the multi-box rule.
+             - UnitTest studentAnswerText formats both kinds; lab-base.css gained the
+               .factor-boxes / .plot-step rules.
+           Promotion (second consumer = this lab, per the brief's "check
+           shared/diagrams and MG11/GeometryLab first"): MM1 RatioLab's first-quadrant
+           diagrams/CoordinatePlane.tsx -> shared/diagrams/FirstQuadrantPlane.tsx
+           (props-driven: xMax/yMax/steps/axis labels/points/lines/onPlot). MM1's old
+           file is now a re-export under its old name; verified unchanged in a
+           browser (Tables & graphs). New optional props: hoverLabel (default true;
+           off for plotting questions) and hitPad (default 0; 14 px extra tap area
+           around the grid for fingers). This is the plane the future Grade 5
+           CoordinatePlaneAndShapeClassificationLab (5.G.1-2) should reuse. The
+           shared 4-quadrant CoordinatePlane and MG11 GeometryLab's own plane were
+           not reused: 4-quadrant only / private to GeometryLab's own engine.
+           MG8's PatternStrip was NOT promoted: 5.OA.3 needs two rows lined up by
+           term (matching terms in one column) plus an ordered-pairs row, so a
+           lab-local PatternTable fits; a strip per pattern would not line up.
+           Lab-local diagrams: ExprView/WorkLines/SymbolKey (grouping symbols in fixed
+           colors — parentheses blue, brackets orange, braces purple — next part
+           ringed, Unit 2 outlines each group), GroupsPicture (story groups vs one
+           extra, legend-labeled dots), TimesBars (k copies of a big-number group,
+           never its value), FactorTree (SVG, primes circled, `levels` reveals one
+           split at a time), PatternTable.
+           Brute force (1,500 per bucket + 800 test/module-test draws) caught
+           wordsTemplate repeating a number (two identical answer choices) and "1
+           strawberries" grammar; both fixed (distinct numbers, 2+ of each item).
+           Round 1 fixes (2026-11-14, see _planning/reviews/.../round-1-fixes.md):
+             - New "buildExpr" Step kind (BuildExprStep, BuiltExpr): the student
+               WRITES a three-number expression (5.OA.2 "write"): tap where the
+               parentheses go, type the numbers, tap the signs. Graded by
+               STRUCTURE in shared/lib/buildExpr.ts (same grouping, numbers and
+               signs; either order on the two sides of + or ×), never by value, so
+               a different expression with the same value is still wrong. Input:
+               shared/components/ExprBuilder.tsx (shared because it lives inside
+               the shared StepInput, like FactorBoxes). Check waits until every
+               part is filled. Used by Unit 3 Practice and Test Q2.
+             - VisualHelp.answers (optional): every step's inputs so far, so a
+               picture can draw the student's own earlier answer (Unit 4 draws the
+               student's starting pair instead of the finished tree).
+             - The plot step is now 520 px wide (was 380) and .plot-step max-width
+               540 px, and MG10's plot problems stay at 12 or less on both axes, so
+               grid columns are about 37 px apart on an iPad.
+             - TimesBars.tsx gained BarRows (any rows of copies, a wider "larger
+               group" bar, and a group split into k equal parts for ÷).
+             - FactorTree pictures no longer show circled primes while a factors
+               step is asked: just the number, then (after a wrong try) one
+               uncircled split only when it isn't the whole answer.
 [x] MG11 — PowersOf10Practice          (MG11/MG11_PowersOfTen.tsx) — wired 2026-10-01
           as a "standalone" skill (multi-file, same pattern as MG6_BarModel).
           Supporting files: MG11_PowersOfTen_MoveSentence.tsx,
