@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { FractionBar, NumberLine } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
-import { choice, type Problem } from "../../../shared/engine/types";
+import { choice, numberBlank, sentence, type Problem } from "../../../shared/engine/types";
 import { Frac, Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingFractionsTest } from "./ComparingFractionsTest";
 import { MathText } from "../../../shared/components/MathText";
+import { CfuToggle, DropdownQuestion, useCfuProgress } from "../../../shared/components/CfuQuestion";
 
 function properFraction(maxD = 9): [number, number] {
   const d = randInt(2, maxD);
@@ -40,13 +41,139 @@ function crossPair(): { n1: number; d1: number; n2: number; d2: number } {
   return { n1, d1, n2, d2 };
 }
 
+const SIGNS = [">", "<", "="];
+
+// ============================================================================
+// CHECK FOR UNDERSTANDING — fixed questions, gate before Practice unlocks
+// ============================================================================
+
+/**
+ * Q1 same denominator: count the extra pieces (typed) and pick the sign.
+ * Q2 the classic same-numerator mistake ("8 is bigger than 4, so 1/8 is
+ * bigger"), with a typed "how many eighths make one fourth". Q3 benchmark
+ * 1/2, with typed halves. Q4 a true/false generalization trap ("the bigger
+ * denominator is always smaller") with a typed common-denominator
+ * counterexample. Every question has a typed box (fill-in rule).
+ * Carried forward: Q1 -> "Same denominator" (typed "how many more"), Test
+ * Q1/Q3; Q2 -> "Same numerator", Test Q2/Q4/Q9; Q3 -> Test Q7; Q4 ->
+ * "Same numerator" (typed common denominator) and "Different everything".
+ */
+function ComparingCheck({ onComplete }: { onComplete?: () => void }) {
+  const { mark } = useCfuProgress(4, onComplete);
+  const SIDE = ["less than", "more than"];
+  return (
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: answer all four to unlock practice problems.</p>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> The bars show <Frac n={3} d={8} /> and <Frac n={5} d={8} />.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <FractionBar numerator={3} denominator={8} width={240} />
+            <FractionBar numerator={5} denominator={8} width={240} />
+          </div>
+          <DropdownQuestion
+            blanks={[
+              { correct: "2", label: "How many more shaded pieces 5/8 has" },
+              { options: SIGNS, correct: ">", label: "Comparison sign" },
+            ]}
+            render={([a, b]) => (
+              <>
+                The pieces are the same size. <Frac n={5} d={8} /> has {a} more shaded pieces. So <Frac n={5} d={8} /> {b} <Frac n={3} d={8} />
+              </>
+            )}
+            good="Yes. Same-size pieces, so more pieces is more. 5 − 3 = 2, and 5/8 > 3/8."
+            bad="Not quite. Count the shaded pieces in each bar. The bar with more shaded pieces is the bigger fraction."
+            onDone={mark(0)}
+          />
+        </div>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>2.</b> Mia says <Frac n={1} d={8} /> is bigger than <Frac n={1} d={4} />, because 8 is bigger than 4.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <FractionBar numerator={1} denominator={4} width={240} />
+            <FractionBar numerator={1} denominator={8} width={240} />
+          </div>
+          <DropdownQuestion
+            blanks={[
+              { options: ["Yes", "No"], correct: "No", label: "Is Mia right" },
+              { correct: "2", label: "Eighths in one fourth" },
+              { options: SIGNS, correct: ">", label: "Comparison sign" },
+            ]}
+            render={([a, b, c]) => (
+              <>
+                Is Mia right? {a} It takes {b} eighths to make one fourth. So <Frac n={1} d={4} /> {c} <Frac n={1} d={8} />
+              </>
+            )}
+            good="Right. Cutting a whole into 8 pieces makes smaller pieces than cutting it into 4. 2 eighths fill one fourth, so 1/4 > 1/8."
+            bad="Not quite. Look at the bars. Which shaded piece is bigger? How many eighths fit under one fourth?"
+            onDone={mark(1)}
+          />
+        </div>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> Compare <Frac n={3} d={8} /> and <Frac n={4} d={6} /> with the benchmark <Frac n={1} d={2} />.
+          </p>
+          <NumberLine min={0} max={1} points={[{ value: 0.5, label: "1/2", tone: "c" }]} minorTicksPerUnit={2} />
+          <DropdownQuestion
+            blanks={[
+              { correct: "4", label: "Half of 8" },
+              { options: SIDE, correct: "less than", label: "3/8 compared to 1/2" },
+              { correct: "3", label: "Half of 6" },
+              { options: SIDE, correct: "more than", label: "4/6 compared to 1/2" },
+            ]}
+            render={([a, b, c, d]) => (
+              <>
+                Half of 8 is {a}, so <Frac n={3} d={8} /> is {b} <Frac n={1} d={2} />. Half of 6 is {c}, so <Frac n={4} d={6} /> is {d}{" "}
+                <Frac n={1} d={2} />.
+              </>
+            )}
+            good="Yes. 3/8 is less than half and 4/6 is more than half, so 4/6 is bigger."
+            bad="Not quite. Find half of each denominator. Is the numerator less than that half, or more?"
+            onDone={mark(2)}
+          />
+        </div>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>4.</b> True or false: the fraction with the bigger denominator is always the smaller fraction.
+          </p>
+          <DropdownQuestion
+            blanks={[
+              { options: ["True", "False"], correct: "False", label: "True or false" },
+              { correct: "8", label: "2/3 in twelfths" },
+              { correct: "9", label: "3/4 in twelfths" },
+            ]}
+            render={([a, b, c]) => (
+              <>
+                That is {a}. Check with <Frac n={2} d={3} /> and <Frac n={3} d={4} />. Rename both as twelfths: <Frac n={2} d={3} /> = <Frac n={b} d={12} /> and{" "}
+                <Frac n={3} d={4} /> = <Frac n={c} d={12} />
+              </>
+            )}
+            good="Right, it is false. 3/4 has the bigger denominator, but 9/12 > 8/12, so 3/4 is bigger. The rule only works when the numerators are the same. (8 = 2 × 4 and 9 = 3 × 3 are also the cross products.)"
+            bad="Not quite. For 2/3, multiply the top and bottom by 4. For 3/4, multiply the top and bottom by 3. Then compare."
+            onDone={mark(3)}
+          />
+        </div>
+      </div>
+    </MathText>
+  );
+}
+
 // ============================================================================
 // EXPLORE
 // ============================================================================
 
 type Frame = "same-denom" | "same-num" | "cross";
 
-function Explore() {
+function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
+  const introActive = !!onIntroDone;
+  const [showCheck, setShowCheck] = useState(false);
   const [frame, setFrame] = useState<Frame>("same-denom");
   const [{ n1, n2, d }] = useState(sameDenomPair);
   const [{ n, d1, d2 }] = useState(sameNumPair);
@@ -55,6 +182,7 @@ function Explore() {
   return (
     <MathText>
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && <CfuToggle on={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
         <p>
           Before comparing two fractions, it helps to know where they sit against a few benchmarks: 0, 1/2, and 1.
         </p>
@@ -102,8 +230,21 @@ function Explore() {
               ]}
               minorTicksPerUnit={cross.d1 === cross.d2 ? cross.d1 : undefined}
             />
+            {/* The common-denominator way, which is also where cross-multiplying
+                comes from (the new numerators ARE the cross products). Practice
+                asks for this in "Same numerator" and "Different everything". */}
+            <p>
+              Or give both the same denominator. Multiply each fraction's top and bottom by the other denominator:{" "}
+              <Frac n={cross.n1} d={cross.d1} /> = <Frac n={cross.n1 * cross.d2} d={cross.d1 * cross.d2} /> and <Frac n={cross.n2} d={cross.d2} /> ={" "}
+              <Frac n={cross.n2 * cross.d1} d={cross.d1 * cross.d2} />. Now the pieces are the same size, so compare the numerators.
+            </p>
+            <p className="muted small">
+              The new numerators, {cross.n1 * cross.d2} and {cross.n2 * cross.d1}, are the cross products: {cross.n1} × {cross.d2} and {cross.n2} × {cross.d1}.
+            </p>
           </>
         )}
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <ComparingCheck onComplete={onIntroDone} />}
       </div>
     </MathText>
   );
@@ -143,6 +284,13 @@ function sameDenomProblem(): Problem {
         aBigger ? aLabel : bLabel,
         [aBigger ? bLabel : aLabel, "They're equal"]
       ),
+      {
+        kind: "number",
+        prompt: `How many more 1/${d} pieces does the bigger fraction have?`,
+        hint: `Subtract the numerators: ${Math.max(n1, n2)} − ${Math.min(n1, n2)}.`,
+        explain: `${Math.max(n1, n2)} − ${Math.min(n1, n2)} = ${Math.abs(n1 - n2)}.`,
+        answer: Math.abs(n1 - n2),
+      },
     ],
     wrapUp: (
       <>
@@ -163,6 +311,7 @@ function sameNumProblem(): Problem {
   const bLabel = `${n}/${d2} is bigger`;
   const fewer = Math.min(d1, d2);
   const more = Math.max(d1, d2);
+  const D = d1 * d2;
 
   return {
     title: "Comparing fractions — same numerator",
@@ -187,6 +336,21 @@ function sameNumProblem(): Problem {
         },
         aBigger ? aLabel : bLabel,
         [aBigger ? bLabel : aLabel, "They're equal"]
+      ),
+      // Typed check of the same comparison with a common denominator (the
+      // CFU Q4 method), so a clean solve needs more than a 1-in-3 pick.
+      sentence(
+        {
+          prompt: `Check it: give both fractions the same denominator, ${D}.`,
+          hint: `Multiply the top and bottom of ${n}/${d1} by ${d2}. Multiply the top and bottom of ${n}/${d2} by ${d1}.`,
+          explain: `${n} × ${d2} = ${n * d2} and ${n} × ${d1} = ${n * d1}. ${Math.max(n * d1, n * d2)} > ${Math.min(n * d1, n * d2)}, so ${n}/${fewer} is bigger.`,
+        },
+        `${n}/${d1} = `,
+        numberBlank(n * d2),
+        ` and ${n}/${d2} = `,
+        numberBlank(n * d1),
+        "",
+        [D, D]
       ),
     ],
     wrapUp: (
@@ -277,10 +441,11 @@ export const comparingFractions: Unit = {
     <>
       <p>Same denominator: compare the numerators directly — more shaded pieces is bigger.</p>
       <p>Same numerator: fewer, bigger pieces wins — more pieces in a whole means each piece is smaller.</p>
-      <p>Different everything: cross-multiply, or compare each to a benchmark like 1/2.</p>
+      <p>Different everything: rename both with the same denominator (cross-multiplying is the shortcut), or compare each to a benchmark like 1/2.</p>
     </>
   ),
   Explore,
+  requiresIntro: true,
   preview: Preview,
   requiredBuckets: ["same-denom", "same-num", "cross"],
   problems: [

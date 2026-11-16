@@ -1083,6 +1083,26 @@ ELEMENTARY
              - FactorTree pictures no longer show circled primes while a factors
                step is asked: just the number, then (after a wrong try) one
                uncircled split only when it isn't the whole answer.
+         — WholeNumberAndDecimalOperationsLab (MG10/MG10_WholeNumberAndDecimalOperationsLab.tsx) —
+           wired 2026-11-15 as MG10's THIRD "standalone" skill (label "Decimal Place
+           Value & Rounding"). Grade 5, plan Units 1-2 ONLY: Reading, Writing and
+           Comparing Decimals (5.NBT.3a-b, one-time CFU) and Rounding Decimals
+           (5.NBT.4, CFU + reintroEverySolved 20). Units 3-5 on hold (user). 10-question
+           Module Test (passScore 8). Shell + palette copied from the Expressions
+           sibling (.wnd-lab). lib/decimals.ts stores every amount as whole
+           THOUSANDTHS plus digits-written (0.5 vs 0.500), behind every picture, name,
+           rounding and graded answer; lib/steps.ts holds step builders shared by
+           units and Tests (no unit<->Test imports).
+           Engine (additive): NumberStep.exact and SentenceNumberBlank.exact turn
+           off numbersMatch's 0.006 tolerance, which would accept 0.499 for 0.5 or
+           2.468 for 2.47. Every typed decimal also sets padTo (fmt() keeps only 2
+           decimals, so the answer key would print 0.04 for 0.042).
+           Lab-local diagrams (not promoted): PlaceChart (tens..thousandths, fill
+           0s, rounding place box + dashed "deciding digit"), ZoomLine (one step at
+           the rounding place cut into 10, halfway marked; drag in Explore),
+           DecimalBars. MG9 DecimalsLab's PlaceValueChart/DecimalNumberLine are
+           hundredths-only and their one consumer gains nothing, so they were not
+           extended. Practice pictures are help-only (the Test shows none).
 [x] MG11 — PowersOf10Practice          (MG11/MG11_PowersOfTen.tsx) — wired 2026-10-01
           as a "standalone" skill (multi-file, same pattern as MG6_BarModel).
           Supporting files: MG11_PowersOfTen_MoveSentence.tsx,
@@ -1470,3 +1490,22 @@ skill/strategy is actually taught, what the correct visual model looks
 like (area model? number line? tape diagram? something new?), and roughly
 what number ranges are age-appropriate. Revisit once that's documented
 for at least one new level.
+
+CFU "LOOK HERE" POINTER (pilot, 2026-11, MG10 WholeNumberAndDecimalOperationsLab only)
+  - shared/components/CfuQuestion.tsx: DropdownQuestion takes an OPTIONAL
+    `exploreTarget={{ target, label }}`. It counts wrong Checks; after the 2nd
+    it shows "Stuck? Look here first: {label}" + a "Go there" button. Without
+    the prop nothing changes (all other labs behave as before).
+  - shared/lib/lookHere.ts: spread lookHereSpot("id") on the Explore element
+    that teaches the idea; mark the key sentence inside with data-look-here-key.
+    lookHere(id) scrolls there and outlines it with a "Look here" badge. It
+    stays lit until that CFU question is right (clearLookHere); one spot lit
+    at a time. CSS is injected by the helper (no lab CSS needed).
+  - To roll out: add exploreTarget to each CFU question and lookHereSpot to its
+    Explore spot. Pointer text must name the place, never the answer.
+  - Per part: a blank may set its own `exploreTarget` and `part` ("a", "b",
+    or a short name). Blanks with the same part + target are one part; each
+    part counts its own wrong Checks, gets its own "Look here first" line and
+    "Go there" after 2, and its spot stays lit until that part is right.
+    Several spots of one question can be lit at once; "Go there" in another
+    question clears them. The question-level prop still works for one idea.

@@ -236,3 +236,54 @@
 .itf-lab .frac .frac-n .tap-select {
   margin: 0 0 3px;
 }
+
+/* CFU question boxes (shared CfuQuestion) — spacing between questions, same
+   rules as MG9_FractionOperationsLab_styles.css. */
+.itf-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.itf-lab .cfu-line {
+  line-height: 2.4;
+}
+
+/* Module test nav/card — same rules as MG9_FractionOperationsLab_styles.css,
+   since the two labs share this feature's markup verbatim. */
+.itf-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.itf-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.itf-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.itf-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.itf-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.itf-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+.itf-lab .module-test-back {
+  margin-bottom: 20px;
+}

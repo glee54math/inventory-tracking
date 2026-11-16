@@ -33,7 +33,7 @@ function crossPair(): { n1: number; d1: number; n2: number; d2: number } {
 }
 
 // Q1, Q3 — visual/text, same denominator
-function sameDenomQuestion(difficulty: "easy" | "medium", hasVisual: boolean): () => TestQuestion[] {
+export function sameDenomQuestion(difficulty: "easy" | "medium", hasVisual: boolean): () => TestQuestion[] {
   return () => {
     const { n1, n2, d } = sameDenomPair();
     const aBigger = n1 > n2;
@@ -61,7 +61,7 @@ function sameDenomQuestion(difficulty: "easy" | "medium", hasVisual: boolean): (
 }
 
 // Q2, Q4 — visual/text, same numerator
-function sameNumQuestion(difficulty: "easy" | "medium", hasVisual: boolean): () => TestQuestion[] {
+export function sameNumQuestion(difficulty: "easy" | "medium", hasVisual: boolean): () => TestQuestion[] {
   return () => {
     const { n, d1, d2 } = sameNumPair();
     const aBigger = d1 < d2;
@@ -91,7 +91,7 @@ function sameNumQuestion(difficulty: "easy" | "medium", hasVisual: boolean): () 
 }
 
 // Q5, Q8 — visual, cross-multiply (ratio step: both products at once)
-function crossRatioQuestion(difficulty: "medium" | "hard"): () => TestQuestion[] {
+export function crossRatioQuestion(difficulty: "medium" | "hard"): () => TestQuestion[] {
   return () => {
     const { n1, d1, n2, d2 } = crossPair();
     const productA = n1 * d2;
@@ -115,7 +115,7 @@ function crossRatioQuestion(difficulty: "medium" | "hard"): () => TestQuestion[]
 }
 
 // Q6, Q10 — text, cross-multiply (choice: which is bigger)
-function crossChoiceQuestion(difficulty: "medium" | "hard"): () => TestQuestion[] {
+export function crossChoiceQuestion(difficulty: "medium" | "hard"): () => TestQuestion[] {
   return () => {
     const { n1, d1, n2, d2 } = crossPair();
     const productA = n1 * d2;
@@ -140,7 +140,7 @@ function crossChoiceQuestion(difficulty: "medium" | "hard"): () => TestQuestion[
 }
 
 // Q7 — visual, benchmark reasoning
-function benchmarkQuestion(): TestQuestion[] {
+export function benchmarkQuestion(): TestQuestion[] {
   const d1 = randInt(5, 9);
   const n1 = randInt(1, Math.floor(d1 / 2) - 1 >= 1 ? Math.floor(d1 / 2) - 1 : 1); // well under 1/2
   const d2 = randInt(5, 9);
@@ -163,7 +163,7 @@ function benchmarkQuestion(): TestQuestion[] {
 }
 
 // Q9 — choice, conceptual
-function conceptQuestion(): TestQuestion[] {
+export function conceptQuestion(): TestQuestion[] {
   const { n, d1, d2 } = sameNumPair();
   return [
     {

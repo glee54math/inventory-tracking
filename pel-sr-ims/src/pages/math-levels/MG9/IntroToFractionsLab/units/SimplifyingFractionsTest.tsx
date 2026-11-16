@@ -21,7 +21,7 @@ function reducingPair(gRange: [number, number]): { num: number; den: number; g: 
 }
 
 // Q1, Q4, Q8 — visual, write in simplest form (the core graded skill)
-function simplifyQuestion(difficulty: "easy" | "medium" | "hard", gRange: [number, number]): () => TestQuestion[] {
+export function simplifyQuestion(difficulty: "easy" | "medium" | "hard", gRange: [number, number]): () => TestQuestion[] {
   return () => {
     const { num, den, m, n } = reducingPair(gRange);
     return [
@@ -44,7 +44,7 @@ function simplifyQuestion(difficulty: "easy" | "medium" | "hard", gRange: [numbe
 }
 
 // Q2, Q5 — text, find the GCF
-function findGcfQuestion(difficulty: "easy" | "medium"): () => TestQuestion[] {
+export function findGcfQuestion(difficulty: "easy" | "medium"): () => TestQuestion[] {
   return () => {
     const { num, den, g, m, n } = reducingPair([2, 6]);
     return [
@@ -63,10 +63,17 @@ function findGcfQuestion(difficulty: "easy" | "medium"): () => TestQuestion[] {
   };
 }
 
-// Q3, Q6 — text, already simplest?
-function alreadySimplestQuestion(difficulty: "easy" | "medium"): () => TestQuestion[] {
+// Q3, Q6 — text, already simplest? Half the time the fraction reduces, so
+// "No" is not the answer every time (it used to be, on both questions).
+export function alreadySimplestQuestion(difficulty: "easy" | "medium"): () => TestQuestion[] {
   return () => {
-    const [m, n] = properCoprimePair();
+    const reduces = randInt(1, 2) === 1;
+    const [m0, n0] = properCoprimePair();
+    const g = reduces ? randInt(2, 5) : 1;
+    const m = g * m0;
+    const n = g * n0;
+    const NO = "No — they share no common factor besides 1";
+    const YES = "Yes — they share another common factor";
     return [
       {
         visual: <Frac n={m} d={n} />,
@@ -75,10 +82,12 @@ function alreadySimplestQuestion(difficulty: "easy" | "medium"): () => TestQuest
           {
             prompt: `Do ${m} and ${n} share a common factor besides 1?`,
             hint: `List a few factors of ${m} and of ${n} — do any match, besides 1?`,
-            explain: `${m} and ${n} share no common factor besides 1, so ${m}/${n} is already in simplest form.`,
+            explain: reduces
+              ? `You can divide both ${m} and ${n} by ${g}, so ${m}/${n} is not in simplest form yet.`
+              : `${m} and ${n} share no common factor besides 1, so ${m}/${n} is already in simplest form.`,
           },
-          "No — they share no common factor besides 1",
-          ["Yes — they share another common factor"]
+          reduces ? YES : NO,
+          [reduces ? NO : YES]
         ),
       },
     ];
@@ -86,7 +95,7 @@ function alreadySimplestQuestion(difficulty: "easy" | "medium"): () => TestQuest
 }
 
 // Q7, Q10 — text, divide both by the GCF (ratio step)
-function divideByGcfQuestion(difficulty: "medium" | "hard"): () => TestQuestion[] {
+export function divideByGcfQuestion(difficulty: "medium" | "hard"): () => TestQuestion[] {
   return () => {
     const { num, den, g, m, n } = reducingPair(difficulty === "medium" ? [2, 5] : [6, 9]);
     return [
@@ -108,7 +117,7 @@ function divideByGcfQuestion(difficulty: "medium" | "hard"): () => TestQuestion[
 }
 
 // Q9 — choice, the GCF/LCM distractor question
-function whichDividesQuestion(): TestQuestion[] {
+export function whichDividesQuestion(): TestQuestion[] {
   const { num, den, g } = reducingPair([2, 6]);
   const commonMultiple = lcm(num, den);
   let wrongFactor = g + 1;

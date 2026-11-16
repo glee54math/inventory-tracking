@@ -1,4 +1,4 @@
-import { EquivalentBars, FractionBar } from "../diagrams";
+import { FractionBar } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
 import { Frac } from "../../../shared/engine/controls";
@@ -13,18 +13,20 @@ function baseFraction(): [number, number] {
 }
 
 // Q1, Q4 — visual, find the missing numerator
-function missingNumeratorQuestion(difficulty: "easy" | "medium"): () => TestQuestion[] {
+export function missingNumeratorQuestion(difficulty: "easy" | "medium"): () => TestQuestion[] {
   return () => {
     const [n, d] = baseFraction();
     const k = difficulty === "easy" ? randInt(2, 3) : randInt(3, 5);
     const D = d * k;
     return [
       {
-        visual: <EquivalentBars n={n} d={d} k={k} />,
+        // A plain bar of the given fraction. EquivalentBars would show the
+        // answer (its caption names the new fraction) — more help than Practice gives.
+        visual: <FractionBar numerator={n} denominator={d} />,
         difficulty,
         step: {
           kind: "number",
-          prompt: <>?/{D} is equivalent to <Frac n={n} d={d} />. What's the missing numerator?</>,
+          prompt: <><Frac n="?" d={D} /> is equivalent to <Frac n={n} d={d} />. What's the missing numerator?</>,
           hint: `${D} ÷ ${d} = ${k}, so multiply the numerator by ${k} too.`,
           explain: `${n} × ${k} = ${n * k}.`,
           answer: n * k,
@@ -35,18 +37,18 @@ function missingNumeratorQuestion(difficulty: "easy" | "medium"): () => TestQues
 }
 
 // Q2, Q5 — visual, find the missing denominator
-function missingDenominatorQuestion(difficulty: "easy" | "medium"): () => TestQuestion[] {
+export function missingDenominatorQuestion(difficulty: "easy" | "medium"): () => TestQuestion[] {
   return () => {
     const [n, d] = baseFraction();
     const k = difficulty === "easy" ? randInt(2, 3) : randInt(3, 5);
     const N = n * k;
     return [
       {
-        visual: <EquivalentBars n={n} d={d} k={k} />,
+        visual: <FractionBar numerator={n} denominator={d} />,
         difficulty,
         step: {
           kind: "number",
-          prompt: <>{N}/? is equivalent to <Frac n={n} d={d} />. What's the missing denominator?</>,
+          prompt: <><Frac n={N} d="?" /> is equivalent to <Frac n={n} d={d} />. What's the missing denominator?</>,
           hint: `${N} ÷ ${n} = ${k}, so multiply the denominator by ${k} too.`,
           explain: `${d} × ${k} = ${d * k}.`,
           answer: d * k,
@@ -57,7 +59,7 @@ function missingDenominatorQuestion(difficulty: "easy" | "medium"): () => TestQu
 }
 
 // Q3, Q7 — visual/text, spot the equivalent
-function spotEquivalentQuestion(hasVisual: boolean, difficulty: "easy" | "medium"): () => TestQuestion[] {
+export function spotEquivalentQuestion(hasVisual: boolean, difficulty: "easy" | "medium"): () => TestQuestion[] {
   return () => {
     const [n, d] = baseFraction();
     const k = randInt(2, 5);
@@ -83,7 +85,7 @@ function spotEquivalentQuestion(hasVisual: boolean, difficulty: "easy" | "medium
 }
 
 // Q6, Q10 — text, build an equivalent fraction
-function buildEquivalentQuestion(difficulty: "medium" | "hard"): () => TestQuestion[] {
+export function buildEquivalentQuestion(difficulty: "medium" | "hard"): () => TestQuestion[] {
   return () => {
     const [n, d] = baseFraction();
     const k = difficulty === "medium" ? randInt(2, 4) : randInt(5, 7);
@@ -106,7 +108,7 @@ function buildEquivalentQuestion(difficulty: "medium" | "hard"): () => TestQuest
 }
 
 // Q8 — choice, find the one that does NOT belong
-function notEquivalentQuestion(): TestQuestion[] {
+export function notEquivalentQuestion(): TestQuestion[] {
   const [n, d] = baseFraction();
   const k1 = randInt(2, 3);
   const k2 = randInt(4, 5);
@@ -119,7 +121,7 @@ function notEquivalentQuestion(): TestQuestion[] {
       difficulty: "hard",
       step: choice(
         {
-          prompt: <>Three of these are equal to <Frac n={n} d={d} /> — which one is NOT?</>,
+          prompt: <>Two of these are equal to <Frac n={n} d={d} />. Which one is NOT?</>,
           hint: "Check each one: does dividing the numerator by the denominator give the same value as the original?",
           explain: `${equivA} and ${equivB} both come from multiplying ${n}/${d} by a whole number on top and bottom. ${correctOdd} doesn't match that pattern.`,
         },
@@ -131,12 +133,13 @@ function notEquivalentQuestion(): TestQuestion[] {
 }
 
 // Q9 — choice, conceptual: what does "equivalent" actually mean
-function conceptQuestion(): TestQuestion[] {
+export function conceptQuestion(): TestQuestion[] {
   const [n, d] = baseFraction();
   const k = randInt(2, 5);
   return [
     {
-      visual: <EquivalentBars n={n} d={d} k={k} />,
+      // No picture: EquivalentBars' caption says "the same amount", which is the answer.
+      visual: null,
       difficulty: "hard",
       step: choice(
         {

@@ -1,0 +1,371 @@
+/* Scoped under .wnd-lab (the wrapper div in MG10_WholeNumberAndDecimalOperationsLab.tsx).
+   Lines up to .explore-head are copied from the MG10 sibling
+   MG10_NumericalExpressionsAndPatternsLab_styles.css (same palette, light + dark,
+   CFU box chrome, select.answer, module-test chrome, stacked fractions, SentenceStep
+   sizing). Below that: this lab's own diagrams (PlaceChart, ZoomLine readouts).
+   Import BOTH stylesheets, and add "lab-base" alongside "wnd-lab" on the wrapper div. */
+.wnd-lab {
+  --bg: #f2f6fb;
+  --card: #ffffff;
+  --ink: #1b2540;
+  --muted: #5d6782;
+  --line: #c9d0e2;
+  --grid: #e6edf6;
+  --qa: #2a6fbb;
+  --qa-soft: #d9e9fb;
+  --qa-text: #1f548a;
+  --qb: #c2410c;
+  --qb-soft: #fbe3d4;
+  --qb-text: #9a3408;
+  --qc: #7b4fd8;
+  --qc-soft: #e9e0fa;
+  --qc-text: #6334b8;
+  --good: #1f8f5f;
+  --good-soft: #d7f2e4;
+  --bad: #c93848;
+  --bad-soft: #fbe1e4;
+  --item-red: #c4432e;
+  --item-red-soft: #f6ddd6;
+  --item-red-text: #9a3420;
+  --item-green: #4c8c2b;
+  --item-green-soft: #e1edd4;
+  --item-green-text: #386b1f;
+  --item-yellow: #d4a72c;
+  --item-yellow-soft: #fbf1d1;
+  --item-yellow-text: #8c6b14;
+  --item-orange: #f08c00;
+  --on-q: #ffffff;
+  --radius-lg: 18px;
+  --radius-sm: 10px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  -webkit-font-smoothing: antialiased;
+}
+/* .align-drill/.align-stack-wrap/.intro-gate-title aren't in lab-base.css —
+   they're the box chrome AlignDecimalsDrill (MG11) introduced for a mandatory
+   gated exercise, reused here for PositiveNegativePreCheck's same role. */
+.wnd-lab .align-drill {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--qb-soft);
+}
+.wnd-lab .align-drill .intro-gate-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.wnd-lab .align-stack-wrap {
+  margin-top: 14px;
+}
+.wnd-lab .feedback.good {
+  color: var(--good);
+}
+/* lab-base.css's .answer styling is scoped to `input.answer` only — the
+   Coordinate Plane Check for Understanding's dropdowns are <select>s, which
+   that selector doesn't match, so they need their own rule (same pattern as
+   MG9_IntroToFractionsLab_styles.css's .itf-lab select.answer). */
+.wnd-lab select.answer {
+  padding: 9px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.wnd-lab select.answer:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+/* Module test nav/card — same rules as MM1_RatioLab_styles.css's own module
+   test chrome, since the two labs share this feature's markup verbatim. */
+.wnd-lab .module-test-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.wnd-lab .module-test-nav:hover {
+  background: var(--grid);
+}
+.wnd-lab .module-test-nav.on {
+  background: var(--qa-soft);
+  color: var(--qa-text);
+}
+.wnd-lab .module-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.wnd-lab .module-test-check {
+  color: var(--good);
+  font-weight: 700;
+}
+.wnd-lab .module-test-card {
+  grid-template-columns: 1fr auto;
+}
+/* CFU choice buttons that stay pressed to show the current pick. */
+.wnd-lab .btn.ghost.pressed {
+  background: var(--qa-soft);
+  border-color: var(--qa);
+}
+.wnd-lab .module-test-back {
+  margin-bottom: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  .wnd-lab:not([data-theme="light"]) {
+    --bg: #121a26;
+    --card: #1b2636;
+    --ink: #e8eefa;
+    --muted: #9bacc4;
+    --line: #34435e;
+    --grid: #202c3e;
+    --qa: #7cb3ff;
+    --qa-soft: #243a58;
+    --qa-text: #a8d0ff;
+    --qb: #f2976a;
+    --qb-soft: #4a3018;
+    --qb-text: #f5b38f;
+    --qc: #b696f5;
+    --qc-soft: #382a5c;
+    --qc-text: #c7a8fa;
+    --good: #4cc98f;
+    --good-soft: #173d2e;
+    --bad: #ff6b7a;
+    --bad-soft: #45202a;
+    --item-red: #e8775e;
+    --item-red-soft: #4a2a22;
+    --item-red-text: #f2a68f;
+    --item-green: #7fc44b;
+    --item-green-soft: #243318;
+    --item-green-text: #a3db7a;
+    --item-yellow: #e8c455;
+    --item-yellow-soft: #4a3c14;
+    --item-yellow-text: #f2d98a;
+    --item-orange: #ffad33;
+    --on-q: #0e1626;
+  }
+}
+.wnd-lab[data-theme="dark"] {
+  --bg: #121a26;
+  --card: #1b2636;
+  --ink: #e8eefa;
+  --muted: #9bacc4;
+  --line: #34435e;
+  --grid: #202c3e;
+  --qa: #7cb3ff;
+  --qa-soft: #243a58;
+  --qa-text: #a8d0ff;
+  --qb: #f2976a;
+  --qb-soft: #4a3018;
+  --qb-text: #f5b38f;
+  --qc: #b696f5;
+  --qc-soft: #382a5c;
+  --qc-text: #c7a8fa;
+  --good: #4cc98f;
+  --good-soft: #173d2e;
+  --bad: #ff6b7a;
+  --bad-soft: #45202a;
+  --item-red: #e8775e;
+  --item-red-soft: #4a2a22;
+  --item-red-text: #f2a68f;
+  --item-green: #7fc44b;
+  --item-green-soft: #243318;
+  --item-green-text: #a3db7a;
+  --item-yellow: #e8c455;
+  --item-yellow-soft: #4a3c14;
+  --item-yellow-text: #f2d98a;
+  --item-orange: #ffad33;
+  --on-q: #0e1626;
+}
+
+/* Stacked fractions — the shared Frac component has no styling in lab-base.css
+   (same rule as MG9_IntroToFractionsLab_styles.css). */
+.wnd-lab .frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  margin: 0 0.15em;
+  font-size: 0.88em;
+  line-height: 1.05;
+}
+.wnd-lab .frac-n,
+.wnd-lab .frac-d {
+  padding: 0 0.12em;
+}
+.wnd-lab .frac-n {
+  border-bottom: 1.5px solid currentColor;
+}
+/* Every fraction in this lab's text is stacked (shared MathText inside
+   <StackedFractions>; MG10 round 3, user requirement). A mixed number keeps
+   its whole number and fraction together on one line. Text blocks get a
+   taller line height, so a line with a fraction in it is no taller than one
+   without (no uneven gaps between lines). */
+.wnd-lab .frac-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.wnd-lab .frac-text .frac {
+  margin: 0 0.1em;
+}
+.wnd-lab .panel p,
+.wnd-lab .key-idea p,
+.wnd-lab .goal,
+.wnd-lab .story,
+.wnd-lab .step-prompt,
+.wnd-lab .step-result,
+.wnd-lab .explain,
+.wnd-lab .show-me,
+.wnd-lab .test-prompt,
+.wnd-lab .test-review li {
+  line-height: 1.9;
+}
+.wnd-lab .path-goal,
+.wnd-lab .unit-carousel-goal {
+  line-height: 1.8;
+}
+/* Small print keeps its fractions readable on an iPad. */
+.wnd-lab .small .frac,
+.wnd-lab .path-goal .frac,
+.wnd-lab .unit-carousel-goal .frac {
+  font-size: 0.92em;
+}
+
+/* SentenceStep blanks (mixed-number answers: whole box + numerator box) —
+   same rules as MM1_RatioLab_styles.css. */
+.wnd-lab .sentence-input {
+  font-size: 17px;
+  line-height: 1.6;
+}
+.wnd-lab .sentence-select {
+  padding: 6px 10px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+.wnd-lab .sentence-select:focus {
+  border-color: var(--qa);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--qa-soft);
+}
+.wnd-lab .sentence-number {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.wnd-lab input.sentence-input-box {
+  width: 70px;
+  padding: 6px 10px;
+  font-size: 16px;
+}
+
+/* CFU sentence with dropdowns slotted in — wraps cleanly on narrow screens. */
+.wnd-lab .cfu-line {
+  line-height: 2.4;
+}
+/* Typed boxes inside a Check for Understanding sentence. */
+.wnd-lab input.answer.cfu-typed {
+  padding: 5px 8px;
+  font-size: 17px;
+  margin: 0 2px;
+}
+
+.wnd-lab .prereq-note {
+  margin-top: -6px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--qc);
+  background: var(--qc-soft);
+  border-radius: var(--radius-sm);
+}
+.wnd-lab .explore-head {
+  margin: 10px 0 0;
+  font-size: 18px;
+}
+
+/* ---------- PlaceChart (tens | ones | . | tenths | hundredths | thousandths) ---------- */
+.wnd-lab .pc {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  background: var(--card);
+  border-radius: var(--radius-sm);
+  width: fit-content;
+}
+.wnd-lab .pc th {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  color: var(--muted);
+  border-bottom: 2px solid var(--line);
+}
+.wnd-lab .pc td {
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+  padding: 2px 8px;
+  min-width: 1.4em;
+}
+.wnd-lab .pc tr.qa-text td {
+  color: var(--qa-text);
+}
+.wnd-lab .pc tr.qb-text td {
+  color: var(--qb-text);
+}
+.wnd-lab .pc td.pc-point {
+  padding: 2px 0;
+  min-width: 0;
+}
+.wnd-lab .pc td.pc-ghost {
+  color: var(--muted);
+  opacity: 0.55;
+}
+.wnd-lab .pc td.pc-fade {
+  opacity: 0.25;
+}
+/* The place we round to: a solid box. The digit that decides: a dashed one. */
+.wnd-lab .pc .pc-place {
+  outline: 3px solid var(--qa);
+  outline-offset: -3px;
+}
+.wnd-lab .pc .pc-decide {
+  outline: 3px dashed var(--qc);
+  outline-offset: -3px;
+}
+
+/* ---------- Explore readouts ---------- */
+.wnd-lab .dec-forms {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wnd-lab .dec-forms p {
+  margin: 0;
+}
+.wnd-lab .dec-big {
+  font-size: 22px;
+}

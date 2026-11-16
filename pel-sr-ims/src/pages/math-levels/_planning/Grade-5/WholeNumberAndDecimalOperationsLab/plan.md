@@ -1,5 +1,7 @@
 # WholeNumberAndDecimalOperationsLab
 
+> **User decisions (2026-11-15) override parts of this plan — read `user-notes.md` in this folder first.** Units 1–2: BUILT 2026-11-15 (MG10, "Decimal Place Value & Rounding"). Units 3–5: on hold (user undecided; Unit 3 decimal-multiplication rule kept in user-notes.md as an idea, not a go-ahead).
+
 **Proposed slot:** MG10 — provisional, confirm at build time per project convention.
 **Grade:** 5
 **Standards covered:**

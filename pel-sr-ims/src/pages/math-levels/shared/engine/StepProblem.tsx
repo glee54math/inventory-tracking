@@ -2,7 +2,7 @@ import React, { useEffect, useId, useRef, useState } from "react";
 import { autoRead, ReadAloud } from "../tts/ReadAloud";
 import { getState, sayText, stopIfPlaying } from "../tts/speechEngine";
 import { sentenceBlanksOf, tappedList, type FractionStep, type Problem, type SentenceBlank, type Step, type TapCountStep, type VisualHelp } from "./types";
-import { fmt, fracText, gcd, numbersMatch, parseAnswer, rawFraction, verticalMultiplyBreakdown } from "../lib/math";
+import { fmt, fracText, gcd, near, numbersMatch, parseAnswer, rawFraction, verticalMultiplyBreakdown } from "../lib/math";
 import { numberPadProps, useEarlyLearner } from "./audience";
 import { InlineNumberPad } from "../components/NumberPad";
 import { hasFraction, MathText, useStackedFractions } from "../components/MathText";
@@ -99,7 +99,8 @@ const sentenceBlankOk = (b: SentenceBlank, raw: string): boolean => {
   if (b.kind === "select") return Number(raw) === b.correct;
   const trimmed = b.money ? raw.trim().replace(/^\$/, "") : raw;
   const v = parseAnswer(trimmed);
-  if (v === null || !numbersMatch(v, b.answer)) return false;
+  // SentenceNumberBlank.exact: no "close enough" (thousandths answers).
+  if (v === null || !(b.exact ? near(v, b.answer) : numbersMatch(v, b.answer))) return false;
   if (b.money && b.answer % 1 !== 0 && !/^\d+\.\d{2}$/.test(trimmed)) return false;
   return true;
 };
@@ -260,7 +261,9 @@ export const check = (s: Step, inputs: string[], opts: { early?: boolean; tries?
     }
     const v = parseAnswer(raw);
     if (v === null) return { ok: false, msg: s.money ? "Type a dollar amount, like 4.50." : s.frac ? "Type a number or a fraction, like 3/4." : "Type a number, like 12, 2.5 or 3/4." };
-    if (numbersMatch(v, s.answer)) {
+    // NumberStep.exact: no "close enough" tolerance (thousandths answers, where 0.499 must not pass for 0.5).
+    const same = (x: number, y: number) => (s.exact ? near(x, y) : numbersMatch(x, y));
+    if (same(v, s.answer)) {
       if (s.money && s.answer % 1 !== 0 && !/^\d+\.\d{2}$/.test(raw)) {
         return { ok: false, msg: `That's the right amount, but money answers need exactly two decimal places — write it like $${v.toFixed(2)}.` };
       }
@@ -280,8 +283,8 @@ export const check = (s: Step, inputs: string[], opts: { early?: boolean; tries?
     }
     const named = s.diagnose?.(v);
     if (named) return { ok: false, msg: named };
-    if (s.answer !== 0 && numbersMatch(v, 1 / s.answer)) return { ok: false, msg: "That's the flip of the answer. Check which quantity you divided by which." };
-    if (numbersMatch(v * 10, s.answer) || numbersMatch(v / 10, s.answer)) return { ok: false, msg: "Close: the digits are right but the size is off by a factor of 10." };
+    if (!s.exact && s.answer !== 0 && numbersMatch(v, 1 / s.answer)) return { ok: false, msg: "That's the flip of the answer. Check which quantity you divided by which." };
+    if (same(v * 10, s.answer) || same(v / 10, s.answer)) return { ok: false, msg: "Close: the digits are right but the size is off by a factor of 10." };
     return { ok: false, msg: "Not yet. Look at the diagram and try again." };
   }
   if (s.kind === "coordinate") {

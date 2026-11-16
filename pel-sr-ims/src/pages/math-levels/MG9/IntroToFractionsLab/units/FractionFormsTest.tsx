@@ -16,9 +16,12 @@ function properFraction(): [number, number] {
   const n = randInt(1, d - 1);
   return [n, d];
 }
+// Never a whole-number multiple of d (no "2 0/4" mixed numbers); the n/n
+// boundary case has its own question (Q10).
 function improperFraction(): [number, number] {
   const d = randInt(2, 8);
-  const n = randInt(d + 1, d * 4);
+  let n = randInt(d + 1, d * 4);
+  while (n % d === 0) n = randInt(d + 1, d * 4);
   return [n, d];
 }
 function mixedParts(): { whole: number; leftover: number; den: number } {
@@ -33,7 +36,7 @@ const IMPROPER = "Improper fraction — the numerator is greater than or equal t
 const MIXED = "Mixed number — a whole number written together with a proper fraction";
 
 // Q1 — visual, classify a proper fraction
-function classifyProperQuestion(): TestQuestion[] {
+export function classifyProperQuestion(): TestQuestion[] {
   const [n, d] = properFraction();
   return [
     {
@@ -49,11 +52,13 @@ function classifyProperQuestion(): TestQuestion[] {
 }
 
 // Q2 — visual, classify an improper fraction
-function classifyImproperQuestion(): TestQuestion[] {
+export function classifyImproperQuestion(): TestQuestion[] {
   const [n, d] = improperFraction();
   return [
     {
-      visual: <FractionBar numerator={d} denominator={d} label={`${n}/${d} needs more than one bar`} />,
+      // Whole bars + the leftover, like Practice. (The old caption "needs more
+      // than one bar" gave the answer away.)
+      visual: <WholePlusPartBar whole={Math.floor(n / d)} leftoverNum={n % d} den={d} />,
       difficulty: "easy",
       step: choice(
         { prompt: <>Is <QA><Frac n={n} d={d} /></QA> a proper fraction, an improper fraction, or a mixed number?</>, hint: `Compare ${n} to ${d}.`, explain: `${n} is greater than ${d}, so this is an improper fraction.` },
@@ -65,7 +70,7 @@ function classifyImproperQuestion(): TestQuestion[] {
 }
 
 // Q3 — visual, classify a mixed number
-function classifyMixedQuestion(): TestQuestion[] {
+export function classifyMixedQuestion(): TestQuestion[] {
   const { whole, leftover, den } = mixedParts();
   return [
     {
@@ -93,7 +98,7 @@ function classifyMixedQuestion(): TestQuestion[] {
 }
 
 // Q4, Q5, Q8 — visual, improper → mixed (two values at once via a ratio step)
-function improperToMixedQuestion(difficulty: "medium" | "hard"): () => TestQuestion[] {
+export function improperToMixedQuestion(difficulty: "medium" | "hard"): () => TestQuestion[] {
   return () => {
     const [num, den] = improperFraction();
     const whole = Math.floor(num / den);
@@ -117,7 +122,7 @@ function improperToMixedQuestion(difficulty: "medium" | "hard"): () => TestQuest
 }
 
 // Q6, Q7 — text, mixed → improper (numerator only, denominator stays the same)
-function mixedToImproperQuestion(): TestQuestion[] {
+export function mixedToImproperQuestion(): TestQuestion[] {
   const { whole, leftover, den } = mixedParts();
   const num = whole * den + leftover;
   return [
@@ -141,7 +146,7 @@ function mixedToImproperQuestion(): TestQuestion[] {
 }
 
 // Q9 — choice, pick the equivalent improper fraction for a given mixed number
-function pickEquivalentQuestion(): TestQuestion[] {
+export function pickEquivalentQuestion(): TestQuestion[] {
   const { whole, leftover, den } = mixedParts();
   const num = whole * den + leftover;
   return [
@@ -166,7 +171,7 @@ function pickEquivalentQuestion(): TestQuestion[] {
 }
 
 // Q10 — choice, the boundary case: numerator exactly equal to denominator
-function boundaryCaseQuestion(): TestQuestion[] {
+export function boundaryCaseQuestion(): TestQuestion[] {
   const d = randInt(2, 9);
   return [
     {

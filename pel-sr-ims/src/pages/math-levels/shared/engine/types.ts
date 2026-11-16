@@ -134,6 +134,13 @@ export interface NumberStep extends BaseStep {
    */
   diagnose?: (value: number) => string | null;
   /**
+   * Optional: grade the value exactly. By default a non-whole answer also
+   * accepts anything within 0.006 (so 0.33 passes for 1/3), which would let
+   * 0.499 pass for 0.5 or 2.468 for 2.47 in a thousandths lab. Added for
+   * MG10 WholeNumberAndDecimalOperationsLab; steps without it grade as before.
+   */
+  exact?: boolean;
+  /**
    * Optional: draw the answer box as the TOP of a stacked fraction over this
    * printed denominator (the box, a bar, then the number), instead of writing
    * "/8" as text after the box. Grading is unchanged (the box holds the
@@ -275,6 +282,8 @@ export interface SentenceNumberBlank {
   answer: number;
   /** Same two-decimal-place formatting rule as NumberStep.money — see its doc comment. */
   money?: boolean;
+  /** Grade the value exactly, with no 0.006 tolerance — see NumberStep.exact. */
+  exact?: boolean;
 }
 
 export type SentenceBlank = SentenceSelectBlank | SentenceNumberBlank;

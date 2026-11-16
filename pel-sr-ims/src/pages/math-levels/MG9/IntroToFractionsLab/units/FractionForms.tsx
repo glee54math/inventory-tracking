@@ -6,6 +6,7 @@ import { Frac, QA, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { fractionFormsTest } from "./FractionFormsTest";
 import { MathText } from "../../../shared/components/MathText";
+import { CfuToggle, DropdownQuestion, useCfuProgress } from "../../../shared/components/CfuQuestion";
 
 /** A proper fraction: numerator < denominator. */
 function properFraction(): [number, number] {
@@ -14,10 +15,13 @@ function properFraction(): [number, number] {
   return [n, d];
 }
 
-/** An improper fraction: numerator > denominator, so it's worth at least one whole. */
+/** An improper fraction: numerator > denominator, so it's worth more than one
+ *  whole. Never a whole-number multiple of d (8/4, 9/3): those have nothing
+ *  left over, so "write it as a mixed number" would come out as "2 0/4". */
 function improperFraction(): [number, number] {
   const d = randInt(2, 8);
-  const n = randInt(d + 1, d * 4);
+  let n = randInt(d + 1, d * 4);
+  while (n % d === 0) n = randInt(d + 1, d * 4);
   return [n, d];
 }
 
@@ -31,22 +35,134 @@ function mixedParts(): { whole: number; leftover: number; den: number } {
 }
 
 // ============================================================================
+// CHECK FOR UNDERSTANDING — fixed questions, gate before Practice unlocks
+// ============================================================================
+
+/**
+ * Q1 vocabulary, with the two commonly swapped words in one question (the
+ * denominator says how many parts make a whole; the numerator counts the
+ * shaded ones). Q2 improper -> mixed, typed boxes under the picture. Q3
+ * mixed -> improper, typed. Q4 the boundary trap: n/n is NOT proper (it is
+ * exactly one whole), plus a typed "equal to 1 whole". 3 of 4 questions are
+ * typed (fill-in rule). Carried forward: Q1/Q2/Q3 -> every Practice type and
+ * Test Q4-Q9; Q4 -> the Practice "Classify" improper case (n/n sometimes)
+ * and Test Q10.
+ */
+function FormsCheck({ onComplete }: { onComplete?: () => void }) {
+  const { mark } = useCfuProgress(4, onComplete);
+  const PARTS = ["numerator", "denominator"];
+  return (
+    <MathText>
+      <div className="align-drill">
+        <p className="intro-gate-title">Check for understanding: answer all four to unlock practice problems.</p>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>1.</b> This bar shows <Frac n={3} d={8} />.
+          </p>
+          <FractionBar numerator={3} denominator={8} width={240} />
+          <DropdownQuestion
+            blanks={[
+              { options: PARTS, correct: "denominator", label: "Which number tells how many equal parts make one whole" },
+              { options: PARTS, correct: "numerator", label: "Which number tells how many parts are shaded" },
+            ]}
+            render={([a, b]) => (
+              <>
+                In <Frac n={3} d={8} />, the {a} tells how many equal parts make one whole. The {b} tells how many parts are shaded.
+              </>
+            )}
+            good="Yes. The denominator, 8, tells how many parts make the whole. The numerator, 3, counts the shaded parts."
+            bad="Not quite. Count all the parts in the bar. Which number in 3/8 matches that count?"
+            onDone={mark(0)}
+          />
+        </div>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>2.</b> Here is <Frac n={9} d={4} />.
+          </p>
+          <WholePlusPartBar whole={2} leftoverNum={1} den={4} />
+          <DropdownQuestion
+            blanks={[
+              { correct: "2", label: "How many whole bars are full" },
+              { correct: "1", label: "How many fourths are left over" },
+              { correct: "2 1/4", label: "9/4 as a mixed number", mixedFraction: true, accept: (raw) => raw.replace(/\s+/g, " ").trim() === "2 1/4" },
+            ]}
+            render={([a, b, c]) => (
+              <>
+                <Frac n={9} d={4} /> fills {a} whole bars. There is {b} fourth left over. So <Frac n={9} d={4} /> = {c}
+              </>
+            )}
+            good="Yes. 8 fourths fill 2 whole bars, and 1 fourth is left over. 9/4 = 2 1/4."
+            bad="Not quite. Count the full bars first. Then count the shaded parts in the last bar. Write the mixed number with both."
+            onDone={mark(1)}
+          />
+        </div>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>3.</b> Here is <MathText>2 2/3</MathText>.
+          </p>
+          <WholePlusPartBar whole={2} leftoverNum={2} den={3} />
+          <DropdownQuestion
+            blanks={[
+              { correct: "3", label: "Thirds in one whole" },
+              { correct: "6", label: "Thirds in 2 wholes" },
+              { correct: "8", label: "Numerator of the improper fraction" },
+            ]}
+            render={([a, b, c]) => (
+              <>
+                One whole bar has {a} thirds. So 2 wholes are {b} thirds. That means <MathText>2 2/3</MathText> = <Frac n={c} d={3} />
+              </>
+            )}
+            good="Yes. 2 × 3 = 6 thirds, plus 2 more thirds makes 8 thirds. 2 2/3 = 8/3."
+            bad="Not quite. Count the parts in one full bar. Then count every shaded part in all the bars."
+            onDone={mark(2)}
+          />
+        </div>
+
+        <div className="align-stack-wrap">
+          <p>
+            <b>4.</b> Here is <Frac n={6} d={6} />.
+          </p>
+          <FractionBar numerator={6} denominator={6} width={240} />
+          <DropdownQuestion
+            blanks={[
+              { options: ["True", "False"], correct: "False", label: "True or false" },
+              { correct: "1", label: "How many wholes 6/6 is equal to" },
+            ]}
+            render={([a, b]) => (
+              <>
+                True or false: <Frac n={6} d={6} /> is a proper fraction. {a} <Frac n={6} d={6} /> is equal to {b} whole.
+              </>
+            )}
+            good="Yes, it is false. A proper fraction is less than 1 whole. 6/6 fills the whole bar, so it is improper."
+            bad="Not quite. Is the bar partly shaded or full? A proper fraction is less than 1 whole."
+            onDone={mark(3)}
+          />
+        </div>
+      </div>
+    </MathText>
+  );
+}
+
+// ============================================================================
 // EXPLORE
 // ============================================================================
 
 /**
- * The one gated unit in this module (Unit.requiresIntro — see export below):
- * before Practice unlocks, the student converts one generated improper
- * fraction into its whole + leftover parts themselves, watching both the
- * decomposed-bar picture and the number line update live as they adjust two
- * Steppers — concrete manipulation first (IES recommendation #1), with the
- * number line making the point that the fraction and the mixed number are
- * the exact same NUMBER, just two ways of naming it (IES recommendation #2).
- * One-time gate only (no reintroEverySolved) — this is vocabulary/concept
- * building, not a procedural fact that decays over time.
+ * The student converts one generated improper fraction into its whole +
+ * leftover parts themselves, watching the decomposed-bar picture update live
+ * as they adjust two Steppers — concrete manipulation first (IES
+ * recommendation #1), with the number line making the point that the
+ * fraction and the mixed number are the exact same NUMBER, just two ways of
+ * naming it (IES recommendation #2). The gate before Practice is the fixed
+ * FormsCheck below the picture (one-time gate, no reintroEverySolved — this
+ * is concept building, not a fact that decays).
  */
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
+  const [showCheck, setShowCheck] = useState(false);
   const [[num, den]] = useState(improperFraction);
   const correctWhole = Math.floor(num / den);
   const correctLeftover = num % den;
@@ -59,20 +175,19 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   // Self-check dropdown for the opening sentence — num/den always comes from
   // improperFraction(), so "improper" is always correct here, but making the
   // student pick rather than just reading "is an improper fraction" off the
-  // page is the whole point (same reasoning as the gated whole/leftover task
-  // below, just lower-stakes — no Check button, immediate inline feedback).
+  // page is the point. The reason sentence shows only after the right pick,
+  // so it can't give the answer away.
   const [formGuess, setFormGuess] = useState("");
 
   return (
     <MathText>
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {!introActive && <CfuToggle on={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
         {/* Fixed, non-randomized anchor pictures — the pizza-slice model most
             students already have an informal sense of (IES recommendation #1:
             build on that before the abstract rule). Two examples: an ordinary
             proper fraction, and the improper/mixed pair the rest of this unit
-            is about — shown as ONE picture read two ways, same idea
-            WholePlusPartBar/WholePlusPartCircles both lean on throughout this
-            unit, just with the more familiar circle instead of a bar first. */}
+            is about — shown as ONE picture read two ways. */}
         <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
           <div>
             <FractionCircle numerator={3} denominator={4} radius={52} showNumbers />
@@ -102,8 +217,10 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
               {formGuess === "improper" ? "✓" : "Not quite — compare the numerator to the denominator."}
             </b>
           )}
-          . Its numerator is bigger than its denominator, so it's worth more than one whole. Every improper fraction can also be written as a{" "}
-          <b>mixed number</b>: a whole number plus a proper fraction.
+          .{formGuess === "improper" && <> Its numerator is bigger than its denominator, so it is worth more than one whole.</>}
+        </p>
+        <p>
+          Every improper fraction can also be written as a <b>mixed number</b>: a whole number plus a proper fraction.
         </p>
         {/* Two number lines, same tick positions, two label conventions — the
             "same number, two names" idea made spatial: every 1/den tick is
@@ -118,34 +235,28 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           The same points, as mixed numbers:
         </p>
         <FractionNumberLine denominator={den} numerator={num} labelStyle="mixed" />
-        {introActive && (
-          <div className="align-drill">
-            <p className="intro-gate-title">
-              Convert <Frac n={num} d={den} /> into a mixed number: how many whole groups of {den}, and what's left over?
-            </p>
-            <div className="controls">
-              <Stepper label="Whole groups" value={whole} min={0} max={correctWhole + 2} onChange={setWhole} tone="a" />
-              <Stepper label="Leftover numerator" value={leftover} min={0} max={den - 1} onChange={setLeftover} tone="b" />
-            </div>
-            <WholePlusPartBar whole={whole} leftoverNum={leftover} den={den} />
-            <button className="btn primary" onClick={() => setChecked(true)}>
-              Check my work
-            </button>
-            {checked && (
-              <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-                {ok
-                  ? `Exactly — ${num}/${den} = ${correctWhole} ${correctLeftover}/${den}. Same number, two names.`
-                  : `Not quite — ${den} goes into ${num} some whole number of times, with a bit left over. Try again.`}
-              </p>
-            )}
-            {checked && ok && onIntroDone && (
-              <button className="btn primary" onClick={onIntroDone}>
-                Continue
-              </button>
-            )}
+        <div className="align-drill">
+          <p className="intro-gate-title">
+            Try it: write <Frac n={num} d={den} /> as a mixed number. How many whole groups of {den}? How many are left over?
+          </p>
+          <div className="controls">
+            <Stepper label="Whole groups" value={whole} min={0} max={correctWhole + 2} onChange={setWhole} tone="a" />
+            <Stepper label="Leftover numerator" value={leftover} min={0} max={den - 1} onChange={setLeftover} tone="b" />
           </div>
-        )}
-        {!introActive && <WholePlusPartBar whole={correctWhole} leftoverNum={correctLeftover} den={den} />}
+          <WholePlusPartBar whole={whole} leftoverNum={leftover} den={den} />
+          <button className="btn primary" onClick={() => setChecked(true)}>
+            Check my work
+          </button>
+          {checked && (
+            <p className={`feedback ${ok ? "good" : "bad"}`} role="alert">
+              {ok
+                ? `Exactly — ${num}/${den} = ${correctWhole} ${correctLeftover}/${den}. Same number, two names.`
+                : `Not quite. Count by ${den}s toward ${num}. How many ${den}s fit? How many are left?`}
+            </p>
+          )}
+        </div>
+        {/* Below the picture, so students explore first, then check. */}
+        {(introActive || showCheck) && <FormsCheck onComplete={onIntroDone} />}
       </div>
     </MathText>
   );
@@ -155,6 +266,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 // PROBLEM TYPE 1 — classify the form
 // ============================================================================
 
+// The picture appears once both steps are done: it would show the answer to
+// the typed step (how many parts / whole bars) before the student works it out.
 function classifyProblem(): Problem {
   const kind = pick(["proper", "improper", "mixed"] as const);
   const PROPER = "Proper fraction — the numerator is less than the denominator, so it's worth less than one whole";
@@ -166,38 +279,63 @@ function classifyProblem(): Problem {
     return {
       title: "Classifying fractions",
       story: "",
-      visual: () => <FractionBar numerator={n} denominator={d} />,
+      visual: (done: number) => (done >= 2 ? <FractionBar numerator={n} denominator={d} /> : null),
       steps: [
         choice(
           { prompt: <>Is <QA><Frac n={n} d={d} /></QA> a proper fraction, an improper fraction, or a mixed number?</>, hint: `Compare ${n} to ${d} — which is bigger?`, explain: `${n} is less than ${d}, so this is a proper fraction.` },
           PROPER,
           [IMPROPER, MIXED]
         ),
+        {
+          kind: "number",
+          prompt: `How many more 1/${d} parts would make one whole?`,
+          hint: `One whole is ${d}/${d}. You have ${n}/${d}.`,
+          explain: `${d} − ${n} = ${d - n}. ${n}/${d} + ${d - n}/${d} = ${d}/${d}, one whole.`,
+          answer: d - n,
+        },
       ],
       wrapUp: <><Frac n={n} d={d} /> is a proper fraction.</>,
     };
   }
   if (kind === "improper") {
-    const [n, d] = improperFraction();
+    // About 1 in 4 is the boundary case n/n (exactly one whole) — the CFU's
+    // true/false trap, carried into Practice.
+    const [n, d] = Math.random() < 0.25 ? (() => {
+      const dd = randInt(2, 9);
+      return [dd, dd] as [number, number];
+    })() : improperFraction();
+    const wholes = Math.floor(n / d);
     return {
       title: "Classifying fractions",
       story: "",
-      visual: () => <FractionBar numerator={d} denominator={d} label={`${n}/${d} needs more than one bar`} />,
+      visual: (done: number) => (done >= 2 ? <WholePlusPartBar whole={wholes} leftoverNum={n % d} den={d} /> : null),
       steps: [
         choice(
-          { prompt: <>Is <QA><Frac n={n} d={d} /></QA> a proper fraction, an improper fraction, or a mixed number?</>, hint: `Compare ${n} to ${d} — which is bigger?`, explain: `${n} is greater than ${d}, so this is an improper fraction.` },
+          {
+            prompt: <>Is <QA><Frac n={n} d={d} /></QA> a proper fraction, an improper fraction, or a mixed number?</>,
+            hint: `Compare ${n} to ${d} — which is bigger, or are they the same?`,
+            explain: n === d ? `${n} is equal to ${d}, so this is exactly one whole. That makes it an improper fraction.` : `${n} is greater than ${d}, so this is an improper fraction.`,
+          },
           IMPROPER,
           [PROPER, MIXED]
         ),
+        {
+          kind: "number",
+          prompt: <>How many whole bars does <Frac n={n} d={d} /> fill all the way?</>,
+          hint: `Each whole bar holds ${d} parts. Count by ${d}s up to ${n} without going over.`,
+          explain: n % d === 0 ? `${n} ÷ ${d} = ${wholes}, so it fills ${wholes} whole bar${wholes === 1 ? "" : "s"} exactly.` : `${d} × ${wholes} = ${wholes * d}, and ${n % d} more parts don't fill another bar. So ${wholes} whole bar${wholes === 1 ? "" : "s"}.`,
+          answer: wholes,
+        },
       ],
       wrapUp: <><Frac n={n} d={d} /> is an improper fraction.</>,
     };
   }
   const { whole, leftover, den } = mixedParts();
+  const total = whole * den + leftover;
   return {
     title: "Classifying fractions",
     story: "",
-    visual: () => <WholePlusPartBar whole={whole} leftoverNum={leftover} den={den} />,
+    visual: (done: number) => (done >= 2 ? <WholePlusPartBar whole={whole} leftoverNum={leftover} den={den} /> : null),
     steps: [
       choice(
         {
@@ -210,12 +348,19 @@ function classifyProblem(): Problem {
               </QA> a proper fraction, an improper fraction, or a mixed number?
             </>
           ),
-          hint: "It's written as a whole number together with a fraction.",
+          hint: "Look at the number. Is there a whole number in front of the fraction?",
           explain: "A whole number written next to a fraction is a mixed number.",
         },
         MIXED,
         [PROPER, IMPROPER]
       ),
+      {
+        kind: "number",
+        prompt: `How many 1/${den} parts make ${whole} ${leftover}/${den}?`,
+        hint: `Each whole is ${den} parts. ${whole} × ${den} = ?, then add ${leftover}.`,
+        explain: `${whole} × ${den} = ${whole * den}, and ${whole * den} + ${leftover} = ${total}.`,
+        answer: total,
+      },
     ],
     wrapUp: (
       <>
@@ -242,7 +387,7 @@ function improperToMixedProblem(): Problem {
       {
         kind: "number",
         prompt: `How many whole groups of ${den} fit in ${num}?`,
-        hint: `${den} × what is the biggest multiple of ${den} that's still ≤ ${num}?`,
+        hint: `Count by ${den}s up to ${num} without going over. How many ${den}s did you count?`,
         explain: `${den} fits into ${num} exactly ${whole} whole times (${den} × ${whole} = ${whole * den}).`,
         answer: whole,
       },
@@ -264,7 +409,7 @@ function improperToMixedProblem(): Problem {
           explain: `${whole} whole groups, with ${leftover}/${den} left over.`,
         },
         `${whole} ${leftover}/${den}`,
-        [`${leftover} ${whole}/${den}`, `${whole} ${den}/${leftover || 1}`]
+        [`${leftover} ${whole}/${den}`, `${whole} ${den}/${leftover}`]
       ),
     ],
     wrapUp: (

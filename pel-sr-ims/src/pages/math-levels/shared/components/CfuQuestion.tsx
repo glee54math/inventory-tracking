@@ -9,6 +9,24 @@ import { FactorBoxes } from "./FactorBoxes";
 import { FirstQuadrantPlane } from "../diagrams/FirstQuadrantPlane";
 import { palette } from "../lib/palette";
 import { checkFactors, checkPlot, parsePoints, splitFactorBoxes, togglePoint } from "../lib/factors";
+import { clearLookHere, lookHere } from "../lib/lookHere";
+
+/**
+ * Optional pointer to the Explore spot that teaches a CFU question (pilot,
+ * MG10 WholeNumberAndDecimalOperationsLab). After the 2nd wrong Check, the
+ * question shows "Stuck? Look here first: {label}" with a "Go there" button
+ * that scrolls to the element marked lookHereSpot(target) and highlights it
+ * until this question is answered right.
+ */
+export interface ExploreTarget {
+  /** The id given to lookHereSpot() on the Explore element. */
+  target: string;
+  /** The Explore part's name, as the student sees it. */
+  label: string;
+}
+
+/** Wrong Checks before the Explore pointer shows. */
+const LOOK_HERE_AFTER = 2;
 
 // ============================================================================
 // Check-for-Understanding building blocks for 2nd-grade-and-up labs (K–1 labs
@@ -68,6 +86,15 @@ export interface CfuBlank {
    * key. Added for MG10 Expressions & Patterns.
    */
   plot?: { answer: [number, number][]; xMax: number; yMax: number; xLabel: string; yLabel: string };
+  /**
+   * Optional (pilot): the Explore spot that teaches THIS part. Blanks with the
+   * same `part` and target are one part; each part counts its own wrong
+   * Checks and gets its own "Look here first" line. Falls back to the
+   * question's `exploreTarget`.
+   */
+  exploreTarget?: ExploreTarget;
+  /** Optional part name shown before its pointer line ("a", "b"). */
+  part?: string;
 }
 
 /**
@@ -121,6 +148,7 @@ export function DropdownQuestion({
   good,
   bad,
   onDone,
+  exploreTarget,
 }: {
   blanks: CfuBlank[];
   /** Lays out the question text with the rendered boxes slotted in, in order. */
@@ -129,7 +157,22 @@ export function DropdownQuestion({
   /** Feedback when any box is wrong; the function form gets each box's verdict and value. */
   bad: ReactNode | ((oks: boolean[], values: string[]) => ReactNode);
   onDone?: () => void;
+  /** Optional: where in Explore this idea is taught (shown after 2 wrong Checks). */
+  exploreTarget?: ExploreTarget;
 }) {
+  // Explore pointers: one group per part (blank-level target, else the question's).
+  const groups: { key: string; part?: string; to: ExploreTarget; idx: number[] }[] = [];
+  blanks.forEach((b, i) => {
+    const to = b.exploreTarget ?? exploreTarget;
+    if (!to) return;
+    const key = `${b.part ?? ""}|${to.target}`;
+    const g = groups.find((x) => x.key === key);
+    if (g) g.idx.push(i);
+    else groups.push({ key, part: b.part, to, idx: [i] });
+  });
+  const [wrongTries, setWrongTries] = useState<Record<string, number>>({});
+  const [partRight, setPartRight] = useState<Record<string, boolean>>({});
+  const [lit, setLit] = useState<string[]>([]);
   const [values, setValues] = useState<string[]>(() => blanks.map(() => ""));
   const [checked, setChecked] = useState(false);
   const stacked = useStackedFractions();
@@ -162,6 +205,31 @@ export function DropdownQuestion({
   useEffect(() => {
     if (done) onDone?.();
   }, [done, onDone]);
+  // Parts still wrong after LOOK_HERE_AFTER wrong Checks get a pointer line.
+  const pointers = done ? [] : groups.filter((g) => (wrongTries[g.key] ?? 0) >= LOOK_HERE_AFTER && !partRight[g.key]);
+  const activeKey = pointers.map((g) => g.to.target).join(" ");
+  // A lit spot clears once no still-wrong part of this question points to it.
+  useEffect(() => {
+    const active = activeKey.split(" ");
+    const gone = lit.filter((t) => !active.includes(t));
+    if (gone.length === 0) return;
+    gone.forEach(clearLookHere);
+    setLit((l) => l.filter((t) => !gone.includes(t)));
+  }, [activeKey, lit]);
+
+  // One wrong Check of a part = one press while that part is wrong (feeds the pointers).
+  const check = () => {
+    if (!checked && groups.length > 0) {
+      const gOk = (g: (typeof groups)[number]) => g.idx.every((i) => oks[i]);
+      setWrongTries((t) => Object.fromEntries(groups.map((g) => [g.key, (t[g.key] ?? 0) + (gOk(g) ? 0 : 1)])));
+      setPartRight(Object.fromEntries(groups.map((g) => [g.key, gOk(g)])));
+    }
+    setChecked(true);
+  };
+  const goThere = (target: string) => {
+    lookHere(target, lit);
+    setLit((l) => (l.includes(target) ? l : [...l, target]));
+  };
 
   const set = (i: number, v: string) => {
     setValues((all) => all.map((x, k) => (k === i ? v : x)));
@@ -180,14 +248,14 @@ export function DropdownQuestion({
       style={{ width, ...answerBorder(oks[i], showMark) }}
       onChange={(e) => onChange(e.target.value)}
       onKeyDown={(e) => {
-        if (e.key === "Enter" && filled) setChecked(true);
+        if (e.key === "Enter" && filled) check();
       }}
     />
   );
 
   const boxes = blanks.map((b, i) =>
     b.factorsOf !== undefined ? (
-      <FactorBoxes key={i} target={b.factorsOf} pair={b.factorPair} raw={values[i]} disabled={done} boxStyle={answerBorder(oks[i], checked)} onChange={(v) => set(i, v)} onEnter={() => filled && setChecked(true)} />
+      <FactorBoxes key={i} target={b.factorsOf} pair={b.factorPair} raw={values[i]} disabled={done} boxStyle={answerBorder(oks[i], checked)} onChange={(v) => set(i, v)} onEnter={() => filled && check()} />
     ) : b.plot ? (
       <span key={i} className="cfu-plot" role="group" aria-label={b.label} style={{ display: "block", ...answerBorder(oks[i], checked), borderWidth: checked ? 2 : 0, borderStyle: "solid", borderRadius: 10 }}>
         <FirstQuadrantPlane
@@ -294,7 +362,7 @@ export function DropdownQuestion({
         style={{ width: b.width ?? 70, ...answerBorder(oks[i], checked) }}
         onChange={(e) => set(i, e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && filled) setChecked(true);
+          if (e.key === "Enter" && filled) check();
         }}
       />
     )
@@ -306,7 +374,12 @@ export function DropdownQuestion({
         <MathText>{render(boxes)}</MathText>
       </div>
       <div className="control-row" style={{ marginTop: 8 }}>
-        <button className="btn primary" type="button" disabled={!filled || done} onClick={() => setChecked(true)}>
+        <button
+          className="btn primary"
+          type="button"
+          disabled={!filled || done}
+          onClick={check}
+        >
           Check Answer
         </button>
       </div>
@@ -315,6 +388,21 @@ export function DropdownQuestion({
           <MathText>{ok ? good : typeof bad === "function" ? bad(oks, values) : bad}</MathText>
           {!ok && kindLine}
         </p>
+      )}
+      {pointers.length > 0 && (
+        <div className="cfu-look-here" style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 6, padding: "6px 10px", borderLeft: "4px solid #f59e0b", background: "#fffbeb", borderRadius: 6 }}>
+          {pointers.some((g) => g.part) && <span>Stuck?</span>}
+          {pointers.map((g) => (
+            <p key={g.key} className="cfu-look-here-line" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: 0 }}>
+              <span>
+                {g.part ? (g.part.length === 1 ? `${g.part}. ` : `${g.part}: `) : "Stuck? "}Look here first: <b>{g.to.label}</b>
+              </span>
+              <button type="button" className="btn ghost" onClick={() => goThere(g.to.target)}>
+                Go there ↑
+              </button>
+            </p>
+          ))}
+        </div>
       )}
     </>
   );

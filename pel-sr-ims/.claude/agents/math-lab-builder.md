@@ -662,6 +662,29 @@ question may require the student to do every step on their own: if
 Practice walks through 3 steps, the Test may ask for just the final
 answer and expect all 3 steps to be done.
 
+**Say the required answer format in every graded question.** If grading
+needs a form (every place written, "3.00" not "3"; lowest terms; a unit),
+the prompt says so in Practice, the Test and the Module Test, not only in
+the CFU. A Test gives no feedback, so an unstated format fails a student
+who knows the math. (MG10 Decimals marked "3" wrong for 3.00 with no
+instruction.)
+
+**Say "through the … place", not "up to".** "Up to" can read as "at most"
+("Write every place up to the tenths" suggests the 0 can be left off). Name
+the place: "Write a digit in every place through the tenths place, even a
+0." (Found in MG10 Decimal Place Value & Rounding.)
+
+**"Which is greatest / least" questions:** shuffle the listed order, and
+vary which kind of number is the answer (shorter vs. longer, fewer vs. more
+digits), so neither "pick the first" nor a flipped misconception ("fewer
+digits is bigger") passes every time. Count the splits in the brute-force
+script.
+
+**Pictures zoom when the difference is tiny.** A bar or number-line picture
+that must show a difference too small to see at normal scale (0.45 vs
+0.452) zooms in and says so ("Zoomed in: each small mark is 1 thousandth").
+A sentence must never say "the longer bar" when the bars look the same.
+
 **Standards' verbs are done, not just recognized.** When a standard says
 *write*, *place*, *construct* or *draw*, at least one Practice step makes
 the student build it (typed numbers, tapped signs, tapped symbol

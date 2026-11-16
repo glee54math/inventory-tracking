@@ -185,6 +185,13 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
       componentFile: "MG10_NumericalExpressionsAndPatternsLab",
       componentExport: "NumericalExpressionsAndPatternsLab",
     },
+    {
+      type: "standalone",
+      skillId: "WholeNumberAndDecimalOperationsLab",
+      label: "Decimal Place Value & Rounding",
+      componentFile: "MG10_WholeNumberAndDecimalOperationsLab",
+      componentExport: "WholeNumberAndDecimalOperationsLab",
+    },
   ],
   MG11: [
     {

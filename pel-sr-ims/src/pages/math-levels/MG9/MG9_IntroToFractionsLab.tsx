@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import "../shared/styles/lab-base.css";
 import "./MG9_IntroToFractionsLab_styles.css";
 import { units, type Unit } from "./IntroToFractionsLab/units";
+import { moduleTest, moduleTestStars, MODULE_TEST_TOTAL } from "./IntroToFractionsLab/units/ModuleTest";
 import { StepProblem } from "../shared/engine/StepProblem";
 import { Segmented } from "../shared/engine/controls";
 import { UnitTestView } from "../shared/engine/UnitTest";
@@ -13,6 +14,10 @@ import { MASTERY_GOAL, isMastered as sharedIsMastered, starCount as sharedStarCo
 import { useStudentContext } from "../../../components/student_portal/StudentContext";
 
 const MODULE_ID = "MG9_IntroToFractionsLab";
+// Synthetic progress key for the cross-unit module test — not a real unit id,
+// but ProgressMap/recordTest are already generic over any string key (same
+// convention as every other lab's own module test).
+const MODULE_PROGRESS_KEY = "module";
 
 // isMastered/starCount math itself now lives in useModuleProgress.ts, shared
 // across every lab — these are just thin per-lab wrappers so every other
@@ -44,8 +49,31 @@ function Stars({ unit, p, size = "sm" }: { unit: Unit; p?: UnitProgress; size?: 
   );
 }
 
-function Home({ onPick, progress }: { onPick: (i: number) => void; progress: Record<string, UnitProgress> }) {
+/** A plain n-of-max star rating, independent of the mastery-tracking Stars
+ *  component above — used for the module test's rating. */
+function RatingStars({ n, max = 5, size = "sm", label }: { n: number; max?: number; size?: "sm" | "lg"; label: string }) {
+  return (
+    <span className={`stars ${size}`} aria-label={label}>
+      {Array.from({ length: max }, (_, i) => (
+        <span key={i} className={i < n ? "on" : ""} aria-hidden>
+          ★
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function Home({
+  onPick,
+  progress,
+  onModuleTest,
+}: {
+  onPick: (i: number) => void;
+  progress: Record<string, UnitProgress>;
+  onModuleTest: () => void;
+}) {
   const next = units.findIndex((u) => !isMastered(u, progress[u.id]));
+  const moduleTestScore = progress[MODULE_PROGRESS_KEY]?.testScore;
   return (
     <div className="home">
       <section className="hero">
@@ -83,18 +111,34 @@ function Home({ onPick, progress }: { onPick: (i: number) => void; progress: Rec
             </li>
           ))}
         </ol>
-        <p className="muted small">Stars fill in as you cleanly solve (at most one hint) every different kind of problem in Mixed mode — the last star needs all of them.</p>
+        <p className="muted small">
+          Stars fill in as you solve each kind of problem twice in Mixed mode, cleanly (no wrong guesses, at most one hint). The last star needs all of
+          them.
+        </p>
+      </section>
+      <section>
+        <button className="path-card module-test-card" onClick={onModuleTest}>
+          <span className="path-body">
+            <span className="path-title">📝 Module Test</span>
+            <span className="path-goal">20 questions, 5 from every unit in this lab.</span>
+          </span>
+          <span className="unit-stars">
+            {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} label="Module test rating" />}
+            <TestBadge p={progress[MODULE_PROGRESS_KEY]} passScore={moduleTest.passScore} total={MODULE_TEST_TOTAL} />
+          </span>
+        </button>
       </section>
     </div>
   );
 }
 
-function TestBadge({ p, passScore }: { p?: UnitProgress; passScore: number }) {
+function TestBadge({ p, passScore, total = 10 }: { p?: UnitProgress; passScore: number; total?: number }) {
   if (p?.testScore === undefined) return null;
   const passed = p.testScore >= passScore;
   return (
     <span className={`test-badge ${passed ? "pass" : "fail"}`} title="Your best score across all attempts">
-      Best test score: {p.testScore} out of 10{passed ? " ✓" : ""}
+      Best test score: {p.testScore} out of {total}
+      {passed ? " ✓" : ""}
     </span>
   );
 }
@@ -283,14 +327,23 @@ function IntroToFractionsLab() {
   );
   const [current, setCurrent] = useState<number | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [moduleTestOpen, setModuleTestOpen] = useState(false);
   const go = useCallback((i: number | null) => {
+    setModuleTestOpen(false);
     setCurrent(i);
     window.scrollTo({ top: 0 });
   }, []);
+  const openModuleTest = useCallback(() => {
+    setCurrent(null);
+    setModuleTestOpen(true);
+    window.scrollTo({ top: 0 });
+  }, []);
+  const moduleTestScore = progress[MODULE_PROGRESS_KEY]?.testScore;
   const unit = current === null ? null : units[current];
   const onSolved = useCallback((clean: boolean, bucket?: string) => unit && record(unit.id, clean, bucket), [unit, record]);
   const onTest = useCallback((score: number) => unit && recordTest(unit.id, score), [unit, recordTest]);
   const onIntroDone = useCallback(() => unit && recordIntroDone(unit.id), [unit, recordIntroDone]);
+  const onModuleTestComplete = useCallback((score: number) => recordTest(MODULE_PROGRESS_KEY, score), [recordTest]);
 
   return (
     <div className="itf-lab lab-base">
@@ -311,6 +364,17 @@ function IntroToFractionsLab() {
               </li>
             ))}
           </ol>
+          <button className={`module-test-nav ${moduleTestOpen ? "on" : ""}`} aria-current={moduleTestOpen ? "page" : undefined} onClick={openModuleTest}>
+            <span className="module-test-row">
+              <span>📝 Module Test</span>
+              {moduleTestScore !== undefined && moduleTestScore >= moduleTest.passScore && (
+                <span className="module-test-check" aria-label="Completed">
+                  ✓
+                </span>
+              )}
+            </span>
+            {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} label="Module test rating" />}
+          </button>
           <button
             className="reset"
             onClick={() => {
@@ -325,7 +389,26 @@ function IntroToFractionsLab() {
           </button>
         </nav>
         <main className="main">
-          {unit ? (
+          {moduleTestOpen ? (
+            <div className="unit">
+              <header className="unit-head">
+                <div>
+                  <h1>Module Test</h1>
+                  <p className="goal">20 questions covering every unit in Introduction To Fractions — 5 from each.</p>
+                </div>
+                <div className="unit-stars">
+                  {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} size="lg" label="Module test rating" />}
+                  <TestBadge p={progress[MODULE_PROGRESS_KEY]} passScore={moduleTest.passScore} total={MODULE_TEST_TOTAL} />
+                </div>
+              </header>
+              <button className="btn ghost module-test-back" onClick={() => go(null)}>
+                ← Back to Introduction To Fractions
+              </button>
+              <div className="panel">
+                <UnitTestView test={moduleTest} onComplete={onModuleTestComplete} />
+              </div>
+            </div>
+          ) : unit ? (
             <UnitView
               key={unit.id}
               unit={unit}
@@ -336,7 +419,7 @@ function IntroToFractionsLab() {
               onNextUnit={current !== null && current < units.length - 1 ? () => go(current + 1) : undefined}
             />
           ) : (
-            <Home onPick={go} progress={progress} />
+            <Home onPick={go} progress={progress} onModuleTest={openModuleTest} />
           )}
         </main>
       </div>
