@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import {
     Baby,
@@ -21,6 +22,15 @@ const englishModules = import.meta.glob('./english-levels/*/*.tsx');
 
 const mathFileCounts = countPreviewableFilesByLevel(mathModules, './math-levels/');
 const englishFileCounts = countPreviewableFilesByLevel(englishModules, './english-levels/');
+
+// Mr. Lee-only review status (admin-review-status/). Lazy so its data stays in a chunk
+// only this admin page loads — never part of what the student portal downloads.
+const ReviewStatusBoard = lazy(() =>
+    import("./admin-review-status/ReviewStatus").then((m) => ({ default: m.ReviewStatusBoard }))
+);
+const LevelReviewDot = lazy(() =>
+    import("./admin-review-status/ReviewStatus").then((m) => ({ default: m.LevelReviewDot }))
+);
 
 const allMathIds = Object.keys(mathFileCounts).sort((a, b) =>
     a.localeCompare(b, undefined, { numeric: true })
@@ -92,6 +102,9 @@ function GradeBandGroup({
                 {levels.map((level) => (
                     <Link key={level} to={`/levels/${level}/files`} className="all-levels-chip">
                         {level}
+                        <Suspense fallback={null}>
+                            <LevelReviewDot level={level} />
+                        </Suspense>
                         {/* Only worth flagging once there's more than one file to browse into —
                             every level folder has at least its (possibly empty) shell file. */}
                         {fileCounts[level] > 1 && <span className="all-levels-chip-badge">{fileCounts[level]}</span>}
@@ -144,6 +157,10 @@ export default function AllLevelsPage() {
                     </div>
                 </div>
             </div>
+
+            <Suspense fallback={null}>
+                <ReviewStatusBoard />
+            </Suspense>
 
             <div className="all-levels-subjects">
                 <SubjectCard title="Math" levels={mathLevels} fileCounts={mathFileCounts} />

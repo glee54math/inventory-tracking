@@ -34,6 +34,12 @@ step per round, never overwritten:
 `round-1-curriculum.md`, `round-1-english.md`, `round-1-merged.md`,
 `round-1-fixes.md`, `round-2-curriculum.md`, … and `summary.md` at the end.
 
+**Status board.** `src/pages/math-levels/_planning/reviews/LAB_STATUS.md`
+lists every lab and whether it has been reviewed. Read it before starting.
+Update its row after Stage 1 (new lab: add a row, "Not started") and at
+Stage 6 (Review → "Done (N rounds)", CFU pointer column, notes/open items).
+Any all-labs change gets a line in its "All-labs changes" table.
+
 **Starting point.**
 - New lab, or new units for an existing lab, from standards → Stage 0.
 - Review an existing lab ("review MK2", "run the checkers on MG5") →
@@ -208,6 +214,7 @@ the agreed change — sorted Blocker → Polish.
 2. **Summary.** Write `{review folder}/summary.md` and give the user a short
    version: rounds run, what was found and fixed per round, what was
    skipped and why, anything still open, and the review folder path.
+   Then update the lab's row in `_planning/reviews/LAB_STATUS.md`.
 3. Close with: a manual pass in the running app is still needed, then a
    real student on a real iPad. Headless checks can't confirm iOS Safari
    speech, real touch feel, or how a young student actually uses it.

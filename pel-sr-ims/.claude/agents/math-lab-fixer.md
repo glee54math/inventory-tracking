@@ -58,6 +58,13 @@ approved plan, the grade, and the round number.
      (MK1–MK4, MG1) are near-copies: a `UnitView` fix goes into all five.
    - New text → grammatical for every value the generator can produce, and
      no answer given away in stories, titles or wrong-answer messages.
+   - Any CFU touched (or the lab is being fixed at all) → every CFU part
+     has a "Look here" pointer to the Explore spot that teaches it (shared
+     `useCfuPointers` + `<StuckBox>`, or `exploreTarget` on
+     `DropdownQuestion`; `early` for MK/MG1–MG4). Add any that are missing,
+     plus a short Explore teaching line if nothing there teaches the part.
+     Rules: builder "Look here pointer" bullet and
+     `_planning/reviews/CFU_Pointer_Rollout/README.md`.
 5. **Never commit, push, or delete files** you didn't create. Temporary
    harness pages and scratch scripts go away when you're done.
 

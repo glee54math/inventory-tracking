@@ -6,6 +6,8 @@ import type { Unit } from "../../../shared/units/types";
 import { addToTakeFromWordProblemsTest } from "./AddToTakeFromWordProblemsTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
 import { TapSelect } from "../../../shared/components/TapSelect";
+import { StuckBox, useCfuPointers, type ExploreTarget } from "../../../shared/components/CfuPointers";
+import { lookHereSpot } from "../../../shared/lib/lookHere";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -21,6 +23,13 @@ const ROLES = ["the starting amount (how much there was at the very beginning)",
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
+/** CFU "Look here" pointers: the Explore spot that teaches each part (shown after its 2nd miss). */
+const LOOK = {
+  roles: { target: "atf-roles", label: "Explore: start, change, or result", say: "Look here. Which one is missing?" },
+  story: { target: "atf-story", label: "Explore: build your own story", say: "Look here. Start, then add more." },
+  missing: { target: "atf-missing", label: "Explore: when the start or change is missing", say: "Look here. Take away from the end." },
+};
+
 function RolePlusNumberQuestion({
   n,
   story,
@@ -29,6 +38,7 @@ function RolePlusNumberQuestion({
   correctAnswer,
   answerOptions,
   explain,
+  answerLook,
   onComplete,
 }: {
   n: number;
@@ -38,6 +48,8 @@ function RolePlusNumberQuestion({
   correctAnswer: number;
   answerOptions: number[];
   explain: string;
+  /** The Explore spot that teaches finding this answer (CFU "Look here" pointer). */
+  answerLook: ExploreTarget;
   onComplete?: () => void;
 }) {
   const [role, setRole] = useState("");
@@ -50,6 +62,18 @@ function RolePlusNumberQuestion({
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  const partOk = (key: string) => (key === "role" ? roleOk : answerOk);
+  const ptr = useCfuPointers(
+    [
+      { key: "role", part: "What's unknown", to: LOOK.roles },
+      { key: "answer", part: "Answer", to: answerLook },
+    ],
+    { done: checked && ok, early: true, rightNow: (p) => checked && partOk(p.key) }
+  );
+  const check = () => {
+    ptr.record((p) => partOk(p.key), `${role}|${answer}`);
+    setChecked(true);
+  };
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -83,10 +107,11 @@ function RolePlusNumberQuestion({
             ))}
           </TapSelect>
         </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && allFilled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? `Correct — ${explain}` : `Not quite — ${explain}`}
@@ -111,6 +136,11 @@ function WordProblemCheckForUnderstanding({ onComplete }: { onComplete?: () => v
     if (tfChecked && tfOk) mark("q3")();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tfChecked, tfOk]);
+  const tfPtr = useCfuPointers([{ key: "q3", to: LOOK.roles }], { done: tfChecked && tfOk, early: true });
+  const tfCheck = () => {
+    if (trueFalse) tfPtr.record(() => tfOk, trueFalse);
+    setTfChecked(true);
+  };
 
   return (
     <div className="align-drill">
@@ -122,6 +152,7 @@ function WordProblemCheckForUnderstanding({ onComplete }: { onComplete?: () => v
         correctRole={2}
         correctAnswer={11}
         answerOptions={[5, 6, 11]}
+        answerLook={LOOK.story}
         explain="this story asks for the RESULT — the amount Sam has now, after picking more: 6 + 5 = 11."
         onComplete={mark("q1")}
       />
@@ -132,6 +163,7 @@ function WordProblemCheckForUnderstanding({ onComplete }: { onComplete?: () => v
         correctRole={1}
         correctAnswer={5}
         answerOptions={[5, 6, 11]}
+        answerLook={LOOK.missing}
         explain="the question asks how many he PICKED — the CHANGE, not the result. 11 − 6 = 5. The answer isn't always the biggest number in the story."
         onComplete={mark("q2")}
       />
@@ -147,10 +179,11 @@ function WordProblemCheckForUnderstanding({ onComplete }: { onComplete?: () => v
             <option value="true">True</option>
             <option value="false">False</option>
           </TapSelect>
-          <button className="btn primary" type="button" onClick={() => setTfChecked(true)}>
+          <button className="btn primary" type="button" onClick={tfCheck}>
             Check Answer
           </button>
         </div>
+        <StuckBox {...tfPtr} early />
         {tfChecked && (
           <ReadAloud as="p" className={`feedback ${tfOk ? "good" : "bad"}`} role="alert">
             {tfOk
@@ -166,6 +199,7 @@ function WordProblemCheckForUnderstanding({ onComplete }: { onComplete?: () => v
         correctRole={0}
         correctAnswer={7}
         answerOptions={[4, 7, 15]}
+        answerLook={LOOK.missing}
         explain={'the word "more" doesn\'t always mean add — here the STARTING amount is unknown, and finding it means SUBTRACTING the change: 11 − 4 = 7, not adding.'}
         onComplete={mark("q4")}
       />
@@ -180,8 +214,9 @@ function WordProblemCheckForUnderstanding({ onComplete }: { onComplete?: () => v
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
-  const [start, setStart] = useState(6);
-  const [change, setChange] = useState(5);
+  // Not the CFU's numbers, so a "Look here" never shows a CFU answer.
+  const [start, setStart] = useState(5);
+  const [change, setChange] = useState(3);
   const [action, setAction] = useState<"add" | "take">("add");
 
   const result = action === "add" ? Math.min(20, start + change) : Math.max(0, start - change);
@@ -231,25 +266,32 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           Switch to {action === "add" ? "Take From" : "Add To"}
         </button>
       </div>
-      <div className="control-row" style={{ gap: 24, alignItems: "flex-start" }} data-readaloud-part>
-        <div>
-          <TenFrameGroup value={start} tone="a" />
-          <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
-            Start: {start}
-          </ReadAloud>
+      <div {...lookHereSpot("atf-story")}>
+        <div className="control-row" style={{ gap: 24, alignItems: "flex-start" }} data-readaloud-part>
+          <div>
+            <TenFrameGroup value={start} tone="a" />
+            <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
+              Start: {start}
+            </ReadAloud>
+          </div>
+          <div>
+            <TenFrameGroup value={result} tone="c" />
+            <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
+              Result: {result}
+            </ReadAloud>
+          </div>
         </div>
-        <div>
-          <TenFrameGroup value={result} tone="c" />
-          <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
-            Result: {result}
-          </ReadAloud>
-        </div>
+        <ReadAloud as="p" className="muted small" data-look-here-key>
+          {action === "add"
+            ? `${start} + ${change} = ${result}. The amount grew — this is an "Add To" story.`
+            : `${start} − ${change} = ${result}. The amount shrank — this is a "Take From" story.`}
+        </ReadAloud>
       </div>
-      <ReadAloud as="p" className="muted small">
-        {action === "add"
-          ? `${start} + ${change} = ${result}. The amount grew — this is an "Add To" story.`
-          : `${start} − ${change} = ${result}. The amount shrank — this is a "Take From" story.`}{" "}
-        A story can ask for the start, the change, or the result — read carefully to see which one is missing.
+      <ReadAloud as="p" className="muted small" {...lookHereSpot("atf-roles")}>
+        <span data-look-here-key>A story can ask for the start, the change, or the result — read carefully to see which one is missing.</span>
+      </ReadAloud>
+      <ReadAloud as="p" className="muted small" {...lookHereSpot("atf-missing")}>
+        <span data-look-here-key>Start or change missing? Take the number you know away from the end.</span>
       </ReadAloud>
       {/* Below the picture, so students explore first, then check. */}
       {(introActive || showCheck) && <WordProblemCheckForUnderstanding onComplete={onIntroDone} />}

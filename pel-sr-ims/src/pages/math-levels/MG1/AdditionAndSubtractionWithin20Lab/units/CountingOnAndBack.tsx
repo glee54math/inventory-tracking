@@ -8,6 +8,8 @@ import type { Unit } from "../../../shared/units/types";
 import { countingOnAndBackTest } from "./CountingOnAndBackTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
 import { TapSelect } from "../../../shared/components/TapSelect";
+import { StuckBox, useCfuPointers } from "../../../shared/components/CfuPointers";
+import { lookHereSpot, useLookHereRequest } from "../../../shared/lib/lookHere";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -18,6 +20,15 @@ import { TapSelect } from "../../../shared/components/TapSelect";
 // (2) off-by-one in count-back.
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+
+/** CFU "Look here" pointers: the Explore spot that teaches each part (shown after its 2nd miss). */
+const LOOK = {
+  start: { target: "cob-keep", label: "Explore: keep the number you have", say: "Look here. Start at the number you have." },
+  many: { target: "cob-count", label: "Explore: count one more", say: "Look here. Count how many more." },
+  bigger: { target: "cob-bigger", label: "Explore: start at the bigger number", say: "Look here. Start at the bigger number." },
+  back: { target: "cob-back", label: "Explore: count one back", say: "Look here. Count back one at a time." },
+  rule: { target: "cob-back-rule", label: "Explore: how many times to count back", say: "Look here. Count back the number you take away." },
+};
 
 /** Vocabulary + "where do you start" / "how many counts" — the two things
  *  the plan explicitly calls out, in one question so neither can be guessed
@@ -33,6 +44,18 @@ function WhereAndHowManyQuestion({ onComplete }: { onComplete?: () => void }) {
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  const partOk = (key: string) => (key === "start" ? startOk : manyOk);
+  const ptr = useCfuPointers(
+    [
+      { key: "start", part: "Start", to: LOOK.start },
+      { key: "many", part: "How many", to: LOOK.many },
+    ],
+    { done: checked && ok, early: true, rightNow: (p) => checked && partOk(p.key) }
+  );
+  const check = () => {
+    ptr.record((p) => partOk(p.key), `${start}|${many}`);
+    setChecked(true);
+  };
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -63,10 +86,11 @@ function WhereAndHowManyQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="11">11</option>
           </TapSelect>
         </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && allFilled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -88,6 +112,11 @@ function SmartStartQuestion({ onComplete }: { onComplete?: () => void }) {
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.bigger }], { done: checked && ok, early: true });
+  const check = () => {
+    if (picked) ptr.record(() => ok, picked);
+    setChecked(true);
+  };
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -102,10 +131,11 @@ function SmartStartQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="3">3 (the first number written)</option>
           <option value="8">8 (the bigger number)</option>
         </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -132,6 +162,12 @@ function CountBackSequenceQuestion({ onComplete }: { onComplete?: () => void }) 
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  // One idea (count back one at a time), so the three boxes are one part.
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.back }], { done: checked && ok, early: true });
+  const check = () => {
+    if (a && b && c) ptr.record(() => ok, `${a}|${b}|${c}`);
+    setChecked(true);
+  };
 
   const selectRow = (label: string, value: string, setValue: (v: string) => void, isOk: boolean) => (
     <label>
@@ -158,10 +194,11 @@ function CountBackSequenceQuestion({ onComplete }: { onComplete?: () => void }) 
         {selectRow("1st", a, setA, aOk)}
         {selectRow("2nd", b, setB, bOk)}
         {selectRow("3rd", c, setC, cOk)}
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -182,6 +219,11 @@ function CountBackRuleQuestion({ onComplete }: { onComplete?: () => void }) {
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.rule }], { done: checked && ok, early: true });
+  const check = () => {
+    if (picked) ptr.record(() => ok, picked);
+    setChecked(true);
+  };
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -197,10 +239,11 @@ function CountBackRuleQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="true">True</option>
           <option value="false">False</option>
         </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -239,9 +282,10 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
   const [mode, setMode] = useState<"on" | "back">("on");
-  const [start, setStart] = useState(8);
-  const [current, setCurrent] = useState(8);
-  const [trail, setTrail] = useState<number[]>([8]);
+  // Starts at 6, not the CFU's 8, so a "Look here" never shows a CFU answer.
+  const [start, setStart] = useState(6);
+  const [current, setCurrent] = useState(6);
+  const [trail, setTrail] = useState<number[]>([6]);
 
   const resetTo = (n: number) => {
     setStart(n);
@@ -255,6 +299,14 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   };
   // From start/current, not the trail: the trail only keeps the last few numbers.
   const countsSoFar = Math.abs(current - start);
+  // A CFU "Look here" for a spot shown only in the other mode switches to that mode first.
+  useLookHereRequest((id) => {
+    const want = id === "cob-back" || id === "cob-back-rule" ? "back" : id === "cob-count" || id === "cob-bigger" ? "on" : null;
+    if (want && want !== mode) {
+      setMode(want);
+      resetTo(start);
+    }
+  });
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -281,36 +333,52 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         )}
       </div>
 
-      <div className="control-row" style={{ alignItems: "center" }} data-readaloud-part>
-        <button
-          className="btn primary"
-          onClick={countOnce}
-          disabled={mode === "on" ? current >= 20 : current <= 0}
-        >
-          {mode === "on" ? "Count one more" : "Count one back"}
-        </button>
-        <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {trail.map((n, i) => (
-            <span
-              key={i}
-              style={{
-                fontWeight: 800,
-                fontSize: 18,
-                padding: "4px 10px",
-                borderRadius: 999,
-                background: i === 0 ? "var(--grid)" : "var(--qa-soft)",
-                color: i === 0 ? "var(--ink)" : "var(--qa-text, var(--ink))",
-              }}
-            >
-              {n}
-            </span>
-          ))}
-        </span>
+      {/* Keyed by mode: each mode's spot is its own element, so a lit spot never changes id. */}
+      <div key={mode} {...lookHereSpot(mode === "on" ? "cob-count" : "cob-back")} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="control-row" style={{ alignItems: "center" }} data-readaloud-part>
+          <button
+            className="btn primary"
+            onClick={countOnce}
+            disabled={mode === "on" ? current >= 20 : current <= 0}
+          >
+            {mode === "on" ? "Count one more" : "Count one back"}
+          </button>
+          <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {trail.map((n, i) => (
+              <span
+                key={i}
+                style={{
+                  fontWeight: 800,
+                  fontSize: 18,
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  background: i === 0 ? "var(--grid)" : "var(--qa-soft)",
+                  color: i === 0 ? "var(--ink)" : "var(--qa-text, var(--ink))",
+                }}
+              >
+                {n}
+              </span>
+            ))}
+          </span>
+        </div>
+        <ReadAloud as="p" className="muted small" style={{ margin: 0 }} data-look-here-key>
+          You counted {mode === "on" ? "on" : "back"} {countsSoFar} time{countsSoFar === 1 ? "" : "s"} from {start}, landing on {current}.
+        </ReadAloud>
       </div>
-      <ReadAloud as="p" className="muted small">
-        You counted {mode === "on" ? "on" : "back"} {countsSoFar} time{countsSoFar === 1 ? "" : "s"} from {start}, landing on {current}. Notice
-        you never had to start over from {mode === "on" ? "1" : "the very top"} — you kept the starting number and just kept going.
+      <ReadAloud as="p" className="muted small" {...lookHereSpot("cob-keep")}>
+        <span data-look-here-key>
+          Notice you never had to start over from {mode === "on" ? "1" : "the very top"} — you kept the starting number and just kept going.
+        </span>
       </ReadAloud>
+      {mode === "on" ? (
+        <ReadAloud as="p" className="muted small" {...lookHereSpot("cob-bigger")}>
+          <span data-look-here-key>Start at the bigger number. For 2 + 9, start at 9 and count on 2.</span>
+        </ReadAloud>
+      ) : (
+        <ReadAloud as="p" className="muted small" {...lookHereSpot("cob-back-rule")}>
+          <span data-look-here-key>To take away 4, count back 4 times. Say 4 numbers.</span>
+        </ReadAloud>
+      )}
 
       <NumberLine min={0} max={20} points={[{ value: start, label: "start", tone: "c" }, ...(current !== start ? [{ value: current, label: "now", tone: "a" as const }] : [])]} />
       <TenFrameGroup value={current} tone="a" />

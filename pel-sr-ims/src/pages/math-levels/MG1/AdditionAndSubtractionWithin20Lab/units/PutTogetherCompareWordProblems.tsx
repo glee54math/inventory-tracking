@@ -6,6 +6,8 @@ import type { Unit } from "../../../shared/units/types";
 import { putTogetherCompareWordProblemsTest } from "./PutTogetherCompareWordProblemsTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
 import { TapSelect } from "../../../shared/components/TapSelect";
+import { StuckBox, useCfuPointers } from "../../../shared/components/CfuPointers";
+import { lookHereSpot } from "../../../shared/lib/lookHere";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -19,6 +21,14 @@ import { TapSelect } from "../../../shared/components/TapSelect";
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
+/** CFU "Look here" pointers: the Explore spot that teaches each part (shown after its 2nd miss). */
+const LOOK = {
+  whole: { target: "ptc-whole", label: "Explore: put together", say: "Look here. In all means put them together." },
+  ways: { target: "ptc-ways", label: "Explore: try different splits", say: "Look here. Try other splits." },
+  part: { target: "ptc-part", label: "Explore: find a missing part", say: "Look here. Take the part away from the whole." },
+  diff: { target: "ptc-diff", label: "Explore: compare", say: "Look here. Take the smaller from the bigger." },
+};
+
 function TotalOrAddendQuestion({ onComplete }: { onComplete?: () => void }) {
   const [role, setRole] = useState("");
   const [answer, setAnswer] = useState("");
@@ -30,6 +40,12 @@ function TotalOrAddendQuestion({ onComplete }: { onComplete?: () => void }) {
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  // Both boxes are one idea ("in all" means the total), so one part.
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.whole }], { done: checked && ok, early: true });
+  const check = () => {
+    if (allFilled) ptr.record(() => ok, `${role}|${answer}`);
+    setChecked(true);
+  };
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -58,10 +74,11 @@ function TotalOrAddendQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="9">9</option>
           </TapSelect>
         </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && allFilled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? "Correct — \"in all\" means the TOTAL. 4 + 5 = 9." : "Not quite — \"in all\" is asking for the TOTAL (both parts combined): 4 + 5 = 9."}
@@ -83,6 +100,18 @@ function ManyWaysQuestion({ onComplete }: { onComplete?: () => void }) {
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  const partOk = (key: string) => (key === "ways" ? waysOk : answerOk);
+  const ptr = useCfuPointers(
+    [
+      { key: "ways", part: "How many ways", to: LOOK.ways },
+      { key: "answer", part: "Animal cards", to: LOOK.part },
+    ],
+    { done: checked && ok, early: true, rightNow: (p) => checked && partOk(p.key) }
+  );
+  const check = () => {
+    ptr.record((p) => partOk(p.key), `${waysPicked}|${answer}`);
+    setChecked(true);
+  };
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -111,10 +140,11 @@ function ManyWaysQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="6">6</option>
           </TapSelect>
         </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && allFilled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -139,6 +169,12 @@ function MoreAndFewerSameQuestion({ onComplete }: { onComplete?: () => void }) {
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  // "More" and "fewer" are the same gap, taught in one place: one part.
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.diff }], { done: checked && ok, early: true });
+  const check = () => {
+    if (allFilled) ptr.record(() => ok, `${moreAns}|${fewerAns}`);
+    setChecked(true);
+  };
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -168,10 +204,11 @@ function MoreAndFewerSameQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="9">9</option>
           </TapSelect>
         </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && allFilled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -195,6 +232,12 @@ function FewerDirectionQuestion({ onComplete }: { onComplete?: () => void }) {
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  // Both boxes are "bigger − smaller", taught in one place: one part.
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.diff }], { done: checked && ok, early: true });
+  const check = () => {
+    if (allFilled) ptr.record(() => ok, `${calc}|${answer}`);
+    setChecked(true);
+  };
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -223,10 +266,11 @@ function FewerDirectionQuestion({ onComplete }: { onComplete?: () => void }) {
             <option value="9">9</option>
           </TapSelect>
         </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && allFilled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -266,12 +310,13 @@ function PutTogetherCompareCheckForUnderstanding({ onComplete }: { onComplete?: 
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
-  const [redCount, setRedCount] = useState(4);
-  const [blueCount, setBlueCount] = useState(5);
+  // Not the CFU's numbers (4 + 5, 9 and 5), so a "Look here" never shows a CFU answer.
+  const [redCount, setRedCount] = useState(6);
+  const [blueCount, setBlueCount] = useState(7);
   const total = redCount + blueCount;
 
-  const [amountA, setAmountA] = useState(9);
-  const [amountB, setAmountB] = useState(5);
+  const [amountA, setAmountA] = useState(8);
+  const [amountB, setAmountB] = useState(3);
   const bigger = Math.max(amountA, amountB);
   const smaller = Math.min(amountA, amountB);
   const diff = bigger - smaller;
@@ -301,10 +346,17 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             Orange: <input type="range" min={0} max={15} value={blueCount} onChange={(e) => setBlueCount(Number(e.target.value))} /> {blueCount}
           </label>
         </div>
-        <TenFrameGroup value={Math.min(20, total)} tone="a" splitAt={redCount} tone2="b" />
-        <ReadAloud as="p" className="muted small">
-          {redCount} + {blueCount} = {total} in all. Try different green/orange splits that still add up to the same total — notice there's more than
-          one way.
+        <div {...lookHereSpot("ptc-whole")}>
+          <TenFrameGroup value={Math.min(20, total)} tone="a" splitAt={redCount} tone2="b" />
+          <ReadAloud as="p" className="muted small" data-look-here-key>
+            {redCount} + {blueCount} = {total} in all.
+          </ReadAloud>
+        </div>
+        <ReadAloud as="p" className="muted small" {...lookHereSpot("ptc-ways")}>
+          <span data-look-here-key>Try different green/orange splits that still add up to the same total — notice there's more than one way.</span>
+        </ReadAloud>
+        <ReadAloud as="p" className="muted small" {...lookHereSpot("ptc-part")}>
+          <span data-look-here-key>Know the whole and one part? Take that part away from the whole.</span>
         </ReadAloud>
       </div>
 
@@ -318,14 +370,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             Amount B: <input type="range" min={0} max={20} value={amountB} onChange={(e) => setAmountB(Number(e.target.value))} /> {amountB}
           </label>
         </div>
-        <div className="control-row" style={{ gap: 24, alignItems: "flex-start" }} data-readaloud-part>
-          <TenFrameGroup value={amountA} tone="a" />
-          <TenFrameGroup value={amountB} tone="b" />
+        <div {...lookHereSpot("ptc-diff")}>
+          <div className="control-row" style={{ gap: 24, alignItems: "flex-start" }} data-readaloud-part>
+            <TenFrameGroup value={amountA} tone="a" />
+            <TenFrameGroup value={amountB} tone="b" />
+          </div>
+          <ReadAloud as="p" className="muted small" data-look-here-key>
+            The bigger amount is {bigger}, the smaller is {smaller}. The difference is always bigger − smaller = {diff} — whether you call it "
+            {diff} more" or "{diff} fewer" depends only on which amount you're talking about, not on the math.
+          </ReadAloud>
         </div>
-        <ReadAloud as="p" className="muted small">
-          The bigger amount is {bigger}, the smaller is {smaller}. The difference is always bigger − smaller = {diff} — whether you call it "
-          {diff} more" or "{diff} fewer" depends only on which amount you're talking about, not on the math.
-        </ReadAloud>
       </div>
       {/* Below the picture, so students explore first, then check. */}
       {(introActive || showCheck) && <PutTogetherCompareCheckForUnderstanding onComplete={onIntroDone} />}

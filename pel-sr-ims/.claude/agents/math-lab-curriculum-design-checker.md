@@ -186,8 +186,14 @@ Each part should set up the next. Check the links:
   a nudge and "Look here" ring on the first miss, the picture showing it
   happening on the second. The trap is still checked, but through a
   picture, not a sentence.
+- **Every CFU part points to Explore.** After a part's 2nd wrong Check, a
+  "Look here" pointer (early labs: a big talking "Look here!" button and
+  arrow) must lead to the Explore spot that actually teaches that part.
+  Flag a part with no pointer, a pointer to a spot that doesn't teach it,
+  or a spot that shows the CFU's own answer (e.g. Explore's default numbers
+  equal the CFU's). Rules: `_planning/reviews/CFU_Pointer_Rollout/README.md`.
 - *Check:* make a table per unit: concept → where shown in Explore → CFU
-  question → Practice bucket → Test question. Gaps are findings.
+  question → Look-here spot → Practice bucket → Test question. Gaps are findings.
 
 ### Layer 4: Getting unstuck (highest priority)
 For every Problem type, trace the help a stuck student gets:

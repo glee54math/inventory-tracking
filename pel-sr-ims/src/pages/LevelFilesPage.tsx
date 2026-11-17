@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { MATH_LEVELS } from "../utils/types";
 import { LEVEL_SKILLS } from "../utils/levelSubsections";
@@ -17,6 +17,12 @@ const englishModules = import.meta.glob('./english-levels/*/*.tsx');
 // previewableFilesForLevel's filter (e.g. MG5.tsx, a leftover demo file with
 // no units folder of its own).
 const mathUnitModules = import.meta.glob<{ units: Unit[] }>('./math-levels/*/*/units/index.ts');
+
+// Mr. Lee-only review badge (admin-review-status/). Lazy so the review data never
+// lands in a chunk the student portal loads.
+const LabReviewBadge = lazy(() =>
+    import("./admin-review-status/ReviewStatus").then((m) => ({ default: m.LabReviewBadge }))
+);
 
 function filesForLevel(levelId: string, isMath: boolean): string[] {
     const modules = isMath ? mathModules : englishModules;
@@ -150,6 +156,9 @@ export default function LevelFilesPage() {
                                             {lab.units.length === 1 ? "1 unit" : `${lab.units.length} units`}
                                         </span>
                                     </div>
+                                    <Suspense fallback={null}>
+                                        <LabReviewBadge componentFile={lab.componentFile} />
+                                    </Suspense>
                                     <UnitPreviewCarousel units={lab.units} onPick={open} />
                                     <button type="button" className="level-files-open" onClick={open}>
                                         Open lab

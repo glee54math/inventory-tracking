@@ -7,6 +7,8 @@ import type { Unit } from "../../../shared/units/types";
 import { fluencyFactsWithin20Test } from "./FluencyFactsWithin20Test";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
 import { TapSelect } from "../../../shared/components/TapSelect";
+import { StuckBox, useCfuPointers, type ExploreTarget } from "../../../shared/components/CfuPointers";
+import { lookHereSpot, useLookHereRequest } from "../../../shared/lib/lookHere";
 
 // ============================================================================
 // SHARED LOGIC — same function backs both the Explore grouping hint and the
@@ -45,6 +47,24 @@ export function bestPairToGroup(nums: [number, number, number]): [number, number
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
+/** CFU "Look here" pointers: the Explore spot that teaches each question (shown after its 2nd miss). */
+const LOOK = {
+  pair: { target: "flu-pair", label: "Explore: three addends, the pair to add first", say: "Look here. Find two numbers that make 10." },
+  order: { target: "flu-order", label: "Explore: three addends, any order", say: "Look here. Try a different order." },
+  within: { target: "flu-within", label: "Explore: within 10 or past 10", say: "Look here. Is the total past 10?" },
+  makeTen: { target: "flu-make-ten", label: "Explore: make a ten first", say: "Look here. Make a ten first." },
+};
+
+/** One-pick CFU question's pointer: shows after the 2nd wrong Check. */
+function usePickPointer(look: ExploreTarget, picked: string, checked: boolean, ok: boolean, setChecked: (v: boolean) => void) {
+  const ptr = useCfuPointers([{ key: "q", to: look }], { done: checked && ok, early: true });
+  const check = () => {
+    if (picked) ptr.record(() => ok, picked);
+    setChecked(true);
+  };
+  return { ptr, check };
+}
+
 function GroupingChoiceQuestion({ onComplete }: { onComplete?: () => void }) {
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
@@ -52,6 +72,7 @@ function GroupingChoiceQuestion({ onComplete }: { onComplete?: () => void }) {
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  const { ptr, check } = usePickPointer(LOOK.pair, picked, checked, ok, setChecked);
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -67,10 +88,11 @@ function GroupingChoiceQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="8+2">8 + 2</option>
           <option value="4+2">4 + 2</option>
         </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -89,6 +111,7 @@ function OrderDoesntMatterQuestion({ onComplete }: { onComplete?: () => void }) 
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  const { ptr, check } = usePickPointer(LOOK.order, picked, checked, ok, setChecked);
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -103,10 +126,11 @@ function OrderDoesntMatterQuestion({ onComplete }: { onComplete?: () => void }) 
           <option value="true">True</option>
           <option value="false">False</option>
         </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -125,6 +149,7 @@ function WithinTenOrTwentyQuestion({ onComplete }: { onComplete?: () => void }) 
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  const { ptr, check } = usePickPointer(LOOK.within, picked, checked, ok, setChecked);
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -139,10 +164,11 @@ function WithinTenOrTwentyQuestion({ onComplete }: { onComplete?: () => void }) 
           <option value="4+3">4 + 3</option>
           <option value="8+7">8 + 7</option>
         </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -161,6 +187,7 @@ function UnfamiliarSpeedQuestion({ onComplete }: { onComplete?: () => void }) {
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  const { ptr, check } = usePickPointer(LOOK.makeTen, answer, checked, ok, setChecked);
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -176,10 +203,11 @@ function UnfamiliarSpeedQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="16">16</option>
           <option value="17">17</option>
         </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -218,15 +246,22 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
   const [mode, setMode] = useState<"within10" | "within20" | "three">("within10");
-  const [a, setA] = useState(4);
-  const [b, setB] = useState(3);
-  const [c, setC] = useState(2);
+  // Not the CFU's numbers (4 + 3, 4 + 8 + 2), so a "Look here" never shows a CFU answer.
+  const [a, setA] = useState(3);
+  const [b, setB] = useState(5);
+  const [c, setC] = useState(7);
 
   const nums: [number, number, number] = [a, b, c];
   const [i, j] = bestPairToGroup(nums);
   const kIdx = [0, 1, 2].find((x) => x !== i && x !== j)!;
   const pairSum = nums[i] + nums[j];
   const total = a + b + c;
+  // A CFU "Look here" for a spot shown only in the other mode switches to that mode first.
+  useLookHereRequest((id) => {
+    if (id === "flu-pair" || id === "flu-order") setMode("three");
+    else if (mode === "three" && id === "flu-within") setMode("within10");
+    else if (mode === "three" && id === "flu-make-ten") setMode("within20");
+  });
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -260,9 +295,14 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             </label>
           </div>
           <TenFrameGroup value={Math.min(20, a + b)} tone="a" splitAt={Math.min(a, 20)} tone2="b" />
-          <ReadAloud as="p" className="muted small">
-            {a} + {b} = {a + b}. {a + b <= 10 ? "This stays within 10." : "This crosses past 10 — a within-20 fact."} The goal is to recall facts
-            like this quickly, not count one-by-one every time.
+          <ReadAloud as="p" className="muted small" {...lookHereSpot("flu-within")}>
+            <span data-look-here-key>
+              {a} + {b} = {a + b}. {a + b <= 10 ? "This stays within 10." : "This crosses past 10 — a within-20 fact."}
+            </span>{" "}
+            The goal is to recall facts like this quickly, not count one-by-one every time.
+          </ReadAloud>
+          <ReadAloud as="p" className="muted small" {...lookHereSpot("flu-make-ten")}>
+            <span data-look-here-key>Past 10? Make a ten first, then add what is left.</span>
           </ReadAloud>
         </>
       ) : (
@@ -279,9 +319,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             </label>
           </div>
           <TenFrameGroup value={Math.min(20, total)} tone="a" />
-          <ReadAloud as="p" className="muted small">
-            {nums[i]} + {nums[j]} = {pairSum} is the easiest pair to group first, then {pairSum} + {nums[kIdx]} = {total}. Try sliding the numbers
-            around — the total ({total}) never changes no matter which pair you group first.
+          <div {...lookHereSpot("flu-pair")}>
+            <ReadAloud as="p" className="muted small" data-look-here-key>
+              Look for two numbers that make 10. Add them first.
+            </ReadAloud>
+            <ReadAloud as="p" className="muted small">
+              {nums[i]} + {nums[j]} = {pairSum} is the easiest pair to group first, then {pairSum} + {nums[kIdx]} = {total}.
+            </ReadAloud>
+          </div>
+          <ReadAloud as="p" className="muted small" {...lookHereSpot("flu-order")}>
+            <span data-look-here-key>Try sliding the numbers around — the total ({total}) never changes no matter which pair you group first.</span>
           </ReadAloud>
         </>
       )}

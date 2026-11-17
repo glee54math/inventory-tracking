@@ -84,7 +84,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {!introActive && <CfuToggle open={showCheck} onToggle={() => setShowCheck((v) => !v)} />}
       <p className="muted small" style={{ margin: 0 }}>
-        Remember from grade 3: area counts the unit squares that cover the inside; perimeter is the distance around the outside.
+        Remember: area counts the unit squares that cover the inside; perimeter is the distance around the outside.
       </p>
       <div className="control-row">
         <Segmented

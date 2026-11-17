@@ -1,5 +1,7 @@
 # K-8 Curriculum Lab Plans — Index
 
+> **Which labs have been reviewed?** See `reviews/LAB_STATUS.md` — one row per lab, updated by the build-math-lab workflow.
+
 This folder is a **Stage-0 curriculum plan**, not code. It exists so that
 `.claude/skills/build-math-lab`'s "Stage 0" (standard → approved plan,
 before handoff to the `math-lab-builder` subagent) is already done, in

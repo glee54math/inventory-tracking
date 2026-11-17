@@ -8,17 +8,27 @@ import type { Unit } from "../../../shared/units/types";
 import { makingTenAndDecomposingTest } from "./MakingTenAndDecomposingTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
 import { TapSelect } from "../../../shared/components/TapSelect";
+import { StuckBox, useCfuPointers, type ExploreTarget } from "../../../shared/components/CfuPointers";
+import { lookHereSpot, useLookHereRequest } from "../../../shared/lib/lookHere";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
 // ============================================================================
 // Fixed, hand-picked questions. Targets the plan's named misconceptions:
 // (1) decomposing the WRONG addend (always breaking apart the second number
-// regardless of which is closer to ten), and (2) treating "making ten" as
+// instead of the SMALLER one — the bigger number is closer to ten, so keep it whole), and (2) treating "making ten" as
 // one memorized answer rather than a repeatable strategy — tested on an
 // UNFAMILIAR fact to confirm it actually generalizes.
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+
+/** CFU "Look here" pointers: the Explore spot that teaches each part (shown after its 2nd miss). */
+const LOOK = {
+  keep: { target: "mt-keep", label: "Explore: keep the bigger number whole", say: "Look here. Break apart the smaller number." },
+  bond: { target: "mt-bond", label: "Explore: the number bond and the two number sentences", say: "Look here. Fill the ten first." },
+  any: { target: "mt-any", label: "Explore: try new numbers", say: "Look here. Try new numbers." },
+  sub: { target: "mt-sub", label: "Explore: bridging through ten", say: "Look here. Get to 10 first." },
+};
 
 /** Fixed width so the SVG bond keeps its size inside wrapping flex rows. */
 function Bond({ whole, parts }: { whole: number | null; parts: [BondPart, BondPart] }) {
@@ -64,6 +74,7 @@ function BondFill({
   equations,
   hint,
   done,
+  look,
   onComplete,
 }: {
   whole: number;
@@ -71,6 +82,8 @@ function BondFill({
   equations: Tok[][];
   hint: string;
   done: string;
+  /** The Explore spot that teaches this bond (CFU "Look here" pointer). */
+  look: ExploreTarget;
   onComplete?: () => void;
 }) {
   const [vals, setVals] = useState<Record<number, string>>({});
@@ -83,6 +96,12 @@ function BondFill({
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  // The bond and its sentences are one idea, so all the boxes are one part.
+  const ptr = useCfuPointers([{ key: "bond", to: look }], { done: checked && ok, early: true });
+  const check = () => {
+    ptr.record(() => ok, specs.map((_, i) => valueOf(i)).join("|"));
+    setChecked(true);
+  };
 
   const blank = (s: BlankSpec): Blank => {
     const i = specs.indexOf(s);
@@ -114,10 +133,11 @@ function BondFill({
         </Equations>
       </div>
       <div className="control-row" style={{ alignItems: "center" }} data-readaloud-part>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok ? `Correct! ${done}` : `Not quite. Fix the red boxes. ${hint}`}
@@ -134,6 +154,11 @@ function WhichAddendQuestion({ onComplete }: { onComplete?: () => void }) {
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "6";
+  const ptr = useCfuPointers([{ key: "pick", to: LOOK.keep }], { done: checked && ok, early: true, rightNow: () => checked && ok });
+  const check = () => {
+    if (picked) ptr.record(() => ok, picked);
+    setChecked(true);
+  };
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -150,16 +175,17 @@ function WhichAddendQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="" disabled>
             choose
           </option>
-          <option value="6">6 (the first number)</option>
-          <option value="9">9 (the second number)</option>
+          <option value="6">6 (the smaller number)</option>
+          <option value="9">9 (the bigger number)</option>
         </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct! 9 is almost 10, so keep 9 whole. Now break apart 6 and solve:" : "Not quite. 9 is almost 10, so keep 9 whole. Try again!"}
+          {ok ? "Correct! 9 is bigger and close to 10. Keep 9 whole. Break apart 6 and solve:" : "Not quite. Which number is closer to 10? Try again!"}
         </ReadAloud>
       )}
       {checked && ok && (
@@ -175,6 +201,7 @@ function WhichAddendQuestion({ onComplete }: { onComplete?: () => void }) {
           ]}
           hint="9 needs 1 more to make 10."
           done="6 + 9 = 15"
+          look={LOOK.bond}
           onComplete={onComplete}
         />
       )}
@@ -209,6 +236,7 @@ function UnfamiliarFactQuestion({ onComplete }: { onComplete?: () => void }) {
         ]}
         hint="Count the empty boxes: 8 needs 2 more to make 10."
         done="8 + 6 = 14"
+        look={LOOK.bond}
         onComplete={onComplete}
       />
     </ReadAloud>
@@ -223,6 +251,11 @@ function StrategyVsFactQuestion({ onComplete }: { onComplete?: () => void }) {
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.any }], { done: checked && ok, early: true });
+  const check = () => {
+    if (picked) ptr.record(() => ok, picked);
+    setChecked(true);
+  };
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -238,10 +271,11 @@ function StrategyVsFactQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="true">True</option>
           <option value="false">False</option>
         </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -275,6 +309,7 @@ function SubtractionBridgeQuestion({ onComplete }: { onComplete?: () => void }) 
         ]}
         hint="13 is 3 more than 10. Take away 3 first."
         done="13 − 5 = 8"
+        look={LOOK.sub}
         onComplete={onComplete}
       />
     </ReadAloud>
@@ -310,11 +345,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [mode, setMode] = useState<"add" | "subtract">("add");
   const [a, setA] = useState(9);
   const [b, setB] = useState(4);
-  const [start, setStart] = useState(13);
-  const [sub, setSub] = useState(5);
+  const [start, setStart] = useState(14);
+  const [sub, setSub] = useState(6);
 
   const addBreak = makeTenBreakdown(a, b);
   const subBreak = subtractThroughTenBreakdown(start, sub);
+  // A CFU "Look here" for a spot shown only in the other mode switches to that mode first.
+  useLookHereRequest((id) => {
+    if (id === "mt-sub") setMode("subtract");
+    else if (id === "mt-keep" || id === "mt-bond" || id === "mt-any") setMode("add");
+  });
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -334,21 +374,36 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 
       {mode === "add" ? (
         <>
-          <div className="control-row" data-readaloud-part>
-            <Stepper label="Near-ten number" value={a} min={6} max={9} step={1} onChange={setA} tone="a" />
-            <Stepper label="Other addend" value={b} min={2} max={9} step={1} onChange={setB} tone="b" />
+          <div {...lookHereSpot("mt-any")}>
+            <div className="control-row" data-readaloud-part>
+              <Stepper label="Bigger number" value={a} min={6} max={9} step={1} onChange={(v: number) => { setA(v); if (b >= v) setB(v - 1); }} tone="a" />
+              <Stepper label="Smaller number" value={b} min={2} max={a - 1} step={1} onChange={setB} tone="b" />
+            </div>
+            <ReadAloud as="p" className="muted small" data-look-here-key>
+              Try new numbers. Making ten works every time.
+            </ReadAloud>
           </div>
-          <div className="control-row" style={pictureRow} data-readaloud-part>
-            <Frame value={a} tone="a" />
-            <Sign>+</Sign>
-            <Frame value={b} tone="b" splitAt={addBreak.addToA} tone2="c" />
+          <div {...lookHereSpot("mt-keep")}>
+            <div className="control-row" style={pictureRow} data-readaloud-part>
+              <Frame value={a} tone="a" />
+              <Sign>+</Sign>
+              <Frame value={b} tone="b" splitAt={addBreak.addToA} tone2="c" />
+            </div>
+            <ReadAloud as="p" className="muted small" data-look-here-key>
+              Keep the bigger number whole. It is closer to 10. Break apart the smaller number.
+            </ReadAloud>
           </div>
-          <div className="control-row" style={{ gap: 32, alignItems: "center" }} data-readaloud-part>
-            <Bond whole={b} parts={[{ value: addBreak.addToA, tone: "b" }, { value: addBreak.remainder, tone: "c" }]} />
-            <Equations>
-              <EquationStrip tokens={[{ value: a, tone: "a" }, "+", { value: addBreak.addToA, tone: "b" }, "=", addBreak.ten]} />
-              <EquationStrip tokens={[addBreak.ten, "+", { value: addBreak.remainder, tone: "c" }, "=", addBreak.total]} />
-            </Equations>
+          <div {...lookHereSpot("mt-bond")}>
+            <div className="control-row" style={{ gap: 32, alignItems: "center" }} data-readaloud-part>
+              <Bond whole={b} parts={[{ value: addBreak.addToA, tone: "b" }, { value: addBreak.remainder, tone: "c" }]} />
+              <Equations>
+                <EquationStrip tokens={[{ value: a, tone: "a" }, "+", { value: addBreak.addToA, tone: "b" }, "=", addBreak.ten]} />
+                <EquationStrip tokens={[addBreak.ten, "+", { value: addBreak.remainder, tone: "c" }, "=", addBreak.total]} />
+              </Equations>
+            </div>
+            <ReadAloud as="p" className="muted small" data-look-here-key>
+              Fill the ten first. Then add what is left.
+            </ReadAloud>
           </div>
         </>
       ) : (
@@ -357,13 +412,18 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             <Stepper label="Starting number" value={start} min={11} max={19} step={1} onChange={setStart} tone="c" />
             <Stepper label="Subtract" value={sub} min={2} max={9} step={1} onChange={setSub} tone="b" />
           </div>
-          <Frame value={start} tone="c" splitAt={subBreak.ten} tone2="b" />
-          <div className="control-row" style={{ gap: 32, alignItems: "center" }} data-readaloud-part>
-            <Bond whole={sub} parts={[{ value: subBreak.toTen, tone: "b" }, { value: subBreak.remainder, tone: "a" }]} />
-            <Equations>
-              <EquationStrip tokens={[{ value: start, tone: "c" }, "−", { value: subBreak.toTen, tone: "b" }, "=", subBreak.ten]} />
-              <EquationStrip tokens={[subBreak.ten, "−", { value: subBreak.remainder, tone: "a" }, "=", subBreak.total]} />
-            </Equations>
+          <div {...lookHereSpot("mt-sub")}>
+            <Frame value={start} tone="c" splitAt={subBreak.ten} tone2="b" />
+            <div className="control-row" style={{ gap: 32, alignItems: "center" }} data-readaloud-part>
+              <Bond whole={sub} parts={[{ value: subBreak.toTen, tone: "b" }, { value: subBreak.remainder, tone: "a" }]} />
+              <Equations>
+                <EquationStrip tokens={[{ value: start, tone: "c" }, "−", { value: subBreak.toTen, tone: "b" }, "=", subBreak.ten]} />
+                <EquationStrip tokens={[subBreak.ten, "−", { value: subBreak.remainder, tone: "a" }, "=", subBreak.total]} />
+              </Equations>
+            </div>
+            <ReadAloud as="p" className="muted small" data-look-here-key>
+              Take away to land on 10 first. Then take away the rest.
+            </ReadAloud>
           </div>
         </>
       )}
@@ -497,14 +557,15 @@ function makeTenProblem(targetBucket?: string): Problem {
   if (bucket === "makeTenNearTen") {
     const a = randInt(8, 9);
     const gap = 10 - a;
-    const b = randInt(gap + 1, 9); // guarantees a genuine (nonzero-remainder) decomposition
+    // gap + 1: a real leftover. a − 1: always break apart the SMALLER number.
+    const b = randInt(gap + 1, a - 1);
     return makeTenAdditionProblem(a, b, bucket);
   }
 
   if (bucket === "makeTenLargerGap") {
     const a = randInt(6, 7);
     const gap = 10 - a;
-    const b = randInt(gap + 1, 9);
+    const b = randInt(gap + 1, a - 1); // smaller than a: break apart the smaller number
     return makeTenAdditionProblem(a, b, bucket);
   }
 
@@ -520,7 +581,7 @@ export const makingTenAndDecomposing: Unit = {
   standard: "1.OA.6",
   keyIdea: (
     <>
-      <p>Keep the number closest to ten whole, and break apart the OTHER number — no matter which order the numbers are written in.</p>
+      <p>Keep the bigger number whole (it is closer to ten), and break apart the smaller number — no matter which order the numbers are written in.</p>
       <p>Make-ten is a repeatable strategy (find the gap to ten, split the other number, add the pieces), not one fact to memorize — and the same bridge-through-ten idea works for subtraction too.</p>
     </>
   ),

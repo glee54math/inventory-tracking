@@ -477,6 +477,19 @@ MK1–MK4.
   requires solving it twice by itself) and in at least one Unit Test
   question. A misconception checked only once in the CFU is not taught.
   List the CFU → bucket → Test mapping in your final report.
+- **"Look here" pointer on every CFU part (user requirement).** After a
+  part's 2nd wrong Check, it points to the Explore spot that teaches it.
+  Mark the spot with `{...lookHereSpot("id")}` (key sentence:
+  `data-look-here-key`), from `shared/lib/lookHere.ts`. `DropdownQuestion`:
+  pass `exploreTarget` (per blank + `part`, or per question). Hand-built
+  CFUs: `useCfuPointers` + `<StuckBox>` from
+  `shared/components/CfuPointers.tsx`. MK and MG1–MG4: `early` (big talking
+  "Look here!" button + bouncing arrow) with a few-word `say` line. A spot
+  shown only in one Explore mode: `useLookHereRequest` switches to it. Point
+  to the teaching, never the answer (Explore's default numbers must not be
+  the CFU's). If Explore has nothing that teaches a part, add one short
+  teaching line there. Guide + example:
+  `_planning/reviews/CFU_Pointer_Rollout/README.md`.
 - State every chosen CFU question, its correct answer, and why you picked
   it, in your final report — this is the part the user most wants to review.
 

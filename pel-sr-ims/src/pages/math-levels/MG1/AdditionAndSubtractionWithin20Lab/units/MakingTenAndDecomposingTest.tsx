@@ -26,7 +26,7 @@ export const gapToTenQuestion = (): TestQuestion[] => {
 export const makeTenNearTenNumberQuestion = (): TestQuestion[] => {
   const a = randInt(8, 9);
   const gap = 10 - a;
-  const b = randInt(gap + 1, 9);
+  const b = randInt(gap + 1, a - 1); // smaller than a: break apart the smaller number
   const { addToA, total } = makeTenBreakdown(a, b);
   return [
     {
@@ -41,7 +41,7 @@ export const makeTenNearTenNumberQuestion = (): TestQuestion[] => {
 export const makeTenLargerGapNumberQuestion = (): TestQuestion[] => {
   const a = randInt(6, 7);
   const gap = 10 - a;
-  const b = randInt(gap + 1, 9);
+  const b = randInt(gap + 1, a - 1); // smaller than a: break apart the smaller number
   const { addToA, total } = makeTenBreakdown(a, b);
   return [
     {
@@ -56,13 +56,13 @@ export const makeTenLargerGapNumberQuestion = (): TestQuestion[] => {
  *  SECOND, so "always break apart the second number" fails here. */
 export const wrongAddendChoiceQuestion = (): TestQuestion[] => {
   const nearTen = randInt(8, 9);
-  const other = randInt(10 - nearTen + 1, 9);
+  const other = randInt(10 - nearTen + 1, nearTen - 1); // always the smaller number
   return [
     {
       visual: null,
       difficulty: "hard",
       step: choice(
-        { prompt: `${other} + ${nearTen} — which number should you break apart to make a ten?`, hint: "Break apart whichever number is FARTHER from ten, no matter which order they're written in.", explain: `Break apart ${other} — ${nearTen} is already close to ten, so keep it whole.` },
+        { prompt: `${other} + ${nearTen} — which number should you break apart to make a ten?`, hint: "Break apart the smaller number. The bigger number is closer to ten, no matter which order they're written in.", explain: `Break apart ${other}, the smaller number. ${nearTen} is bigger and closer to ten, so keep it whole.` },
         String(other),
         [String(nearTen)] // misconception: always breaking apart whichever is written second
       ),

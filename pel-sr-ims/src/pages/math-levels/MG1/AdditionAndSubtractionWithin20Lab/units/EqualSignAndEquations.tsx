@@ -7,6 +7,8 @@ import type { Unit } from "../../../shared/units/types";
 import { equalSignAndEquationsTest } from "./EqualSignAndEquationsTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
 import { TapSelect } from "../../../shared/components/TapSelect";
+import { StuckBox, useCfuPointers, type ExploreTarget } from "../../../shared/components/CfuPointers";
+import { lookHereSpot } from "../../../shared/lib/lookHere";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -19,6 +21,24 @@ import { TapSelect } from "../../../shared/components/TapSelect";
 
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
+/** CFU "Look here" pointers: the Explore spot that teaches each part (shown after its 2nd miss). */
+const LOOK = {
+  balance: { target: "eq-balance", label: "Explore: the = sign is like a balance", say: "Look here. Both sides are the same." },
+  eitherSide: { target: "eq-either-side", label: "Explore: the total can be on either side", say: "Look here. The total can go first." },
+  scale: { target: "eq-scale", label: "Explore: make it balance", say: "Look here. Add up each side." },
+  missing: { target: "eq-missing", label: "Explore: a box can hide a number", say: "Look here. Make both sides the same." },
+};
+
+/** One-pick CFU question's pointer: shows after the 2nd wrong Check. */
+function usePickPointer(look: ExploreTarget, picked: string, checked: boolean, ok: boolean, setChecked: (v: boolean) => void) {
+  const ptr = useCfuPointers([{ key: "q", to: look }], { done: checked && ok, early: true });
+  const check = () => {
+    if (picked) ptr.record(() => ok, picked);
+    setChecked(true);
+  };
+  return { ptr, check };
+}
+
 function EqualSignMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
@@ -26,6 +46,7 @@ function EqualSignMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  const { ptr, check } = usePickPointer(LOOK.balance, picked, checked, ok, setChecked);
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -40,10 +61,11 @@ function EqualSignMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="next">"The answer comes right after this"</option>
           <option value="same">"Both sides have the exact same amount"</option>
         </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -68,6 +90,18 @@ function BackwardsEquationsQuestion({ onComplete }: { onComplete?: () => void })
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  const partOk = (key: string) => (key === "a" ? aOk : bOk);
+  const ptr = useCfuPointers(
+    [
+      { key: "a", part: "5 = 2 + 3", to: LOOK.eitherSide },
+      { key: "b", part: "7 + 1 = 6 + 2", to: LOOK.scale },
+    ],
+    { done: checked && ok, early: true, rightNow: (p) => checked && partOk(p.key) }
+  );
+  const check = () => {
+    ptr.record((p) => partOk(p.key), `${a}|${b}`);
+    setChecked(true);
+  };
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -95,10 +129,11 @@ function BackwardsEquationsQuestion({ onComplete }: { onComplete?: () => void })
             <option value="false">False</option>
           </TapSelect>
         </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && allFilled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -118,6 +153,7 @@ function TrivialTrueQuestion({ onComplete }: { onComplete?: () => void }) {
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  const { ptr, check } = usePickPointer(LOOK.balance, picked, checked, ok, setChecked);
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -132,10 +168,11 @@ function TrivialTrueQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="true">True</option>
           <option value="false">False</option>
         </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -155,6 +192,7 @@ function UnknownNotLastQuestion({ onComplete }: { onComplete?: () => void }) {
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
+  const { ptr, check } = usePickPointer(LOOK.missing, answer, checked, ok, setChecked);
 
   return (
     <ReadAloud className="align-stack-wrap">
@@ -170,10 +208,11 @@ function UnknownNotLastQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="8">8</option>
           <option value="19">19</option>
         </TapSelect>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={check}>
           Check Answer
         </button>
       </div>
+      <StuckBox {...ptr} early />
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
@@ -211,10 +250,11 @@ function EqualSignCheckForUnderstanding({ onComplete }: { onComplete?: () => voi
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
-  const [leftA, setLeftA] = useState(7);
-  const [leftB, setLeftB] = useState(1);
+  // Not the CFU's numbers (7 + 1 = 6 + 2), so a "Look here" never shows a CFU answer.
+  const [leftA, setLeftA] = useState(5);
+  const [leftB, setLeftB] = useState(4);
   const [rightA, setRightA] = useState(6);
-  const [rightB, setRightB] = useState(2);
+  const [rightB, setRightB] = useState(3);
 
   const leftTotal = leftA + leftB;
   const rightTotal = rightA + rightB;
@@ -235,7 +275,9 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         )}
       </div>
 
-      <ReadAloud as="p" className="muted small">The = sign is like a balance scale: both sides must weigh the same. Try to make it balance.</ReadAloud>
+      <ReadAloud as="p" className="muted small" {...lookHereSpot("eq-balance")}>
+        <span data-look-here-key>The = sign is like a balance scale: both sides must weigh the same.</span> Try to make it balance.
+      </ReadAloud>
       <div className="control-row" data-readaloud-part>
         <Stepper label="Left, first" value={leftA} min={0} max={15} step={1} onChange={setLeftA} tone="a" />
         <Stepper label="Left, second" value={leftB} min={0} max={15} step={1} onChange={setLeftB} tone="a" />
@@ -245,22 +287,30 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <Stepper label="Right, first" value={rightA} min={0} max={15} step={1} onChange={setRightA} tone="b" />
         <Stepper label="Right, second" value={rightB} min={0} max={15} step={1} onChange={setRightB} tone="b" />
       </div>
-      <div className="control-row" style={{ gap: 24, alignItems: "flex-start" }} data-readaloud-part>
-        <div>
-          <TenFrameGroup value={Math.min(20, leftTotal)} tone="a" />
-          <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
-            {leftA} + {leftB} = {leftTotal}
-          </ReadAloud>
+      <div {...lookHereSpot("eq-scale")}>
+        <div className="control-row" style={{ gap: 24, alignItems: "flex-start" }} data-readaloud-part>
+          <div>
+            <TenFrameGroup value={Math.min(20, leftTotal)} tone="a" />
+            <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
+              {leftA} + {leftB} = {leftTotal}
+            </ReadAloud>
+          </div>
+          <div>
+            <TenFrameGroup value={Math.min(20, rightTotal)} tone="b" />
+            <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
+              {rightA} + {rightB} = {rightTotal}
+            </ReadAloud>
+          </div>
         </div>
-        <div>
-          <TenFrameGroup value={Math.min(20, rightTotal)} tone="b" />
-          <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
-            {rightA} + {rightB} = {rightTotal}
-          </ReadAloud>
-        </div>
+        <ReadAloud as="p" className={`feedback ${balanced ? "good" : "bad"}`} data-look-here-key>
+          {balanced ? `Balanced! ${leftA} + ${leftB} = ${rightA} + ${rightB} — both sides equal ${leftTotal}.` : `Not balanced — ${leftTotal} ≠ ${rightTotal}. Adjust the numbers until both sides match.`}
+        </ReadAloud>
       </div>
-      <ReadAloud as="p" className={`feedback ${balanced ? "good" : "bad"}`}>
-        {balanced ? `Balanced! ${leftA} + ${leftB} = ${rightA} + ${rightB} — both sides equal ${leftTotal}.` : `Not balanced — ${leftTotal} ≠ ${rightTotal}. Adjust the numbers until both sides match.`}
+      <ReadAloud as="p" className="muted small" {...lookHereSpot("eq-either-side")}>
+        <span data-look-here-key>The total can be on either side. 6 = 4 + 2 is the same as 4 + 2 = 6.</span>
+      </ReadAloud>
+      <ReadAloud as="p" className="muted small" {...lookHereSpot("eq-missing")}>
+        <span data-look-here-key>A box can hide a number. Find the number that makes both sides the same.</span>
       </ReadAloud>
       {/* Below the picture, so students explore first, then check. */}
       {(introActive || showCheck) && <EqualSignCheckForUnderstanding onComplete={onIntroDone} />}
