@@ -1,66 +1,69 @@
 # MG1 Addition and Subtraction Within 20: CFU "Look here" pointers (early-grade pilot)
 
-**Summary:** all 6 units' CFUs (24 questions, 31 parts) point to Explore after a part's 2nd wrong Check, using the shared `useCfuPointers` + `<StuckBox early>`. 12 short teaching lines added where Explore had nothing. Explore defaults that equalled a CFU's numbers were changed so a pointer never shows an answer. CFU questions and their feedback are unchanged.
+**Summary (updated 2026-11-17, review round 3, final):** the 6 CFUs use the K–1 design (`shared/components/KCheck.tsx`: one short question at a time, typed answers on the number pad, big pick buttons). Every question passes its own `look` target to `TypeCheck` / `PickCheck`; KCheck runs the shared `useCfuPointers` + `<StuckBox early>` inside the question. **Miss order (user decision):** 1st miss → a few-word nudge; **2nd miss → the "Look here!" button** (spoken line, arrow, the spot stays lit until the answer is right); **3rd miss → "show it"** (the worked picture). Questions without `look` (MK1–MK4) keep show-it on the 2nd miss.
 
-## Part → spot
-"(mode)" = the spot is only in that Explore mode; the pointer switches to it (`useLookHereRequest`).
+**Round 2 (C2-01): no CFU has a plain two-button pick any more.** U1 Q3 and U2 Q1 are typed. U4's "Is there just one way?" pick is gone (a second typed split replaces it). U6 Q1 has three picture choices. U6 Q2 (now false) and Q4 keep Yes/No but pass the new optional `twin` to `PickCheck`: the first wrong tap swaps in a same-idea question with new numbers (both buttons stay live), a wrong tap on the twin is the 2nd miss ("Look here!"), and one more is the 3rd (show it). **Round 3 (C3-01, user decision): tried buttons stay tappable on every pick that has a `look` pointer**, until show-it. So three-button picks (U1 Q5, U3 Q1/Q4/Q5, U4 Q6, U5 Q1, U6 Q1) show "Look here!" on the 2nd miss with all three buttons live, and the 3rd miss brings the worked picture (then the tried buttons lock). Shared KCheck: applies to MG1 and MG2 (both pass `look`); MK1–MK4 pass no `look` and are unchanged (MK2 re-checked). U6 Q2's twin is now false too (C3-04), and the twin's prompt is read without the question number.
 
-| Unit | Q / part | Spot id | Key line (NEW = added) | Spoken line |
+CHANGED / NEW in the table = round 2; **R3** = changed in round 3.
+
+33 questions; 24 typed (73%). Per unit: U1 4/5, U2 6/6, U3 3/6, U4 5/6, U5 3/4, U6 3/6 (all ≥ 40%).
+
+## Question → spot
+"(mode)" = the spot is only in that Explore mode; the pointer switches to it (`useLookHereRequest`). CHANGED / NEW = round 2; R3 = round 3.
+
+| Unit | Q | Spot id | Key line | Spoken line |
 |---|---|---|---|---|
-| 1 Counting On/Back | Q1 Start counting at | cob-keep | "Notice you never had to start over from 1 — you kept the starting number and just kept going." | Look here. Start at the number you have. |
-| | Q1 How many more | cob-count (Count on) | "Count one more" row + "You counted on N times from S, landing on C." (split out of the old paragraph) | Look here. Count how many more. |
-| | Q2 Smarter start (3 + 8) | cob-bigger (Count on) | NEW "Start at the bigger number. For 2 + 9, start at 9 and count on 2." | Look here. Start at the bigger number. |
-| | Q3 Count back from 12 (3 boxes, one part) | cob-back (Count back) | "Count one back" row + "You counted back N times from S…" | Look here. Count back one at a time. |
-| | Q4 T/F counts back = number taken away | cob-back-rule (Count back) | NEW "To take away 4, count back 4 times. Say 4 numbers." | Look here. Count back the number you take away. |
-| 2 Making Ten | Q1 Which number to break apart | mt-keep (Making ten) | NEW "Keep the number close to 10 whole. Break apart the other number." | Look here. Keep the number close to 10. |
-| | Q1 bond + sentences (one part) | mt-bond (Making ten) | NEW "Fill the ten first. Then add what is left." | Look here. Fill the ten first. |
-| | Q2 8 + 6 bond + sentences | mt-bond | (same) | Look here. Fill the ten first. |
-| | Q3 T/F works for any fact | mt-any (Making ten) | NEW "Try new numbers. Making ten works every time." (under the number steppers) | Look here. Try new numbers. |
-| | Q4 13 − 5 bond + sentences | mt-sub (Bridging through ten) | NEW "Take away to land on 10 first. Then take away the rest." | Look here. Get to 10 first. |
-| 3 Add To / Take From | Q1, Q2, Q4 What's unknown | atf-roles | "A story can ask for the start, the change, or the result — read carefully to see which one is missing." | Look here. Which one is missing? |
-| | Q1 Answer (result) | atf-story | ten frames + "5 + 3 = 8. The amount grew — this is an "Add To" story." | Look here. Start, then add more. |
-| | Q2 Answer (change), Q4 Answer (start) | atf-missing | NEW "Start or change missing? Take the number you know away from the end." | Look here. Take away from the end. |
-| | Q3 T/F always the end amount | atf-roles | (as above) | Look here. Which one is missing? |
-| 4 Put Together / Compare | Q1 total + answer (one part) | ptc-whole | ten frame + "6 + 7 = 13 in all." | Look here. In all means put them together. |
-| | Q2 How many ways | ptc-ways | "Try different green/orange splits that still add up to the same total — notice there's more than one way." | Look here. Try other splits. |
-| | Q2 Animal cards | ptc-part | NEW "Know the whole and one part? Take that part away from the whole." | Look here. Take the part away from the whole. |
-| | Q3 more + fewer (one part) | ptc-diff | "The difference is always bigger − smaller…" | Look here. Take the smaller from the bigger. |
-| | Q4 which subtraction + answer (one part) | ptc-diff | (same) | Look here. Take the smaller from the bigger. |
-| 5 Fluency | Q1 Which pair first (4 + 8 + 2) | flu-pair (Three addends) | NEW "Look for two numbers that make 10. Add them first." | Look here. Find two numbers that make 10. |
-| | Q2 T/F any order | flu-order (Three addends) | "Try sliding the numbers around — the total never changes no matter which pair you group first." | Look here. Try a different order. |
-| | Q3 Which stays within 10 | flu-within (Within 10/20) | "a + b = sum. This stays within 10. / This crosses past 10 — a within-20 fact." | Look here. Is the total past 10? |
-| | Q4 9 + 7 | flu-make-ten (Within 10/20) | NEW "Past 10? Make a ten first, then add what is left." | Look here. Make a ten first. |
-| 6 Equal Sign | Q1 What = means | eq-balance | "The = sign is like a balance scale: both sides must weigh the same." | Look here. Both sides are the same. |
-| | Q2 5 = 2 + 3 | eq-either-side | NEW "The total can be on either side. 6 = 4 + 2 is the same as 4 + 2 = 6." | Look here. The total can go first. |
-| | Q2 7 + 1 = 6 + 2 | eq-scale | ten frames + "Balanced! … both sides equal 9." | Look here. Add up each side. |
-| | Q3 8 = 8 | eq-balance | (as above) | Look here. Both sides are the same. |
-| | Q4 8 + ☐ = 11 | eq-missing | NEW "A box can hide a number. Find the number that makes both sides the same." | Look here. Make both sides the same. |
+| 1 Counting On/Back | 1 "8 + 3. Count on. Where do you start?" (typed) | cob-keep | "You did not start over. You kept going from {start}." | Look here. Start at the number you have. |
+| | 2 "Count on 3 from 8. Where do you land?" (typed) | cob-count (Count on) | "Count one more" row + CHANGED "You counted on N times from S. Now you are on C." (before the first tap: "You are on S. Count one more.") | Look here. Count how many more. |
+| | 3 R3 "3 + 7. Where do you start?" (typed, 7; was "3 + 8. Type the number you start at.", same answer as Q1) | cob-bigger (Count on) | "Start at the bigger number. For 2 + 9, start at 9 and count on 2." | Look here. Start at the bigger number. |
+| | 4 "12 − 3. Count back 3 from 12. Where do you land?" (typed) | cob-back (Count back) | "Count one back" row + "You counted back N times from S. Now you are on C." | Look here. Count back one at a time. |
+| | 5 "13 − 4. How many times do you count back?" (pick 3 / 4 / 5) | cob-back-rule (Count back) | CHANGED "To take away 5, count back 5 times. Say 5 numbers." (4 was Q5's answer) | CHANGED Look here. One hop for each one you take away. |
+| 2 Making Ten | 1 R3 "6 + 9. Which number do you break apart?" (typed, 6; 9 drawn in the bigger number's color) | mt-keep (Making ten) | "Keep the bigger number whole. It is closer to 10. Break apart the smaller number." | Look here. Which number is closer to 10? |
+| | 2 "8 + 6. How many more does 8 need to make 10?" (typed) | mt-bond (Making ten) | "Fill the ten first. Then add what is left." | Look here. Fill the ten first. |
+| | 3 "So 8 + 6 = ?" (typed) | mt-bond | (same) | Look here. Fill the ten first. |
+| | 4 "7 + 5. Make a ten. What is the total?" (typed) | mt-any (Making ten) | "Try new numbers. Making ten works every time." | CHANGED Look here. Fill the ten. Then add the rest. |
+| | 5 "13 − 5. Get to 10 first. How many do you take away first?" (typed) | mt-sub (Get to 10 first) | "Take away to land on 10 first. Then take away the rest." | Look here. Get to 10 first. |
+| | 6 "13 − 5 = ?" (typed) | mt-sub | (same) | Look here. Get to 10 first. |
+| 3 Add To / Take From | 1 "Sam had 6 apples. He picked 5 more. What is missing?" (pick the start / the change / the end; CHANGED picture colors by role: start a, change b, end c) | atf-roles | "A story can hide the start, the change, or the end. Which one is missing?" | Look here. Which one is missing? |
+| | 2 "How many apples does Sam have now?" (typed) | atf-story | "{s} + {c} = {e}. It went up. This is an Add To story." | Look here. Start, then add more. |
+| | 3 "…Now he has 11. How many did he pick?" (typed) | CHANGED atf-missing-change | The "What is missing?" picture (Start / Change / End boxes, the missing one dashed with "?", "Show" fills it by counting). CHANGED key line, with the picture's numbers in the order you use them: Add To "Change missing? Start at {start}. Count on to {end}." (Take From: "…Count back to {end}."). The request switches Explore to Add To, change missing. | CHANGED Look here. Count on to the end. |
+| | 4 "Ana had 9 shells. She lost some. Now she has 6. What is missing?" (pick; CHANGED colors: 9 start, 6 end) | atf-roles | (as Q1) | Look here. Which one is missing? |
+| | 5 "Leo had some stickers. He got 4 more. Now he has 11. What is missing?" (pick; CHANGED colors: 4 change, 11 end) | atf-roles | (as Q1) | Look here. Which one is missing? |
+| | 6 "How many stickers did Leo have at the start?" (typed) | CHANGED atf-missing-start | Same picture, start missing. CHANGED key line: Add To "Start missing? Start at {end}. Take away {change}." (Take From: "…Add back {change}."). The request switches Explore to Add To, start missing. Show line CHANGED "Watch: start at 11. Take away 4. 7 are left." | CHANGED Look here. Start at the end. Take away. |
+| 4 Put Together / Compare | 1 "Mia has 4 green buttons and 5 orange buttons. How many buttons in all?" (typed) | ptc-whole | "{g} green and {o} orange make {t} in all. {g} + {o} = {t}." | Look here. Put the two parts together. |
+| | 2 R3 "Jake has 6 cards. 2 are sports cards. The rest are animal cards. How many are animal cards?" (typed, 4) | ptc-part | "Know the total and one part? Start with the total. Take away the part." | Look here. Start with the total. Take away the part. |
+| | 3 NEW "Now 5 are sports cards. How many are animal cards?" (typed, 1; R3 praise "Yes! You can split 6 many ways.") | ptc-ways | "Try other green and orange splits. The total stays the same." + "Move one to orange / green" buttons | Look here. Try other splits. |
+| | 4 "Lily has 9 crayons. Ben has 5. How many more crayons does Lily have than Ben?" (typed) | ptc-diff | Lined-up compare rows (extras circled) with a "Say it" switch (The gap / More than / Fewer than). Key line (The gap): "{bigger} has {n}. {smaller} has {m}. The gap is {d}."; the request switches to "The gap". | CHANGED Look here. Line them up. Count the extras. |
+| | 5 "How many fewer crayons does Ben have than Lily?" (typed) | ptc-diff | (same) | CHANGED (as Q4) |
+| | 6 "Ben has 5 crayons. Lily has 9. Which one finds how many fewer?" (pick 5 − 9 / 9 − 5 / 9 + 5) | ptc-diff | (same) | Look here. Start with the bigger. Take away the smaller. |
+| 5 Fast Facts | 1 "4 + 8 + 2. Which two do you add first?" (pick) | flu-pair (Three numbers) | "Look for two numbers that make 10. Add them first." | Look here. Find two numbers that make 10. |
+| | 2 "Now add 4 + 8 first. Then add the 2. What is the total?" (typed) | flu-order (Three numbers) | "Move the numbers around. The total stays {total}." | Look here. Try a different order. |
+| | 3 "6 + 3 = ?" (typed) | flu-within (Within 10) | "{a} + {b} = {sum}. Start at {big}, the bigger number. Count on {small}: …" | Look here. Count on from the bigger number. |
+| | 4 "9 + 7. Make a ten first. What is the total?" (typed) | flu-make-ten (Past 10) | "Past 10? Make a ten first, then add what is left." | Look here. Make a ten first. |
+| 6 Equal Sign | 1 R3 "Which one is the same on both sides?" (3 picture choices: 6 = 9 / 6 = 6 / 6 = 3, each with two small ten-frames; spoken "6 is the same as 9") | eq-balance | "= means the same as. Both sides must have the same amount." | Look here. Both sides are the same. |
+| | 2 "6 = 2 + 3. Is it true?" (Yes / No; answer No; spoken "Is 6 the same as 2 plus 3?"; R3 praise "Right! 2 + 3 is 5, not 6."; wrong-tap line "Add up each side. Try this one."). R3 twin after a wrong pick: "7 = 4 + 2. Is it true?" (No; praise "Right! 4 + 2 is 6, not 7."). R3 pictures: smaller ten-frames on one line (C3-03) | R3 eq-scale | "Same! … Both sides are 9." / "Not the same. … Change the numbers until both sides match." | Look here. Add up each side. |
+| | 3 "7 + 1 = 6 + ☐. What number goes in the box?" (typed) | eq-scale | "Same! … Both sides are 9." / "Not the same. … Change the numbers until both sides match." | Look here. Add up each side. |
+| | 4 "8 = 8. Is it true?" (Yes / No; Yes). NEW twin after a wrong pick: "7 = 7. Is it true?" (Yes) | eq-balance | (as Q1) | Look here. Both sides are the same. |
+| | 5 "8 + ☐ = 11. What number goes in the box?" (typed; nudge CHANGED "Count on from 8 to 11.") | eq-missing | Box mode: "Hide a number in a box" + "Find it" (counts on until both sides match); CHANGED key "A box can hide a number. What number makes both sides the same?" The request turns box mode on. | Look here. Make both sides the same. |
+| | 6 "☐ = 6 + 5. What number goes in the box?" (typed) | eq-either-side | (as Q2) | Look here. The total can go first. |
 
-The non-early label (`ExploreTarget.label`, e.g. "Explore: the number bond and the two number sentences") is used only as the button's accessible name here.
+The non-early label (`ExploreTarget.label`) is used only as the button's accessible name here.
 
-## Explore defaults changed (they equalled a CFU's numbers)
-| Unit | Before | After |
-|---|---|---|
-| 1 Counting | start at 8 (CFU Q1 is 8 + 3) | start at 6 |
-| 2 Making Ten, Bridging | 13 − 5 (= CFU Q4) | 14 − 6 |
-| 3 Add To / Take From | 6 + 5 (= CFU Q1) | 5 + 3 |
-| 4 Put Together | 4 green + 5 orange (= CFU Q1); compare 9 and 5 (= CFU Q3/Q4) | 6 + 7; compare 8 and 3 |
-| 5 Fluency | 4, 3, 2 (4 + 3 = CFU Q3) | 3, 5, 7 (3 + 7 makes the ten) |
-| 6 Equal Sign | 7 + 1 = 6 + 2 (= CFU Q2) | 5 + 4 = 6 + 3 |
+## Explore defaults (never a CFU's numbers, and nothing they reveal is a CFU answer)
+| Unit | Default |
+|---|---|
+| 1 Counting | start at 6; the count-back rule line uses 5 (CHANGED from 4, Q5's answer) |
+| 2 Making Ten | 9 + 4; Get to 10 first 14 − 6; Same total 6 + 5 |
+| 3 Add To / Take From | R3 3 + 6 = 9 (change-missing line: "Start at 3. Count on to 9."; start-missing: "Start at 9. Take away 6."). The old 5 + 3 printed "Start at 5" at Q3's pointer, and 5 is Q3's answer (C3-02). |
+| 4 Put Together | 6 green + 7 orange; compare Lily 8, Ben 3 |
+| 5 Fast Facts | Within 10: 3 + 5; Past 10: 8 + 5; Three numbers: 3, 5, 7 |
+| 6 Equal Sign | CHANGED 6 + 3 = 5 + 4 (total 9; "Find it" reveals 4). The old 5 + 4 = 6 + 3 revealed 3 (Q5's answer); the suggested 5 + 6 = 7 + 4 would print 11 (Q6's answer). |
 
 ## Files
-- shared/lib/lookHere.ts (arrow option, `useLookHereRequest`, waits for a mode switch), shared/components/CfuPointers.tsx (new), shared/components/CfuQuestion.tsx (DropdownQuestion now uses the hook; same behaviour)
-- MG1/AdditionAndSubtractionWithin20Lab/units/{CountingOnAndBack, MakingTenAndDecomposing, AddToTakeFromWordProblems, PutTogetherCompareWordProblems, FluencyFactsWithin20, EqualSignAndEquations}.tsx
+- shared/components/KCheck.tsx (round 1: optional `look` on TypeCheck / PickCheck; round 2: optional `twin` on PickCheck, only used with `look`; round 3: with `look`, tried pick buttons stay live until show-it; MK1–MK4 unchanged), shared/components/CfuPointers.tsx, shared/lib/lookHere.ts (unchanged)
+- MG1/AdditionAndSubtractionWithin20Lab/units/{CountingOnAndBack, MakingTenAndDecomposing, AddToTakeFromWordProblems, PutTogetherCompareWordProblems, FluencyFactsWithin20, EqualSignAndEquations}.tsx; diagrams/StoryStrip.tsx, diagrams/ThreeGroups.tsx
 
 ## Verification
-tsc -b pass; eslint 0 errors (warnings are the existing fast-refresh kind); vite build pass. Playwright at 820×1180 touch, with a temp harness (since removed):
-- U1 Q1: miss 1 → no button; miss 2 (both wrong) → "Start: Look here!" + "How many: Look here!"; each tap says its line, lights cob-keep / cob-count with the arrow; fixing Start removes its button and its light; fixing both → no button, nothing lit, green feedback.
-- U1 Q3 (from Count on mode): tap → Explore switches to Count back, cob-back lit with arrow, spoken.
-- U2 Q4: two wrong Checks → button → switches to Bridging through ten, mt-sub lit; right answer clears it.
-- U5 Q1: repeat Check with the same answer is not counted; 2nd real miss → button → switches to Three addends, flu-pair lit; right clears.
-- All 24 spot ids found in their units (after the mode request).
-- MG10 U1 Q1 re-check: unchanged ("a./b. Look here first: …" lines after miss 2, both spots lit, fixing b leaves only a, all right clears).
-
-## Not done / notes
-- The CFUs still use the older MG1 layout (all 4 questions at once, true/false pickers, long feedback), not the KCheck one-at-a-time design. Out of scope here.
-- Parts in MG1 re-grade live after a Check (existing behaviour), so a part's button also hides as soon as its box turns right (`rightNow`).
+- Round 1 (2026-11-17): every question answered wrong, wrong, (wrong), right at 820×1180 with touch; 27 questions reached "Look here!"; two-button picks could not (fixed in round 2).
+- Round 2 (2026-11-17): see `_planning/reviews/MG1_AdditionAndSubtractionWithin20Lab/round-2-fixes.md` → Verification.
+- Round 3 (2026-11-17): 3-button picks U1 Q5, U3 Q4, U6 Q1 (and MG2 Comparing Q1): 2nd miss → "Look here!" with all 3 buttons live; 3rd miss → worked picture, tried buttons lock. U6 Q2 twin false, read without "2.". U3 Q3 pointer line "Change missing? Start at 3. Count on to 9.". See `round-3-fixes.md`.

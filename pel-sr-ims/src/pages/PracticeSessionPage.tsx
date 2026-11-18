@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useStudentContext } from "../components/student_portal/StudentContext";
-import { buildHwkHistoryFromAssignments } from "../utils/progressService";
+import { buildHwkHistoryFromAssignments, getLevelIndex } from "../utils/progressService";
 import { getSkillsForLevel } from "../utils/levelSubsections";
 import type { LevelSkill } from "../utils/levelSubsections";
 import PracticeModeSelector from "../components/student_portal/PracticeModeSelector";
 import type { PracticeMode } from "../components/student_portal/PracticeModeSelector";
 import ProblemRenderer from "../components/student_portal/ProblemRenderer";
 import SkillPicker from "../components/student_portal/SkillPicker";
+import { LabNudge, TeacherLabPanel, useLabStatuses } from "../components/student_portal/LabOrder";
+import { LAB_BY_ID, nextUp, unmetNeeds } from "../utils/labOrder";
 
 const ALL_MODES: PracticeMode[] = ["visual", "wordProblem", "standalone"];
 
@@ -45,6 +47,42 @@ export default function PracticeSessionPage() {
   const [mode, setMode] = useState<PracticeMode | null>(null);
   const [selectedSkill, setSelectedSkill] = useState<LevelSkill | null>(null);
 
+  // Lab order (utils/labOrder.ts): this level's labs plus the labs they need.
+  // Needs only nudge ("This lab is easier after …"); every lab stays open.
+  const levelLabIds = useMemo(
+    () => poolsByMode.standalone.map((s) => ("componentFile" in s ? s.componentFile : "")).filter((id) => LAB_BY_ID[id]),
+    [poolsByMode]
+  );
+  const labIds = useMemo(
+    () => Array.from(new Set([...levelLabIds, ...levelLabIds.flatMap((id) => LAB_BY_ID[id].needs)])),
+    [levelLabIds]
+  );
+  const { statuses: labStatuses, refresh: refreshLabStatuses } = useLabStatuses(
+    currentStudent?.location,
+    currentStudent?.id,
+    labIds
+  );
+  const nextUpId = labStatuses ? nextUp(levelLabIds, labStatuses) : null;
+  const [teacherOpen, setTeacherOpen] = useState(false);
+  // Labs the student chose to start anyway this session (so the tip shows once).
+  const ackKey = `lab-order-ack:${currentStudent?.id ?? "guest"}`;
+  const [acked, setAcked] = useState<string[]>(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem(ackKey) ?? "[]");
+    } catch {
+      return [];
+    }
+  });
+  const ackLab = (id: string) => {
+    const next = [...acked, id];
+    setAcked(next);
+    try {
+      sessionStorage.setItem(ackKey, JSON.stringify(next));
+    } catch {
+      /* the tip may show again next time; that's fine */
+    }
+  };
+
   // Auto-pick the mode when only one type is available for this level.
   useEffect(() => {
     setMode(availableModes.length === 1 ? availableModes[0] : null);
@@ -72,7 +110,15 @@ export default function PracticeSessionPage() {
 
   if (!currentStudent || !level) return null;
 
-  const hasHomeworkInLevel = hwkHistory.some((h) => h.level === level);
+  // A level is open if the student has homework in it OR in any higher level of the
+  // same subject — e.g. a student who started in MG5 can still practice MG1–MG4.
+  const subject = level.startsWith("M") ? "Math" : "English";
+  const levelIdx = getLevelIndex(level, subject);
+  const hasHomeworkInLevel = hwkHistory.some(
+    (h) =>
+      h.level === level ||
+      (levelIdx >= 0 && h.level.startsWith(level[0]) && getLevelIndex(h.level, subject) >= levelIdx)
+  );
   const multipleModesAvailable = availableModes.length > 1;
   const skillPool = mode ? poolsByMode[mode] : [];
   const multipleSkillsInMode = skillPool.length > 1;
@@ -81,8 +127,29 @@ export default function PracticeSessionPage() {
   // StandaloneProblem. Skip our own header/max-w wrapper so they aren't squeezed
   // into the narrower column used by the visual/wordProblem card modes.
   const isStandalone = mode === "standalone" && selectedSkill?.type === "standalone";
+  const selectedLabId = isStandalone && selectedSkill && "componentFile" in selectedSkill ? selectedSkill.componentFile : null;
+  const selectedLab = selectedLabId ? LAB_BY_ID[selectedLabId] : undefined;
+  const selectedUnmet =
+    selectedLab && labStatuses && !labStatuses[selectedLab.id]?.finished ? unmetNeeds(selectedLab.id, labStatuses) : [];
+  // Wait for the finished check before opening a lab that has needs, so the tip
+  // doesn't pop up over a lab that already started.
+  const waitingForLabOrder = !!selectedLab && selectedLab.needs.length > 0 && labStatuses === null;
+  const showNudge = !!selectedLab && selectedUnmet.length > 0 && !acked.includes(selectedLab.id);
 
-  if (isStandalone && selectedSkill && hasHomeworkInLevel) {
+  const teacherPanel =
+    teacherOpen && labStatuses && currentStudent?.location && currentStudent?.id ? (
+      <TeacherLabPanel
+        location={currentStudent.location}
+        studentId={currentStudent.id}
+        studentName={`${currentStudent.firstName} ${currentStudent.lastName}`}
+        labIds={labIds}
+        statuses={labStatuses}
+        onChanged={refreshLabStatuses}
+        onClose={() => setTeacherOpen(false)}
+      />
+    ) : null;
+
+  if (isStandalone && selectedSkill && hasHomeworkInLevel && !waitingForLabOrder && !showNudge) {
     return (
       <>
         {multipleSkillsInMode && (
@@ -148,13 +215,33 @@ export default function PracticeSessionPage() {
             {!mode && <PracticeModeSelector availableModes={availableModes} onSelect={setMode} />}
 
             {mode && !selectedSkill && multipleSkillsInMode && (
-              <SkillPicker skills={skillPool} onSelect={setSelectedSkill} />
+              <SkillPicker
+                skills={skillPool}
+                onSelect={setSelectedSkill}
+                statuses={mode === "standalone" ? labStatuses : null}
+                nextUpId={nextUpId}
+                onTeacher={mode === "standalone" && labStatuses ? () => setTeacherOpen(true) : undefined}
+              />
             )}
 
-            {mode && selectedSkill && <ProblemRenderer level={level} skill={selectedSkill} />}
+            {mode && selectedSkill && waitingForLabOrder && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center text-sm text-gray-400">Loading…</div>
+            )}
+
+            {mode && selectedSkill && selectedLab && showNudge && (
+              <LabNudge
+                lab={selectedLab}
+                unmet={selectedUnmet}
+                onStart={() => ackLab(selectedLab.id)}
+                onTeacher={() => setTeacherOpen(true)}
+              />
+            )}
+
+            {mode && selectedSkill && !waitingForLabOrder && !showNudge && <ProblemRenderer level={level} skill={selectedSkill} />}
           </div>
         )}
       </main>
+      {teacherPanel}
     </div>
   );
 }

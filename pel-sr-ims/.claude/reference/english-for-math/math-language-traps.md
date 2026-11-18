@@ -23,6 +23,10 @@ picture, and avoid using the everyday meaning in the same lab.
 | table | furniture | rows of data | 3+ |
 | right, degree | correct / side; temperature | 90° angle; angle unit | 4 |
 | multiple, prime | many; best | multiple of a number; only 1 and itself | 4 |
+| ones | "the ones that…" (those) | single units | 1 — in a tens-and-ones lab, never use *ones* as a pronoun ("even the ones whose names…"); say "those numbers" or name them |
+| cross out | strike through (a picture action) | "cross out of the teens" = go below 10 | 1 |
+| say | speak aloud ("Say 3 numbers") | suppose ("Say 3 are green"); in K–1 use only "speak aloud" | K–2 |
+| fewer (as a label) | "fewer stories" = not as many stories | compare word ("How many fewer?"); don't use it as a label adjective | K–2 |
 | mixed | a mix of problem types (a practice-mode label) | mixed number | 4–5 |
 | top, bottom | position on the screen ("the top fraction") | numerator, denominator | 3–5 |
 | base, power, origin, plot | baseball; strength; beginning; story | prism base; exponent; (0,0); place a point | 5 |
@@ -52,9 +56,12 @@ backwards.
 | 3 divided into 12 | 12 ÷ 3 | 3 ÷ 12 |
 | the quotient of a and b | a ÷ b | |
 | add 8 and 7, then double it | 2 × (8 + 7) | 8 + 7 × 2 |
+| take the smaller from the bigger / take the part away from the whole | bigger − smaller | (the words name the smaller first) |
 
 Use the wording where order matches the math until the reversed form is the
-thing being taught.
+thing being taught. In K–1 say it in operation order: "Start with the
+bigger. Take away the smaller." (MG1 Unit 4's "Look here" line said "Take
+the smaller from the bigger.")
 
 ## 4. Comparison language
 The hardest structure in elementary word problems.
@@ -100,6 +107,16 @@ to say), and pronouns must match them.
 
 ## 8. Symbols and text the voice must say
 - "a-b" ranges → "a to b". "vs." → "and". "→" → "then".
+- **Never type `->` as an arrow.** The voice reads `-` as a pause and `>` as
+  "is greater than", so "109 -> 110" is heard as "109 is greater than 110".
+  Write "to" or "then". (MG2, user-approved 2026-11-18.)
+- **No bare signs inside a sentence** ("Use >, =, or <"). The voice turns
+  each sign into its full phrase ("Use is greater than, equals, or is less
+  than"). Name them in words, or show the signs on their own in a picture.
+- `☐` is spoken "blank" while the text may call it "the box" ("42 ☐ 45.
+  What goes in the box?"). The user approved this (2026-11-18); don't flag it.
+- `⭐` is spoken "star". Other emoji are silent; check any emoji that
+  carries meaning.
 - "?" in the middle of a sentence → "the box with the question mark".
 - "−" is *minus* between numbers and *negative* in front of one.
 - "1/4" → "one fourth" (not "one slash four"). "0.4" → "four tenths" while

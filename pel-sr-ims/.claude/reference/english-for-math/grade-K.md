@@ -31,6 +31,8 @@
 - **Not yet:** *if / then*, *each*, *than* sentences that are longer than
   "more than 5," passive voice, two clauses in one sentence, pronouns that
   point back to an earlier sentence.
+- **Not yet:** "True or false:" statements about a rule or strategy. Ask
+  about one new example instead (see grade-1.md).
 
 ## Math words
 - **Known on arrival:** some number words by ear (often to 10), *big/little*,

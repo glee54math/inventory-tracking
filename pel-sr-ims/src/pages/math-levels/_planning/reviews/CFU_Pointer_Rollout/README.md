@@ -50,8 +50,8 @@ One idea taught in one place = one part, even if it has several boxes (e.g. a nu
 
 | Lab | CFU units | CFU style | Status |
 |---|---|---|---|
-| MG1_AdditionAndSubtractionWithin20Lab | 6 | hand-built (TapSelect, BondFill) | **pilot done** (see MG1_AdditionAndSubtractionWithin20Lab.md) |
-| MG2_PlaceValueTo120Lab | 5 | hand-built | todo (early) |
+| MG1_AdditionAndSubtractionWithin20Lab | 6 | KCheck (rebuilt 2026-11-17) | **done** (early; via review, `../MG1_AdditionAndSubtractionWithin20Lab/`) |
+| MG2_PlaceValueTo120Lab | 5 | KCheck (rebuilt 2026-11-17) | **done** (early; via review, `../MG2_PlaceValueTo120Lab/`) |
 | MG3_MeasurementTimeAndDataLab | 4 | hand-built | todo (early) |
 | MG4_ShapesAndFractionsIntroLab | 3 | hand-built | todo (early) |
 | MG5_EvenOddAndArraysLab | 4 | hand-built | todo |

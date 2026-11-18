@@ -16,6 +16,7 @@ import { palette } from "../lib/palette";
 import { checkFactors, checkPlot, factorPairsNoOne, parsePoints, pointsText, primeFactors, splitFactorBoxes, timesText, togglePoint } from "../lib/factors";
 import { builtFilled, builtText, checkBuilt } from "../lib/buildExpr";
 import { ExprBuilder } from "../components/ExprBuilder";
+import type { StarOutcome } from "../../../../hooks/useModuleProgress";
 
 /** Exported so the end-of-unit test (engine/UnitTest.tsx) can type its own
  *  per-question answer state the same shape StepInput expects. */
@@ -351,8 +352,12 @@ export interface StepProblemProps {
    * guessed), and at most one hint. `bucket` forwards problem.bucket as-is
    * (undefined for problems that don't set one) — see Problem.bucket and
    * UnitProgress.coveredBuckets for what it's for.
+   *
+   * Return the StarOutcome from useModuleProgress's recordSolve() (the same
+   * call that saves the star) so the wrap-up only says "⭐" when a star really
+   * lit up. Returning nothing gives a plain "Solved it!" with no star.
    */
-  onComplete?: (clean: boolean, bucket?: string) => void;
+  onComplete?: (clean: boolean, bucket?: string) => StarOutcome | void;
   onNext?: () => void;
   /** Early learners: a new problem of the SAME kind, offered after a solve that needed help. */
   onRetrySame?: () => void;
@@ -381,6 +386,9 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
   const [current, setCurrent] = useState(0);
   const [states, setStates] = useState<StepState[]>(() => problem.steps.map(fresh));
   const reported = useRef(false);
+  // The honest star result for the wrap-up, fixed once when the problem is
+  // finished (null until then). "none" = the lab didn't report one.
+  const [starResult, setStarResult] = useState<StarOutcome | "none" | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLLIElement>(null);
   // Read-aloud: the active step's icon reads its prompt, answer choices and buttons together.
@@ -433,7 +441,8 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
     const now = { current, wrong: cur?.wrong ?? 0, hint: cur?.hint ?? false, showMe: cur?.showMe ?? false };
     const before = prev.current;
     prev.current = now;
-    if (finished) return autoRead(readerId, [q(".wrapup")]);
+    // Wait for the star result so the wrap-up is read with its final words.
+    if (finished) return starResult ? autoRead(readerId, [q(".wrapup")]) : undefined;
     if (!before || before.current !== current) {
       stopIfPlaying();
       const step = problem.steps[current];
@@ -442,7 +451,7 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
     if (now.showMe && !before.showMe) return autoRead(readerId, [q(".step.active .show-me")]);
     if (now.wrong > before.wrong) return autoRead(readerId, [q(".step.active .feedback"), q(".step.active .hint")]);
     if (now.hint && !before.hint) return autoRead(readerId, [q(".step.active .hint")]);
-  }, [current, finished, cur?.wrong, cur?.hint, cur?.showMe, problem, readerId]);
+  }, [current, finished, starResult, cur?.wrong, cur?.hint, cur?.showMe, problem, readerId]);
 
   const isClean = (all: StepState[]) => {
     const hints = all.filter((s) => s.hint).length;
@@ -461,7 +470,7 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
   useEffect(() => {
     if (finished && !reported.current) {
       reported.current = true;
-      onComplete?.(isClean(states), problem.bucket);
+      setStarResult(onComplete?.(isClean(states), problem.bucket) || "none");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finished, states, onComplete, problem.bucket]);
@@ -655,12 +664,14 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
           ))}
         </div>
 
-        {finished && (
+        {finished && starResult && (
           <ReadAloud className="wrapup" role="status">
-            <div className="wrapup-title">{clean ? "Solved it! ⭐" : "Solved, with help."}</div>
+            {/* Only say "⭐" when a star really lit up (starResult comes from the same call that saves it). */}
+            <div className="wrapup-title">{!clean ? "Solved, with help." : starResult === "star" ? "Solved it! You got a ⭐!" : "Solved it!"}</div>
             <p>
               <MathText>{problem.wrapUp}</MathText>
             </p>
+            {clean && starNote(starResult, early) && <p className="muted">{starNote(starResult, early)}</p>}
             {!clean && (
               <p className="muted">
                 {/* Every lab that passes onRetrySame locks "Next problem" until a
@@ -670,7 +681,9 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
                   ? early
                     ? "Now try one like it by yourself."
                     : "Now solve one like it on your own. Then you can move on."
-                  : "Solve one with no wrong guesses and at most one hint to earn a mastery star."}
+                  : early
+                    ? "Try one with no help to earn a star."
+                    : "Solve one with no wrong guesses and at most one hint to earn a mastery star."}
               </p>
             )}
             <div className="step-tools" data-readaloud-part>
@@ -692,6 +705,25 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
       </div>
     </div>
   );
+}
+
+/**
+ * The short line under a clean solve's "Solved it!" that says why no star
+ * lit up (or nothing, when one did). Kept few-words for early learners.
+ */
+function starNote(result: StarOutcome | "none", early: boolean): string | null {
+  switch (result) {
+    case "progress":
+      return early ? "Good! Keep going for a star." : "That counts. Keep going to fill your next star.";
+    case "bucketFull":
+      return early ? "You already got the star for this kind." : "You already earned the star credit for this kind of problem.";
+    case "notMixed":
+      return "Only Mixed problems earn stars.";
+    case "allDone":
+      return early ? "You have all the stars here!" : "You already have all the stars for this unit.";
+    default:
+      return null;
+  }
 }
 
 /** The number/ratio/choice input widget for one step. Exported for reuse by

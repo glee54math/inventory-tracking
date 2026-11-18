@@ -17,22 +17,30 @@ export const gapToTenQuestion = (): TestQuestion[] => {
     {
       visual: <TenFrameGroup value={a} tone="a" />,
       difficulty: "easy",
-      step: { kind: "number", prompt: `How many more do you need to add to ${a} to make 10?`, hint: "Count up from the number to 10.", explain: `${a} + ${gap} = 10.`, answer: gap },
+      step: { kind: "number", prompt: `How many more does ${a} need to make 10?`, hint: "Count on to 10.", explain: `${a} + ${gap} = 10.`, answer: gap },
     },
   ];
 };
+
+/** The two numbers as given, on ten-frames: the bigger in tone a, the smaller in tone b (no split shown — the Test doesn't help). */
+const givenPair = (a: number, b: number) => (
+  <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+    <TenFrameGroup value={a} tone="a" />
+    <TenFrameGroup value={b} tone="b" />
+  </div>
+);
 
 /** Full make-ten addition, small gap (8 or 9) — the near-ten bucket. */
 export const makeTenNearTenNumberQuestion = (): TestQuestion[] => {
   const a = randInt(8, 9);
   const gap = 10 - a;
   const b = randInt(gap + 1, a - 1); // smaller than a: break apart the smaller number
-  const { addToA, total } = makeTenBreakdown(a, b);
+  const { addToA, remainder, total } = makeTenBreakdown(a, b);
   return [
     {
-      visual: <TenFrameGroup value={b} tone="b" splitAt={addToA} tone2="c" />,
+      visual: givenPair(a, b),
       difficulty: "medium",
-      step: { kind: "number", prompt: `Use make-ten: what is ${a} + ${b}?`, hint: `${a} needs ${gap} more to make ten.`, explain: `${a} + ${b} = ${total}.`, answer: total },
+      step: { kind: "number", prompt: `Make a ten. What is ${a} + ${b}?`, hint: `Keep ${a} whole. Fill the ten first.`, explain: `${a} + ${addToA} = 10. 10 + ${remainder} = ${total}.`, answer: total },
     },
   ];
 };
@@ -42,29 +50,32 @@ export const makeTenLargerGapNumberQuestion = (): TestQuestion[] => {
   const a = randInt(6, 7);
   const gap = 10 - a;
   const b = randInt(gap + 1, a - 1); // smaller than a: break apart the smaller number
-  const { addToA, total } = makeTenBreakdown(a, b);
+  const { addToA, remainder, total } = makeTenBreakdown(a, b);
   return [
     {
-      visual: <TenFrameGroup value={b} tone="b" splitAt={addToA} tone2="c" />,
+      visual: givenPair(a, b),
       difficulty: "medium",
-      step: { kind: "number", prompt: `Use make-ten: what is ${a} + ${b}?`, hint: `${a} needs ${gap} more to make ten.`, explain: `${a} + ${b} = ${total}.`, answer: total },
+      step: { kind: "number", prompt: `Make a ten. What is ${a} + ${b}?`, hint: `Keep ${a} whole. Fill the ten first.`, explain: `${a} + ${addToA} = 10. 10 + ${remainder} = ${total}.`, answer: total },
     },
   ];
 };
 
-/** The named misconception, made concrete: the near-ten number is written
- *  SECOND, so "always break apart the second number" fails here. */
+/** The named misconception, made concrete: which number to break apart.
+ *  The smaller number is written first only half the time (C2-05), so
+ *  neither "the first number" nor "the second number" always wins. */
 export const wrongAddendChoiceQuestion = (): TestQuestion[] => {
   const nearTen = randInt(8, 9);
   const other = randInt(10 - nearTen + 1, nearTen - 1); // always the smaller number
+  const smallFirst = Math.random() < 0.5;
+  const [x, y] = smallFirst ? [other, nearTen] : [nearTen, other];
   return [
     {
       visual: null,
       difficulty: "hard",
       step: choice(
-        { prompt: `${other} + ${nearTen} — which number should you break apart to make a ten?`, hint: "Break apart the smaller number. The bigger number is closer to ten, no matter which order they're written in.", explain: `Break apart ${other}, the smaller number. ${nearTen} is bigger and closer to ten, so keep it whole.` },
+        { prompt: `${x} + ${y}. Which number do you break apart?`, hint: "Keep the bigger number whole. It is closer to 10.", explain: `Break apart ${other}. It is smaller. Keep ${nearTen} whole.` },
         String(other),
-        [String(nearTen)] // misconception: always breaking apart whichever is written second
+        [String(nearTen)] // misconception: breaking apart whichever is written first / second, not the smaller one
       ),
     },
   ];
@@ -83,7 +94,7 @@ export const subtractBridgeToTenQuestion = (): TestQuestion[] => {
     {
       visual: <TenFrameGroup value={start} tone="c" />,
       difficulty: "easy",
-      step: { kind: "number", prompt: `${start} − ${sub}: subtract just enough to land exactly on a ten. How much is that?`, hint: "What's left of the starting number after you drop the ones digit?", explain: `${start} − ${toTen} = ${start - toTen}.`, answer: toTen },
+      step: { kind: "number", prompt: `${start} − ${sub}. Get to 10 first. How many do you take away first?`, hint: "How many are past 10?", explain: `${start} − ${toTen} = ${start - toTen}.`, answer: toTen },
     },
   ];
 };
@@ -103,7 +114,7 @@ export const subtractBridgeRemainderChoiceQuestion = (): TestQuestion[] => {
       visual: <TenFrameGroup value={start} tone="c" splitAt={ten} tone2="b" />,
       difficulty: "medium",
       step: choice(
-        { prompt: `${start} − ${sub}: after subtracting ${toTen} to reach ${ten}, how much MORE do you still need to subtract?`, hint: `You've only subtracted ${toTen} of the ${sub} total so far.`, explain: `${sub} − ${toTen} = ${remainder} still to subtract — reaching the ten isn't the final answer yet.` },
+        { prompt: `${start} − ${sub}. You took away ${toTen} to get to ${ten}. How many more do you take away?`, hint: `${sub} is ${toTen} and how many more?`, explain: `${sub} − ${toTen} = ${remainder} more to take away. 10 is not the answer yet.` },
         String(remainder),
         ["0"] // misconception: stopping as soon as you land on the ten
       ),
@@ -122,9 +133,9 @@ export const subtractBridgeNumberQuestion = (): TestQuestion[] => {
   const { total, ten } = subtractThroughTenBreakdown(start, sub);
   return [
     {
-      visual: <TenFrameGroup value={start} tone="c" splitAt={ten} tone2="b" />,
+      visual: <TenFrameGroup value={start} tone="c" />,
       difficulty: "hard",
-      step: { kind: "number", prompt: `Use bridging through ten: what is ${start} − ${sub}?`, hint: `First reach ${ten}, then subtract what's left.`, explain: `${start} − ${sub} = ${total}.`, answer: total },
+      step: { kind: "number", prompt: `${start} − ${sub} = ? Get to 10 first.`, hint: `First get to ${ten}. Then take away the rest.`, explain: `${start} − ${sub} = ${total}.`, answer: total },
     },
   ];
 };
@@ -148,49 +159,55 @@ export const equivalentSumNumberQuestion = (): TestQuestion[] => {
     {
       visual: <TenFrameGroup value={total} tone="a" splitAt={a1} tone2="b" />,
       difficulty: "medium",
-      step: { kind: "number", prompt: `${a1} + ${b1} = ${a2} + ? — without adding from scratch, what's the missing addend?`, hint: `${a2} is ${Math.abs(k)} ${k > 0 ? "more" : "less"} than ${a1} — the other addend shifts the opposite way.`, explain: `${total} − ${a2} = ${b2}.`, answer: b2 },
+      step: { kind: "number", prompt: `${a1} + ${b1} = ${a2} + ☐. What number goes in the box?`, hint: `${a2} got ${k > 0 ? "bigger" : "smaller"}. So the box gets ${k > 0 ? "smaller" : "bigger"}.`, explain: `${total} − ${a2} = ${b2}.`, answer: b2 },
     },
   ];
 };
 
-/** Equivalent-sum compensation direction, as a choice — the generalization check. */
+/** Same total, which way the box number moves, as a choice of numbers.
+ *  The first number moves up OR down (C2-05), so the answer is sometimes the
+ *  biggest choice and sometimes the smallest. */
 export const equivalentSumChoiceQuestion = (): TestQuestion[] => {
-  const a1 = randInt(3, 7);
-  const b1 = randInt(3, 8);
-  const k = [1, 2, 3][randInt(0, 2)];
+  let a1 = 0;
+  let k = 0;
+  do {
+    a1 = randInt(3, 7);
+    k = [-3, -2, -1, 1, 2, 3][randInt(0, 5)];
+  } while (a1 + k < 1 || a1 + k > 9);
+  const absK = Math.abs(k);
   const a2 = a1 + k;
+  // b1 ± k stays 1 to 9, so every choice is a real number of counters.
+  const b1 = randInt(absK + 1, 9 - absK);
+  const b2 = b1 - k;
+  const up = k > 0;
   return [
     {
       visual: null,
       difficulty: "hard",
       step: choice(
         {
-          prompt: `${a1} + ${b1} has the same total as ${a2} + ?. Since ${a2} is ${k} MORE than ${a1}, what must the other addend be?`,
-          hint: "One addend going up means the other must come down by the same amount, to keep the total the same.",
-          explain: `${k} LESS than ${b1} — one addend's gain is always the other's exact loss, for the total to stay the same.`,
+          prompt: `${a1} + ${b1} = ${a2} + ☐. What number goes in the box?`,
+          hint: `${a2} is ${absK} ${up ? "more" : "less"} than ${a1}. The total stays the same.`,
+          explain: `${a1} got ${absK} ${up ? "bigger" : "smaller"}. So the box gets ${absK} ${up ? "smaller" : "bigger"}: ${b2}.`,
         },
-        `${k} less than ${b1}`,
-        [`${k} more than ${b1}`, `the same as ${b1}`]
+        String(b2),
+        [String(b1 + k), String(b1)] // misconceptions: moving the same way; not moving at all
       ),
     },
   ];
 };
 
-/** True/false generalization: make-ten is a reusable strategy, not a single memorized answer. */
+/** "Making ten works every time" on one NEW fact (no true/false rule
+ *  statement): the smaller number written first, typed total. */
 export const strategyGeneralizationQuestion = (): TestQuestion[] => {
+  const big = randInt(6, 9);
+  const small = randInt(11 - big, big - 1);
+  const { addToA, remainder, total } = makeTenBreakdown(big, small);
   return [
     {
       visual: null,
       difficulty: "hard",
-      step: choice(
-        {
-          prompt: "True or false: the make-ten strategy (find the gap to ten, split the other addend, then add) works for ANY addition fact with a number close to ten — not just the one example you first practiced it on.",
-          hint: "Try it on a fact you haven't seen before, like 7 + 5. Does the same 3-step process still work?",
-          explain: "Always true — the SAME three steps work on every fact shaped like this, which is exactly what makes it a strategy rather than a single memorized answer.",
-        },
-        "True",
-        ["False"] // misconception: treating make-ten as tied to one specific fact
-      ),
+      step: { kind: "number", prompt: `${small} + ${big}. Make a ten. What is the total?`, hint: "Keep the bigger number whole. Fill the ten first.", explain: `${big} + ${addToA} = 10. 10 + ${remainder} = ${total}.`, answer: total },
     },
   ];
 };

@@ -1,9 +1,9 @@
 import type { Unit } from "../../../shared/units/types";
-import { successorFrom1Question, decadeCrossChoiceQuestion, cross100ChoiceQuestion, cross100NumberQuestion, patternRepeatsTrueFalseQuestion } from "./CountingTo120Test";
-import { standardSentenceQuestion, teenSentenceQuestion, exactlyTenQuestion, reverseDigitSwapChoiceQuestion, zeroOnesTrueFalseQuestion } from "./TensAndOnesTest";
+import { decadeCrossChoiceQuestion, cross100ChoiceQuestion, cross100NumberQuestion, after109Question, howManySticksQuestion } from "./CountingTo120Test";
+import { standardSentenceQuestion, teenSentenceQuestion, exactlyTenQuestion, reverseDigitSwapChoiceQuestion, zeroOnesQuestion } from "./TensAndOnesTest";
 import { diffTensChoiceQuestion, sameTensDiffOnesChoiceQuestion, tensFirstWhyQuestion, equalTrapQuestion, reversedDigitsChoiceQuestion } from "./ComparingTwoDigitNumbersTest";
-import { tenMoreQuestion, tenLessCrossingQuestion, subtractMultipleOfTenMidDecadeQuestion, onesNeverChangeTrueFalseQuestion, digitChangedChoiceQuestion } from "./TenMoreTenLessTest";
-import { noRegroupEasyQuestion, regroupStandardQuestion, forgotCarryChoiceQuestion, regroupRuleTrueFalseQuestion, regroupSentenceProductionQuestion } from "./AddingTwoDigitOneDigitTest";
+import { tenMoreQuestion, tenLessCrossingQuestion, subtractMultipleOfTenMidDecadeQuestion, onesStayQuestion, tenMorePickQuestion } from "./TenMoreTenLessTest";
+import { noRegroupEasyQuestion, regroupStandardQuestion, forgotCarryChoiceQuestion, newTenTypedQuestion, regroupSentenceProductionQuestion } from "./AddingTwoDigitOneDigitTest";
 
 // ---------- cumulative end-of-module test: Place Value to 120 ----------
 // 25 questions, 5 drawn from each of the 5 units' own *Test.tsx question
@@ -27,35 +27,36 @@ export const moduleTestStars = (score: number): number => {
 
 export const moduleTest: NonNullable<Unit["test"]> = {
   questions: [
-    // Counting to 120
-    successorFrom1Question,
+    // Counting to 120. "How many?" (sticks past 100) replaced the easiest
+    // item, "count from 1" (user decision 2026-11-17); still 5 per unit.
     decadeCrossChoiceQuestion,
     cross100ChoiceQuestion,
     cross100NumberQuestion,
-    patternRepeatsTrueFalseQuestion,
+    after109Question,
+    howManySticksQuestion,
     // Tens and Ones
     standardSentenceQuestion,
     teenSentenceQuestion,
     exactlyTenQuestion,
     reverseDigitSwapChoiceQuestion,
-    zeroOnesTrueFalseQuestion,
+    zeroOnesQuestion,
     // Comparing Two-Digit Numbers
     diffTensChoiceQuestion,
     sameTensDiffOnesChoiceQuestion,
     tensFirstWhyQuestion,
     equalTrapQuestion,
     reversedDigitsChoiceQuestion,
-    // Ten More, Ten Less, and Multiples of Ten
+    // Ten More, Ten Less, and Adding Tens
     tenMoreQuestion,
     tenLessCrossingQuestion,
     subtractMultipleOfTenMidDecadeQuestion,
-    onesNeverChangeTrueFalseQuestion,
-    digitChangedChoiceQuestion,
-    // Adding a 2-Digit and a 1-Digit Number
+    onesStayQuestion,
+    tenMorePickQuestion,
+    // Adding Ones to a Number
     noRegroupEasyQuestion,
     regroupStandardQuestion,
     forgotCarryChoiceQuestion,
-    regroupRuleTrueFalseQuestion,
+    newTenTypedQuestion,
     regroupSentenceProductionQuestion,
   ],
   // 20/25 = 80%, matching the 4-star cutoff in moduleTestStars above.

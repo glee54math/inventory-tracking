@@ -1,209 +1,156 @@
 import { useEffect, useState } from "react";
-import { TenFrameGroup } from "../diagrams";
+import { StoryStrip, TenFrameGroup, type StoryPart } from "../diagrams";
+import { storySentenceChoices } from "../logic";
 import { randInt, pick } from "../../../shared/lib/math";
 import { choice, pointing, type Problem, type VisualHelp } from "../../../shared/engine/types";
+import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { addToTakeFromWordProblemsTest } from "./AddToTakeFromWordProblemsTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
-import { StuckBox, useCfuPointers, type ExploreTarget } from "../../../shared/components/CfuPointers";
-import { lookHereSpot } from "../../../shared/lib/lookHere";
+import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
+import { lookHereSpot, useLookHereRequest } from "../../../shared/lib/lookHere";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
 // ============================================================================
-// Fixed, hand-picked questions (never randomized). Targets the plan's named
-// misconceptions: (1) defaulting to "the answer is always the result," and
-// (2) picking the operation from keywords ("more" = add) instead of the
-// story's structure — Q4 is the plan's required trap: a Start-Unknown story
-// that uses a "more"-style (gain) word, where the keyword habit would add
-// when the correct move is actually to subtract.
+// K–1 design (shared/components/KCheck.tsx): one short question at a time,
+// a picture of the story, typed answers. Targets the plan's named
+// misconceptions: (1) "the answer is always the end," and (2) picking the
+// operation from a keyword ("more" = add) instead of the story — the last
+// two questions are the plan's required trap: a start-missing story that
+// says "more", where you take away to find the start. Each question gets a
+// "Look here" pointer after its 2nd wrong try; "show it" comes on the 3rd.
 
-const ROLES = ["the starting amount (how much there was at the very beginning)", "the change (how much was added or taken away)", "the result (the amount at the end)"];
+const ROLE_OPTIONS = [
+  { id: "start", label: "the start" },
+  { id: "change", label: "the change" },
+  { id: "end", label: "the end" },
+];
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
-
-/** CFU "Look here" pointers: the Explore spot that teaches each part (shown after its 2nd miss). */
+/** CFU "Look here" pointers: the Explore spot that teaches each question (shown after its 2nd miss). */
 const LOOK = {
-  roles: { target: "atf-roles", label: "Explore: start, change, or result", say: "Look here. Which one is missing?" },
+  roles: { target: "atf-roles", label: "Explore: start, change, or end", say: "Look here. Which one is missing?" },
   story: { target: "atf-story", label: "Explore: build your own story", say: "Look here. Start, then add more." },
-  missing: { target: "atf-missing", label: "Explore: when the start or change is missing", say: "Look here. Take away from the end." },
+  // Two spots, one per missing part (E2-36): each switches Explore to an Add
+  // To story with that part missing, so the line there matches the nudge.
+  missingChange: { target: "atf-missing-change", label: "Explore: the change is missing", say: "Look here. Count on to the end." },
+  missingStart: { target: "atf-missing-start", label: "Explore: the start is missing", say: "Look here. Start at the end. Take away." },
 };
 
-function RolePlusNumberQuestion({
-  n,
-  story,
-  question,
-  correctRole,
-  correctAnswer,
-  answerOptions,
-  explain,
-  answerLook,
-  onComplete,
-}: {
-  n: number;
-  story: string;
-  question: string;
-  correctRole: number; // index into ROLES
-  correctAnswer: number;
-  answerOptions: number[];
-  explain: string;
-  /** The Explore spot that teaches finding this answer (CFU "Look here" pointer). */
-  answerLook: ExploreTarget;
-  onComplete?: () => void;
-}) {
-  const [role, setRole] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [role, answer].every((v) => String(v).trim() !== "");
-  const roleOk = role === String(correctRole);
-  const answerOk = Number(answer) === correctAnswer;
-  const ok = roleOk && answerOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  const partOk = (key: string) => (key === "role" ? roleOk : answerOk);
-  const ptr = useCfuPointers(
-    [
-      { key: "role", part: "What's unknown", to: LOOK.roles },
-      { key: "answer", part: "Answer", to: answerLook },
-    ],
-    { done: checked && ok, early: true, rightNow: (p) => checked && partOk(p.key) }
-  );
-  const check = () => {
-    ptr.record((p) => partOk(p.key), `${role}|${answer}`);
-    setChecked(true);
-  };
+/** Story roles drawn in the StoryStrip's colors: start a, change b, end c. */
+const ROLE_TONE = { start: "a", change: "b", end: "c" } as const;
 
+/** The numbers a story gives, before anything is solved: one ten-frame each, colored by its role (C2-02). */
+function Given({ parts }: { parts: { n: number; role: StoryPart }[] }) {
   return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>{n}.</b> {story} {question}
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What's unknown?{" "}
-          <TapSelect value={role} onChange={(e) => setRole(e.target.value)} style={fieldOk(roleOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            {ROLES.map((r, i) => (
-              <option key={i} value={i}>
-                {r}
-              </option>
-            ))}
-          </TapSelect>
-        </label>
-        <label>
-          Answer:{" "}
-          <TapSelect value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(answerOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            {answerOptions.map((o) => (
-              <option key={o} value={o}>
-                {o}
-              </option>
-            ))}
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={check}>
-          Check Answer
-        </button>
-      </div>
-      <StuckBox {...ptr} early />
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? `Correct — ${explain}` : `Not quite — ${explain}`}
-        </ReadAloud>
-      )}
-    </ReadAloud>
+    <div className="control-row" style={{ gap: 20, alignItems: "flex-start" }}>
+      {parts.map(({ n, role }, i) => (
+        <div key={i} style={{ width: 168 }}>
+          <TenFrameGroup value={n} tone={ROLE_TONE[role]} />
+          <p style={{ textAlign: "center", fontSize: "1.5rem", fontWeight: 800, margin: "4px 0 0" }}>{n}</p>
+        </div>
+      ))}
+    </div>
   );
 }
 
 function WordProblemCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ q1: false, q2: false, q3: false, q4: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
-  const [trueFalse, setTrueFalse] = useState("");
-  const [tfChecked, setTfChecked] = useState(false);
-  const tfOk = trueFalse === "false";
-  useEffect(() => {
-    if (tfChecked && tfOk) mark("q3")();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tfChecked, tfOk]);
-  const tfPtr = useCfuPointers([{ key: "q3", to: LOOK.roles }], { done: tfChecked && tfOk, early: true });
-  const tfCheck = () => {
-    if (trueFalse) tfPtr.record(() => tfOk, trueFalse);
-    setTfChecked(true);
-  };
-
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure you can tell these stories apart before you try practice problems.</ReadAloud>
-      <RolePlusNumberQuestion
-        n={1}
-        story="Sam had 6 apples. He picked 5 more apples."
-        question="How many apples does he have now?"
-        correctRole={2}
-        correctAnswer={11}
-        answerOptions={[5, 6, 11]}
-        answerLook={LOOK.story}
-        explain="this story asks for the RESULT — the amount Sam has now, after picking more: 6 + 5 = 11."
-        onComplete={mark("q1")}
-      />
-      <RolePlusNumberQuestion
-        n={2}
-        story="Sam had 6 apples. He picked some more apples. Now he has 11 apples. How many apples did he pick?"
-        question=""
-        correctRole={1}
-        correctAnswer={5}
-        answerOptions={[5, 6, 11]}
-        answerLook={LOOK.missing}
-        explain="the question asks how many he PICKED — the CHANGE, not the result. 11 − 6 = 5. The answer isn't always the biggest number in the story."
-        onComplete={mark("q2")}
-      />
-      <ReadAloud className="align-stack-wrap">
-        <p>
-          <b>3.</b> True or false: in every add-to or take-from story, the question is always asking for the total amount at the very END.
-        </p>
-        <div className="control-row" style={{ alignItems: "center" }}>
-          <TapSelect value={trueFalse} onChange={(e) => setTrueFalse(e.target.value)} style={fieldOk(tfOk, tfChecked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="true">True</option>
-            <option value="false">False</option>
-          </TapSelect>
-          <button className="btn primary" type="button" onClick={tfCheck}>
-            Check Answer
-          </button>
-        </div>
-        <StuckBox {...tfPtr} early />
-        {tfChecked && (
-          <ReadAloud as="p" className={`feedback ${tfOk ? "good" : "bad"}`} role="alert">
-            {tfOk
-              ? "Correct — false. Sometimes the STARTING amount is unknown, and sometimes the CHANGE is unknown. Read the question carefully every time."
-              : "Not quite — false. The ending amount isn't always what's missing — sometimes the starting amount or the change is what you need to find."}
-          </ReadAloud>
-        )}
-      </ReadAloud>
-      <RolePlusNumberQuestion
-        n={4}
-        story="Leo had some pennies. He got 4 more pennies, and now has 11 pennies."
-        question="How many pennies did he start with?"
-        correctRole={0}
-        correctAnswer={7}
-        answerOptions={[4, 7, 15]}
-        answerLook={LOOK.missing}
-        explain={'the word "more" doesn\'t always mean add — here the STARTING amount is unknown, and finding it means SUBTRACTING the change: 11 − 4 = 7, not adding.'}
-        onComplete={mark("q4")}
-      />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => (
+          <PickCheck
+            n={1}
+            prompt="Sam had 6 apples. He picked 5 more. What is missing?"
+            picture={<Given parts={[{ n: 6, role: "start" }, { n: 5, role: "change" }]} />}
+            showPicture={<StoryStrip start={6} change={5} end={11} action="add" missing="end" />}
+            options={ROLE_OPTIONS}
+            answer="end"
+            why={{ start: "The story says he had 6.", change: "The story says he picked 5." }}
+            showText="Watch: the story tells the start and the change. The end is missing."
+            praise="Yes! The end is missing."
+            look={LOOK.roles}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="How many apples does Sam have now?"
+            answer={11}
+            tone="c"
+            picture={(m) => <StoryStrip start={6} change={5} end={11} action="add" missing="end" reveal={m === "show" || m === "done" ? 11 : undefined} />}
+            nudge="Start with 6. Count on 5."
+            why={{ 1: "He picked more. Now he has more.", 5: "That is how many he picked." }}
+            showText="Watch and listen: 7, 8, 9, 10, 11."
+            praise="Yes! 6 + 5 = 11."
+            look={LOOK.story}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={3}
+            prompt="Sam had 6 apples. He picked some more. Now he has 11. How many did he pick?"
+            answer={5}
+            tone="b"
+            picture={(m) => <StoryStrip start={6} change={5} end={11} action="add" missing="change" reveal={m === "show" || m === "done" ? 5 : undefined} />}
+            nudge="Start with 6. Count on to 11."
+            why={{ 11: "11 is the end. How many did he pick?", 17: "Don't add 6 and 11." }}
+            showText="Watch: count on from 6 to 11. 7, 8, 9, 10, 11. That is 5."
+            praise="Yes! The change is 5."
+            look={LOOK.missingChange}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={4}
+            prompt="Ana had 9 shells. She lost some. Now she has 6. What is missing?"
+            picture={<Given parts={[{ n: 9, role: "start" }, { n: 6, role: "end" }]} />}
+            showPicture={<StoryStrip start={9} change={3} end={6} action="take" missing="change" />}
+            options={ROLE_OPTIONS}
+            answer="change"
+            why={{ start: "The story says she had 9.", end: "The story says she has 6 now." }}
+            showText="Watch: the story tells the start and the end. The change is missing."
+            praise="Yes! The change is missing."
+            look={LOOK.roles}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={5}
+            prompt="Leo had some stickers. He got 4 more. Now he has 11. What is missing?"
+            picture={<Given parts={[{ n: 4, role: "change" }, { n: 11, role: "end" }]} />}
+            showPicture={<StoryStrip start={7} change={4} end={11} action="add" missing="start" />}
+            options={ROLE_OPTIONS}
+            answer="start"
+            why={{ change: "The story says he got 4.", end: "The story says he has 11 now." }}
+            showText="Watch: the story tells the change and the end. The start is missing."
+            praise="Yes! The start is missing."
+            look={LOOK.roles}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={6}
+            prompt="How many stickers did Leo have at the start?"
+            answer={7}
+            tone="a"
+            picture={(m) => <StoryStrip start={7} change={4} end={11} action="add" missing="start" reveal={m === "show" || m === "done" ? 7 : undefined} />}
+            nudge="He got more. To find the start, take those away."
+            why={{ 15: "He got more. To find the start, take those away.", 11: "11 is the end. What did he have at the start?" }}
+            showText="Watch: start at 11. Take away 4. 7 are left."
+            praise="Yes! 11 − 4 = 7."
+            look={LOOK.missingStart}
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 
@@ -211,15 +158,59 @@ function WordProblemCheckForUnderstanding({ onComplete }: { onComplete?: () => v
 // EXPLORE
 // ============================================================================
 
+/**
+ * The Explore line under the "What is missing?" picture: true for this kind
+ * of story and this missing part, with the picture's numbers in the order
+ * you use them (E2-36), and the same way as the CFU nudges.
+ */
+function missingLine(action: "add" | "take", missing: StoryPart, start: number, change: number, end: number): string {
+  if (missing === "end") return action === "add" ? "End missing? Start, then add the change." : "End missing? Start, then take away the change.";
+  if (action === "add") return missing === "change" ? `Change missing? Start at ${start}. Count on to ${end}.` : `Start missing? Start at ${end}. Take away ${change}.`;
+  return missing === "change" ? `Change missing? Start at ${start}. Count back to ${end}.` : `Start missing? Start at ${end}. Add back ${change}.`;
+}
+
+const SHOW_STEP_MS = 800;
+
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
-  // Not the CFU's numbers, so a "Look here" never shows a CFU answer.
-  const [start, setStart] = useState(5);
-  const [change, setChange] = useState(3);
+  // Not the CFU's numbers, so a "Look here" never shows a CFU answer
+  // (answers 11, 5, 7). 3 + 6 = 9, not 5 + 3 = 8: Q3's pointer switches to
+  // "Change missing? Start at 5…", and 5 was Q3's answer (C3-02).
+  const [start, setStart] = useState(3);
+  const [change, setChange] = useState(6);
   const [action, setAction] = useState<"add" | "take">("add");
+  const [missing, setMissing] = useState<StoryPart>("end");
+  // "Show": how many counters the missing box shows so far (counting on), or null.
+  const [reveal, setReveal] = useState<number | null>(null);
 
-  const result = action === "add" ? Math.min(20, start + change) : Math.max(0, start - change);
+  // Every control's range comes from the others, so the end is always 0–20 and true.
+  const end = action === "add" ? start + change : start - change;
+  const missingValue = missing === "start" ? start : missing === "change" ? change : end;
+  // The other kind of story would go past 20 (or below 0) with these numbers: gray out the switch.
+  const canSwitch = action === "add" ? start - change >= 0 : start + change <= 20;
+
+  useEffect(() => {
+    if (reveal === null || reveal >= missingValue) return;
+    const t = window.setTimeout(() => setReveal((r) => (r === null ? r : r + 1)), SHOW_STEP_MS);
+    return () => window.clearTimeout(t);
+  }, [reveal, missingValue]);
+  const hideReveal = () => setReveal(null);
+  // The start-missing view is its own spot (CFU Q6); the others are the change spot (CFU Q3).
+  const missingSpot = missing === "start" ? "atf-missing-start" : "atf-missing-change";
+
+  // The CFU's "Look here" for a missing part comes from Add To stories:
+  // switch to Add To with that part missing (keeping the end at most 20).
+  useLookHereRequest((id) => {
+    if (id === "atf-missing-change" || id === "atf-missing-start") {
+      if (action === "take") {
+        setAction("add");
+        if (start + change > 20) setStart(20 - change);
+      }
+      setMissing(id === "atf-missing-start" ? "start" : "change");
+      hideReveal();
+    }
+  });
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -236,33 +227,40 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         )}
       </div>
 
-      <ReadAloud as="p">
-        Build your own story: start with some, then {action === "add" ? "add more" : "take some away"}.
-      </ReadAloud>
+      <ReadAloud as="p">Build your own story: start with some, then {action === "add" ? "add more" : "take some away"}.</ReadAloud>
       <div className="control-row" data-readaloud-part>
-        <label>
-          Start:{" "}
-          <input
-            type="range"
-            min={0}
-            max={20}
-            value={start}
-            onChange={(e) => setStart(Number(e.target.value))}
-          />{" "}
-          {start}
-        </label>
-        <label>
-          {action === "add" ? "Add" : "Take away"}:{" "}
-          <input
-            type="range"
-            min={0}
-            max={10}
-            value={change}
-            onChange={(e) => setChange(Number(e.target.value))}
-          />{" "}
-          {change}
-        </label>
-        <button className="btn ghost" onClick={() => setAction(action === "add" ? "take" : "add")}>
+        <Stepper
+          label="Start"
+          value={start}
+          min={action === "take" ? change : 0}
+          max={action === "add" ? 20 - change : 20}
+          step={1}
+          onChange={(v) => {
+            setStart(v);
+            hideReveal();
+          }}
+          tone="a"
+        />
+        <Stepper
+          label={action === "add" ? "Add" : "Take away"}
+          value={change}
+          min={0}
+          max={action === "add" ? Math.min(10, 20 - start) : Math.min(10, start)}
+          step={1}
+          onChange={(v) => {
+            setChange(v);
+            hideReveal();
+          }}
+          tone="b"
+        />
+        <button
+          className="btn ghost"
+          disabled={!canSwitch}
+          onClick={() => {
+            setAction(action === "add" ? "take" : "add");
+            hideReveal();
+          }}
+        >
           Switch to {action === "add" ? "Take From" : "Add To"}
         </button>
       </div>
@@ -275,24 +273,44 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             </ReadAloud>
           </div>
           <div>
-            <TenFrameGroup value={result} tone="c" />
+            <TenFrameGroup value={end} tone="c" />
             <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
-              Result: {result}
+              End: {end}
             </ReadAloud>
           </div>
         </div>
         <ReadAloud as="p" className="muted small" data-look-here-key>
-          {action === "add"
-            ? `${start} + ${change} = ${result}. The amount grew — this is an "Add To" story.`
-            : `${start} − ${change} = ${result}. The amount shrank — this is a "Take From" story.`}
+          {action === "add" ? `${start} + ${change} = ${end}. It went up. This is an Add To story.` : `${start} − ${change} = ${end}. It went down. This is a Take From story.`}
         </ReadAloud>
       </div>
       <ReadAloud as="p" className="muted small" {...lookHereSpot("atf-roles")}>
-        <span data-look-here-key>A story can ask for the start, the change, or the result — read carefully to see which one is missing.</span>
+        <span data-look-here-key>A story can hide the start, the change, or the end. Which one is missing?</span>
       </ReadAloud>
-      <ReadAloud as="p" className="muted small" {...lookHereSpot("atf-missing")}>
-        <span data-look-here-key>Start or change missing? Take the number you know away from the end.</span>
-      </ReadAloud>
+      {/* Keyed by its spot id, so a lit spot never changes id under the highlight. */}
+      <div key={missingSpot} {...lookHereSpot(missingSpot)} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div className="control-row" data-readaloud-part>
+          <Segmented
+            label="What is missing?"
+            value={missing}
+            onChange={(m) => {
+              setMissing(m);
+              hideReveal();
+            }}
+            options={[
+              { id: "start", label: "Start" },
+              { id: "change", label: "Change" },
+              { id: "end", label: "End" },
+            ]}
+          />
+          <button type="button" className="btn primary" disabled={reveal !== null} onClick={() => setReveal(0)}>
+            Show
+          </button>
+        </div>
+        <StoryStrip start={start} change={change} end={end} action={action} missing={missing} reveal={reveal ?? undefined} />
+        <ReadAloud as="p" className="muted small" data-look-here-key>
+          {missingLine(action, missing, start, change, end)}
+        </ReadAloud>
+      </div>
       {/* Below the picture, so students explore first, then check. */}
       {(introActive || showCheck) && <WordProblemCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
@@ -307,131 +325,217 @@ type Bucket = "addToResult" | "addToChange" | "addToStart" | "takeFromResult" | 
 const BUCKETS: Bucket[] = ["addToResult", "addToChange", "addToStart", "takeFromResult", "takeFromChange", "takeFromStart"];
 
 // verbAdd/verbTake are past tense ("Mia got 3"); the *Base forms follow "did" ("How many did Mia get?").
-const CONTEXTS: { person: string; item: string; verbAdd: string; verbAddBase: string; verbTake: string; verbTakeBase: string }[] = [
-  { person: "Mia", item: "stickers", verbAdd: "got", verbAddBase: "get", verbTake: "gave away", verbTakeBase: "give away" },
-  { person: "Jake", item: "marbles", verbAdd: "found", verbAddBase: "find", verbTake: "lost", verbTakeBase: "lose" },
-  { person: "Ava", item: "crayons", verbAdd: "got", verbAddBase: "get", verbTake: "shared", verbTakeBase: "share" },
-  { person: "Liam", item: "shells", verbAdd: "collected", verbAddBase: "collect", verbTake: "dropped", verbTakeBase: "drop" },
-  { person: "Zoe", item: "stamps", verbAdd: "bought", verbAddBase: "buy", verbTake: "used up", verbTakeBase: "use up" },
+// `one` is the singular ("1 sticker"); `pr` is the pronoun for `person`.
+const CONTEXTS: { person: string; pr: "he" | "she"; item: string; one: string; verbAdd: string; verbAddBase: string; verbTake: string; verbTakeBase: string }[] = [
+  { person: "Mia", pr: "she", item: "stickers", one: "sticker", verbAdd: "got", verbAddBase: "get", verbTake: "gave away", verbTakeBase: "give away" },
+  { person: "Jake", pr: "he", item: "marbles", one: "marble", verbAdd: "found", verbAddBase: "find", verbTake: "lost", verbTakeBase: "lose" },
+  { person: "Ava", pr: "she", item: "crayons", one: "crayon", verbAdd: "got", verbAddBase: "get", verbTake: "lost", verbTakeBase: "lose" },
+  { person: "Liam", pr: "he", item: "shells", one: "shell", verbAdd: "found", verbAddBase: "find", verbTake: "dropped", verbTakeBase: "drop" },
+  { person: "Zoe", pr: "she", item: "stamps", one: "stamp", verbAdd: "got", verbAddBase: "get", verbTake: "gave away", verbTakeBase: "give away" },
 ];
+
+const ROLE_NAMES = ["the start", "the change", "the end"];
+const cap = (w: string) => w[0].toUpperCase() + w.slice(1);
+/** "1 sticker" / "3 stickers". */
+const count = (n: number, ctx: (typeof CONTEXTS)[number]) => `${n} ${n === 1 ? ctx.one : ctx.item}`;
+/** "9, 10, 11" — the numbers you say counting from `from` to `to`. */
+const countWords = (from: number, to: number) => {
+  const dir = to > from ? 1 : -1;
+  return Array.from({ length: Math.abs(to - from) }, (_, k) => from + (k + 1) * dir).join(", ");
+};
+/** About 1 second per number said, after a short lead-in (Show me pacing), at most 7 seconds. */
+const holdFor = (n: number) => Math.min(7000, 1000 + n * 1000);
 
 function wordProblem(targetBucket?: string): Problem {
   const bucket = (targetBucket as Bucket | undefined) ?? BUCKETS[randInt(0, BUCKETS.length - 1)];
   const ctx = pick(CONTEXTS);
+  const P = ctx.person;
+  const he = ctx.pr;
+  const He = cap(he);
   const roleChoice = (correctIdx: number) =>
+    choice({ prompt: "What is missing?", hint: "The story tells two numbers. Which one is missing?", explain: `${cap(ROLE_NAMES[correctIdx])} is missing.` }, ROLE_NAMES[correctIdx], ROLE_NAMES.filter((_, i) => i !== correctIdx));
+  // C1-07: the student chooses the number sentence (and so the operation) for this story.
+  const matchChoice = (p: number, q: number, correct: string, answer: number) =>
     choice(
-      { prompt: "What's unknown in this story?", hint: "Decide: is it the starting amount, the change, or the result?", explain: `The unknown here is ${ROLES[correctIdx]}.` },
-      ROLES[correctIdx],
-      ROLES.filter((_, i) => i !== correctIdx)
+      { prompt: "Which one matches the story?", hint: "Picture the story. Did it go up or down?", explain: `${correct} matches the story.` },
+      correct,
+      storySentenceChoices(p, q, correct, answer) // misconceptions: the other sign (keyword), the two numbers added
     );
 
   if (bucket === "addToResult" || bucket === "addToChange" || bucket === "addToStart") {
+    // Start at 1 or more: an Add To story starts with something.
     let start = 0;
     let change = 0;
     do {
-      start = randInt(0, 15);
+      start = randInt(1, 15);
       change = randInt(1, 9);
     } while (start + change > 20);
     const result = start + change;
 
     if (bucket === "addToResult") {
       return {
-        title: "Add To — how many now?",
+        title: "Story problem",
         bucket,
-        story: `${ctx.person} had ${start} ${ctx.item}. Then ${ctx.person} ${ctx.verbAdd} ${change} more ${ctx.item}. How many ${ctx.item} does ${ctx.person} have now?`,
-        // Help ladder (step 1): act the story out, with the change in a second color.
+        story: `${P} had ${count(start, ctx)}. Then ${he} ${ctx.verbAdd} ${change} more. How many ${ctx.item} does ${P} have now?`,
+        // Help ladder (step 3): act the story out, with the change in a second color.
         visual: (_done: number, help?: VisualHelp) => (
           <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
-            {pointing(help, 1) ? <TenFrameGroup value={result} tone="a" splitAt={start} tone2="b" /> : <TenFrameGroup value={start} tone="a" />}
+            {pointing(help, 2) ? <TenFrameGroup value={result} tone="a" splitAt={start} tone2="b" /> : <TenFrameGroup value={start} tone="a" />}
           </div>
         ),
-        steps: [roleChoice(2), { kind: "number", prompt: `How many ${ctx.item} does ${ctx.person} have now?`, hint: "Start + change = result.", explain: `${start} + ${change} = ${result}.`, answer: result }],
+        steps: [
+          roleChoice(2),
+          matchChoice(start, change, `${start} + ${change} = ☐`, result),
+          {
+            kind: "number",
+            prompt: `How many ${ctx.item} does ${P} have now?`,
+            hint: `Start with ${start}. Count on ${change}.`,
+            showMe: `Start with ${start}. Count on ${change}: ${countWords(start, result)}.`,
+            showMeHoldMs: holdFor(change),
+            explain: `${start} + ${change} = ${result}.`,
+            answer: result,
+          },
+        ],
         wrapUp: `${start} + ${change} = ${result}.`,
       };
     }
     if (bucket === "addToChange") {
       return {
-        title: "Add To — how many did they get?",
+        title: "Story problem",
         bucket,
-        story: `${ctx.person} had ${start} ${ctx.item}. ${ctx.person} ${ctx.verbAdd} some more, and now has ${result} ${ctx.item}. How many ${ctx.item} did ${ctx.person} ${ctx.verbAddBase}?`,
+        story: `${P} had ${count(start, ctx)}. ${He} ${ctx.verbAdd} some more. Now ${he} has ${count(result, ctx)}. How many did ${P} ${ctx.verbAddBase}?`,
         visual: (_done: number, help?: VisualHelp) => (
           <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
             <TenFrameGroup value={start} tone="a" />
-            {pointing(help, 1) ? <TenFrameGroup value={result} tone="a" splitAt={start} tone2="b" /> : <TenFrameGroup value={result} tone="c" />}
+            {pointing(help, 2) ? <TenFrameGroup value={result} tone="a" splitAt={start} tone2="b" /> : <TenFrameGroup value={result} tone="c" />}
           </div>
         ),
-        steps: [roleChoice(1), { kind: "number", prompt: `How many ${ctx.item} did ${ctx.person} ${ctx.verbAddBase}?`, hint: "Result − start = change.", explain: `${result} − ${start} = ${change}.`, answer: change }],
+        steps: [
+          roleChoice(1),
+          matchChoice(start, result, `${start} + ☐ = ${result}`, change),
+          {
+            kind: "number",
+            prompt: `How many did ${P} ${ctx.verbAddBase}?`,
+            hint: `Count on from ${start} to ${result}.`,
+            showMe: `Count on from ${start} to ${result}: ${countWords(start, result)}. That is ${change}.`,
+            showMeHoldMs: holdFor(change),
+            explain: `${result} − ${start} = ${change}.`,
+            answer: change,
+          },
+        ],
         wrapUp: `${start} + ${change} = ${result}.`,
       };
     }
     return {
-      title: "Add To — how many at the start?",
+      title: "Story problem",
       bucket,
-      story: `${ctx.person} had some ${ctx.item}. Then ${ctx.person} ${ctx.verbAdd} ${change} more, and now has ${result} ${ctx.item}. How many ${ctx.item} did ${ctx.person} have at the start?`,
+      story: `${P} had some ${ctx.item}. Then ${he} ${ctx.verbAdd} ${change} more. Now ${he} has ${count(result, ctx)}. How many did ${P} have at the start?`,
       visual: (_done: number, help?: VisualHelp) => (
         <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
-          {pointing(help, 1) ? <TenFrameGroup value={result} tone="a" splitAt={start} tone2="b" /> : <TenFrameGroup value={result} tone="c" />}
+          {pointing(help, 2) ? <TenFrameGroup value={result} tone="a" splitAt={start} tone2="b" /> : <TenFrameGroup value={result} tone="c" />}
         </div>
       ),
       steps: [
         roleChoice(0),
-        { kind: "number", prompt: `How many ${ctx.item} did ${ctx.person} have at the start?`, hint: `"More" doesn't always mean add — the change already happened, so subtract it back out: result − change = start.`, explain: `${result} − ${change} = ${start}.`, answer: start },
+        matchChoice(change, result, `☐ + ${change} = ${result}`, start),
+        {
+          kind: "number",
+          prompt: `How many did ${P} have at the start?`,
+          hint: `${He} ${ctx.verbAdd} more. To find the start, take those away.`,
+          showMe: `${He} ${ctx.verbAdd} ${change} more. Take ${change === 1 ? "it" : "them"} away: ${result} − ${change} = ${start}.`,
+          showMeHoldMs: 3000,
+          explain: `${result} − ${change} = ${start}.`,
+          answer: start,
+        },
       ],
       wrapUp: `${start} + ${change} = ${result}.`,
     };
   }
 
-  // take-from buckets
+  // take-from buckets. The end can be 0 only when the end is what's asked.
   let start = 0;
   let change = 0;
   do {
     start = randInt(1, 20);
     change = randInt(1, 9);
-  } while (start - change < 0);
+  } while (start - change < (bucket === "takeFromResult" ? 0 : 1));
   const result = start - change;
 
   if (bucket === "takeFromResult") {
     return {
-      title: "Take From — how many left?",
+      title: "Story problem",
       bucket,
-      story: `${ctx.person} had ${start} ${ctx.item}. Then ${ctx.person} ${ctx.verbTake} ${change} ${ctx.item}. How many ${ctx.item} does ${ctx.person} have left?`,
+      story: `${P} had ${count(start, ctx)}. Then ${he} ${ctx.verbTake} ${change}. How many ${ctx.item} does ${P} have left?`,
       visual: (_done: number, help?: VisualHelp) => (
         <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
-          {/* Help ladder / Show me: the ones given away are crossed out. */}
-          <TenFrameGroup value={start} tone="a" splitAt={pointing(help, 1) ? result : undefined} tone2="b" crossFrom={pointing(help, 1) ? result : undefined} />
+          {/* Help ladder / Show me: the ones taken away are crossed out. */}
+          <TenFrameGroup value={start} tone="a" splitAt={pointing(help, 2) ? result : undefined} tone2="b" crossFrom={pointing(help, 2) ? result : undefined} />
         </div>
       ),
-      steps: [roleChoice(2), { kind: "number", prompt: `How many ${ctx.item} does ${ctx.person} have left?`, hint: "Start − change = result.", explain: `${start} − ${change} = ${result}.`, answer: result }],
+      steps: [
+        roleChoice(2),
+        matchChoice(start, change, `${start} − ${change} = ☐`, result),
+        {
+          kind: "number",
+          prompt: `How many ${ctx.item} does ${P} have left?`,
+          hint: `Start with ${start}. Count back ${change}.`,
+          showMe: `Start with ${start}. Take away ${change}. Count back: ${countWords(start, result)}.`,
+          showMeHoldMs: holdFor(change),
+          explain: `${start} − ${change} = ${result}.`,
+          answer: result,
+        },
+      ],
       wrapUp: `${start} − ${change} = ${result}.`,
     };
   }
   if (bucket === "takeFromChange") {
     return {
-      title: "Take From — how many did they give away?",
+      title: "Story problem",
       bucket,
-      story: `${ctx.person} had ${start} ${ctx.item}. ${ctx.person} ${ctx.verbTake} some, and now has ${result} ${ctx.item} left. How many ${ctx.item} did ${ctx.person} ${ctx.verbTakeBase}?`,
+      story: `${P} had ${count(start, ctx)}. ${He} ${ctx.verbTake} some. Now ${he} has ${count(result, ctx)}. How many did ${P} ${ctx.verbTakeBase}?`,
       visual: (_done: number, help?: VisualHelp) => (
         <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
-          <TenFrameGroup value={start} tone="a" splitAt={pointing(help, 1) ? result : undefined} tone2="b" crossFrom={pointing(help, 1) ? result : undefined} />
+          <TenFrameGroup value={start} tone="a" splitAt={pointing(help, 2) ? result : undefined} tone2="b" crossFrom={pointing(help, 2) ? result : undefined} />
           <TenFrameGroup value={result} tone="c" />
         </div>
       ),
-      steps: [roleChoice(1), { kind: "number", prompt: `How many ${ctx.item} did ${ctx.person} ${ctx.verbTakeBase}?`, hint: "Start − result = change.", explain: `${start} − ${result} = ${change}.`, answer: change }],
+      steps: [
+        roleChoice(1),
+        matchChoice(start, result, `${start} − ☐ = ${result}`, change),
+        {
+          kind: "number",
+          prompt: `How many did ${P} ${ctx.verbTakeBase}?`,
+          hint: `Count back from ${start} to ${result}.`,
+          showMe: `Count back from ${start} to ${result}: ${countWords(start, result)}. That is ${change}.`,
+          showMeHoldMs: holdFor(change),
+          explain: `${start} − ${result} = ${change}.`,
+          answer: change,
+        },
+      ],
       wrapUp: `${start} − ${change} = ${result}.`,
     };
   }
   return {
-    title: "Take From — how many at the start?",
+    title: "Story problem",
     bucket,
-    story: `${ctx.person} ${ctx.verbTake} ${change} ${ctx.item}, and now has ${result} ${ctx.item} left. How many ${ctx.item} did ${ctx.person} have at the start?`,
+    story: `${P} had some ${ctx.item}. Then ${he} ${ctx.verbTake} ${change}. Now ${he} has ${count(result, ctx)}. How many did ${P} have at the start?`,
     visual: (_done: number, help?: VisualHelp) => (
       <div className="control-row" style={{ gap: 20 }} data-readaloud-part>
-        {pointing(help, 1) ? <TenFrameGroup value={start} tone="a" splitAt={result} tone2="b" crossFrom={result} /> : <TenFrameGroup value={result} tone="c" />}
+        {pointing(help, 2) ? <TenFrameGroup value={start} tone="a" splitAt={result} tone2="b" crossFrom={result} /> : <TenFrameGroup value={result} tone="c" />}
       </div>
     ),
     steps: [
       roleChoice(0),
-      { kind: "number", prompt: `How many ${ctx.item} did ${ctx.person} have at the start?`, hint: "The change already happened, so add it back: result + change = start.", explain: `${result} + ${change} = ${start}.`, answer: start },
+      matchChoice(change, result, `☐ − ${change} = ${result}`, start),
+      {
+        kind: "number",
+        prompt: `How many did ${P} have at the start?`,
+        hint: `${He} ${ctx.verbTake} some. To find the start, add them back.`,
+        showMe: `${He} ${ctx.verbTake} ${change}. Add ${change === 1 ? "it" : "them"} back: ${result} + ${change} = ${start}.`,
+        showMeHoldMs: 3000,
+        explain: `${result} + ${change} = ${start}.`,
+        answer: start,
+      },
     ],
     wrapUp: `${start} − ${change} = ${result}.`,
   };
@@ -439,18 +543,18 @@ function wordProblem(targetBucket?: string): Problem {
 
 export const addToTakeFromWordProblems: Unit = {
   id: "addToTakeFromWordProblems",
-  title: "Word Problems: Add To and Take From",
-  goal: "Solve real-world stories where a starting amount changes — figure out whichever part (start, change, or result) is missing.",
+  title: "Add To and Take From Stories",
+  goal: "Solve stories. Add more or take some away.",
   standard: "1.OA.1",
   keyIdea: (
     <>
-      <p>Every story has a START, a CHANGE, and a RESULT. First figure out which one the question is asking for — don't assume it's always the result.</p>
-      <p>Keywords like "more" can be misleading — read the whole story's structure, not just one word, especially when the STARTING amount is unknown.</p>
+      <p>A story has a start, a change, and an end. Find the one that is missing.</p>
+      <p>Picture the story. Don't just look for one word.</p>
     </>
   ),
   Explore,
   requiresIntro: true,
-  problems: [{ label: "Add To / Take From", make: wordProblem, buckets: BUCKETS }],
+  problems: [{ label: "Add To and Take From", make: wordProblem, buckets: BUCKETS }],
   requiredBuckets: BUCKETS,
   test: addToTakeFromWordProblemsTest,
 };

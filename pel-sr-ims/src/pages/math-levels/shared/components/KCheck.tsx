@@ -2,11 +2,21 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { numberPadProps, useEarlyLearner } from "../engine/audience";
 import { InlineNumberPad } from "./NumberPad";
 import { ReadAloud } from "../tts/ReadAloud";
+import { StuckBox, useCfuPointers, type ExploreTarget } from "./CfuPointers";
 
 // Check-for-understanding questions built for Kindergarten (the K-1 labs): one short
 // question, a picture of what's asked, a typed answer on the number pad (or
 // big picture buttons), and short feedback. A wrong try points at the
 // picture; a second wrong try shows it happening, then the student answers.
+//
+// Optional `look` (MG1 and other labs with CFU "Look here" pointers): the
+// question also gets the early "Look here!" button after its 2nd wrong try
+// (shared useCfuPointers + StuckBox; the Explore spot stays lit until the
+// answer is right), and "show it" moves to the 3rd wrong try. Without `look`
+// a question behaves exactly as before (MK1-MK4).
+
+/** Wrong tries before "show it" (the worked picture): 2, or 3 when the question has a "Look here" pointer. */
+const showAfter = (look?: ExploreTarget) => (look ? 3 : 2);
 
 export type Tone = "a" | "b" | "c";
 
@@ -65,9 +75,33 @@ export function PictureBox({ ring, ringKey, children }: { ring: boolean; ringKey
 }
 
 /**
+ * A same-idea question with new numbers that replaces a two-button pick
+ * after its first wrong tap (PickCheck `twin`). Same fields as the pick.
+ */
+export interface PickTwin {
+  prompt: ReactNode;
+  picture?: ReactNode;
+  showPicture: ReactNode;
+  options: { id: string; label: ReactNode }[];
+  answer: string;
+  why: Record<string, string>;
+  showText: string;
+  praise: string;
+}
+
+/**
  * Pick the right answer from big buttons, under a picture. Each wrong
  * button has its own short reason. Two wrong tries swap in `showPicture`,
  * which shows the answer happening.
+ *
+ * Optional `twin` (only with `look`; MG1 round 2): with two buttons, one
+ * wrong tap would leave only the answer. Instead the first wrong tap swaps
+ * in the twin question (new numbers, both buttons live). A wrong tap on the
+ * twin is the 2nd miss ("Look here!"); a wrong tap after that is the 3rd
+ * ("show it"). Without `twin` nothing changes (MK1-MK4).
+ *
+ * With `look` (twin or not), tried buttons stay tappable until "show it",
+ * so a 3-button pick still has real choices at the 2nd-miss pointer.
  */
 export function PickCheck({
   n,
@@ -79,6 +113,8 @@ export function PickCheck({
   why,
   showText,
   praise,
+  look,
+  twin,
   onComplete,
 }: {
   n: number;
@@ -93,26 +129,45 @@ export function PickCheck({
   /** What the student hears with `showPicture`, e.g. "Watch and listen: 49, 50." */
   showText: string;
   praise: string;
+  /** Optional: the Explore spot that teaches this question ("Look here" after the 2nd wrong pick). */
+  look?: ExploreTarget;
+  /** Optional (needs `look`): the question that replaces this one after its first wrong pick. */
+  twin?: PickTwin;
   onComplete?: () => void;
 }) {
   const [picked, setPicked] = useState<string[]>([]);
-  const done = picked.includes(answer);
-  const wrong = picked.filter((p) => p !== answer).length;
+  // Twin mode: the first question's wrong pick (then the twin is on screen).
+  const [firstWrong, setFirstWrong] = useState<string | null>(null);
+  // Twin only: the twin's prompt, read after the swap without the question number "2." (MG1 review E3-54).
+  const headRef = useRef<HTMLSpanElement>(null);
+  const twinOn = !!(twin && look);
+  const onTwin = twinOn && firstWrong !== null;
+  const q = onTwin && twin ? twin : { prompt, picture, showPicture, options, answer, why, showText, praise };
+  const done = picked.includes(q.answer);
+  const wrong = (firstWrong !== null ? 1 : 0) + picked.filter((p) => p !== q.answer).length;
   const last = picked[picked.length - 1];
+  const ptr = useCfuPointers(look ? [{ key: "q", to: look }] : [], { done, early: true });
 
   useEffect(() => {
     if (done) onComplete?.();
   }, [done, onComplete]);
 
-  const showing = !done && wrong >= 2;
-  const feedback = done ? praise : showing ? showText : last ? why[last] : null;
+  const showing = !done && wrong >= showAfter(look);
+  // Right after the swap, the first question's reason is said, then the twin question.
+  const feedback = done ? q.praise : showing ? q.showText : last ? q.why[last] : onTwin && firstWrong ? why[firstWrong] : null;
+  // With a "Look here" pointer (and so on the twin), a tried button stays live and
+  // undimmed until "show it": the 2nd-miss pointer comes while real choices are
+  // left, and the 3rd miss can reach the worked picture (MG1 review C3-01, user
+  // decision). Without `look` a tried button locks at once, as before (MK1-MK4).
+  const lockTried = !look || showing;
 
+  const head = <QuestionHead n={n}>{twinOn ? <span ref={headRef}>{q.prompt}</span> : q.prompt}</QuestionHead>;
   return (
     <div className="align-stack-wrap" style={card}>
-      <QuestionHead n={n}>{prompt}</QuestionHead>
-      {(showing || picture) && (
-        <PictureBox ring={!!last && !done} ringKey={picked.length}>
-          {showing ? showPicture : picture}
+      {head}
+      {(showing || q.picture) && (
+        <PictureBox ring={(!!last || onTwin) && !done} ringKey={picked.length + (firstWrong !== null ? 1 : 0)}>
+          {showing ? q.showPicture : q.picture}
         </PictureBox>
       )}
       <div
@@ -125,24 +180,33 @@ export function PickCheck({
           gap: 12,
         }}
       >
-        {options.map((o) => {
-          const tried = picked.includes(o.id) && o.id !== answer;
+        {q.options.map((o) => {
+          const tried = lockTried && picked.includes(o.id) && o.id !== q.answer;
           return (
             <button
-              key={o.id}
+              key={onTwin ? `twin-${o.id}` : o.id}
               type="button"
               className={`choice${tried ? " tried" : ""}`}
               disabled={done || tried}
               aria-pressed={picked.includes(o.id)}
               style={
-                done && o.id === answer
+                done && o.id === q.answer
                   ? {
                       borderColor: "var(--good)",
                       background: "var(--good-soft)",
                     }
                   : undefined
               }
-              onClick={() => setPicked((p) => [...p, o.id])}
+              onClick={() => {
+                ptr.record(() => o.id === q.answer);
+                if (twinOn && !onTwin && o.id !== q.answer) {
+                  // First wrong tap: the twin question takes this one's place.
+                  setFirstWrong(o.id);
+                  setPicked([]);
+                  return;
+                }
+                setPicked((p) => [...p, o.id]);
+              }}
             >
               {o.label}
             </button>
@@ -150,10 +214,17 @@ export function PickCheck({
         })}
       </div>
       {feedback && (
-        <ReadAloud as="p" className={`feedback ${done ? "good" : showing ? "" : "bad"}`} role="alert" autoPlayKey={`${feedback}|${picked.length}`}>
+        <ReadAloud
+          as="p"
+          className={`feedback ${done ? "good" : showing ? "" : "bad"}`}
+          role="alert"
+          autoPlayKey={`${feedback}|${picked.length + (firstWrong !== null ? 1 : 0)}`}
+          alsoRead={onTwin && picked.length === 0 ? [headRef] : undefined}
+        >
           {feedback}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} early />
     </div>
   );
 }
@@ -177,6 +248,7 @@ export function TypeCheck({
   why = {},
   showText,
   praise,
+  look,
   onComplete,
 }: {
   n: number;
@@ -190,6 +262,8 @@ export function TypeCheck({
   /** Said with the "show" picture, e.g. "Watch and listen: 1, 2, 3, 4, 5." */
   showText: string;
   praise: string;
+  /** Optional: the Explore spot that teaches this question ("Look here" after the 2nd wrong try; "show" moves to the 3rd). */
+  look?: ExploreTarget;
   onComplete?: () => void;
 }) {
   const early = useEarlyLearner();
@@ -198,6 +272,7 @@ export function TypeCheck({
   const [wrong, setWrong] = useState(0);
   const [last, setLast] = useState<number | null>(null);
   const [done, setDone] = useState(false);
+  const ptr = useCfuPointers(look ? [{ key: "q", to: look }] : [], { done, early: true });
 
   useEffect(() => {
     if (done) onComplete?.();
@@ -206,6 +281,7 @@ export function TypeCheck({
   const check = () => {
     if (value.trim() === "") return;
     const v = Number(value);
+    ptr.record(() => v === answer);
     if (v === answer) setDone(true);
     else {
       setWrong((w) => w + 1);
@@ -214,7 +290,7 @@ export function TypeCheck({
     setValue("");
   };
 
-  const mode: CheckMode = done ? "done" : wrong >= 2 ? "show" : wrong === 1 ? "wrong" : "ask";
+  const mode: CheckMode = done ? "done" : wrong >= showAfter(look) ? "show" : wrong >= 1 ? "wrong" : "ask";
   const feedback = done ? praise : mode === "show" ? showText : mode === "wrong" ? (last !== null && why[last]) || nudge : null;
 
   return (
@@ -252,6 +328,7 @@ export function TypeCheck({
           {feedback}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} early />
     </div>
   );
 }

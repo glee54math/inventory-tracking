@@ -535,6 +535,12 @@ export interface ProblemType {
    * subset of) the owning Unit's own requiredBuckets.
    */
   buckets?: string[];
+  /**
+   * Optional extra (e.g. a "Challenge" type): left out of Mixed, so it never
+   * counts toward stars or mastery; the student picks it by hand. Its buckets
+   * must not be in the unit's requiredBuckets. Unset = a normal type.
+   */
+  optional?: boolean;
 }
 
 /**

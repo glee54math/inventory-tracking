@@ -51,6 +51,13 @@ against the standards the lab cites. Say what you assumed.
   "digits," so "digit" is fair in 1st grade once taught).
 - `src/pages/math-levels/shared/tts/mathSpeech.ts`, to know what the voice
   already handles (symbols, "?", decades) before flagging voice problems.
+- **The vocabulary lists** (`_planning/Grade-*/{LabName}/vocabulary.md`) of
+  this lab and every earlier lab: the labs it needs, and theirs (`LAB_NEEDS`
+  in `src/utils/levelSubsections.ts`; builder → "Vocabulary list"). Flag any word
+  a student needs to answer that no earlier unit or lab teaches, including
+  in titles and Test items (checklist §3 "Untaught words"). Also flag this
+  lab's list if it's missing, out of date, or lists a word the lab never
+  teaches with a picture.
 
 ## Rounds
 
@@ -83,7 +90,9 @@ Follow `checklist.md` steps 1–6. In practice:
    plural, a/an, pronouns that match names, and "1 counters"-type slips.
 3. **Read the screens a student meets, in order:** home, Explore, CFU,
    Practice (story, prompt, wrong-answer feedback, hint, Show me, wrap-up),
-   Test, Module Test. Unflagged text can still be too hard. A short
+   Test, Module Test. The wrap-up must never say or speak "⭐"/"star"
+   unless a star was actually earned (a helped or repeat-bucket solve says
+   "Solved, with help." / "Solved it!" with an honest short reason). Unflagged text can still be too hard. A short
    sentence can hold a later-grade word or a double meaning.
 4. **Word problems against the standards:** problem type allowed for this
    grade (CCSS Table 1 and Table 2 as summarized in the grade file), number

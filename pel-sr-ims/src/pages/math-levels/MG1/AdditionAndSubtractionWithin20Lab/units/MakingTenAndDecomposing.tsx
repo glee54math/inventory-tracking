@@ -1,5 +1,5 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { TenFrameGroup, PartPartWhole, EquationStrip, type BondPart, type Tone, type Blank, type EqToken } from "../diagrams";
+import { useState, type ReactNode } from "react";
+import { TenFrameGroup, PartPartWhole, EquationStrip, type BondPart, type Tone } from "../diagrams";
 import { makeTenBreakdown, subtractThroughTenBreakdown } from "../logic";
 import { randInt } from "../../../shared/lib/math";
 import { choice, pointing, type Problem, type VisualHelp } from "../../../shared/engine/types";
@@ -7,27 +7,27 @@ import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { makingTenAndDecomposingTest } from "./MakingTenAndDecomposingTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
-import { StuckBox, useCfuPointers, type ExploreTarget } from "../../../shared/components/CfuPointers";
+import { CheckSequence, TypeCheck } from "../../../shared/components/KCheck";
 import { lookHereSpot, useLookHereRequest } from "../../../shared/lib/lookHere";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
 // ============================================================================
-// Fixed, hand-picked questions. Targets the plan's named misconceptions:
-// (1) decomposing the WRONG addend (always breaking apart the second number
-// instead of the SMALLER one — the bigger number is closer to ten, so keep it whole), and (2) treating "making ten" as
-// one memorized answer rather than a repeatable strategy — tested on an
-// UNFAMILIAR fact to confirm it actually generalizes.
+// K–1 design (shared/components/KCheck.tsx): one short question at a time,
+// ten-frame pictures, typed answers. Targets the plan's named misconceptions:
+// (1) breaking apart the WRONG number (always the second one, instead of the
+// SMALLER one — the bigger number is closer to 10, so keep it whole), and
+// (2) making ten as one memorized answer instead of a way that works again —
+// tested on a NEW fact (7 + 5). Each question gets a "Look here" pointer
+// after its 2nd wrong try; "show it" comes on the 3rd.
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
-
-/** CFU "Look here" pointers: the Explore spot that teaches each part (shown after its 2nd miss). */
+/** CFU "Look here" pointers: the Explore spot that teaches each question (shown after its 2nd miss). */
 const LOOK = {
-  keep: { target: "mt-keep", label: "Explore: keep the bigger number whole", say: "Look here. Break apart the smaller number." },
+  // Asks, doesn't tell: the answer buttons are plain "6" / "9".
+  keep: { target: "mt-keep", label: "Explore: keep the bigger number whole", say: "Look here. Which number is closer to 10?" },
   bond: { target: "mt-bond", label: "Explore: the number bond and the two number sentences", say: "Look here. Fill the ten first." },
-  any: { target: "mt-any", label: "Explore: try new numbers", say: "Look here. Try new numbers." },
-  sub: { target: "mt-sub", label: "Explore: bridging through ten", say: "Look here. Get to 10 first." },
+  any: { target: "mt-any", label: "Explore: try new numbers", say: "Look here. Fill the ten. Then add the rest." },
+  sub: { target: "mt-sub", label: "Explore: get to 10 first", say: "Look here. Get to 10 first." },
 };
 
 /** Fixed width so the SVG bond keeps its size inside wrapping flex rows. */
@@ -40,298 +40,171 @@ function Bond({ whole, parts }: { whole: number | null; parts: [BondPart, BondPa
 }
 
 /** A ten-frame with its number underneath — the picture first, the numeral as its name. */
-function Frame({ value, tone, splitAt, tone2, highlightEmpty, crossFrom }: { value: number; tone: Tone; splitAt?: number; tone2?: Tone; highlightEmpty?: boolean; crossFrom?: number }) {
+function Frame({ value, tone, splitAt, tone2, highlightEmpty, crossFrom, label }: { value: number; tone: Tone; splitAt?: number; tone2?: Tone; highlightEmpty?: boolean; crossFrom?: number; label?: ReactNode }) {
   return (
     <div>
       <TenFrameGroup value={value} tone={tone} splitAt={splitAt} tone2={tone2} highlightEmpty={highlightEmpty} crossFrom={crossFrom} />
-      <ReadAloud as="p" style={{ textAlign: "center", fontSize: "1.5rem", fontWeight: 700, margin: "4px 0 0" }}>{value}</ReadAloud>
+      <ReadAloud as="p" style={{ textAlign: "center", fontSize: "1.5rem", fontWeight: 700, margin: "4px 0 0" }}>
+        {label ?? value}
+      </ReadAloud>
     </div>
   );
 }
 
 const Sign = ({ children }: { children: string }) => <span style={{ fontSize: "1.9rem", fontWeight: 700 }}>{children}</span>;
 
-const Equations = ({ children }: { children: ReactNode }) => (
-  <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start" }}>{children}</div>
-);
+const Equations = ({ children }: { children: ReactNode }) => <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start" }}>{children}</div>;
 
 const pictureRow = { gap: 24, alignItems: "center" } as const;
 
-// ---- Fill-in bond: the student types the parts AND the number sentences ----
-
-type BlankSpec = { answer: number; tone?: Tone; label: string };
-type Tok = EqToken | BlankSpec;
-const isSpec = (t: Tok): t is BlankSpec => typeof t === "object" && "answer" in t;
-
-/**
- * A number bond plus number sentences where the student types the parts and
- * the numbers, not just picks from a list — so they turn the picture into the
- * math themselves. Done only when every box is right.
- */
-function BondFill({
-  whole,
-  parts,
-  equations,
-  hint,
-  done,
-  look,
-  onComplete,
-}: {
-  whole: number;
-  parts: [BlankSpec & { tone: Tone }, BlankSpec & { tone: Tone }];
-  equations: Tok[][];
-  hint: string;
-  done: string;
-  /** The Explore spot that teaches this bond (CFU "Look here" pointer). */
-  look: ExploreTarget;
-  onComplete?: () => void;
-}) {
-  const [vals, setVals] = useState<Record<number, string>>({});
-  const [checked, setChecked] = useState(false);
-  // Every box gets a stable id from its position: the two parts first, then the equations left to right.
-  const specs: BlankSpec[] = [...parts, ...equations.flat().filter(isSpec)];
-  const valueOf = (i: number) => vals[i] ?? "";
-  const allFilled = specs.every((_, i) => valueOf(i) !== "");
-  const ok = specs.every((s, i) => valueOf(i) !== "" && Number(valueOf(i)) === s.answer);
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  // The bond and its sentences are one idea, so all the boxes are one part.
-  const ptr = useCfuPointers([{ key: "bond", to: look }], { done: checked && ok, early: true });
-  const check = () => {
-    ptr.record(() => ok, specs.map((_, i) => valueOf(i)).join("|"));
-    setChecked(true);
-  };
-
-  const blank = (s: BlankSpec): Blank => {
-    const i = specs.indexOf(s);
-    return {
-      value: valueOf(i),
-      label: s.label,
-      status: checked ? (Number(valueOf(i)) === s.answer ? "good" : "bad") : undefined,
-      onChange: (v) => {
-        setVals((old) => ({ ...old, [i]: v }));
-        setChecked(false);
-      },
-    };
-  };
-
+/** big + small on ten-frames, in the order written: the bigger number in tone a, the smaller in tone b. */
+function AddPicture({ first, second, lightBig }: { first: number; second: number; lightBig?: boolean }) {
+  const big = Math.max(first, second);
+  const frame = (n: number) => (n === big ? <Frame value={n} tone="a" highlightEmpty={lightBig} /> : <Frame value={n} tone="b" />);
   return (
-    <>
-      <div className="control-row" style={{ gap: 32, alignItems: "center" }} data-readaloud-part>
-        <Bond
-          whole={whole}
-          parts={[
-            { value: null, tone: parts[0].tone, blank: blank(parts[0]) },
-            { value: null, tone: parts[1].tone, blank: blank(parts[1]) },
-          ]}
-        />
-        <Equations>
-          {equations.map((row, r) => (
-            <EquationStrip key={r} tokens={row.map((t) => (isSpec(t) ? { blank: blank(t), tone: t.tone } : t))} />
-          ))}
-        </Equations>
-      </div>
-      <div className="control-row" style={{ alignItems: "center" }} data-readaloud-part>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={check}>
-          Check Answer
-        </button>
-      </div>
-      <StuckBox {...ptr} early />
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? `Correct! ${done}` : `Not quite. Fix the red boxes. ${hint}`}
-        </ReadAloud>
-      )}
-    </>
+    <div className="control-row" style={pictureRow}>
+      {frame(first)}
+      <Sign>+</Sign>
+      {frame(second)}
+    </div>
   );
 }
 
-/** The core trap: the near-ten number is written SECOND, so "always break
- *  apart the second number" gives the wrong answer here. Picking the right
- *  number unlocks a fill-in bond where the student breaks 6 apart and solves. */
-function WhichAddendQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "6";
-  const ptr = useCfuPointers([{ key: "pick", to: LOOK.keep }], { done: checked && ok, early: true, rightNow: () => checked && ok });
-  const check = () => {
-    if (picked) ptr.record(() => ok, picked);
-    setChecked(true);
-  };
-
+/** The ten is made: the bigger number plus enough of the smaller fills one frame; the rest sits beside it. */
+function MadeTen({ big, small }: { big: number; small: number }) {
+  const { addToA, remainder } = makeTenBreakdown(big, small);
   return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> For 6 + 9, which number should you break apart to make a ten?
-      </p>
-      <div className="control-row" style={pictureRow}>
-        <Frame value={6} tone="a" />
-        <Sign>+</Sign>
-        <Frame value={9} tone="b" />
-      </div>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="6">6 (the smaller number)</option>
-          <option value="9">9 (the bigger number)</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={check}>
-          Check Answer
-        </button>
-      </div>
-      <StuckBox {...ptr} early />
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct! 9 is bigger and close to 10. Keep 9 whole. Break apart 6 and solve:" : "Not quite. Which number is closer to 10? Try again!"}
-        </ReadAloud>
-      )}
-      {checked && ok && (
-        <BondFill
-          whole={6}
-          parts={[
-            { answer: 1, tone: "c", label: "part of 6 that goes with 9" },
-            { answer: 5, tone: "a", label: "part of 6 that is left over" },
-          ]}
-          equations={[
-            [{ answer: 9, tone: "b", label: "number kept whole" }, "+", { answer: 1, tone: "c", label: "part that makes ten" }, "=", 10],
-            [10, "+", { answer: 5, tone: "a", label: "part left over" }, "=", { answer: 15, label: "6 plus 9" }],
-          ]}
-          hint="9 needs 1 more to make 10."
-          done="6 + 9 = 15"
-          look={LOOK.bond}
-          onComplete={onComplete}
-        />
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Applying the strategy to an UNFAMILIAR fact — confirms it's a repeatable
- *  method, not a single memorized answer. */
-function UnfamiliarFactQuestion({ onComplete }: { onComplete?: () => void }) {
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> Solve 8 + 6 by making a ten. Break apart 6.
-      </p>
-      <div className="control-row" style={pictureRow}>
-        <Frame value={8} tone="a" />
-        <Sign>+</Sign>
-        <Frame value={6} tone="b" />
-      </div>
-      {/* 8 + 6 (not 7 + 6): 6 splits into two DIFFERENT parts (2 and 4), so it's
-          clear which part makes the ten — 7 + 6 gave 3 and 3, which is ambiguous. */}
-      <BondFill
-        whole={6}
-        parts={[
-          { answer: 2, tone: "b", label: "part of 6 that goes with 8" },
-          { answer: 4, tone: "c", label: "part of 6 that is left over" },
-        ]}
-        equations={[
-          [{ answer: 8, tone: "a", label: "number kept whole" }, "+", { answer: 2, tone: "b", label: "part that makes ten" }, "=", 10],
-          [10, "+", { answer: 4, tone: "c", label: "part left over" }, "=", { answer: 14, label: "8 plus 6" }],
-        ]}
-        hint="Count the empty boxes: 8 needs 2 more to make 10."
-        done="8 + 6 = 14"
-        look={LOOK.bond}
-        onComplete={onComplete}
-      />
-    </ReadAloud>
-  );
-}
-
-/** Conflation trap: is make-ten a repeatable strategy, or one memorized fact? */
-function StrategyVsFactQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "true";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  const ptr = useCfuPointers([{ key: "q", to: LOOK.any }], { done: checked && ok, early: true });
-  const check = () => {
-    if (picked) ptr.record(() => ok, picked);
-    setChecked(true);
-  };
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or false: make-ten is a strategy that works for ANY addition fact with a number close to ten — it's not just one answer
-        to remember.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={check}>
-          Check Answer
-        </button>
-      </div>
-      <StuckBox {...ptr} early />
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — it's a repeatable METHOD: find the gap to ten, split the other addend, add the two tens-friendly pieces. Works on any fact like this, not just the one you first learned it with."
-            : "Not quite — make-ten is a repeatable strategy, not a single memorized fact. The same three steps (find the gap, split the other addend, add) work on every fact with a number close to ten."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Applying the SAME bridge-through-ten idea to subtraction. */
-function SubtractionBridgeQuestion({ onComplete }: { onComplete?: () => void }) {
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> Solve 13 − 5 by landing on 10 first. Break apart 5.
-      </p>
-      <div className="control-row" style={pictureRow}>
-        <Frame value={13} tone="c" />
-      </div>
-      <BondFill
-        whole={5}
-        parts={[
-          { answer: 3, tone: "b", label: "part of 5 that lands on 10" },
-          { answer: 2, tone: "a", label: "part of 5 still to take away" },
-        ]}
-        equations={[
-          [{ answer: 13, tone: "c", label: "starting number" }, "−", { answer: 3, tone: "b", label: "part that lands on 10" }, "=", 10],
-          [10, "−", { answer: 2, tone: "a", label: "part still to take away" }, "=", { answer: 8, label: "13 minus 5" }],
-        ]}
-        hint="13 is 3 more than 10. Take away 3 first."
-        done="13 − 5 = 8"
-        look={LOOK.sub}
-        onComplete={onComplete}
-      />
-    </ReadAloud>
+    <div className="control-row" style={pictureRow}>
+      <Frame value={10} tone="a" splitAt={big} tone2="b" label={`${big} + ${addToA}`} />
+      <Sign>+</Sign>
+      <Frame value={remainder} tone="c" />
+    </div>
   );
 }
 
 function MakeTenCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ whichAddend: false, unfamiliar: false, strategy: false, subtraction: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure making ten makes sense before you try practice problems.</ReadAloud>
-      <WhichAddendQuestion onComplete={mark("whichAddend")} />
-      <UnfamiliarFactQuestion onComplete={mark("unfamiliar")} />
-      <StrategyVsFactQuestion onComplete={mark("strategy")} />
-      <SubtractionBridgeQuestion onComplete={mark("subtraction")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        // The core trap: the bigger number is written SECOND, so "always break
+        // apart the second number" is wrong here. 9 is drawn in the bigger
+        // number's color (tone a), as in Explore. Typed, not a two-button
+        // pick: one wrong tap would leave only the answer (C2-01).
+        (done) => (
+          <TypeCheck
+            n={1}
+            prompt="6 + 9. Which number do you break apart?"
+            answer={6}
+            tone="b"
+            picture={(m) => (m === "show" || m === "done" ? <MadeTen big={9} small={6} /> : <AddPicture first={6} second={9} lightBig={m === "wrong"} />)}
+            nudge="Not yet. Keep the bigger number whole."
+            why={{ 9: "Not yet. Keep the bigger number whole." }}
+            showText="Watch: 9 needs just 1 more. 1 from the 6 fills the ten."
+            praise="Yes! Keep 9 whole. Break apart 6."
+            look={LOOK.keep}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="8 + 6. How many more does 8 need to make 10?"
+            answer={2}
+            tone="b"
+            picture={(m) => (m === "show" || m === "done" ? <MadeTen big={8} small={6} /> : <AddPicture first={8} second={6} lightBig={m === "wrong"} />)}
+            nudge="Count the empty boxes."
+            why={{ 6: "Keep 8 whole. Count its empty boxes." }}
+            showText="Watch: 2 boxes are empty. 2 from the 6 fill them."
+            praise="Yes! 8 and 2 make 10."
+            look={LOOK.bond}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={3}
+            prompt="So 8 + 6 = ?"
+            answer={14}
+            tone="c"
+            picture={(m) =>
+              m === "show" || m === "done" ? (
+                <MadeTen big={8} small={6} />
+              ) : (
+                <div className="control-row" style={pictureRow}>
+                  <Frame value={8} tone="a" highlightEmpty={m === "wrong"} />
+                  <Sign>+</Sign>
+                  <Frame value={6} tone="b" splitAt={2} tone2="c" />
+                  <Bond whole={6} parts={[{ value: 2, tone: "b" }, { value: 4, tone: "c" }]} />
+                </div>
+              )
+            }
+            nudge="Fill the ten first. Then add the rest."
+            why={{ 4: "That is the rest. Add it to 10.", 10: "That is the ten. Add the rest too." }}
+            showText="Watch: 8 and 2 make 10. 4 more is 14."
+            praise="Yes! 8 + 6 = 14."
+            look={LOOK.bond}
+            onComplete={done}
+          />
+        ),
+        // A NEW fact: making ten works again, not one memorized answer.
+        (done) => (
+          <TypeCheck
+            n={4}
+            prompt="7 + 5. Make a ten. What is the total?"
+            answer={12}
+            tone="c"
+            picture={(m) => (m === "show" || m === "done" ? <MadeTen big={7} small={5} /> : <AddPicture first={7} second={5} lightBig={m === "wrong"} />)}
+            nudge="Keep 7 whole. Fill the ten first."
+            why={{ 2: "That is the rest. Add it to 10.", 10: "That is the ten. Add the rest too." }}
+            showText="Watch: 3 from the 5 fill the ten. 2 more is 12."
+            praise="Yes! Making ten works again."
+            look={LOOK.any}
+            onComplete={done}
+          />
+        ),
+        // The same idea for taking away: get to 10 first.
+        (done) => (
+          <TypeCheck
+            n={5}
+            prompt="13 − 5. Get to 10 first. How many do you take away first?"
+            answer={3}
+            tone="b"
+            picture={(m) => (m === "ask" ? <Frame value={13} tone="c" /> : <Frame value={13} tone="c" splitAt={10} tone2="b" crossFrom={m === "wrong" ? undefined : 10} />)}
+            nudge="How many are past 10?"
+            why={{ 5: "Take away just enough to get to 10." }}
+            showText="Watch: 3 are past 10. Take those 3 away."
+            praise="Yes! 13 − 3 = 10."
+            look={LOOK.sub}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={6}
+            prompt="13 − 5 = ?"
+            answer={8}
+            tone="a"
+            picture={(m) =>
+              m === "show" || m === "done" ? (
+                <Frame value={13} tone="c" splitAt={8} tone2="b" crossFrom={8} />
+              ) : (
+                <div className="control-row" style={pictureRow}>
+                  <Frame value={13} tone="c" splitAt={10} tone2="b" crossFrom={10} />
+                  <Bond whole={5} parts={[{ value: 3, tone: "b" }, { value: 2, tone: "a" }]} />
+                </div>
+              )
+            }
+            nudge="3 are gone. Take away the rest of the 5."
+            why={{ 10: "Take away the rest of the 5 too.", 18: "Take away. Don't add." }}
+            showText="Watch: 3 are gone. 2 more go from the ten."
+            praise="Yes! 13 − 5 = 8."
+            look={LOOK.sub}
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 
@@ -342,14 +215,20 @@ function MakeTenCheckForUnderstanding({ onComplete }: { onComplete?: () => void 
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
-  const [mode, setMode] = useState<"add" | "subtract">("add");
+  const [mode, setMode] = useState<"add" | "subtract" | "same">("add");
   const [a, setA] = useState(9);
   const [b, setB] = useState(4);
   const [start, setStart] = useState(14);
   const [sub, setSub] = useState(6);
+  // "Same total": two bonds with the same whole (not the CFU's 8 + 6 or 7 + 5),
+  // starting where "Move one over" works both ways.
+  const [s1, setS1] = useState(6);
+  const [s2, setS2] = useState(5);
+  const [moved, setMoved] = useState(0);
 
   const addBreak = makeTenBreakdown(a, b);
   const subBreak = subtractThroughTenBreakdown(start, sub);
+  const sameTotal = s1 + s2;
   // A CFU "Look here" for a spot shown only in the other mode switches to that mode first.
   useLookHereRequest((id) => {
     if (id === "mt-sub") setMode("subtract");
@@ -359,7 +238,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div className="control-row" data-readaloud-part>
-        <Segmented label="Operation" value={mode} onChange={setMode} options={[{ id: "add", label: "Making ten" }, { id: "subtract", label: "Bridging through ten" }]} />
+        <Segmented
+          label="Show"
+          value={mode}
+          onChange={setMode}
+          options={[
+            { id: "add", label: "Making ten" },
+            { id: "subtract", label: "Get to 10 first" },
+            { id: "same", label: "Same total" },
+          ]}
+        />
         {!introActive && (
           <button
             type="button"
@@ -372,12 +260,16 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         )}
       </div>
 
-      {mode === "add" ? (
+      {mode === "add" && (
         <>
           <div {...lookHereSpot("mt-any")}>
+            {/* Every pair here makes a ten: the total is 11 or more, so the
+                smaller number always has some left after filling the ten.
+                Each stepper's range comes from the other, so nothing is
+                ever rounded into range. */}
             <div className="control-row" data-readaloud-part>
-              <Stepper label="Bigger number" value={a} min={6} max={9} step={1} onChange={(v: number) => { setA(v); if (b >= v) setB(v - 1); }} tone="a" />
-              <Stepper label="Smaller number" value={b} min={2} max={a - 1} step={1} onChange={setB} tone="b" />
+              <Stepper label="Bigger number" value={a} min={Math.max(6, b + 1, 11 - b)} max={9} step={1} onChange={setA} tone="a" />
+              <Stepper label="Smaller number" value={b} min={11 - a} max={a - 1} step={1} onChange={setB} tone="b" />
             </div>
             <ReadAloud as="p" className="muted small" data-look-here-key>
               Try new numbers. Making ten works every time.
@@ -395,27 +287,44 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </div>
           <div {...lookHereSpot("mt-bond")}>
             <div className="control-row" style={{ gap: 32, alignItems: "center" }} data-readaloud-part>
-              <Bond whole={b} parts={[{ value: addBreak.addToA, tone: "b" }, { value: addBreak.remainder, tone: "c" }]} />
+              <Bond
+                whole={b}
+                parts={[
+                  { value: addBreak.addToA, tone: "b" },
+                  { value: addBreak.remainder, tone: "c" },
+                ]}
+              />
               <Equations>
                 <EquationStrip tokens={[{ value: a, tone: "a" }, "+", { value: addBreak.addToA, tone: "b" }, "=", addBreak.ten]} />
                 <EquationStrip tokens={[addBreak.ten, "+", { value: addBreak.remainder, tone: "c" }, "=", addBreak.total]} />
               </Equations>
             </div>
+            <ReadAloud as="p" className="muted small">
+              This is a number bond. The top is the whole. The two circles are its parts.
+            </ReadAloud>
             <ReadAloud as="p" className="muted small" data-look-here-key>
               Fill the ten first. Then add what is left.
             </ReadAloud>
           </div>
         </>
-      ) : (
+      )}
+      {mode === "subtract" && (
         <>
+          {/* Every pair here goes past 10: take away more than the ones past 10. */}
           <div className="control-row" data-readaloud-part>
-            <Stepper label="Starting number" value={start} min={11} max={19} step={1} onChange={setStart} tone="c" />
-            <Stepper label="Subtract" value={sub} min={2} max={9} step={1} onChange={setSub} tone="b" />
+            <Stepper label="Start" value={start} min={11} max={Math.min(19, 9 + sub)} step={1} onChange={setStart} tone="c" />
+            <Stepper label="Take away" value={sub} min={(start % 10) + 1} max={9} step={1} onChange={setSub} tone="b" />
           </div>
           <div {...lookHereSpot("mt-sub")}>
             <Frame value={start} tone="c" splitAt={subBreak.ten} tone2="b" />
             <div className="control-row" style={{ gap: 32, alignItems: "center" }} data-readaloud-part>
-              <Bond whole={sub} parts={[{ value: subBreak.toTen, tone: "b" }, { value: subBreak.remainder, tone: "a" }]} />
+              <Bond
+                whole={sub}
+                parts={[
+                  { value: subBreak.toTen, tone: "b" },
+                  { value: subBreak.remainder, tone: "a" },
+                ]}
+              />
               <Equations>
                 <EquationStrip tokens={[{ value: start, tone: "c" }, "−", { value: subBreak.toTen, tone: "b" }, "=", subBreak.ten]} />
                 <EquationStrip tokens={[subBreak.ten, "−", { value: subBreak.remainder, tone: "a" }, "=", subBreak.total]} />
@@ -425,6 +334,65 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
               Take away to land on 10 first. Then take away the rest.
             </ReadAloud>
           </div>
+        </>
+      )}
+      {mode === "same" && (
+        <>
+          <div className="control-row" data-readaloud-part>
+            <Stepper
+              label="First number"
+              value={s1}
+              min={1}
+              max={Math.min(9, 18 - s2)}
+              step={1}
+              onChange={(v) => {
+                setS1(v);
+                setMoved(0);
+              }}
+              tone="a"
+            />
+            <Stepper
+              label="Second number"
+              value={s2}
+              min={1}
+              max={Math.min(9, 18 - s1)}
+              step={1}
+              onChange={(v) => {
+                setS2(v);
+                setMoved(0);
+              }}
+              tone="b"
+            />
+          </div>
+          <div className="control-row" style={{ gap: 32, alignItems: "center" }} data-readaloud-part>
+            <Bond
+              whole={sameTotal}
+              parts={[
+                { value: s1, tone: "a" },
+                { value: s2, tone: "b" },
+              ]}
+            />
+            <Bond
+              whole={sameTotal}
+              parts={[
+                { value: s1 - moved, tone: "a" },
+                { value: s2 + moved, tone: "b" },
+              ]}
+            />
+          </div>
+          <div className="control-row" data-readaloud-part>
+            {/* Gray out at the edges instead of rounding: a part stays 1 to 9. */}
+            <button type="button" className="btn primary" disabled={s1 - moved <= 1 || s2 + moved >= 9} onClick={() => setMoved((m) => m + 1)}>
+              Move one over
+            </button>
+            <button type="button" className="btn ghost" disabled={s2 + moved <= 1 || s1 - moved >= 9} onClick={() => setMoved((m) => m - 1)}>
+              Move one back
+            </button>
+          </div>
+          <EquationStrip tokens={[{ value: s1, tone: "a" }, "+", { value: s2, tone: "b" }, "=", { value: s1 - moved, tone: "a" }, "+", { value: s2 + moved, tone: "b" }]} />
+          <ReadAloud as="p" className="muted small">
+            Move one over. The total stays the same.
+          </ReadAloud>
         </>
       )}
       {/* Below the picture, so students explore first, then check. */}
@@ -440,38 +408,71 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 type Bucket = "makeTenNearTen" | "makeTenLargerGap" | "subtractBridge" | "equivalentSum";
 const BUCKETS: Bucket[] = ["makeTenNearTen", "makeTenLargerGap", "subtractBridge", "equivalentSum"];
 
-function makeTenAdditionProblem(a: number, b: number, bucket: Bucket): Problem {
-  const { gap, addToA, remainder, ten, total } = makeTenBreakdown(a, b);
+/**
+ * big + small (big > small, total past 10), written in either order (the
+ * smaller number first half the time — the CFU's trap). Step 1 asks which
+ * number to break apart; the ten is always filled by the bigger number.
+ */
+function makeTenAdditionProblem(big: number, small: number, bucket: Bucket): Problem {
+  const { gap, remainder, total } = makeTenBreakdown(big, small);
+  const smallFirst = Math.random() < 0.5;
+  const [x, y] = smallFirst ? [small, big] : [big, small];
+  const frame = (n: number, lightBig: boolean, split: boolean) =>
+    n === big ? <Frame value={big} tone="a" highlightEmpty={lightBig} /> : <Frame value={small} tone="b" splitAt={split ? gap : undefined} tone2="c" />;
   return {
     title: "Making ten",
     bucket,
-    story: `Find ${a} + ${b} using make-ten.`,
-    visual: (done: number, help?: VisualHelp) =>
-      // Step 3's "Show me" (and the finished picture): the ten is MADE. The
-      // first frame is full (a, plus the part of b moved over to fill it) and
-      // the leftover sits on its own, so "10 + leftover" is what you see.
-      done >= 3 ? (
+    story: `Find ${x} + ${y}. Make a ten.`,
+    visual: (done: number, help?: VisualHelp) => {
+      // Step 3's "Show me" (and the finished picture): the ten is MADE.
+      if (done >= 3) return <MadeTen big={big} small={small} />;
+      // After the gap is found: the smaller number split into "fills the ten" + "the rest".
+      const split = done >= 2;
+      return (
         <div className="control-row" style={pictureRow} data-readaloud-part>
-          <Frame value={10} tone="a" splitAt={a} tone2="b" />
+          {/* Help ladder: light up the bigger number's empty boxes. */}
+          {frame(x, pointing(help, 0) || pointing(help, 1) || pointing(help, 2), split)}
           <Sign>+</Sign>
-          <Frame value={remainder} tone="c" />
-          <Bond whole={b} parts={[{ value: addToA, tone: "b" }, { value: remainder, tone: "c" }]} />
+          {frame(y, pointing(help, 0) || pointing(help, 1) || pointing(help, 2), split)}
+          {split && (
+            <Bond
+              whole={small}
+              parts={[
+                { value: gap, tone: "b" },
+                { value: remainder, tone: "c" },
+              ]}
+            />
+          )}
         </div>
-      ) : (
-        <div className="control-row" style={pictureRow} data-readaloud-part>
-          {/* Help ladder: light up the empty boxes for "how many more to make 10?" */}
-          <Frame value={a} tone="a" highlightEmpty={pointing(help, 0)} />
-          <Sign>+</Sign>
-          <Frame value={b} tone="b" splitAt={done >= 1 ? addToA : undefined} tone2="c" />
-          <Bond whole={b} parts={[{ value: done >= 1 ? addToA : null, tone: "b" }, { value: done >= 2 ? remainder : null, tone: "c" }]} />
-        </div>
-      ),
+      );
+    },
     steps: [
-      { kind: "number", prompt: `How many more do you need to add to ${a} to make 10?`, hint: "Count the empty boxes in the first ten-frame.", showMe: `${a} fills ${a} boxes. ${gap} boxes are empty.`, explain: `${a} + ${gap} = 10.`, answer: gap },
-      { kind: "number", prompt: `If you take ${gap} from ${b} to help make ten, how many are left over?`, hint: `${b} − ${gap} = ?`, explain: `${b} − ${addToA} = ${remainder} left over.`, answer: remainder },
-      { kind: "number", prompt: `So 10 + ${remainder} = ?`, hint: "Add the leftover onto the ten you just made.", explain: `10 + ${remainder} = ${total}, so ${a} + ${b} = ${total}.`, answer: total },
+      choice(
+        { prompt: `${x} + ${y}. Which number do you break apart?`, hint: "Keep the bigger number whole. It is closer to 10.", explain: `Break apart ${small}. Keep ${big} whole.` },
+        String(small),
+        [String(big)] // misconception: breaking apart the number written second
+      ),
+      {
+        kind: "number",
+        prompt: `How many more does ${big} need to make 10?`,
+        hint: "Count the empty boxes.",
+        showMe: `${big} fills ${big} boxes. ${gap} ${gap === 1 ? "box is" : "boxes are"} empty.`,
+        showMeHoldMs: 2000,
+        explain: `${big} + ${gap} = 10.`,
+        answer: gap,
+        tone: "b",
+      },
+      {
+        kind: "number",
+        prompt: `So ${x} + ${y} = ?`,
+        hint: "Fill the ten first. Then add the rest.",
+        showMe: `${big} and ${gap} make 10. ${remainder} more is ${total}.`,
+        showMeHoldMs: 3000,
+        explain: `${big} + ${gap} = 10. 10 + ${remainder} = ${total}.`,
+        answer: total,
+      },
     ],
-    wrapUp: `${a} + ${b} = ${total}, by making a ten first: ${a} + ${addToA} = ${ten}, then ${ten} + ${remainder} = ${total}.`,
+    wrapUp: `${x} + ${y} = ${total}. ${big} + ${gap} = 10, then 10 + ${remainder} = ${total}.`,
   };
 }
 
@@ -484,26 +485,48 @@ function subtractBridgeProblem(): Problem {
   } while (start % 10 >= sub || start - sub < 0);
   const { toTen, remainder, ten, total } = subtractThroughTenBreakdown(start, sub);
   return {
-    title: "Bridging through ten",
+    title: "Get to 10 first",
     bucket: "subtractBridge",
-    story: `Find ${start} − ${sub} by bridging through ten.`,
+    story: `Find ${start} − ${sub}. Get to 10 first.`,
     visual: (done: number, help?: VisualHelp) => (
       <div className="control-row" style={pictureRow} data-readaloud-part>
-        {/* Help ladder: color the ones past 10 when the student is stuck on step 1. */}
-        {/* Taking away, shown: once the jump down to 10 is found (or shown),
+        {/* Help ladder: color the ones past 10 when the student is stuck on step 1.
+            Taking away, shown: once the jump down to 10 is found (or shown),
             the ones past 10 are crossed out; step 3's "Show me" and the
-            finished picture cross out the leftover too, so what's left is
-            the answer. */}
+            finished picture cross out the rest too, so what's left is the answer. */}
         <Frame value={start} tone="c" splitAt={done >= 1 || pointing(help, 0) ? ten : undefined} tone2="b" crossFrom={done >= 3 ? total : done >= 1 ? ten : undefined} />
-        <Bond whole={sub} parts={[{ value: done >= 1 ? toTen : null, tone: "b" }, { value: done >= 2 ? remainder : null, tone: "a" }]} />
+        <Bond
+          whole={sub}
+          parts={[
+            { value: done >= 1 ? toTen : null, tone: "b" },
+            { value: done >= 2 ? remainder : null, tone: "a" },
+          ]}
+        />
       </div>
     ),
     steps: [
-      { kind: "number", prompt: `Subtract just enough from ${start} to land exactly on a ten. How much is that?`, hint: `How many ones are past 10 in ${start}?`, showMe: `${start} is 10 and ${toTen} more. Take away ${toTen} to land on 10.`, explain: `${start} − ${toTen} = ${ten}.`, answer: toTen },
-      { kind: "number", prompt: `Now how much more do you still need to subtract (from ${sub} total)?`, hint: `${sub} − ${toTen} = ?`, explain: `${sub} − ${toTen} = ${remainder} left to subtract.`, answer: remainder },
-      { kind: "number", prompt: `${ten} − ${remainder} = ?`, hint: "Finish subtracting the leftover from the ten.", explain: `${ten} − ${remainder} = ${total}, so ${start} − ${sub} = ${total}.`, answer: total },
+      {
+        kind: "number",
+        prompt: `How many do you take away to get to 10?`,
+        hint: `How many are past 10 in ${start}?`,
+        showMe: `${start} is 10 and ${toTen} more. Take away ${toTen} to land on 10.`,
+        showMeHoldMs: 2000,
+        explain: `${start} − ${toTen} = ${ten}.`,
+        answer: toTen,
+        tone: "b",
+      },
+      { kind: "number", prompt: `${sub} is ${toTen} and how many more?`, hint: `${sub} − ${toTen} = ?`, explain: `${sub} − ${toTen} = ${remainder} more to take away.`, answer: remainder },
+      {
+        kind: "number",
+        prompt: `${ten} − ${remainder} = ?`,
+        hint: "Take the rest away from 10.",
+        showMe: `${toTen} ${toTen === 1 ? "is" : "are"} gone. Take ${remainder} more from 10. ${total} are left.`,
+        showMeHoldMs: 3000,
+        explain: `${ten} − ${remainder} = ${total}, so ${start} − ${sub} = ${total}.`,
+        answer: total,
+      },
     ],
-    wrapUp: `${start} − ${sub} = ${total}, by bridging through ${ten}.`,
+    wrapUp: `${start} − ${sub} = ${total}. ${start} − ${toTen} = 10, then 10 − ${remainder} = ${total}.`,
   };
 }
 
@@ -513,41 +536,76 @@ function equivalentSumProblem(): Problem {
   let k = 0;
   let a2 = 0;
   let b2 = 0;
+  // Step 3 uses a different first number again, so its answer can't be copied.
+  const thirdsFor = (t: number) => Array.from({ length: 9 }, (_, i) => i + 1).filter((n) => n !== a1 && n !== a2 && t - n >= 1 && t - n <= 9);
   do {
     a1 = randInt(2, 8);
     b1 = randInt(2, 9);
     k = [-3, -2, -1, 1, 2, 3][randInt(0, 5)];
     a2 = a1 + k;
     b2 = a1 + b1 - a2;
-  } while (a2 < 1 || a2 > 9 || b2 < 1 || b2 > 9 || a1 + b1 > 18);
+    // b1 differs from a1 and a2, so "What happens to {b1}?" can only mean one number.
+  } while (a2 < 1 || a2 > 9 || b2 < 1 || b2 > 9 || a1 + b1 > 18 || b1 === a1 || b1 === a2 || thirdsFor(a1 + b1).length === 0);
   const total = a1 + b1;
-  const direction = k > 0 ? "more" : "less";
+  const thirds = thirdsFor(total);
+  const a3 = thirds[randInt(0, thirds.length - 1)];
+  const b3 = total - a3;
   const absK = Math.abs(k);
+  const bigger = k > 0;
   return {
-    title: "Same total, different split",
+    title: "Same total",
     bucket: "equivalentSum",
-    story: `${a1} + ${b1} = ${a2} + ? — figure out the missing addend WITHOUT adding everything from scratch.`,
+    story: `${a1} + ${b1} = ${a2} + ☐`,
     // Two bonds, same whole: the parts change, the whole doesn't.
     visual: (done: number) => (
       <div className="control-row" style={pictureRow} data-readaloud-part>
-        <Bond whole={total} parts={[{ value: a1, tone: "a" }, { value: b1, tone: "b" }]} />
-        <Bond whole={total} parts={[{ value: a2, tone: "a" }, { value: done >= 2 ? b2 : null, tone: "b" }]} />
+        <Bond
+          whole={total}
+          parts={[
+            { value: a1, tone: "a" },
+            { value: b1, tone: "b" },
+          ]}
+        />
+        <Bond
+          whole={total}
+          parts={[
+            { value: a2, tone: "a" },
+            { value: done >= 2 ? b2 : null, tone: "b" },
+          ]}
+        />
+        {done >= 2 && (
+          <Bond
+            whole={total}
+            parts={[
+              { value: a3, tone: "a" },
+              { value: done >= 3 ? b3 : null, tone: "b" },
+            ]}
+          />
+        )}
       </div>
     ),
     steps: [
       choice(
         {
-          prompt: `${a2} is ${absK} ${direction} than ${a1}. For the sum to stay the same, what must happen to the OTHER addend?`,
-          hint: "If one addend grows, the other has to shrink by the same amount to keep the total the same — and the other way around.",
-          explain: `${a2} is ${absK} ${direction} than ${a1}, so the other addend must be ${absK} ${direction === "more" ? "less" : "more"} than ${b1}.`,
+          prompt: `${a1} got ${absK} ${bigger ? "bigger" : "smaller"}. It is ${a2} now. What happens to ${b1}?`,
+          hint: "Move one over. The total stays the same.",
+          explain: `The total stays the same. ${b1} gets ${bigger ? "smaller" : "bigger"} by ${absK}.`,
         },
-        direction === "more" ? "It must decrease by the same amount" : "It must increase by the same amount",
-        [direction === "more" ? "It must increase by the same amount" : "It must decrease by the same amount", "It stays exactly the same"]
+        `It gets ${bigger ? "smaller" : "bigger"} by ${absK}`,
+        [`It gets ${bigger ? "bigger" : "smaller"} by ${absK}`, "It stays the same"]
       ),
-      { kind: "number", prompt: `So what is the missing addend — ${a2} + ? = ${total}?`, hint: `${total} − ${a2} = ?`, explain: `${total} − ${a2} = ${b2}.`, answer: b2 },
-      { kind: "number", prompt: `Check it: what is ${a2} + ${b2}?`, hint: "Add them up to confirm it matches the original total.", explain: `${a2} + ${b2} = ${total}, the same total as ${a1} + ${b1}.`, answer: total },
+      { kind: "number", prompt: `${a1} + ${b1} = ${a2} + ☐. What number goes in the box?`, hint: `Make ${b1} ${bigger ? "smaller" : "bigger"} by ${absK}.`, explain: `${a2} + ${b2} = ${total}, the same as ${a1} + ${b1}.`, answer: b2 },
+      {
+        kind: "number",
+        prompt: `Now ${a3} + ☐ = ${total}. What number goes in the box?`,
+        hint: "Move one over. The total stays the same.",
+        showMe: `${a1} + ${b1} = ${total}. Move ${Math.abs(a3 - a1)} over: ${a3} + ${b3} = ${total}.`,
+        showMeHoldMs: 3000,
+        explain: `${a3} + ${b3} = ${total}.`,
+        answer: b3,
+      },
     ],
-    wrapUp: `${a1} + ${b1} = ${a2} + ${b2} = ${total} — shifting ${absK} from one addend to the other never changes the total.`,
+    wrapUp: `${a1} + ${b1} = ${a2} + ${b2} = ${a3} + ${b3}. The total stays ${total}.`,
   };
 }
 
@@ -555,18 +613,18 @@ function makeTenProblem(targetBucket?: string): Problem {
   const bucket = (targetBucket as Bucket | undefined) ?? BUCKETS[randInt(0, BUCKETS.length - 1)];
 
   if (bucket === "makeTenNearTen") {
-    const a = randInt(8, 9);
-    const gap = 10 - a;
-    // gap + 1: a real leftover. a − 1: always break apart the SMALLER number.
-    const b = randInt(gap + 1, a - 1);
-    return makeTenAdditionProblem(a, b, bucket);
+    const big = randInt(8, 9);
+    const gap = 10 - big;
+    // gap + 1: a real leftover. big − 1: always break apart the SMALLER number.
+    const small = randInt(gap + 1, big - 1);
+    return makeTenAdditionProblem(big, small, bucket);
   }
 
   if (bucket === "makeTenLargerGap") {
-    const a = randInt(6, 7);
-    const gap = 10 - a;
-    const b = randInt(gap + 1, a - 1); // smaller than a: break apart the smaller number
-    return makeTenAdditionProblem(a, b, bucket);
+    const big = randInt(6, 7);
+    const gap = 10 - big;
+    const small = randInt(gap + 1, big - 1); // smaller than big: break apart the smaller number
+    return makeTenAdditionProblem(big, small, bucket);
   }
 
   if (bucket === "subtractBridge") return subtractBridgeProblem();
@@ -576,13 +634,13 @@ function makeTenProblem(targetBucket?: string): Problem {
 
 export const makingTenAndDecomposing: Unit = {
   id: "makingTenAndDecomposing",
-  title: "Making Ten and Decomposing Numbers",
-  goal: "Break numbers apart to make a ten first, then add on (or subtract) what's left.",
+  title: "Making Ten",
+  goal: "Make a ten to add and take away.",
   standard: "1.OA.6",
   keyIdea: (
     <>
-      <p>Keep the bigger number whole (it is closer to ten), and break apart the smaller number — no matter which order the numbers are written in.</p>
-      <p>Make-ten is a repeatable strategy (find the gap to ten, split the other number, add the pieces), not one fact to memorize — and the same bridge-through-ten idea works for subtraction too.</p>
+      <p>Keep the bigger number whole. Break apart the smaller number. Fill the ten first. Then add the rest.</p>
+      <p>To take away, get to 10 first.</p>
     </>
   ),
   Explore,

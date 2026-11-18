@@ -13,7 +13,7 @@ import { EarlyLearnerProvider } from "../shared/engine/audience";
 import type { Problem } from "../shared/engine/types";
 import { bagItems, debtItem, useRetryDebts, type BagItem, type RetryDebt } from "../shared/engine/retryDebt";
 import { shuffle } from "../shared/lib/math";
-import { MASTERY_GOAL, isMastered as sharedIsMastered, starCount as sharedStarCount, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
+import { MASTERY_GOAL, isMastered as sharedIsMastered, starCount as sharedStarCount, useModuleProgress, type UnitProgress, type StarOutcome } from "../../../hooks/useModuleProgress";
 import { useStudentContext } from "../../../components/student_portal/StudentContext";
 
 const MODULE_ID = "MG1_AdditionAndSubtractionWithin20Lab";
@@ -82,7 +82,7 @@ function Home({
       <section className="hero">
         <div className="hero-text">
           <h1>8 + 3 = ?</h1>
-          <ReadAloud as="p">Counting on and back, making ten, word problems, fact fluency, and what the equal sign really means — all within 20.</ReadAloud>
+          <ReadAloud as="p">Count on, make ten, solve stories, and learn what = means.</ReadAloud>
           <button className="btn primary big" onClick={() => onPick(next === -1 ? 0 : next)}>
             {next <= 0 ? "Start exploring" : `Continue: ${units[next].title}`}
           </button>
@@ -110,14 +110,14 @@ function Home({
           ))}
         </ol>
         <ReadAloud as="p" className="muted small">
-          Solve each kind of problem 2 times by yourself to fill in your stars. Only Mixed problems count.
+          Solve Mixed problems by yourself. That fills your stars.
         </ReadAloud>
       </section>
       <section>
         <button className="path-card module-test-card" onClick={onModuleTest}>
           <span className="path-body">
             <span className="path-title">📝 Module Test</span>
-            <span className="path-goal">{MODULE_TEST_TOTAL} cumulative questions, 5 from every unit in this lab.</span>
+            <span className="path-goal">{MODULE_TEST_TOTAL} questions from all {units.length} units.</span>
           </span>
           <span className="unit-stars">
             {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} label="Module test rating" />}
@@ -152,7 +152,7 @@ function UnitView({
 }: {
   unit: Unit;
   progress?: UnitProgress;
-  onSolved: (clean: boolean, bucket?: string) => void;
+  onSolved: (clean: boolean, bucket: string | undefined, counts: boolean) => StarOutcome | undefined;
   onTest: (score: number) => void;
   onIntroDone: () => void;
   onNextUnit?: () => void;
@@ -214,11 +214,15 @@ function UnitView({
   // The draw on screen once it is finished or helped, so it isn't shown again fresh.
   const usedTokenRef = useRef<string | null>(null);
   const handleHelped = useCallback(() => {
-    setOwesRetry(true);
     usedTokenRef.current = drawRef.current?.token ?? null;
     const item = lastMakeRef.current;
+    // An optional type (U4 "Challenge", never in Mixed, no stars) doesn't lock
+    // the student into it after a miss (MG1 review C3-07, user decision).
+    // "Try one like it" is still offered; the type switch stays open.
+    if (item && unit.problems[item.type]?.optional) return;
+    setOwesRetry(true);
     if (item) onDebt({ type: item.type, bucket: item.bucket, mix: typeIdx === "mix" });
-  }, [onDebt, typeIdx]);
+  }, [onDebt, typeIdx, unit]);
   const newProblem = () => (owesRetry ? retrySame() : setSeed((s) => s + 1));
   const openPractice = () => {
     if (tab !== "practice" && usedTokenRef.current !== null && usedTokenRef.current === drawRef.current?.token) {
@@ -296,7 +300,7 @@ function UnitView({
               </button>
             ) : (
               <ReadAloud as="p" className="muted small">
-                Complete the activity above to unlock practice problems.
+                Do the check first. Then you can practice.
               </ReadAloud>
             )}
           </div>
@@ -320,7 +324,7 @@ function UnitView({
           </div>
           {typeIdx !== "mix" && (
             <ReadAloud as="p" className="muted small">
-              Practicing one type is great for extra reps, but only <b>Mixed</b> problems count toward your mastery stars.
+              Only <b>Mixed</b> problems give you stars.
             </ReadAloud>
           )}
           <StepProblem
@@ -332,7 +336,7 @@ function UnitView({
                 setOwesRetry(false);
                 onDebt(null);
               }
-              onSolved(clean && typeIdx === "mix", bucket);
+              return onSolved(clean, bucket, typeIdx === "mix");
             }}
             onHelped={handleHelped}
             onNext={() => setSeed((s) => s + 1)}
@@ -377,7 +381,7 @@ function UnitView({
 
 function AdditionAndSubtractionWithin20Lab() {
   const { currentStudent } = useStudentContext();
-  const { progress, record, recordTest, recordIntroDone, reset } = useModuleProgress(
+  const { progress, recordSolve, recordTest, recordIntroDone, reset } = useModuleProgress(
     currentStudent?.id ?? null,
     currentStudent?.location ?? null,
     MODULE_ID
@@ -397,7 +401,11 @@ function AdditionAndSubtractionWithin20Lab() {
   }, []);
   const unit = current === null ? null : units[current];
   const moduleTestScore = progress[MODULE_PROGRESS_KEY]?.testScore;
-  const onSolved = useCallback((clean: boolean, bucket?: string) => unit && record(unit.id, clean, bucket), [unit, record]);
+  const onSolved = useCallback(
+    (clean: boolean, bucket: string | undefined, counts: boolean) =>
+      unit ? recordSolve(unit.id, clean, bucket, { goal: MASTERY_GOAL, requiredBuckets: unit.requiredBuckets, counts }) : undefined,
+    [unit, recordSolve]
+  );
   const onTest = useCallback((score: number) => unit && recordTest(unit.id, score), [unit, recordTest]);
   const onModuleTestComplete = useCallback((score: number) => recordTest(MODULE_PROGRESS_KEY, score), [recordTest]);
   const onIntroDone = useCallback(() => unit && recordIntroDone(unit.id), [unit, recordIntroDone]);
@@ -459,7 +467,7 @@ function AdditionAndSubtractionWithin20Lab() {
                     <div>
                       <h1>Module Test</h1>
                       <ReadAloud as="p" className="goal">
-                        {MODULE_TEST_TOTAL} cumulative questions covering every unit in Addition &amp; Subtraction Within 20 — 5 from each.
+                        {MODULE_TEST_TOTAL} questions from all {units.length} units.
                       </ReadAloud>
                     </div>
                     <div className="unit-stars">

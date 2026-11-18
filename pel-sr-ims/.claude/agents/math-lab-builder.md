@@ -69,7 +69,7 @@ Conventions drift. Before writing code, re-verify against the actual repo:
   `math-lab-english-checker` will check against. Run
   `node scripts/english-check.cjs --grade {grade} <your files>` before
   you report.
-- For a K–1 lab (MK1–MK4, MG1, or any lab the plan marks "early learner"),
+- For a K–1 lab (MK1–MK4, MG1–MG4, or any lab the plan marks "early learner"),
   also read `shared/engine/audience.tsx`, `shared/components/NumberPad.tsx`,
   `shared/components/TapSelect.tsx`, and the `VisualHelp`/`pointing` part of
   `shared/engine/types.ts`. MG1's `AdditionAndSubtractionWithin20Lab` is the
@@ -94,14 +94,14 @@ Decide the grade band first, then build every screen for it:
 
 | Band | Who | What the screen relies on |
 |---|---|---|
-| K–1 (MK1–MK4, MG1) | Non-readers and early readers, alone on an iPad | **Almost all visual and spoken.** Pictures, the voice, big buttons, the number pad. Sentences under ~10 words. No vocabulary questions, no true/false, no dropdowns, no paragraphs of feedback. |
+| K–1 (MK1–MK4, MG1, and every lab built from a Grade-1 plan: MG2–MG4) | Non-readers and early readers, alone on an iPad | **Almost all visual and spoken.** Pictures, the voice, big buttons, the number pad. Sentences under ~10 words. No vocabulary questions, no true/false, no dropdowns, no paragraphs of feedback. |
 | 2nd–3rd | Developing readers | Short sentences plus pictures; a taught word can be asked about; short multi-part questions are fine. |
 | 4th and up | Readers | Text-led questions, vocabulary, true/false generalization traps and multi-part reasoning (the CFU bar below). |
 
 When a rule in this file names a band, follow it for that band only. When
 unsure, treat the lab as the younger band.
 
-For MK1–MK4 and MG1 that means Kindergarten/1st graders seeing it for the
+For MK1–MK4 and MG1–MG4 that means Kindergarten/1st graders seeing it for the
 first time plus 2nd graders who are behind, working ALONE on an iPad with a
 busy teacher nearby. Most can't read yet, so the lab must work by ear:
 
@@ -150,6 +150,32 @@ broken template teaches confusion. Watch especially:
 - a/an before pooled nouns, and pronouns that match the pooled name.
 Check this in the Verification brute-force script (print one sentence per
 template × every pool entry, and read them).
+
+**Vocabulary list (user requirement 2026-11-18).** Every lab keeps
+`src/pages/math-levels/_planning/Grade-{K..8}/{LabName}/vocabulary.md`, so
+later labs can check "has *take away* been taught yet?". Format (see MG2's
+list): a header (level, lab, grade, standards, "assumes known from"), then
+one `## Unit N: Title` section per unit in unit order, each with a table:
+word or phrase · how it's taught (picture/line, file:line) · where it's used
+· notes. A word goes under the unit that FIRST teaches it, so a later unit
+in the same lab may use it. Then `## Shell / all units`, `## Words this lab
+avoids on purpose` (avoided · used instead · why) and `## Findings`. Mark a
+word used before it's taught as `**Used before taught:** word`. The All
+Levels page's "Lab order & vocabulary" board reads these files, so keep the
+headings and table columns. Rules:
+- **Before writing any student text, read the lists of every earlier lab.**
+  "Earlier" = the labs this lab needs, and the labs those need
+  (`LAB_NEEDS` in `src/utils/levelSubsections.ts`; the board's "Check against
+  a lab" shows it per word). Labs it doesn't need aren't assumed to come
+  first, even at a lower level. A new lab also gets a `LAB_NEEDS` entry
+  (ask the user if it isn't clear). A word a student must understand
+  to answer is either on an earlier list, taught in this lab with a picture
+  before it's used, or replaced. Avoiding a word in Unit 1 isn't enough if a
+  later unit's Test uses it. Titles count.
+- Write or update this lab's list at the end of the build, and list it in
+  the final report. The fixer updates it whenever a fix adds, removes or
+  renames a taught word. If an earlier lab has no list yet, read its
+  Explore/Key Ideas for the words it teaches and say so in the report.
 
 ## File layout (mirror exactly)
 
@@ -206,8 +232,9 @@ Mirror `MG1/MG1_AdditionAndSubtractionWithin20Lab.tsx`:
   `introSatisfied = !unit.requiresIntro || (!!progress?.introDone &&
   !introNeedsRefresh)`. Do not let practice history (`solved > 0`) skip the
   check.
-- The five K–1 shells (MK1–MK4, MG1) are near-copies. A fix to one shell's
-  `UnitView` goes into all five in the same change.
+- The K–1 shells (MK1–MK4, MG1, MG2, and MG3–MG4 once they are moved to
+  early-learner mode) are near-copies. A fix to one shell's `UnitView` goes
+  into all of them in the same change.
 
 ### Stars / mastery (shell's `isMastered`/`Stars`)
 Import `isMastered` and `starCount` from `src/hooks/useModuleProgress.ts`
@@ -238,6 +265,32 @@ where `earned` counts up to 2 clean solves per bucket, capped at
 `MASTERY_GOAL`. If a unit has no `requiredBuckets` at all, both functions
 fall back to the plain clean-solve-count bar automatically. All of this
 lives in `useModuleProgress.ts`; don't restate it locally.
+
+**Only announce a star when one is actually awarded (user requirement:
+kids must never be told they got a star they didn't get).** Never show,
+say or animate "⭐" if help was used, the problem type wasn't Mixed, this
+bucket's star credit was already earned, or the unit's stars are all lit.
+The shell does this by recording Practice solves with `recordSolve` (from
+`useModuleProgress`), NOT `record`, and returning its `StarOutcome` from
+`StepProblem`'s `onComplete`:
+
+```ts
+const onSolved = useCallback(
+  (clean: boolean, bucket: string | undefined, counts: boolean) =>
+    unit ? recordSolve(unit.id, clean, bucket, { goal: MASTERY_GOAL, requiredBuckets: unit.requiredBuckets, counts }) : undefined,
+  [unit, recordSolve]
+);
+// in UnitView:
+onComplete={(clean, bucket) => onSolved(clean, bucket, typeIdx === "mix")}
+```
+`recordSolve` works out the outcome with the same `applySolve`/`starCount`
+it saves with, so the message and the stars can never disagree.
+`StepProblem` then shows "Solved it! You got a ⭐!" only for `"star"`;
+otherwise "Solved it!" plus a short reason ("Good! Keep going for a star.",
+"You already got the star for this kind.", "Only Mixed problems earn
+stars.", "You have all the stars here!"), or "Solved, with help." Never
+hard-code "⭐" or "You got a star" in any lab's own success text or audio;
+any custom success screen must use the same `StarOutcome`.
 
 "Clean" (decided in `StepProblem`) means: no Show me / Show answer, at most
 one hint, and **no wrong pick on any choice step** (a two-choice question
@@ -309,6 +362,11 @@ model drawn loosely teaches nothing. Established shapes in this codebase:
 - Tens: each ten is one COMPLETE ten-frame; the leftover ones go in one more
   frame. Never loose stacks or rods that only look like ten. (Reference:
   `MK1/CountingAndCardinalityLab/diagrams/TenGroups.tsx`, `MG1/.../diagrams/TenFrame.tsx`.)
+- a + b past 10 on ten-frames: the bigger number fills the first frame and
+  the smaller one is broken apart, whatever order they are written in. This
+  holds in every unit, Test and explanation, not only the Making Ten unit.
+  (MG1 Unit 5 filled 3's ten with 7 of the 9; its Test explained 8 + 9 as
+  8 + 2 + 7.)
 - Compare: two rows lined up one-to-one (`MG1/.../diagrams/CompareRows.tsx`),
   so the extras stick out. Not two separate groups.
 - Counting on/back: a number line with numbered hop arcs (`NumberLine`'s
@@ -319,6 +377,10 @@ model drawn loosely teaches nothing. Established shapes in this codebase:
 - Two groups being compared: each in a rounded, labeled box ("Group A" /
   "Group B", or "Grid" / "Scattered"), colored to match the text (MK1
   `TwoGroups`).
+A strategy sandbox only builds cases where the strategy applies: a make-ten
+Explore only allows sums past 10, a bridge-through-ten Explore only allows
+subtractions that cross 10. (MG1 Unit 2 allowed 6 + 2 under "Making ten
+works every time.")
 Before calling a diagram done, render it at its edge values (0, the first
 value of a new row/ten, 9 → 10 → 11, 19 → 20, the max) AND in every
 position/arrangement it supports (above/below/beside, line/grid/circle/
@@ -332,6 +394,10 @@ say it. A "counts so far" label must be computed from the actual values
 (a trail capped at 5 items silently caps the count at 5). **A button that
 would go out of range grays out; it never rounds the value into range**
 (counting by tens from 5 jumped 95 → 100 and cheered "a new ten").
+Compute each control's range from the others so every result and picture
+stays inside the lab's range (Add `max={20 - start}`), and never pass a
+clamped value (`Math.min(20, …)`) to a picture or a sentence. (MG1 Unit 3
+showed "15 + 10 = 20"; Units 4–6 drew 20 dots for totals up to 30.)
 
 **The Key Idea must be true for every problem in the unit.** If any Practice
 or Test problem type adds, the Key Idea can't say "always subtract." State
@@ -385,7 +451,16 @@ is a one-time comprehension check, not practice reps). You choose the
 questions yourself (don't present a menu of candidates). **Which bar to use
 depends on the grade band** (see Audience and language).
 
-#### K–1 CFU (MK1–MK4, MG1): the Kindergarten design
+**One question at a time in every K–5 lab (MK and MG labs; user
+requirement 2026-11-18).** The next question appears only after the current
+one is answered. Never several questions or several sets of answer boxes on
+screen at once. K–1 labs use the design right below. 2nd–5th grade labs keep
+the comprehension bar further down, but deliver it one short item at a time
+(`CheckSequence` where its item types fit, otherwise a hand-built sequence
+with the same flow). Only 6th–8th grade (MM) labs may show a multi-part
+question.
+
+#### K–1 CFU (MK1–MK4, MG1–MG4): the Kindergarten design
 The user's approved design. Build it with the shared pieces in
 `shared/components/KCheck.tsx` (`CheckSequence`, `TypeCheck`, `PickCheck`;
 MK1's `CountOnCheck` for ten-frame counting on). References: every unit in
@@ -410,9 +485,26 @@ MK1–MK4.
   own reason (typing 41 for 14: "That is backwards. Write the ten first.").
   Second wrong try: the picture shows it happening (count-along, cross-out,
   fill-in, slide-together) with "Watch and listen: …", then the student
-  types or picks the answer.
+  types or picks the answer. With a `look` pointer (`TypeCheck`/`PickCheck`
+  `look`), the 2nd miss is "Look here" and show-it moves to the 3rd;
+  KChecks without `look` (MK labs) keep show-it on the 2nd.
 - Each question still targets a real idea or confusion (the trap the old
   bar's true/false would have caught), just asked through a picture.
+- **The 2nd-miss "Look here" must come while at least two answers are still
+  possible.** Use a typed answer, or a `twin` on a two-button pick. With
+  `look`, `PickCheck` keeps tried buttons tappable until show-it, so 3+
+  button picks are fine. In one CFU, Yes/No right answers are not all the
+  same. (MG1 round 2: six two-button picks; Unit 6's were all "Yes.")
+- **`PickCheck` `twin`** (needs `look`): a `PickTwin` (same fields as the
+  pick, new numbers) that replaces the question after its first wrong tap.
+  A wrong tap on the twin is the 2nd miss (Look here), the next is show-it.
+  The twin keeps the same answer type as the question it replaces
+  (false → false), so repeating the rejected tap doesn't pass. (MG1 U6 Q2.)
+- **Story pictures color each number by its role** (start / change / end,
+  part / total), in the unit's Explore colors, not by the order the numbers
+  appear. (MG1 U3 Q5 drew the change in the start color.)
+- **Equation pictures in a CFU or Practice fit on one line at 820 px.** Size
+  the frames for the number of parts. (MG1 U6 CFU equations wrapped on iPad.)
 
 #### 2nd grade and up: the comprehension bar
 
@@ -425,13 +517,17 @@ MK1–MK4.
 - At least one **generalization or true/false trap** — doesn't stop at one
   worked example, asks whether the pattern is *always* true, ideally with a
   counterexample in the explanation.
-- Prefer multi-part questions (2-3 sub-answers + one shared "Check Answer"
-  button + one combined feedback paragraph — see
+- **Grades 2–5: one item at a time** (see the K–5 rule above). A two- or
+  three-part idea becomes 2–3 short items in a row, each with its own Check,
+  not one multi-part question. Make each item real work, not a trivial
+  single pick. The input fits the question (typed boxes, tap choices, boxes
+  inside the diagram), not a dropdown by default.
+- **6th–8th grade (MM) only:** multi-part questions (2-3 sub-answers + one
+  shared "Check Answer" button + one combined feedback paragraph, see
   `ReflectionFormulaQuestion`/`AxisDistanceQuestion` in
-  `CoordinatePlaneUnit.tsx`) over several trivial single-pick questions.
-  The sub-answers do NOT have to be dropdowns: pick the input that fits the
-  question (typed boxes, tap choices, boxes inside the diagram).
-- **Read-aloud labs (MG2–MG5): never use `<select>`.** (K–1 labs use the
+  `CoordinatePlaneUnit.tsx`) are still preferred over several trivial
+  single-pick questions.
+- **Read-aloud labs (MG5): never use `<select>`.** (K–1 labs use the
   K–1 design above, with no pickers at all.) iPad dropdowns are small, hide
   their options, and can't be read aloud well. Use `<TapSelect>`
   (`shared/components/TapSelect.tsx`) — it takes the same `value`/
@@ -455,7 +551,10 @@ MK1–MK4.
   3. The feedback sentence only renders once every box is filled
      (`{checked && filled && (...)}`), so a blank box is never graded as wrong.
   Never grade live as boxes change (no `{(a || b) && <feedback>}`); always
-  use an explicit Check button. Use the shared helpers in
+  use an explicit Check button. **After a wrong Check, changing any answer
+  clears the check** (`onChange={(e) => { setX(e.target.value);
+  setChecked(false); }}`), so borders can't turn green while the student
+  cycles through options (MG2's old CFU could be passed that way). Use the shared helpers in
   `shared/lib/answerChecks.ts`:
   ```tsx
   const [checked, setChecked] = useState(false);
@@ -487,7 +586,10 @@ MK1–MK4.
   "Look here!" button + bouncing arrow) with a few-word `say` line. A spot
   shown only in one Explore mode: `useLookHereRequest` switches to it. Point
   to the teaching, never the answer (Explore's default numbers must not be
-  the CFU's). If Explore has nothing that teaches a part, add one short
+  the CFU's). That includes any number the spot reveals ("Find it", "Show")
+  or switches to on a Look-here request (a mode or "missing" line): none may
+  equal the answer of a CFU that points there. (MG1 U3's default start 5 was
+  Q3's answer.) If Explore has nothing that teaches a part, add one short
   teaching line there. Guide + example:
   `_planning/reviews/CFU_Pointer_Rollout/README.md`.
 - State every chosen CFU question, its correct answer, and why you picked
@@ -519,7 +621,11 @@ wire up the shell and the hand-written Explore/CFU text. Mirror
   is on, Practice/Test questions, hints, Show me lines, and every
   `role="alert"` feedback line read themselves. So give every feedback line
   `role="alert"`, and don't add your own auto-play calls.
-- Write text the voice can say. The tokenizer reads `☐`/`□` as "blank" and
+- **A control labeled "Say…" or "Count…" must speak each number it
+  shows** with the lab voice (MG2's "Say the next number" only changed the
+  counter, silently).
+- Write text the voice can say. The tokenizer reads `☐`/`□` as "blank"
+  (text may still call it "the box"; user-approved), `⭐` as "star", and
   handles `+ − = < >`; anything else (custom symbols, emoji, "→") must be
   checked, or give the element `data-tts-say="…"` with the spoken words.
   Use `data-tts-skip` on purely decorative text.
@@ -562,6 +668,10 @@ each rung something worth showing:
 - **`showMe` on every final step**: a short worked line in the student's
   words, e.g. ``showMe: `Start at ${a}. Count on ${b}: ${countWords(a, total)}.` ``
   It's read aloud, so write it to be heard.
+- **Help for a part that is 0 must still change the picture.** When the
+  answer is "0 cubes" / "0 ones", ringing nothing is a dead end: draw a
+  dashed empty spot where the cubes would go and point at it, with a big
+  "0" on Show me. (MG2 U2 "How many ones are in 10?")
 - **If a hint tells the student to touch the picture, the picture must
   respond to touch** (MK1 `CounterGroup`'s `tapToCount` numbers each tapped
   counter). A "Touch each counter" hint over a static picture is a dead end.
@@ -588,6 +698,15 @@ put real teaching into every one:
   exact total), numbers on dots as they're counted, a "?" box where the next
   one goes. Give the answer box the same color as the highlight
   (`NumberStep.tone` matching the picture's `targetTone`).
+- **Use color boldly (user requirement 2026-11-18).** Strong color links
+  help young students: if the tens sticks are blue, write "How many
+  **tens**?" with *tens* in the same blue, and make the answer box blue too.
+  Color the key word in the prompt, the matching part of the picture and the
+  answer box the same. **The one exception:** when the question is *which*
+  of the colored things is the answer (the bigger number, who has more, the
+  winner), the answer box and that word stay plain, or the color gives the
+  answer away. (MG2 U3 "Type the bigger number" had its box tinted the
+  bigger number's color.)
 - **Pace to the voice:** about 1 second per item at the student's read-aloud
   speed (`STEP_MS` slow/normal/fast) after a short lead-in, so the dots and
   the spoken numbers line up. Blinks: about 1 second each, 3 times (0.6 s
@@ -598,7 +717,10 @@ put real teaching into every one:
   animation plays.
 
 **The picture matches the question, not the answer (user requirement).**
-Before help, the picture shows what the problem GIVES (the start amount,
+No Practice or Test picture marks, colors, prints or leaves readable a
+step's answer (a lit result cell, a labeled landing spot, a readable "next"
+cell) before that step is done: draw the result only when `done > i`, or as
+help after a wrong try. Before help, the picture shows what the problem GIVES (the start amount,
 the two groups, the empty frame), never the result, or a student just counts
 dots and never does the math. This matters most in fluency/fact practice.
 After a wrong answer, `pointing(help, …)` may point at what to look at and
@@ -636,11 +758,18 @@ Practice just because they hint; strip only what gives the answer away.
 - **Every wrong choice must be false.** A true statement that "isn't the
   reason" is never a distractor ("B adds more each time" for a times
   pattern). Make it false, or ask a question with only one true answer.
+  A "which pair / which first" choice is generated only when exactly one
+  option is right: no pair listed twice in reversed order, and no answer
+  chosen by a tie-break ("easiest" = biggest sum). (MG1 three addends: 66%
+  had no make-ten pair; 6% marked "7 + 3" wrong when "3 + 7" was right.)
 - If the prompt names a number or key word ("{k} times"), at least one
   wrong choice uses it too, so the right choice can't be found by matching
   words.
 - Don't ask the same thing twice in two forms (type 2, then tap the numeral
   2). Each step needs its own idea.
+- **A finished step's prompt stays on screen, so no step's prompt may
+  contain a later step's answer.** (MG2 "19 to 20: which ten did you just
+  start?" sat above "What comes after 19?")
 - **Breadth inside one problem:** where the skill is matching or naming,
   put several items in one problem (match 4 word–numeral pairs by dragging,
   not one pair), so a few problems cover the range.
@@ -748,11 +877,23 @@ student on "Try one like it" can't pass by remembering a position.
 going to Home or reloading doesn't clear it. "Reset progress" clears it
 along with the stars, which is fine.
 
+**Challenge types: `ProblemType.optional`** (`shared/engine/types.ts`). An
+optional type is left out of Mixed (`bagItems` in `retryDebt.ts`), so it
+never counts toward stars or mastery; the student picks it by hand. Its
+buckets stay out of `requiredBuckets` and out of the Unit Test. MG1's shell
+also skips the retry lock for it (`handleHelped` returns early when
+`unit.problems[item.type]?.optional`; "Try one like it" is still offered).
+Any other shell that uses an optional type needs the same early return.
+(MG1 U4 "Challenge: tricky compare stories.")
+
 **Generators stay in range by construction.** Draw numbers so the result is
 already inside the unit's range (e.g. within 20: `a = randInt(1, 11); b =
 randInt(1, Math.min(9, 20 - a))`). Never clamp a result after the fact
 (`Math.min(20, a + b)`): the explanation then states false math like
 "12 + 9 = 20." Applies to Practice, Test, and Module Test generators.
+The brute-force script asserts that every number each generator makes,
+including derived ones (start = result + change), stays inside the range.
+(MG1 Unit 3 Test reached 25.)
 
 Randomization hygiene: when two values must stay distinct AFTER a
 transform (e.g. negating), draw the distinctness from the PRE-transform
@@ -846,10 +987,25 @@ should be audited against the final Explore/Practice content, not left as
 whatever was drafted first. Every CFU concept/trap must have at least one
 Test question (ideally with the matching misconception as a distractor).
 
+**A Test picture must not give the answer away (user requirement
+2026-11-18).** For every Test question, ask: can a student read the answer
+straight off this picture without doing the skill? If yes, remove the
+picture or show only what the question gives. Pictures the student has to
+work from are fine (count the sticks and cubes to find the number, compare
+two rows). A picture that prints the answer is not: a full 1–120 chart on
+"What comes after 86?" shows 87 beside 86, and on "10 more than 47" shows
+57 one row down (MG2 Units 1 and 4). Never mark, color or label the answer
+cell. Judge each question; don't just copy the Practice picture.
+
 **Test pictures and words match Practice (user requirement):** the same
 labeled group boxes, the same color-coded names on prompts and buttons, the
-same models. When a Practice picture changes, update the Test and Module
-Test questions that show the same idea. When two Test questions check the
+same models (within the rule above). When a Practice picture changes, update
+the Test and Module Test questions that show the same idea. **When a
+Practice step is removed or changed, search the unit Test and the Module
+Test for the same idea and the same words, and replace any Test item whose
+skill or word no longer appears in Explore or Practice, in the same
+change.** (MG2: the Practice "Which digit changed?" pick was removed, its
+Test twin stayed with nothing teaching it.) When two Test questions check the
 same skill, draw them from **separate number pools** so they never come out
 identical (MK1's two "look-alike numerals" questions once both asked 6/9).
 
@@ -961,8 +1117,11 @@ Delete the harness when done. Take screenshots and look at them.
     picture changes to point at what to look at, without printing the
     answer; wrong again → Show me appears, is read, and its picture shows
     THIS step's demo (not the next step's); "Got it" stays gray until the
-    demo finishes; finish → "Solved, with help." and "Try one like it" gives
-    the SAME problem type; stars do not go up for that solve. Then try the
+    demo finishes; finish → "Solved, with help." (no ⭐ anywhere, shown or
+    spoken) and "Try one like it" gives the SAME problem type; stars do not
+    go up for that solve. Also: a clean Mixed solve of a bucket that already
+    has its 2 clean solves says "Solved it!" with no ⭐; a clean solve that
+    lights a star says "Solved it! You got a ⭐!" and the star count goes up. Then try the
     side doors: leave Practice and come back, press "New problem," switch
     the problem type. None may bring back the helped problem fresh or skip
     the same-type retry. Check that a tried choice is disabled and the

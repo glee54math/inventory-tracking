@@ -1,245 +1,303 @@
-import { useEffect, useState } from "react";
-import { TenFrameGroup } from "../diagrams";
+import { useEffect, useState, type ReactNode } from "react";
+import { EquationStrip, TenFrameGroup, type Tone } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
-import { choice, type Problem, type VisualHelp } from "../../../shared/engine/types";
+import { choice, pointing, type Problem, type Step, type VisualHelp } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { equalSignAndEquationsTest } from "./EqualSignAndEquationsTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
-import { StuckBox, useCfuPointers, type ExploreTarget } from "../../../shared/components/CfuPointers";
-import { lookHereSpot } from "../../../shared/lib/lookHere";
+import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
+import { lookHereSpot, useLookHereRequest } from "../../../shared/lib/lookHere";
+
+// ============================================================================
+// PICTURES
+// ============================================================================
+
+/**
+ * One number as a ten-frame with its numeral under it. `label={false}` hides
+ * the numeral: a help picture can show an amount to count but never prints
+ * the answer before it is found.
+ */
+function Num({ n, tone, splitAt, tone2, crossFrom, label = true, small = false }: { n: number; tone: Tone; splitAt?: number; tone2?: Tone; crossFrom?: number; label?: boolean; small?: boolean }) {
+  return (
+    <div style={{ width: small ? 112 : 168 }}>
+      <TenFrameGroup value={n} tone={tone} splitAt={splitAt} tone2={tone2} crossFrom={crossFrom} />
+      <p style={{ textAlign: "center", fontSize: "1.5rem", fontWeight: 800, margin: "4px 0 0", minHeight: "1.9rem" }}>{label ? n : ""}</p>
+    </div>
+  );
+}
+
+const Sign = ({ children }: { children: string }) => <span style={{ fontSize: "1.9rem", fontWeight: 800, alignSelf: "center" }}>{children}</span>;
+
+/**
+ * A row of pictures and signs, e.g. [5, "=", 2, "+", 3]. `nowrap` keeps an
+ * equation on one line: a CFU picture with 3 numbers uses `<Num small>` and
+ * `nowrap`, so on an iPad the last number never drops under the first (C3-03).
+ */
+const Row = ({ children, nowrap = false }: { children: ReactNode; nowrap?: boolean }) => (
+  <div className="control-row" style={{ gap: 12, alignItems: "flex-start", flexWrap: nowrap ? "nowrap" : "wrap" }}>
+    {children}
+  </div>
+);
+
+/** A pick button's picture: two small ten-frames with "=" between them, and the equation under them. */
+function MiniEq({ left, right }: { left: number; right: number }) {
+  return (
+    <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+      <span style={{ display: "flex", alignItems: "center", gap: 8 }} aria-hidden>
+        <span style={{ width: 96 }}>
+          <TenFrameGroup value={left} tone="a" />
+        </span>
+        <span style={{ fontSize: 24, fontWeight: 800 }}>=</span>
+        <span style={{ width: 96 }}>
+          <TenFrameGroup value={right} tone="b" />
+        </span>
+      </span>
+      <span style={{ fontSize: 26, fontWeight: 800 }} data-tts-say={`${left} is the same as ${right}`}>
+        {left} = {right}
+      </span>
+    </span>
+  );
+}
+
+/** "Is this true?" with the equation spoken as "the same as" (E1-29). */
+const isItTrue = (eq: string) => <span data-tts-say={`Is ${eq.replace(" = ", " the same as ").replace(/\+/g, "plus").replace(/−/g, "minus")}?`}>{`${eq}. Is it true?`}</span>;
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
 // ============================================================================
-// Fixed, hand-picked questions. Targets the plan's named misconceptions:
-// reading "=" as "and the answer comes next" (so 5=2+3 or 7+1=6+2 look
-// "backwards"), and mishandling a true/false equation that needs NO
-// computation at all (8=8). Q4 is the plan's required unknown-not-in-last-
-// position question.
+// K–1 design (shared/components/KCheck.tsx): one short question at a time,
+// a picture, big Yes/No buttons for "is it true?" (1.OA.7 itself), typed
+// boxes for missing numbers. Targets the plan's named misconceptions:
+// reading "=" as "the answer comes next" (so 5 = 2 + 3 looks backwards),
+// an equation that needs no adding (8 = 8), and a missing number that is
+// not last (8 + ☐ = 11, ☐ = 6 + 5). Each question gets a "Look here"
+// pointer after its 2nd wrong try; "show it" comes on the 3rd.
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
-
-/** CFU "Look here" pointers: the Explore spot that teaches each part (shown after its 2nd miss). */
+/** CFU "Look here" pointers: the Explore spot that teaches each question (shown after its 2nd miss). */
 const LOOK = {
-  balance: { target: "eq-balance", label: "Explore: the = sign is like a balance", say: "Look here. Both sides are the same." },
+  balance: { target: "eq-balance", label: "Explore: = means the same as", say: "Look here. Both sides are the same." },
   eitherSide: { target: "eq-either-side", label: "Explore: the total can be on either side", say: "Look here. The total can go first." },
-  scale: { target: "eq-scale", label: "Explore: make it balance", say: "Look here. Add up each side." },
+  scale: { target: "eq-scale", label: "Explore: make both sides match", say: "Look here. Add up each side." },
   missing: { target: "eq-missing", label: "Explore: a box can hide a number", say: "Look here. Make both sides the same." },
 };
 
-/** One-pick CFU question's pointer: shows after the 2nd wrong Check. */
-function usePickPointer(look: ExploreTarget, picked: string, checked: boolean, ok: boolean, setChecked: (v: boolean) => void) {
-  const ptr = useCfuPointers([{ key: "q", to: look }], { done: checked && ok, early: true });
-  const check = () => {
-    if (picked) ptr.record(() => ok, picked);
-    setChecked(true);
-  };
-  return { ptr, check };
-}
-
-function EqualSignMeaningQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "same";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  const { ptr, check } = usePickPointer(LOOK.balance, picked, checked, ok, setChecked);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> What does the = sign mean?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="next">"The answer comes right after this"</option>
-          <option value="same">"Both sides have the exact same amount"</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={check}>
-          Check Answer
-        </button>
-      </div>
-      <StuckBox {...ptr} early />
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? 'Correct — "=" means both sides are equal in value, like a balanced scale. The answer doesn\'t have to come right after it.'
-            : 'Not quite — "=" means both sides have the exact same amount, like a balanced scale — not "the answer comes next."'}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Both terms live, in the same question — the "backwards-looking" trap at
- *  two levels of complexity. */
-function BackwardsEquationsQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [a, setA] = useState("");
-  const [b, setB] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [a, b].every((v) => String(v).trim() !== "");
-  const aOk = a === "true";
-  const bOk = b === "true";
-  const ok = aOk && bOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  const partOk = (key: string) => (key === "a" ? aOk : bOk);
-  const ptr = useCfuPointers(
-    [
-      { key: "a", part: "5 = 2 + 3", to: LOOK.eitherSide },
-      { key: "b", part: "7 + 1 = 6 + 2", to: LOOK.scale },
-    ],
-    { done: checked && ok, early: true, rightNow: (p) => checked && partOk(p.key) }
-  );
-  const check = () => {
-    ptr.record((p) => partOk(p.key), `${a}|${b}`);
-    setChecked(true);
-  };
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> Is each equation true or false?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          5 = 2 + 3:{" "}
-          <TapSelect value={a} onChange={(e) => setA(e.target.value)} style={fieldOk(aOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="true">True</option>
-            <option value="false">False</option>
-          </TapSelect>
-        </label>
-        <label>
-          7 + 1 = 6 + 2:{" "}
-          <TapSelect value={b} onChange={(e) => setB(e.target.value)} style={fieldOk(bOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="true">True</option>
-            <option value="false">False</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={check}>
-          Check Answer
-        </button>
-      </div>
-      <StuckBox {...ptr} early />
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — BOTH are true. 5 = 2 + 3 (5 both times), and 7 + 1 = 6 + 2 (8 both times). The sum doesn't have to sit alone on the right."
-            : "Not quite — both are true. 2 + 3 = 5 and 5 = 2 + 3 say the exact same thing, just flipped. Same for 7 + 1 = 6 + 2 — check that both sides equal 8."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Requires NO computation at all — just the equal-sign concept. */
-function TrivialTrueQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "true";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  const { ptr, check } = usePickPointer(LOOK.balance, picked, checked, ok, setChecked);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or false: 8 = 8
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={check}>
-          Check Answer
-        </button>
-      </div>
-      <StuckBox {...ptr} early />
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — no computing needed here. The same number is on both sides, so of course they're equal."
-            : "Not quite — there's nothing to compute here. 8 is 8, on both sides, so this is simply true."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** The plan's required question: the unknown is NOT in the last position. */
-function UnknownNotLastQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [answer, setAnswer] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = answer === "3";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  const { ptr, check } = usePickPointer(LOOK.missing, answer, checked, ok, setChecked);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> Find the missing number: 8 + ☐ = 11
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <TapSelect value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="3">3</option>
-          <option value="8">8</option>
-          <option value="19">19</option>
-        </TapSelect>
-        <button className="btn primary" type="button" onClick={check}>
-          Check Answer
-        </button>
-      </div>
-      <StuckBox {...ptr} early />
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — the missing number doesn't have to be at the very end. 8 + 3 = 11, so the blank is 3."
-            : "Not quite — the blank can be anywhere in the equation. 11 − 8 = 3, so 8 + 3 = 11."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+const YES_NO = [
+  { id: "yes", label: "Yes, true" },
+  { id: "no", label: "No, false" },
+];
 
 function EqualSignCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ meaning: false, backwards: false, trivial: false, unknownNotLast: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure the equal sign makes sense before you try practice problems.</ReadAloud>
-      <EqualSignMeaningQuestion onComplete={mark("meaning")} />
-      <BackwardsEquationsQuestion onComplete={mark("backwards")} />
-      <TrivialTrueQuestion onComplete={mark("trivial")} />
-      <UnknownNotLastQuestion onComplete={mark("unknownNotLast")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        // = means "the same as", checked with three pictures (C2-01: no
+        // two-button "what does = mean?" pick). The true one is in the middle.
+        (done) => (
+          <PickCheck
+            n={1}
+            prompt="Which one is the same on both sides?"
+            showPicture={
+              <Row>
+                <Num n={6} tone="a" />
+                <Sign>=</Sign>
+                <Num n={6} tone="b" />
+              </Row>
+            }
+            options={[
+              { id: "6=9", label: <MiniEq left={6} right={9} /> },
+              { id: "6=6", label: <MiniEq left={6} right={6} /> },
+              { id: "6=3", label: <MiniEq left={6} right={3} /> },
+            ]}
+            answer="6=6"
+            why={{ "6=9": "Count both sides. Are they the same?", "6=3": "Count both sides. Are they the same?" }}
+            showText="Watch: 6 on this side. 6 on that side. They are the same."
+            praise="Yes! = means the same as."
+            look={LOOK.balance}
+            onComplete={done}
+          />
+        ),
+        // False (C2-01: the Yes/No answers are not all "Yes"). A wrong pick
+        // brings a twin with new numbers, so the 2nd miss can show "Look here!".
+        (done) => (
+          <PickCheck
+            n={2}
+            prompt={isItTrue("6 = 2 + 3")}
+            picture={
+              <Row nowrap>
+                <Num n={6} tone="a" small />
+                <Sign>=</Sign>
+                <Num n={2} tone="b" small />
+                <Sign>+</Sign>
+                <Num n={3} tone="b" small />
+              </Row>
+            }
+            showPicture={
+              <Row>
+                <Num n={6} tone="a" />
+                <Sign>=</Sign>
+                <Num n={5} tone="b" splitAt={2} tone2="c" />
+              </Row>
+            }
+            options={YES_NO}
+            answer="no"
+            // Only heard just before the twin comes, so it doesn't ask a second question (E3-54).
+            why={{ yes: "Add up each side. Try this one." }}
+            showText="Watch: 2 and 3 make 5. 5 is not 6."
+            praise="Right! 2 + 3 is 5, not 6."
+            // The spot that teaches a false sentence: add up each side (C3-04).
+            look={LOOK.scale}
+            // The twin is false too, so tapping "Yes" again never passes (C3-04).
+            twin={{
+              prompt: isItTrue("7 = 4 + 2"),
+              picture: (
+                <Row nowrap>
+                  <Num n={7} tone="a" small />
+                  <Sign>=</Sign>
+                  <Num n={4} tone="b" small />
+                  <Sign>+</Sign>
+                  <Num n={2} tone="b" small />
+                </Row>
+              ),
+              showPicture: (
+                <Row>
+                  <Num n={7} tone="a" />
+                  <Sign>=</Sign>
+                  <Num n={6} tone="b" splitAt={4} tone2="c" />
+                </Row>
+              ),
+              options: YES_NO,
+              answer: "no",
+              why: { yes: "Add up each side. Are they the same?" },
+              showText: "Watch: 4 and 2 make 6. 6 is not 7.",
+              praise: "Right! 4 + 2 is 6, not 7.",
+            }}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={3}
+            prompt="7 + 1 = 6 + ☐. What number goes in the box?"
+            answer={2}
+            tone="c"
+            picture={(m) =>
+              m === "show" || m === "done" ? (
+                <Row>
+                  <Num n={8} tone="a" splitAt={7} tone2="a" />
+                  <Sign>=</Sign>
+                  <Num n={8} tone="b" splitAt={6} tone2="c" />
+                </Row>
+              ) : (
+                <Row nowrap>
+                  <Num n={7} tone="a" small />
+                  <Sign>+</Sign>
+                  <Num n={1} tone="a" small />
+                  <Sign>=</Sign>
+                  <Num n={6} tone="b" small />
+                </Row>
+              )
+            }
+            nudge="Add up the first side. Make the other side match."
+            why={{ 8: "The first side is 8. What goes with 6 to make 8?", 14: "Make both sides the same." }}
+            showText="Watch: 7 + 1 is 8. 6 and 2 more make 8."
+            praise="Yes! 7 + 1 = 6 + 2. Both are 8."
+            look={LOOK.scale}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={4}
+            prompt={isItTrue("8 = 8")}
+            picture={
+              <Row>
+                <Num n={8} tone="a" />
+                <Sign>=</Sign>
+                <Num n={8} tone="b" />
+              </Row>
+            }
+            showPicture={
+              <Row>
+                <Num n={8} tone="a" />
+                <Sign>=</Sign>
+                <Num n={8} tone="b" />
+              </Row>
+            }
+            options={YES_NO}
+            answer="yes"
+            why={{ no: "Look at both sides." }}
+            showText="Watch: 8 on this side. 8 on that side."
+            praise="Yes! 8 is the same as 8."
+            look={LOOK.balance}
+            twin={{
+              prompt: isItTrue("7 = 7"),
+              picture: (
+                <Row>
+                  <Num n={7} tone="a" />
+                  <Sign>=</Sign>
+                  <Num n={7} tone="b" />
+                </Row>
+              ),
+              showPicture: (
+                <Row>
+                  <Num n={7} tone="a" />
+                  <Sign>=</Sign>
+                  <Num n={7} tone="b" />
+                </Row>
+              ),
+              options: YES_NO,
+              answer: "yes",
+              why: { no: "Look at both sides." },
+              showText: "Watch: 7 on this side. 7 on that side.",
+              praise: "Yes! 7 is the same as 7.",
+            }}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={5}
+            prompt="8 + ☐ = 11. What number goes in the box?"
+            answer={3}
+            tone="c"
+            picture={(m) => (m === "show" || m === "done" ? <Num n={11} tone="a" splitAt={8} tone2="c" /> : <Num n={8} tone="a" />)}
+            nudge="Count on from 8 to 11."
+            why={{ 19: "Don't add 8 and 11.", 11: "11 is the total. What goes with 8?" }}
+            showText="Watch and listen: 9, 10, 11. That is 3."
+            praise="Yes! 8 + 3 = 11."
+            look={LOOK.missing}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={6}
+            prompt="☐ = 6 + 5. What number goes in the box?"
+            answer={11}
+            tone="c"
+            picture={(m) =>
+              m === "show" || m === "done" ? (
+                <Num n={11} tone="a" splitAt={6} tone2="b" />
+              ) : (
+                <Row>
+                  <Num n={6} tone="a" />
+                  <Sign>+</Sign>
+                  <Num n={5} tone="b" />
+                </Row>
+              )
+            }
+            nudge="The box can come first. Add 6 + 5."
+            why={{ 1: "Add. Don't take away." }}
+            showText="Watch: 6 and 4 make 10. 1 more is 11."
+            praise="Yes! 11 = 6 + 5."
+            look={LOOK.eitherSide}
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 
@@ -247,18 +305,44 @@ function EqualSignCheckForUnderstanding({ onComplete }: { onComplete?: () => voi
 // EXPLORE
 // ============================================================================
 
+const FIND_STEP_MS = 700;
+
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
-  // Not the CFU's numbers (7 + 1 = 6 + 2), so a "Look here" never shows a CFU answer.
-  const [leftA, setLeftA] = useState(5);
-  const [leftB, setLeftB] = useState(4);
-  const [rightA, setRightA] = useState(6);
-  const [rightB, setRightB] = useState(3);
+  // 6 + 3 = 5 + 4: no CFU numbers, and neither the total (9) nor what "Find
+  // it" reveals (4) is a CFU answer (2, 3, 11), so a "Look here" never shows
+  // one (C2-03b; 5 + 6 = 7 + 4 was suggested, but its total 11 is Q6's answer).
+  const [first, setFirst] = useState(6);
+  const [second, setSecond] = useState(3);
+  const [third, setThird] = useState(5);
+  const [fourth, setFourth] = useState(4);
+  const [flipped, setFlipped] = useState(false);
+  // Box mode: the fourth number is hidden in a box; "Find it" counts on until both sides match.
+  const [boxMode, setBoxMode] = useState(false);
+  const [found, setFound] = useState<number | null>(null);
 
-  const leftTotal = leftA + leftB;
-  const rightTotal = rightA + rightB;
-  const balanced = leftTotal === rightTotal;
+  const firstSide = first + second;
+  const target = firstSide - third;
+  const shownFourth = boxMode ? (found ?? 0) : fourth;
+  const otherSide = third + shownFourth;
+  const balanced = firstSide === otherSide;
+  const canBox = third <= firstSide;
+
+  useEffect(() => {
+    if (found === null || found >= target) return;
+    const t = window.setTimeout(() => setFound((f) => (f === null ? f : f + 1)), FIND_STEP_MS);
+    return () => window.clearTimeout(t);
+  }, [found, target]);
+
+  useLookHereRequest((id) => {
+    if (id === "eq-missing" && canBox) {
+      setBoxMode(true);
+      setFound(null);
+    }
+  });
+
+  const restart = () => setFound(null);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -276,42 +360,108 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
 
       <ReadAloud as="p" className="muted small" {...lookHereSpot("eq-balance")}>
-        <span data-look-here-key>The = sign is like a balance scale: both sides must weigh the same.</span> Try to make it balance.
+        <span data-look-here-key>= means the same as. Both sides must have the same amount.</span> Try to make them match.
       </ReadAloud>
+      {/* Each side's numbers get their ranges from each other, so a side is at most 20. */}
       <div className="control-row" data-readaloud-part>
-        <Stepper label="Left, first" value={leftA} min={0} max={15} step={1} onChange={setLeftA} tone="a" />
-        <Stepper label="Left, second" value={leftB} min={0} max={15} step={1} onChange={setLeftB} tone="a" />
+        <Stepper
+          label="First"
+          value={first}
+          min={0}
+          max={20 - second}
+          step={1}
+          onChange={(v) => {
+            setFirst(v);
+            restart();
+          }}
+          tone="a"
+        />
+        <Stepper
+          label="Second"
+          value={second}
+          min={0}
+          max={20 - first}
+          step={1}
+          onChange={(v) => {
+            setSecond(v);
+            restart();
+          }}
+          tone="a"
+        />
         <span className="affix" style={{ fontWeight: 800, fontSize: 20 }}>
           =
         </span>
-        <Stepper label="Right, first" value={rightA} min={0} max={15} step={1} onChange={setRightA} tone="b" />
-        <Stepper label="Right, second" value={rightB} min={0} max={15} step={1} onChange={setRightB} tone="b" />
+        <Stepper
+          label="Third"
+          value={third}
+          min={0}
+          max={boxMode ? firstSide : 20 - fourth}
+          step={1}
+          onChange={(v) => {
+            setThird(v);
+            restart();
+          }}
+          tone="b"
+        />
+        {!boxMode && <Stepper label="Fourth" value={fourth} min={0} max={20 - third} step={1} onChange={setFourth} tone="b" />}
       </div>
       <div {...lookHereSpot("eq-scale")}>
         <div className="control-row" style={{ gap: 24, alignItems: "flex-start" }} data-readaloud-part>
           <div>
-            <TenFrameGroup value={Math.min(20, leftTotal)} tone="a" />
+            <TenFrameGroup value={firstSide} tone="a" />
             <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
-              {leftA} + {leftB} = {leftTotal}
+              {first} + {second} = {firstSide}
             </ReadAloud>
           </div>
           <div>
-            <TenFrameGroup value={Math.min(20, rightTotal)} tone="b" />
+            <TenFrameGroup value={otherSide} tone="b" splitAt={boxMode ? third : undefined} tone2="c" />
             <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
-              {rightA} + {rightB} = {rightTotal}
+              {boxMode && found === null ? `${third} + ☐` : `${third} + ${shownFourth} = ${otherSide}`}
             </ReadAloud>
           </div>
         </div>
         <ReadAloud as="p" className={`feedback ${balanced ? "good" : "bad"}`} data-look-here-key>
-          {balanced ? `Balanced! ${leftA} + ${leftB} = ${rightA} + ${rightB} — both sides equal ${leftTotal}.` : `Not balanced — ${leftTotal} ≠ ${rightTotal}. Adjust the numbers until both sides match.`}
+          {boxMode && found === null
+            ? `${first} + ${second} = ${third} + ☐. What goes in the box?`
+            : balanced
+              ? `Same! ${first} + ${second} = ${third} + ${shownFourth}. Both sides are ${firstSide}.`
+              : `Not the same. ${firstSide} ≠ ${otherSide}. Change the numbers until both sides match.`}
         </ReadAloud>
       </div>
-      <ReadAloud as="p" className="muted small" {...lookHereSpot("eq-either-side")}>
-        <span data-look-here-key>The total can be on either side. 6 = 4 + 2 is the same as 4 + 2 = 6.</span>
-      </ReadAloud>
-      <ReadAloud as="p" className="muted small" {...lookHereSpot("eq-missing")}>
-        <span data-look-here-key>A box can hide a number. Find the number that makes both sides the same.</span>
-      </ReadAloud>
+      <div {...lookHereSpot("eq-missing")} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="control-row" data-readaloud-part>
+          <button
+            type="button"
+            className="btn ghost"
+            disabled={!boxMode && !canBox}
+            onClick={() => {
+              setBoxMode(!boxMode);
+              restart();
+            }}
+          >
+            {boxMode ? "Show the fourth number" : "Hide a number in a box"}
+          </button>
+          {boxMode && (
+            <button type="button" className="btn primary" disabled={found !== null} onClick={() => setFound(0)}>
+              Find it
+            </button>
+          )}
+        </div>
+        <ReadAloud as="p" className="muted small" data-look-here-key>
+          A box can hide a number. What number makes both sides the same?
+        </ReadAloud>
+      </div>
+      <div {...lookHereSpot("eq-either-side")} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="control-row" style={{ alignItems: "center", gap: 16 }} data-readaloud-part>
+          <EquationStrip tokens={flipped ? [{ value: firstSide, tone: "c" }, "=", { value: first, tone: "a" }, "+", { value: second, tone: "a" }] : [{ value: first, tone: "a" }, "+", { value: second, tone: "a" }, "=", { value: firstSide, tone: "c" }]} />
+          <button type="button" className="btn ghost" onClick={() => setFlipped((f) => !f)}>
+            Flip
+          </button>
+        </div>
+        <ReadAloud as="p" className="muted small" data-look-here-key>
+          The total can be on either side.
+        </ReadAloud>
+      </div>
       {/* Below the picture, so students explore first, then check. */}
       {(introActive || showCheck) && <EqualSignCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
@@ -321,143 +471,372 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 // ============================================================================
 // PRACTICE
 // ============================================================================
+// Before help, pictures show only the numbers the problem gives (separate
+// frames, no colored missing part). After a wrong try the picture puts them
+// together or splits the total; "Show me" counts it out.
 
 type Bucket = "equalSignUnknownLeft" | "trueFalseTrap" | "findUnknownNonFinal";
 const BUCKETS: Bucket[] = ["equalSignUnknownLeft", "trueFalseTrap", "findUnknownNonFinal"];
 
+/** "9, 10, 11" — the numbers you say counting from `from` to `to`. */
+const countWords = (from: number, to: number) => {
+  const dir = to > from ? 1 : -1;
+  return Array.from({ length: Math.abs(to - from) }, (_, k) => from + (k + 1) * dir).join(", ");
+};
+/** About 1 second per number said, after a short lead-in (Show me pacing), at most 7 seconds. */
+const holdFor = (n: number) => Math.min(7000, 1000 + n * 1000);
+
+/** A number from lo..hi that isn't in `avoid`. */
+function otherThan(lo: number, hi: number, avoid: number[]): number {
+  const pool = Array.from({ length: hi - lo + 1 }, (_, i) => lo + i).filter((n) => !avoid.includes(n));
+  return pool[randInt(0, pool.length - 1)];
+}
+
 function equalSignUnknownLeftProblem(): Problem {
-  const shape = Math.random() < 0.5 ? "unknownOnLeft" : "operationBothSides";
-  if (shape === "unknownOnLeft") {
-    // ☐ = A + B — the "answer slot" is on the left, breaking the default.
-    const a = randInt(1, 11);
-    const b = randInt(1, Math.min(9, 20 - a));
+  if (Math.random() < 0.5) {
+    // ☐ = A + B — the box comes first, breaking "the answer comes next".
+    // Total at least 4, so another split (not a, not b) always exists for step 2.
+    let a = 0;
+    let b = 0;
+    do {
+      a = randInt(1, 11);
+      b = randInt(1, Math.min(9, 20 - a));
+    } while (a + b < 4);
     const total = a + b;
+    // Step 2: the same total split another way (not a, not b), so nothing is copied.
+    const c = otherThan(1, total - 1, [a, b]);
     return {
-      title: "Equal sign — unknown on the left",
+      title: "The box comes first",
       bucket: "equalSignUnknownLeft",
       story: `☐ = ${a} + ${b}`,
-      visual: () => <TenFrameGroup value={total} tone="a" splitAt={a} tone2="b" />,
+      visual: (done: number, help?: VisualHelp) =>
+        done >= 1 || pointing(help, 0) ? (
+          <Num n={total} tone="a" splitAt={a} tone2="b" label={done >= 1} />
+        ) : (
+          <Row>
+            <Num n={a} tone="a" />
+            <Sign>+</Sign>
+            <Num n={b} tone="b" />
+          </Row>
+        ),
       steps: [
-        choice({ prompt: "What does the = sign mean here?", hint: 'It still means "the same amount," even with the blank on the left.', explain: 'Both sides must be equal — the blank just happens to be on the left this time.' }, "Both sides equal the same amount", ["The answer comes right after ="]),
-        { kind: "number", prompt: "What number goes in the blank?", hint: `Add ${a} + ${b}.`, explain: `${a} + ${b} = ${total}, so ☐ = ${total}.`, answer: total },
+        {
+          kind: "number",
+          prompt: "What number goes in the box?",
+          hint: `The box can come first. Add ${a} + ${b}.`,
+          showMe: `${a} + ${b}: start at ${Math.max(a, b)}. Count on ${Math.min(a, b)}: ${countWords(Math.max(a, b), total)}.`,
+          showMeHoldMs: holdFor(Math.min(a, b)),
+          explain: `${a} + ${b} = ${total}, so ☐ = ${total}.`,
+          answer: total,
+        },
+        {
+          kind: "number",
+          prompt: `Now ${total} = ${c} + ☐. What number goes in the box?`,
+          hint: `${c} and what make ${total}?`,
+          showMe: `Start at ${c}. Count on to ${total}: ${countWords(c, total)}. That is ${total - c}.`,
+          showMeHoldMs: holdFor(total - c),
+          explain: `${total} = ${c} + ${total - c}.`,
+          answer: total - c,
+        },
       ],
-      wrapUp: `${total} = ${a} + ${b}.`,
+      wrapUp: `${total} = ${a} + ${b} = ${c} + ${total - c}.`,
     };
   }
-  // A + B = C + ☐ — an operation on BOTH sides.
-  const a = randInt(2, 9);
-  const b = randInt(2, 9);
-  const total = Math.min(20, a + b);
-  const c = randInt(1, Math.max(1, total - 1));
+  // A + B = C + ☐ — adding on both sides.
+  let a = 0;
+  let b = 0;
+  do {
+    a = randInt(2, 9);
+    b = randInt(2, 9);
+  } while (a + b > 18);
+  const total = a + b;
+  const c = otherThan(1, total - 1, [a, b]);
   const d = total - c;
   return {
-    title: "Equal sign — operation on both sides",
+    title: "Adding on both sides",
     bucket: "equalSignUnknownLeft",
     story: `${a} + ${b} = ${c} + ☐`,
-    // "Show me" on the blank: the SAME counters, split the other way (c + ☐).
-    visual: (done: number, help?: VisualHelp) =>
-      (help?.showMe && help.step === 1) || done >= 2 ? (
-        <TenFrameGroup value={total} tone="a" splitAt={c} tone2="c" />
-      ) : (
-        <TenFrameGroup value={total} tone="a" splitAt={a} tone2="b" />
-      ),
+    // "Show me" on the box: the other side, split the same total another way.
+    visual: (done: number, help?: VisualHelp) => (
+      <Row>
+        {done >= 1 || pointing(help, 0) ? <Num n={total} tone="a" label={done >= 1} /> : (
+          <>
+            <Num n={a} tone="a" />
+            <Sign>+</Sign>
+            <Num n={b} tone="a" />
+          </>
+        )}
+        <Sign>=</Sign>
+        {done >= 2 || pointing(help, 1) ? <Num n={total} tone="b" splitAt={c} tone2="c" label={done >= 2} /> : <Num n={c} tone="b" />}
+      </Row>
+    ),
     steps: [
-      choice({ prompt: "What does the = sign mean here?", hint: "Both sides need to add up to the same total, even though there's a sum on both sides.", explain: `Both ${a} + ${b} and ${c} + ☐ must equal the same total, ${total}.` }, "Both sides equal the same amount", ["The answer comes right after ="]),
-      { kind: "number", prompt: "What number goes in the blank?", hint: `${a} + ${b} = ${total}. What plus ${c} makes ${total}?`, explain: `${total} − ${c} = ${d}, so ${c} + ${d} = ${total}.`, answer: d },
+      { kind: "number", prompt: `Add up the first side: ${a} + ${b} = ?`, hint: `Start at ${Math.max(a, b)}. Count on ${Math.min(a, b)}.`, explain: `${a} + ${b} = ${total}.`, answer: total },
+      {
+        kind: "number",
+        prompt: "What number goes in the box?",
+        hint: `${c} and what make ${total}?`,
+        showMe: `Start at ${c}. Count on to ${total}: ${countWords(c, total)}. That is ${d}.`,
+        showMeHoldMs: holdFor(d),
+        explain: `${c} + ${d} = ${total}, the same as ${a} + ${b}.`,
+        answer: d,
+      },
     ],
-    wrapUp: `${a} + ${b} = ${c} + ${d} = ${total}.`,
+    wrapUp: `${a} + ${b} = ${c} + ${d}. Both sides are ${total}.`,
   };
 }
 
+/** A wrong total near the real one, inside lo..hi (default 0..20). */
+const nearMiss = (t: number, lo = 0, hi = 20) => {
+  const options = [-2, -1, 1, 2].map((k) => t + k).filter((w) => w >= lo && w <= hi);
+  return options[randInt(0, options.length - 1)];
+};
+
+const yesNo = (eq: string, isTrue: boolean, hint: string, explain: string): Step =>
+  choice({ prompt: isItTrue(eq), hint, explain }, isTrue ? "Yes, true" : "No, false", [isTrue ? "No, false" : "Yes, true"]);
+
+/**
+ * "Is this true?" — the answer (yes/no) is decided first, 50/50, then the
+ * equation is built to fit. Every kind but "n = n" has a typed "add it up"
+ * step first, so the bucket can't be passed by guessing.
+ */
 function trueFalseTrapProblem(): Problem {
-  const kind = ["false", "trivialTrue", "genuineTrue"][randInt(0, 2)];
-  if (kind === "trivialTrue") {
+  const kind = ["sumRight", "sumLeft", "bothSides", "subtract", "same"][randInt(0, 4)];
+  // "n = n" (1 kind in 5) is always true, so the other kinds are true 3 times in 8: "Yes" is right half the time overall.
+  const isTrue = kind === "same" || Math.random() < 0.375;
+  const title = "Is it true?";
+
+  if (kind === "same") {
+    // Needs no adding at all: the same number on both sides.
     const n = randInt(1, 20);
     return {
-      title: "True or false?",
+      title,
       bucket: "trueFalseTrap",
       story: `${n} = ${n}`,
-      visual: () => <TenFrameGroup value={n} tone="a" />,
-      steps: [choice({ prompt: `Is ${n} = ${n} true or false?`, hint: "There's nothing to compute here — look at both sides as they are.", explain: `${n} is ${n} — no computation needed, it's simply true.` }, "True", ["False"])],
-      wrapUp: `${n} = ${n} is true — the exact same number on both sides.`,
+      visual: () => (
+        <Row>
+          <Num n={n} tone="a" />
+          <Sign>=</Sign>
+          <Num n={n} tone="b" />
+        </Row>
+      ),
+      steps: [yesNo(`${n} = ${n}`, true, "Look at both sides. Are they the same?", `${n} is the same as ${n}. It is true.`)],
+      wrapUp: `${n} = ${n} is true. Both sides are ${n}.`,
     };
   }
+
+  if (kind === "subtract") {
+    const a = randInt(5, 20);
+    const b = randInt(1, Math.min(9, a - 1));
+    const t = a - b;
+    const shown = isTrue ? t : nearMiss(t);
+    const eq = Math.random() < 0.5 ? `${a} − ${b} = ${shown}` : `${shown} = ${a} − ${b}`;
+    return {
+      title,
+      bucket: "trueFalseTrap",
+      story: eq,
+      visual: (done: number, help?: VisualHelp) => <Num n={a} tone="c" crossFrom={done >= 1 || pointing(help, 0) ? t : undefined} />,
+      steps: [
+        { kind: "number", prompt: `${a} − ${b} = ?`, hint: `Start at ${a}. Count back ${b}.`, showMe: `Start at ${a}. Count back ${b}: ${countWords(a, t)}.`, showMeHoldMs: holdFor(b), explain: `${a} − ${b} = ${t}.`, answer: t },
+        yesNo(eq, isTrue, "Look at both sides. Are they the same?", isTrue ? `${a} − ${b} = ${t}. Both sides are ${t}. It is true.` : `${a} − ${b} = ${t}, not ${shown}. It is false.`),
+      ],
+      wrapUp: `${a} − ${b} = ${t}.`,
+    };
+  }
+
   const a = randInt(1, 9);
   const b = randInt(1, 9);
-  const trueTotal = a + b;
-  if (kind === "genuineTrue") {
+  const t = a + b;
+
+  if (kind === "bothSides") {
+    // a + b = c + d: true when c + d is the same total; false when it is off by a little.
+    // At most 18, so it can be written as two numbers of 9 or less.
+    const otherTotal = isTrue ? t : nearMiss(t, 0, 18);
+    const c = randInt(Math.max(0, otherTotal - 9), Math.min(9, otherTotal));
+    const d = otherTotal - c;
+    const eq = `${a} + ${b} = ${c} + ${d}`;
     return {
-      title: "True or false?",
+      title,
       bucket: "trueFalseTrap",
-      story: `${a} + ${b} = ${trueTotal}`,
-      visual: () => <TenFrameGroup value={Math.min(20, trueTotal)} tone="a" splitAt={a} tone2="b" />,
-      steps: [choice({ prompt: `Is ${a} + ${b} = ${trueTotal} true or false?`, hint: "Add the left side and compare it to the right side.", explain: `${a} + ${b} = ${trueTotal}, which matches the right side — true.` }, "True", ["False"])],
-      wrapUp: `${a} + ${b} = ${trueTotal} is true.`,
+      story: eq,
+      visual: (done: number, help?: VisualHelp) => (
+        <Row>
+          {done >= 1 || pointing(help, 0) ? <Num n={t} tone="a" label={done >= 1} /> : <Num n={a} tone="a" />}
+          {!(done >= 1 || pointing(help, 0)) && (
+            <>
+              <Sign>+</Sign>
+              <Num n={b} tone="a" />
+            </>
+          )}
+          <Sign>=</Sign>
+          {done >= 2 || pointing(help, 1) ? <Num n={otherTotal} tone="b" label={done >= 2} /> : <Num n={c} tone="b" />}
+          {!(done >= 2 || pointing(help, 1)) && (
+            <>
+              <Sign>+</Sign>
+              <Num n={d} tone="b" />
+            </>
+          )}
+        </Row>
+      ),
+      steps: [
+        { kind: "number", prompt: `Add up the first side: ${a} + ${b} = ?`, hint: `Start at ${Math.max(a, b)}. Count on ${Math.min(a, b)}.`, explain: `${a} + ${b} = ${t}.`, answer: t },
+        { kind: "number", prompt: `Add up the other side: ${c} + ${d} = ?`, hint: `Start at ${Math.max(c, d)}. Count on ${Math.min(c, d)}.`, explain: `${c} + ${d} = ${otherTotal}.`, answer: otherTotal },
+        yesNo(eq, isTrue, "Do both sides match?", isTrue ? `Both sides are ${t}. It is true.` : `${t} and ${otherTotal} are not the same. It is false.`),
+      ],
+      wrapUp: isTrue ? `${eq}. Both sides are ${t}.` : `${a} + ${b} = ${t}. ${c} + ${d} = ${otherTotal}. Not the same.`,
     };
   }
-  // Deliberately false.
-  let wrongTotal = trueTotal;
-  while (wrongTotal === trueTotal) wrongTotal = Math.max(0, trueTotal + [-2, -1, 1, 2][randInt(0, 3)]);
+
+  // a + b = t (sumRight) or t = a + b (sumLeft: the total comes first).
+  const shown = isTrue ? t : nearMiss(t);
+  const eq = kind === "sumRight" ? `${a} + ${b} = ${shown}` : `${shown} = ${a} + ${b}`;
   return {
-    title: "True or false?",
+    title,
     bucket: "trueFalseTrap",
-    story: `${a} + ${b} = ${wrongTotal}`,
-    visual: () => <TenFrameGroup value={Math.min(20, trueTotal)} tone="a" splitAt={a} tone2="b" />,
-    steps: [choice({ prompt: `Is ${a} + ${b} = ${wrongTotal} true or false?`, hint: "Add the left side yourself — don't just assume it's right because it's written down.", explain: `${a} + ${b} = ${trueTotal}, not ${wrongTotal} — false.` }, "False", ["True"])],
-    wrapUp: `${a} + ${b} = ${trueTotal}, not ${wrongTotal} — the equation is false.`,
+    story: eq,
+    visual: (done: number, help?: VisualHelp) =>
+      done >= 1 || pointing(help, 0) ? (
+        <Num n={t} tone="a" splitAt={a} tone2="b" label={done >= 1} />
+      ) : (
+        <Row>
+          <Num n={a} tone="a" />
+          <Sign>+</Sign>
+          <Num n={b} tone="b" />
+        </Row>
+      ),
+    steps: [
+      {
+        kind: "number",
+        prompt: `${a} + ${b} = ?`,
+        hint: `Start at ${Math.max(a, b)}. Count on ${Math.min(a, b)}.`,
+        showMe: `Start at ${Math.max(a, b)}. Count on ${Math.min(a, b)}: ${countWords(Math.max(a, b), t)}.`,
+        showMeHoldMs: holdFor(Math.min(a, b)),
+        explain: `${a} + ${b} = ${t}.`,
+        answer: t,
+      },
+      yesNo(eq, isTrue, kind === "sumLeft" ? "The total can come first. Do both sides match?" : "Add it up. Is it really true?", isTrue ? `${a} + ${b} = ${t}. It is true.` : `${a} + ${b} = ${t}, not ${shown}. It is false.`),
+    ],
+    wrapUp: `${a} + ${b} = ${t}.`,
   };
 }
 
+/** "Which number is missing?" choices: for adding, the first / second number or the total; for taking away, the first / second number or what is left. */
+const ADD_PARTS = ["the first number", "the second number", "the total"];
+const TAKE_PARTS = ["the first number", "the second number", "what is left"];
+
 function findUnknownNonFinalProblem(): Problem {
-  const shape = ["addFirst", "addSecond", "subtract"][randInt(0, 2)];
-  if (shape === "addFirst") {
-    // A + ☐ = C
-    const a = randInt(1, 15);
-    const c = Math.min(20, a + randInt(1, 9));
-    const unknown = c - a;
+  const shape = ["addSecond", "addFirst", "takeSecond", "takeFirst", "total"][randInt(0, 4)];
+  const title = "Find the missing number";
+  const partStep = (parts: string[], idx: number, hint: string) =>
+    choice({ prompt: "Which number is missing?", hint, explain: `${parts[idx][0].toUpperCase()}${parts[idx].slice(1)} is missing.` }, parts[idx], parts.filter((_, i) => i !== idx));
+
+  if (shape === "addSecond" || shape === "addFirst") {
+    const known = randInt(1, 15);
+    const unknown = randInt(1, Math.min(9, 20 - known));
+    const c = known + unknown;
+    const story = shape === "addSecond" ? `${known} + ☐ = ${c}` : `☐ + ${known} = ${c}`;
     return {
-      title: "Find the unknown",
+      title,
       bucket: "findUnknownNonFinal",
-      story: `${a} + ☐ = ${c}`,
-      visual: () => <TenFrameGroup value={c} tone="a" splitAt={a} tone2="b" />,
+      story,
+      // Before help: the total, all one color. Stuck on the box: the known part and the rest.
+      visual: (done: number, help?: VisualHelp) => (done >= 2 || pointing(help, 1) ? <Num n={c} tone="a" splitAt={known} tone2="c" /> : <Num n={c} tone="a" />),
       steps: [
-        choice({ prompt: "Which part of this equation is unknown?", hint: "Read the equation left to right — where is the blank?", explain: "The SECOND addend is unknown — not the final total." }, "The second addend", ["The total"]),
-        { kind: "number", prompt: "What number goes in the blank?", hint: `${c} − ${a} = ?`, explain: `${c} − ${a} = ${unknown}.`, answer: unknown },
+        partStep(ADD_PARTS, shape === "addSecond" ? 1 : 0, "Where is the box?"),
+        {
+          kind: "number",
+          prompt: "What number goes in the box?",
+          hint: `Count on from ${known} to ${c}.`,
+          showMe: `Start at ${known}. Count on to ${c}: ${countWords(known, c)}. That is ${unknown}.`,
+          showMeHoldMs: holdFor(unknown),
+          explain: shape === "addSecond" ? `${known} + ${unknown} = ${c}.` : `${unknown} + ${known} = ${c}.`,
+          answer: unknown,
+        },
       ],
-      wrapUp: `${a} + ${unknown} = ${c}.`,
+      wrapUp: shape === "addSecond" ? `${known} + ${unknown} = ${c}.` : `${unknown} + ${known} = ${c}.`,
     };
   }
-  if (shape === "addSecond") {
-    // ☐ + B = C
-    const b = randInt(1, 15);
-    const c = Math.min(20, b + randInt(1, 9));
-    const unknown = c - b;
+  if (shape === "takeSecond") {
+    // a − ☐ = c: the box is the number you take away (1–9).
+    const a = randInt(5, 19);
+    const unknown = randInt(1, Math.min(9, a));
+    const c = a - unknown;
     return {
-      title: "Find the unknown",
+      title,
       bucket: "findUnknownNonFinal",
-      story: `☐ + ${b} = ${c}`,
-      visual: () => <TenFrameGroup value={c} tone="a" />,
+      story: `${a} − ☐ = ${c}`,
+      visual: (done: number, help?: VisualHelp) => <Num n={a} tone="c" crossFrom={done >= 2 || pointing(help, 1) ? c : undefined} />,
       steps: [
-        choice({ prompt: "Which part of this equation is unknown?", hint: "The blank is the very FIRST thing in the equation.", explain: "The FIRST addend is unknown — not the final total." }, "The first addend", ["The total"]),
-        { kind: "number", prompt: "What number goes in the blank?", hint: `${c} − ${b} = ?`, explain: `${c} − ${b} = ${unknown}.`, answer: unknown },
+        partStep(TAKE_PARTS, 1, "Where is the box?"),
+        {
+          kind: "number",
+          prompt: "What number goes in the box?",
+          hint: "The box is the number you take away.",
+          showMe: `Start at ${a}. Count back to ${c}: ${countWords(a, c)}. That is ${unknown}.`,
+          showMeHoldMs: holdFor(unknown),
+          explain: `${a} − ${unknown} = ${c}.`,
+          answer: unknown,
+        },
       ],
-      wrapUp: `${unknown} + ${b} = ${c}.`,
+      wrapUp: `${a} − ${unknown} = ${c}.`,
     };
   }
-  // A - ☐ = C
-  const a = randInt(5, 19);
-  const c = randInt(0, a - 1);
-  const unknown = a - c;
+  if (shape === "takeFirst") {
+    // ☐ − b = c (1.OA.8): the box is the start. Add back what was taken away.
+    const b = randInt(1, 9);
+    const c = randInt(0, 20 - b);
+    const unknown = b + c;
+    return {
+      title,
+      bucket: "findUnknownNonFinal",
+      story: `☐ − ${b} = ${c}`,
+      visual: (done: number, help?: VisualHelp) => (done >= 2 || pointing(help, 1) ? <Num n={unknown} tone="a" splitAt={c} tone2="c" label={done >= 2} /> : <Num n={c} tone="a" />),
+      steps: [
+        partStep(TAKE_PARTS, 0, "Where is the box?"),
+        {
+          kind: "number",
+          prompt: "What number goes in the box?",
+          hint: `${b} went away. Add ${b === 1 ? "it" : "them"} back to ${c}.`,
+          showMe: `${c} ${c === 1 ? "is" : "are"} left. Add back the ${b}: ${c} + ${b} = ${unknown}.`,
+          showMeHoldMs: 3000,
+          explain: `${unknown} − ${b} = ${c}.`,
+          answer: unknown,
+        },
+      ],
+      wrapUp: `${unknown} − ${b} = ${c}.`,
+    };
+  }
+  // a + b = ☐ — so "the total" is sometimes the missing part.
+  const a = randInt(1, 9);
+  const b = randInt(1, 9);
+  const total = a + b;
   return {
-    title: "Find the unknown",
+    title,
     bucket: "findUnknownNonFinal",
-    story: `${a} − ☐ = ${c}`,
-    visual: () => <TenFrameGroup value={a} tone="c" splitAt={c} tone2="b" />,
+    story: `${a} + ${b} = ☐`,
+    visual: (done: number, help?: VisualHelp) =>
+      done >= 2 || pointing(help, 1) ? (
+        <Num n={total} tone="a" splitAt={a} tone2="b" label={done >= 2} />
+      ) : (
+        <Row>
+          <Num n={a} tone="a" />
+          <Sign>+</Sign>
+          <Num n={b} tone="b" />
+        </Row>
+      ),
     steps: [
-      choice({ prompt: "Which part of this equation is unknown?", hint: "The blank sits between the subtraction sign and the equal sign.", explain: "The amount being SUBTRACTED is unknown — not the final result." }, "The amount being subtracted", ["The final result"]),
-      { kind: "number", prompt: "What number goes in the blank?", hint: `${a} − ${c} = ?`, explain: `${a} − ${c} = ${unknown}.`, answer: unknown },
+      partStep(ADD_PARTS, 2, "Where is the box?"),
+      {
+        kind: "number",
+        prompt: "What number goes in the box?",
+        hint: `Start at ${Math.max(a, b)}. Count on ${Math.min(a, b)}.`,
+        showMe: `Start at ${Math.max(a, b)}. Count on ${Math.min(a, b)}: ${countWords(Math.max(a, b), total)}.`,
+        showMeHoldMs: holdFor(Math.min(a, b)),
+        explain: `${a} + ${b} = ${total}.`,
+        answer: total,
+      },
     ],
-    wrapUp: `${a} − ${unknown} = ${c}.`,
+    wrapUp: `${a} + ${b} = ${total}.`,
   };
 }
 
@@ -470,20 +849,20 @@ function equalSignProblem(targetBucket?: string): Problem {
 
 export const equalSignAndEquations: Unit = {
   id: "equalSignAndEquations",
-  title: "Equal Sign and Equations",
-  goal: "Understand that = means \"the same amount as\" (not \"the answer comes next\"), and find a missing number anywhere in an equation.",
+  title: "Equal Sign and Number Sentences",
+  goal: "Learn what = means. Find the missing number.",
   standard: "1.OA.7, 1.OA.8",
   keyIdea: (
     <>
-      <p>= means both sides have the exact same amount — like a balanced scale. The sum doesn't have to sit alone on the right side.</p>
-      <p>The missing number in an equation can be anywhere — first, second, or the total — read the whole equation before deciding what to do.</p>
+      <p>= means the same as. Both sides have the same amount.</p>
+      <p>The missing number can be anywhere.</p>
     </>
   ),
   Explore,
   requiresIntro: true,
-  // Reasoning about equation structure, re-derived each time — not a fact
+  // Reasoning about number sentences, re-derived each time — not a fact
   // to memorize (contrast Unit 5's fluency buckets).
-  problems: [{ label: "Equal Sign and Equations", make: equalSignProblem, buckets: BUCKETS }],
+  problems: [{ label: "Equal Sign", make: equalSignProblem, buckets: BUCKETS }],
   requiredBuckets: BUCKETS,
   test: equalSignAndEquationsTest,
 };

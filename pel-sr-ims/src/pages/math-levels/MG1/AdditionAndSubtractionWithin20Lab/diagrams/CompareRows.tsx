@@ -8,6 +8,8 @@ const GAP = 6;
 const LABEL_W = 64;
 const ROW_H = 2 * R + 14;
 const PAD = 8;
+/** Extra space after every 5th counter, so a row reads in fives (5, 10, 15, 20). */
+const FIVE_GAP = 10;
 
 export interface CompareRowsProps {
   rows: [{ label: string; count: number; tone?: Tone }, { label: string; count: number; tone?: Tone }];
@@ -20,16 +22,17 @@ export interface CompareRowsProps {
 }
 
 /**
- * Two rows of counters lined up one-to-one, so "how many more?" is something
+ * Two rows of counters lined up one-to-one (a small gap after every 5th, so
+ * they can be counted by fives), so "how many more?" is something
  * a student can see: match them up, then count the extras. (Two separate
  * ten-frames side by side don't line up, so the gap is hard to see.)
  */
 export function CompareRows({ rows, showGap }: CompareRowsProps) {
   const longest = Math.max(rows[0].count, rows[1].count, 1);
   const shorter = Math.min(rows[0].count, rows[1].count);
-  const width = PAD * 2 + LABEL_W + longest * (2 * R + GAP);
+  const width = PAD * 2 + LABEL_W + longest * (2 * R + GAP) + Math.floor((longest - 1) / 5) * FIVE_GAP;
   const height = PAD * 2 + ROW_H * 2 + (showGap ? 18 : 0);
-  const cx = (i: number) => PAD + LABEL_W + R + i * (2 * R + GAP);
+  const cx = (i: number) => PAD + LABEL_W + R + i * (2 * R + GAP) + Math.floor(i / 5) * FIVE_GAP;
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}

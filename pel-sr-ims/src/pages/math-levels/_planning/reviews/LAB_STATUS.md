@@ -35,8 +35,8 @@ then be reviewed and changed again.
 | MK2 | AdditionSubtractionAndTeenNumbersLab | Addition, Subtraction & Teen Numbers | Not started | — | K-friendly CFU (KCheck) done |
 | MK3 | MeasurementAndClassifyingLab | Measurement & Classifying | Not started | — | K-friendly CFU (KCheck) done |
 | MK4 | ShapesLab | Shapes Lab | Not started | — | K-friendly CFU (KCheck) done |
-| MG1 | AdditionAndSubtractionWithin20Lab | Addition & Subtraction Within 20 | Not started | Pilot (2026-11-16) | Pointer approved by user 2026-11-17. Making Ten fixed to bigger/smaller (break apart the smaller). Review round 1 running. CFUs still the older all-at-once layout |
-| MG2 | PlaceValueTo120Lab | Place Value to 120 | Not started | — | |
+| MG1 | AdditionAndSubtractionWithin20Lab | Addition & Subtraction Within 20 | Done (3 rounds, 2026-11-17) | Done (2026-11-17) | KCheck CFUs one at a time (24/33 typed); pointer 2nd miss, show-it 3rd; Making Ten = break apart the smaller. Optional U4 challenge (no stars, no retry lock). Rule changes approved + added. Open: real-iPad check; tried-button focus outline; challenge "Next problem" grey after helped solve; other shells' "Complete the activity above…" line; MG11 sticky hover |
+| MG2 | PlaceValueTo120Lab | Place Value to 120 | Done (3 rounds, 2026-11-17) | Done (2026-11-17) | Treated as K–1: early-learner shell + KCheck CFUs (18/21 typed). User decisions 2026-11-17: new-ten item kept, 100–120 "How many?" bucket added (grouped 10 sticks), pass 9/10 kept, ☐ = voice "blank"/text "box", KCheck title + Test signs OK (`user-decisions-fixes.md`). 2026-11-18: Unit 1 + Unit 4 Test charts removed (they showed the answer). Rule changes decided; first `vocabulary.md` |
 | MG3 | MeasurementTimeAndDataLab | Measurement, Time & Data | Not started | — | |
 | MG4 | ShapesAndFractionsIntroLab | Shapes & Fractions | Not started | — | |
 | MG5 | EvenOddAndArraysLab | Even/Odd & Arrays | Not started | — | |
@@ -76,3 +76,7 @@ then be reviewed and changed again.
 | (earlier) | K-friendly one-at-a-time CFU (KCheck) | MK1–MK4 | — |
 | 2026-11-16 | No grade references in student text | MG1–MG9 checked; 1 fixed (MG9 Measurement, Area & Perimeter Formulas) | — |
 | 2026-11-16 | CFU "Look here" pointer rule added to builder, fixer, curriculum checker | Rule only; labs updated through review | `reviews/CFU_Pointer_Rollout/README.md` |
+| 2026-11-17 | Floating number pad moved off the unit list on wide screens (>860px) + scroll room above it; Test pictures no longer sticky (stopped sliding over the question) | All early labs using the floating pad (MG1, MG2); Test layout in all labs | `shared/styles/lab-base.css`, `shared/components/NumberPad.tsx` |
+| 2026-11-18 | Lab order: `LAB_NEEDS` (draft) in `utils/levelSubsections.ts`; students get a "This lab is easier after …" nudge + Next up / Finished / Try first in the lab picker (never locked); finished = Module Test passed or Mr. Lee's PIN mark. Vocabulary lists for MK1–MK4, MG1, MG2. "Lab order & vocabulary" board on All Levels | All labs (student portal) | `utils/labOrder.ts`, `pages/admin-lab-map/` |
+| 2026-11-18 | Voice reads ⭐ as "star" ("You got a ⭐!" was "You got a") | All labs | `shared/tts/mathSpeech.ts` |
+| 2026-11-18 | Rules from the MG2 review: MG2–MG4 are K–1; one question at a time in every K–5 CFU; Test pictures must not give the answer away; bold color matching (plain only when color is the answer); per-lab `vocabulary.md` word lists; + English traps | Rules only; labs updated through review. Most labs need a `vocabulary.md` and a check against the new rules | `reviews/MG2_PlaceValueTo120Lab/summary.md` (Rule decisions) |

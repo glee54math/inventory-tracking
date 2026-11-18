@@ -32,9 +32,9 @@ export interface BagItem {
   make: () => Problem;
 }
 
-/** Every bag slot for a mode: one per bucket (or one per type with no buckets). */
+/** Every bag slot for a mode: one per bucket (or one per type with no buckets). Mixed leaves out `optional` types. */
 export function bagItems(problems: ProblemType[], typeIdx: number | "mix"): BagItem[] {
-  const idxs = typeIdx === "mix" ? problems.map((_, i) => i) : [typeIdx];
+  const idxs = typeIdx === "mix" ? problems.map((_, i) => i).filter((i) => !problems[i].optional) : [typeIdx];
   return idxs.flatMap((i): BagItem[] => {
     const pt = problems[i];
     return pt.buckets && pt.buckets.length > 0

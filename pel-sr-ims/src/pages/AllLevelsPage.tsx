@@ -28,6 +28,9 @@ const englishFileCounts = countPreviewableFilesByLevel(englishModules, './englis
 const ReviewStatusBoard = lazy(() =>
     import("./admin-review-status/ReviewStatus").then((m) => ({ default: m.ReviewStatusBoard }))
 );
+// Mr. Lee-only lab order + vocabulary board (admin-lab-map/). Lazy for the same reason:
+// the planning files it reads never reach the student portal.
+const LabMapBoard = lazy(() => import("./admin-lab-map/LabMap").then((m) => ({ default: m.LabMapBoard })));
 const LevelReviewDot = lazy(() =>
     import("./admin-review-status/ReviewStatus").then((m) => ({ default: m.LevelReviewDot }))
 );
@@ -160,6 +163,10 @@ export default function AllLevelsPage() {
 
             <Suspense fallback={null}>
                 <ReviewStatusBoard />
+            </Suspense>
+
+            <Suspense fallback={null}>
+                <LabMapBoard />
             </Suspense>
 
             <div className="all-levels-subjects">

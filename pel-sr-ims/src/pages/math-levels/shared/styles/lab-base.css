@@ -905,9 +905,14 @@
   font-weight: 500;
 }
 
-.lab-base .choice:hover {
-  border-color: var(--qa);
-  background: var(--qa-soft);
+/* Mouse only: on an iPad :hover sticks after a tap, and this green/blue look
+   made the button in the same spot on the next question look "chosen"
+   (MG1 review C2-07). */
+@media (hover: hover) {
+  .lab-base .choice:hover {
+    border-color: var(--qa);
+    background: var(--qa-soft);
+  }
 }
 
 .lab-base .feedback {
@@ -1329,6 +1334,13 @@ input.align-slot.align-slot-input {
   }
 }
 
+/* Tests are one column: a sticky picture would slide over the question and
+   answer boxes when the page scrolls (e.g. with the number pad's extra room). */
+.lab-base .test-question .problem-visual {
+  position: relative;
+  top: auto;
+}
+
 .lab-base .problem-visual {
   transition: padding-top 0.2s ease;
 }
@@ -1616,6 +1628,19 @@ input.align-slot.align-slot-input {
   left: 16px;
   bottom: 84px;
   z-index: 60;
+}
+
+/* Wide screens keep the unit list (.rail, 250px) on the left: start the pad
+   in the main column instead of on top of the list. */
+@media (min-width: 861px) {
+  .lab-base .numpad-float {
+    left: calc(250px + 16px);
+  }
+}
+
+/* Room to scroll the last box on the page up above the pad (see NumberPad). */
+.lab-base:has(.numpad-float) .main {
+  padding-bottom: 400px;
 }
 
 /* ---------- Choice buttons that show a picture (ChoiceStep.display) ---------- */

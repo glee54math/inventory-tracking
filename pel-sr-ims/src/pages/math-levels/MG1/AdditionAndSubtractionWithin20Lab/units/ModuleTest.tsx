@@ -1,7 +1,7 @@
 import type { Unit } from "../../../shared/units/types";
 import { countOnLargerNumberQuestion, countOnSmallFirstChoiceQuestion, countBackSimpleNumberQuestion, countBackHowManyTimesChoiceQuestion, countBackCrossNumberQuestion } from "./CountingOnAndBackTest";
 import { gapToTenQuestion, makeTenNearTenNumberQuestion, wrongAddendChoiceQuestion, subtractBridgeNumberQuestion, equivalentSumNumberQuestion } from "./MakingTenAndDecomposingTest";
-import { addToResultNumberQuestion, changeUnknownRoleChoiceQuestion, addToStartKeywordTrapChoiceQuestion, takeFromResultNumberQuestion, takeFromStartKeywordTrapChoiceQuestion } from "./AddToTakeFromWordProblemsTest";
+import { addToResultNumberQuestion, changeUnknownRoleChoiceQuestion, addToStartKeywordTrapChoiceQuestion, takeFromResultNumberQuestion, takeFromChangeNumberQuestion } from "./AddToTakeFromWordProblemsTest";
 import { ptaTotalNumberQuestion, ptaAddendNumberQuestion, compareDiffMoreNumberQuestion, compareDiffFewerDirectionChoiceQuestion, compareBiggerUnknownNumberQuestion } from "./PutTogetherCompareWordProblemsTest";
 import { factsWithin10AddNumberQuestion, factsWithin20AddNumberQuestion, threeAddendGroupingChoiceQuestion, threeAddendSumNumberQuestion, orderDoesNotMatterQuestion } from "./FluencyFactsWithin20Test";
 import { equalSignMeaningChoiceQuestion, unknownOnLeftNumberQuestion, backwardsEquationTrueFalseQuestion, trivialTrueFalseQuestion, findUnknownSecondAddendNumberQuestion } from "./EqualSignAndEquationsTest";
@@ -35,31 +35,32 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     countBackSimpleNumberQuestion,
     countBackHowManyTimesChoiceQuestion,
     countBackCrossNumberQuestion,
-    // Making Ten and Decomposing Numbers
+    // Making Ten
     gapToTenQuestion,
     makeTenNearTenNumberQuestion,
     wrongAddendChoiceQuestion,
     subtractBridgeNumberQuestion,
     equivalentSumNumberQuestion,
-    // Word Problems: Add To and Take From
+    // Add To and Take From Stories
     addToResultNumberQuestion,
     changeUnknownRoleChoiceQuestion,
     addToStartKeywordTrapChoiceQuestion,
     takeFromResultNumberQuestion,
-    takeFromStartKeywordTrapChoiceQuestion,
-    // Word Problems: Put Together/Take Apart and Compare
+    // At most one start-missing story (addToStartKeywordTrapChoiceQuestion): 1st graders meet them, 2nd graders master them.
+    takeFromChangeNumberQuestion,
+    // Put Together and Compare Stories
     ptaTotalNumberQuestion,
     ptaAddendNumberQuestion,
     compareDiffMoreNumberQuestion,
     compareDiffFewerDirectionChoiceQuestion,
     compareBiggerUnknownNumberQuestion,
-    // Fluency Facts Within 20
+    // Fast Facts to 20
     factsWithin10AddNumberQuestion,
     factsWithin20AddNumberQuestion,
     threeAddendGroupingChoiceQuestion,
     threeAddendSumNumberQuestion,
     orderDoesNotMatterQuestion,
-    // Equal Sign and Equations
+    // Equal Sign and Number Sentences
     equalSignMeaningChoiceQuestion,
     unknownOnLeftNumberQuestion,
     backwardsEquationTrueFalseQuestion,

@@ -52,7 +52,12 @@ const LATER_WORDS = {
 const TRAPS = /\b(left over|in all|altogether|times a (day|week)|even though|difference between|mean|range|figure out|you nailed it|piece of cake|ballpark)\b/i;
 const HOMOPHONES = /\b(sum|whole|cents|weigh|plane|pair)\b/i; // checked for K-3 (read-aloud)
 const CONTEXT = /\b(dozen|allowance|tip|tax|inning|touchdown|quarterback|mileage|mortgage)\b/i;
-const PLURAL_RISK = "⁣"; // invisible marker set by textOf, removed before printing
+// Invisible markers set by textOf (template-level checks), removed before printing.
+const PLURAL_RISK = "⁣"; // "1 points"
+const DID_PAST = "⁢";    // "did ${name} ${ctx.verbAdd}" -> "did Nora found"
+const NUM_ARE = "⁡";     // "${n} are" -> "1 are green"
+const NUM_TIMES = "⁤";   // "${n} times from" / "${n} numbers" / "them" after a number -> "1 times", "1 numbers"
+const MARKERS = [PLURAL_RISK, DID_PAST, NUM_ARE, NUM_TIMES];
 
 // ---------- extraction
 const SKIP_PROPS = new Set(["className", "style", "id", "key", "type", "kind", "bucket", "tone", "tones", "href", "src", "fill", "stroke", "d", "viewBox", "arrangement", "difficulty", "skillId", "componentFile", "componentExport", "variant", "mode", "role", "as", "fontFamily", "fontWeight", "textAnchor", "dominantBaseline", "transform", "points", "width", "height", "color", "background", "border"]);
@@ -69,11 +74,34 @@ function textOf(node) {
     // the template handles the singular (=== 1, !== 1, a plural helper).
     const handlesOne = /[!=]==?\s*1\b|plural/i.test(node.getText());
     let s = node.head.text;
-    for (const sp of node.templateSpans) {
-      const countLike = /\.length$|^(n|count|num\w*|total\w*|\w*Count|\w*Num)$/.test(sp.expression.getText());
-      const risky = !handlesOne && countLike && /^ [a-z]+s\b/.test(sp.literal.text) && !/^ (is|was|has|does|says|plus|times|minus|less|its|this|as)\b/.test(sp.literal.text);
-      s += "N" + (risky ? PLURAL_RISK : "") + sp.literal.text;
-    }
+    let numSeen = false; // a bare number (no noun after it) came earlier in this template
+    node.templateSpans.forEach((sp, i) => {
+      const ex = sp.expression.getText();
+      const lit = sp.literal.text;
+      const countLike = /\.length$|^(n|count|num\w*|total\w*|\w*Count|\w*Num)$/.test(ex);
+      // A plain lowercase number variable (a, b, sub, start), not a pooled word
+      // (names, pronouns like ${He}, objects, verbs) or a call. Used below.
+      const numLike = /^[a-z]\w{0,11}(\.[a-z]\w{0,11})?$/.test(ex) && !/^(he|she|they|pron\w*|subj\w*)$/i.test(ex) && !/ctx\.|name|person|item|obj|noun|thing|kind|color|colou?r|part[AB]?$|label|unit|group|word|verb|animal|food|place|plural|text|title|who|pet|toy/i.test(ex);
+      let marks = "";
+      if (!handlesOne && countLike && /^ [a-z]+s\b/.test(lit) && !/^ (is|was|has|does|says|plus|times|minus|less|its|this|as)\b/.test(lit)) marks += PLURAL_RISK;
+      // "1 are green": a number followed by "are" with no singular case.
+      // Skipped for a joined subject ("${a} and ${b} are", "8 − 3 = ${c} are").
+      const before = i === 0 ? node.head.text : node.templateSpans[i - 1].literal.text;
+      if (!handlesOne && numLike && /^ are\b/.test(lit) && !/(\b(and|or)|[=+−×÷-])\s*$/.test(before)) marks += NUM_ARE;
+      // "Count back 1 times from 12." / "Say 1 numbers": "times" here is a count
+      // of steps, not multiplying (skip "${a} times ${b}" and "times as many").
+      if (!handlesOne && numLike && (/^ numbers\b/.test(lit) || (/^ times\b/.test(lit) && !/^ times\s*$/.test(lit) && !/^ times (as|\d)/.test(lit)))) marks += NUM_TIMES;
+      // "1 went away. Add them back": "them" after a pooled number. Not when the
+      // number has its own plural noun ("${n} ones. 10 of them"): "them" is the noun.
+      if (numLike && !/^ [a-z]+s\b/.test(lit)) numSeen = true;
+      if (!handlesOne && numSeen && /\bthem\b/.test(lit)) marks += NUM_TIMES;
+      // "How many did ${person} ${ctx.verbAdd}?" -> "did Nora found": after
+      // "did" (and the person), the verb must be a base form (verbAddBase),
+      // not a past-tense pool word.
+      const beforePerson = i >= 2 ? node.templateSpans[i - 2].literal.text : i === 1 ? node.head.text : "";
+      if (/\bverb/i.test(ex) && !/base|inf|present/i.test(ex) && (/\bdid\s*$/i.test(before) || (/^\s+$/.test(before) && /\bdid\s*$/i.test(beforePerson)))) marks += DID_PAST;
+      s += "N" + marks + lit;
+    });
     return s;
   }
   return null;
@@ -147,7 +175,14 @@ function flagsFor(s) {
   if (/\b(which|whom|whose)\b/i.test(s) && !/(^|[.?!] )Which\b|\bwhich (one|group|row|number|shape|is|has|box|side|clock|picture|way|tool|ten|part)\b/i.test(s)) f.push("relative-clause");
   if (/\bNOT\b/.test(s) || /\bwhich (is|does) not\b/i.test(s)) f.push("negative-question");
   if (/\bthe (total )?number of \w+ (of|in|that|who)\b/i.test(s)) f.push("long-noun-phrase");
-  if (/\btrue or false\b/i.test(s)) f.push(G <= 1 ? "true-false(K-1 ban)" : "true-false");
+  if (/\btrue or false\b/i.test(s)) {
+    // Equation true/false (1.OA.7: "Is 8 = 8 true or false?") is allowed in
+    // K-1; only a statement about a rule or strategy is banned there.
+    const tf = sentences.find((x) => /\btrue or false\b/i.test(x)) || s;
+    const rest = tf.replace(/\btrue or false\b/i, "");
+    const equation = /[=≠<>]/.test(rest) && !/[a-z]{3,}/i.test(rest.replace(/\b(is|it|this|the|same|as|true|false|equation)\b/gi, ""));
+    f.push(G <= 1 && !equation ? "true-false(K-1 ban)" : "true-false");
+  }
   if (/\s(vs\.?|→|⇒)\s/.test(s)) f.push("voice:symbol");
   if (/\b\d+\s?[-–]\s?\d+\b/.test(s.replace(/\bN\b/g, "7")) && !/[−=+×÷]/.test(s)) f.push("voice:range");
   if (/\?\s+[a-z]/.test(s)) f.push("voice:mid-?");
@@ -163,6 +198,13 @@ function flagsFor(s) {
   if (G <= 1 && /\b(at first|at the start|to start with|in the beginning)\b/i.test(s)) f.push("start-unknown");
   if (G <= 3 && /\btimes as (many|much|long|tall)\b/i.test(s)) f.push("times-as-many(4th)");
   if (s.includes(PLURAL_RISK)) f.push("plural:possible '1 points'");
+  if (s.includes(NUM_ARE)) f.push("plural:possible '1 are'");
+  if (s.includes(NUM_TIMES)) f.push("plural:possible '1 times' / '1 numbers' / 'them'");
+  if (s.includes(DID_PAST)) f.push("grammar:'did' + past-tense pool verb");
+  // Echo questions put "how many" after the verb ("Lily has how many more?").
+  if (/\b(has|have|is|are|was|were) how (many|much)\b/i.test(s)) f.push("echo-question");
+  // "not" inside a question ("Which number does the story not tell?").
+  if (!f.includes("negative-question") && sentences.some((x) => /\?\s*$/.test(x) && /\b(not|\w+n't)\b/i.test(x))) f.push("negative-question:not");
   // A fixed preposition in front of a noun drawn from a pool ("in every ${group}")
   // breaks for nouns that take a different one ("in every plate").
   if (/\b(in|on|at|into|onto) (every|each|the|a|one) N\b/.test(s)) f.push("prep:fixed before pooled noun");
@@ -173,7 +215,7 @@ const KIND = (field) =>
   : ["explain", "wrapUp", "praise", "good", "bad", "feedback", "note", "correctExplain"].includes(field) ? "after-answer"
   : field === "screen" ? "screen (Explore/CFU/shell)" : "other";
 
-const out = rows.map((r) => ({ ...r, kind: KIND(r.field), ...flagsFor(r.text) })).map((r) => ({ ...r, text: r.text.split(PLURAL_RISK).join(""), flags: r.f, f: undefined }));
+const out = rows.map((r) => ({ ...r, kind: KIND(r.field), ...flagsFor(r.text) })).map((r) => ({ ...r, text: MARKERS.reduce((t, m) => t.split(m).join(""), r.text), flags: r.f, f: undefined }));
 if (jsonOut) fs.writeFileSync(jsonOut, JSON.stringify(out, null, 1));
 
 // ---------- report
@@ -194,7 +236,7 @@ out.forEach((r) => r.flags.forEach((f) => { const k = f.startsWith("long:") ? "l
 console.log("\n## Flag counts");
 Object.entries(counts).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => console.log(`- ${k}: ${v}`));
 
-const order = ["true-false(K-1 ban)", "times-as-many(4th)", "later-word", "start-unknown", "homophone", "voice", "negative-question", "long", "passive", "relative-clause", "if-first", "long-noun-phrase", "dash-aside", "paren-aside", "trap", "context", "true-false", "abbreviation"];
+const order = ["true-false(K-1 ban)", "times-as-many(4th)", "grammar", "plural", "later-word", "start-unknown", "homophone", "voice", "negative-question", "echo-question", "long", "passive", "relative-clause", "if-first", "long-noun-phrase", "dash-aside", "paren-aside", "trap", "context", "true-false", "abbreviation"];
 const rank = (r) => Math.min(...r.flags.map((f) => { const i = order.findIndex((o) => f.startsWith(o)); return i < 0 ? 99 : i; }));
 const flagged = out.filter((r) => r.flags.length).sort((a, b) => rank(a) - rank(b) || b.maxW - a.maxW);
 const cap = showAll ? flagged.length : Math.min(flagged.length, 150);

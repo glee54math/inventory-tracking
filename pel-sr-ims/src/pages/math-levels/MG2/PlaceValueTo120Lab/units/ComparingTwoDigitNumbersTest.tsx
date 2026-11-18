@@ -1,13 +1,19 @@
-import { HundredChart } from "../diagrams";
+import { BlocksPair, HundredChart } from "../diagrams";
 import { randInt, shuffle } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
+import { onesW, tensW } from "./words";
 
 // ---------- end-of-unit test: Comparing Two-Digit Numbers ----------
 // 10 questions from 10 generators. Self-contained — same no-circular-import
 // convention as every other *Test.tsx in this app.
 
 const symbolFor = (a: number, b: number) => (a < b ? "<" : a > b ? ">" : "=");
+const SIGNS = ["<", ">", "="];
+const symbolChoice = (a: number, b: number, hint: string) => {
+  const sym = symbolFor(a, b);
+  return choice({ prompt: `${a} ☐ ${b}. What goes in the box?`, hint, explain: `${a} ${sym} ${b}.` }, sym, SIGNS.filter((s) => s !== sym));
+};
 
 /** Different tens digit — decided by tens alone. */
 export const diffTensChoiceQuestion = (): TestQuestion[] => {
@@ -18,14 +24,7 @@ export const diffTensChoiceQuestion = (): TestQuestion[] => {
   } while (ta === tb);
   const a = ta * 10 + randInt(0, 9);
   const b = tb * 10 + randInt(0, 9);
-  const sym = symbolFor(a, b);
-  return [
-    {
-      visual: <HundredChart marks={[{ n: a, tone: "a" }, { n: b, tone: "b" }]} />,
-      difficulty: "easy",
-      step: choice({ prompt: `${a} ___ ${b}. Which symbol?`, hint: "Different tens digits — that alone decides it.", explain: `${a} ${sym} ${b}.` }, sym, ["<", ">", "="].filter((s) => s !== sym)),
-    },
-  ];
+  return [{ visual: <HundredChart marks={[{ n: a, tone: "a" }, { n: b, tone: "b" }]} />, difficulty: "easy", step: symbolChoice(a, b, "More tens is bigger.") }];
 };
 
 /** Identifying the tens digit itself — a direct prerequisite check. */
@@ -36,7 +35,7 @@ export const tensDigitIdQuestion = (): TestQuestion[] => {
     {
       visual: null,
       difficulty: "easy",
-      step: { kind: "number", prompt: `How many tens does ${n} have?`, hint: "The first digit.", explain: `${n} has ${tens} tens.`, answer: tens },
+      step: { kind: "number", prompt: `How many tens are in ${n}?`, hint: "Count the tens.", explain: `${n} has ${tensW(tens)}.`, answer: tens },
     },
   ];
 };
@@ -51,18 +50,11 @@ export const sameTensDiffOnesChoiceQuestion = (): TestQuestion[] => {
   } while (o1 === o2);
   const a = tens * 10 + o1;
   const b = tens * 10 + o2;
-  const sym = symbolFor(a, b);
-  return [
-    {
-      visual: <HundredChart marks={[{ n: a, tone: "a" }, { n: b, tone: "b" }]} />,
-      difficulty: "medium",
-      step: choice({ prompt: `${a} ___ ${b}. Which symbol?`, hint: "The tens are tied — compare the ones to break the tie.", explain: `${a} ${sym} ${b}.` }, sym, ["<", ">", "="].filter((s) => s !== sym)),
-    },
-  ];
+  return [{ visual: <HundredChart marks={[{ n: a, tone: "a" }, { n: b, tone: "b" }]} />, difficulty: "medium", step: symbolChoice(a, b, "The tens are the same. Look at the ones.") }];
 };
 
-/** The WHY reasoning check — must select tens-first logic, not a careless
- *  ones-first habit, targeting the exact misconception this unit names. */
+/** Tens first, then the ones (review E1-25: the right answer and the trap no
+ *  longer start with the same words, and the stem doesn't say "first"). */
 export const tensFirstWhyQuestion = (): TestQuestion[] => {
   const tens = randInt(1, 9);
   let o1: number, o2: number;
@@ -77,22 +69,38 @@ export const tensFirstWhyQuestion = (): TestQuestion[] => {
       visual: <HundredChart marks={[{ n: a, tone: "a" }, { n: b, tone: "b" }]} />,
       difficulty: "hard",
       step: choice(
-        { prompt: `${a} and ${b} — both have ${tens} tens. What should you do first?`, hint: "Tens tied means move on to the next digit.", explain: "With the tens tied, you compare the ones digit to break the tie." },
-        "Compare the ones digits, since the tens are already tied",
-        ["Compare the ones digits first, before even checking the tens", "Say they're equal, since the tens match"]
+        { prompt: `${a} and ${b} both have ${tensW(tens)}. What do you look at next?`, hint: "The tens are the same. Look at the ones.", explain: "The tens are the same. The ones decide." },
+        "The ones",
+        ["The tens"] // misconception: comparing the tens again when they are the same
       ),
     },
   ];
 };
 
-/** Trap: equal numbers. */
+/** Equal numbers, with place value (review C2-29): "4 tens and 7 ones ☐ 47",
+ *  the blocks drawn beside the number, as in Practice's "Sticks and cubes".
+ *  Half the time (review C3-42) the blocks don't match (tens and ones swapped, or 1 ten off),
+ *  so the answer isn't always "=". */
 export const equalTrapQuestion = (): TestQuestion[] => {
-  const a = randInt(10, 99);
+  const n = randInt(11, 99);
+  const t = Math.floor(n / 10);
+  const o = n % 10;
+  let blocks = n;
+  if (Math.random() < 1 / 2) {
+    // misconception: tens and ones swapped still "look the same"
+    blocks = o >= 1 && o !== t ? o * 10 + t : t === 9 ? n - 10 : n + 10;
+  }
+  const sym = symbolFor(blocks, n);
+  const words = `${tensW(Math.floor(blocks / 10))} and ${onesW(blocks % 10)}`;
   return [
     {
-      visual: <HundredChart marks={[{ n: a, tone: "a" }]} />,
-      difficulty: "easy",
-      step: choice({ prompt: `${a} ___ ${a}. Which symbol?`, hint: "Same tens AND same ones.", explain: `${a} = ${a}.` }, "=", ["<", ">"]),
+      visual: <BlocksPair a={blocks} b={n} middle="box" blocksVsNumber />,
+      difficulty: "medium",
+      step: choice(
+        { prompt: `${words} ☐ ${n}. What goes in the box?`, hint: "Count the sticks by tens. Then the cubes.", explain: `${words} is ${blocks}. ${blocks} ${sym} ${n}.` },
+        sym,
+        SIGNS.filter((s) => s !== sym)
+      ),
     },
   ];
 };
@@ -106,82 +114,78 @@ export const reversedDigitsChoiceQuestion = (): TestQuestion[] => {
   } while (t === o);
   const a = t * 10 + o;
   const b = o * 10 + t;
-  const sym = symbolFor(a, b);
-  return [
-    {
-      visual: <HundredChart marks={[{ n: a, tone: "a" }, { n: b, tone: "b" }]} />,
-      difficulty: "hard",
-      step: choice(
-        { prompt: `${a} ___ ${b}. Which symbol?`, hint: "Same digits, different places — check which digit is in the TENS spot for each.", explain: `${a} has ${t} tens; ${b} has ${o} tens, so they're not equal.` },
-        sym,
-        ["="] // misconception: same digits -> must be equal
-      ),
-    },
-  ];
+  return [{ visual: <HundredChart marks={[{ n: a, tone: "a" }, { n: b, tone: "b" }]} />, difficulty: "hard", step: symbolChoice(a, b, "Look at the tens of each number.") }];
 };
 
-/** Generalization / true-false: same digits never automatically means equal. */
-export const reversedDigitsTrueFalseQuestion = (): TestQuestion[] => {
+/** Tens and ones swapped: which is bigger? (Replaces the old true/false item,
+ *  review C1-08 / E1-03.) The two numbers are listed in a random order. */
+export const reversedDigitsBiggerQuestion = (): TestQuestion[] => {
   let t: number, o: number;
   do {
     t = randInt(1, 9);
     o = randInt(1, 9);
   } while (t === o);
-  const a = t * 10 + o;
-  const b = o * 10 + t;
+  const [x, y] = shuffle([t * 10 + o, o * 10 + t]);
+  const big = Math.max(x, y);
   return [
     {
       visual: null,
       difficulty: "hard",
       step: choice(
-        { prompt: `True or false: ${a} and ${b} use the exact same two digits, so they must be equal.`, hint: "WHICH place each digit sits in still matters.", explain: `False — ${a} has ${t} tens and ${b} has ${o} tens. Same digits, different value.` },
-        "False",
-        ["True"]
+        { prompt: `Which is bigger, ${x} or ${y}?`, hint: "Look at the tens.", explain: `${big} has more tens.` },
+        String(big),
+        [String(Math.min(x, y))] // misconception: same digits, so it doesn't matter / ones first
       ),
     },
   ];
 };
 
-/** Vocabulary: symbol meaning. */
-export const symbolVocabQuestion = (): TestQuestion[] => {
-  return [
-    {
-      visual: null,
-      difficulty: "easy",
-      step: choice({ prompt: "Which symbol means \"is GREATER than\"?", hint: "The wide-open side faces the bigger number.", explain: "> means \"is greater than.\"" }, ">", ["<", "="]),
-    },
-  ];
+/** The symbol, checked with a picture (review C1-18 / E1-26, decision 2):
+ *  the two numbers as sticks and cubes with a box between them. */
+export const symbolPictureQuestion = (): TestQuestion[] => {
+  let ta: number, tb: number;
+  do {
+    ta = randInt(1, 9);
+    tb = randInt(1, 9);
+  } while (ta === tb);
+  const a = ta * 10 + randInt(0, 9);
+  const b = tb * 10 + randInt(0, 9);
+  return [{ visual: <BlocksPair a={a} b={b} middle="box" />, difficulty: "easy", step: symbolChoice(a, b, "The open side faces the bigger number.") }];
 };
 
-/** Generalization: the tens-first procedure applies to ANY pair of two-digit numbers. */
-export const tensFirstGeneralizationQuestion = (): TestQuestion[] => {
+/** Tens first, typed: the number with the bigger ones digit is the smaller
+ *  number (e.g. 39 and 41). Replaces the old true/false "always check the
+ *  tens first" item (review C1-08). */
+export const tensBeatOnesQuestion = (): TestQuestion[] => {
+  const t = randInt(1, 8);
+  const small = t * 10 + randInt(6, 9);
+  const big = (t + 1) * 10 + randInt(0, 3);
+  const [x, y] = shuffle([small, big]);
   return [
     {
       visual: null,
       difficulty: "hard",
-      step: choice(
-        { prompt: "True or false: to compare any two two-digit numbers, you should always check the tens digit first.", hint: "Think about why — the tens digit represents a much bigger amount than the ones digit ever could.", explain: "True — the tens digit always carries more value, so it should always be checked first, no matter which two numbers you're comparing." },
-        "True",
-        ["False"]
-      ),
+      step: { kind: "number", prompt: `${x} and ${y}. Type the bigger number.`, hint: "Look at the tens first.", explain: `${big} has more tens.`, answer: big },
     },
   ];
 };
 
 /** Pick-the-biggest among three numbers sharing the same tens digit — forces
- *  a full ones-digit comparison across three options, not just a pair. */
+ *  a full ones-digit comparison across three options, not just a pair. The
+ *  numbers are listed in a random order (review C2-33: the biggest used to be
+ *  always last); choice() shuffles the buttons. */
 export const pickBiggestSameTensQuestion = (): TestQuestion[] => {
   const tens = randInt(1, 9);
   const onesSet = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 3);
-  const nums = onesSet.map((o) => tens * 10 + o).sort((x, y) => x - y);
-  const biggest = nums[2];
-  const others = [nums[0], nums[1]];
+  const nums = onesSet.map((o) => tens * 10 + o);
+  const biggest = Math.max(...nums);
+  const others = nums.filter((x) => x !== biggest);
   return [
     {
       visual: null,
       difficulty: "medium",
       step: choice(
-        { prompt: `Which of these is the BIGGEST: ${nums.join(", ")}?`, hint: "All three share the same tens digit, so compare the ones digits.", explain: `${biggest} has the biggest ones digit, so it's the biggest number.` },
+        { prompt: `Which is biggest: ${nums.join(", ")}?`, hint: "The tens are the same. Look at the ones.", explain: `${biggest} has the most ones.` },
         String(biggest),
         others.map(String)
       ),
@@ -197,9 +201,9 @@ export const comparingTwoDigitNumbersTest: Unit["test"] = {
     tensFirstWhyQuestion,
     equalTrapQuestion,
     reversedDigitsChoiceQuestion,
-    reversedDigitsTrueFalseQuestion,
-    symbolVocabQuestion,
-    tensFirstGeneralizationQuestion,
+    reversedDigitsBiggerQuestion,
+    symbolPictureQuestion,
+    tensBeatOnesQuestion,
     pickBiggestSameTensQuestion,
   ],
   passScore: 9,

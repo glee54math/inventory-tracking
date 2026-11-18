@@ -9,7 +9,11 @@ import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter basename="/inventory-tracking">
+    {/* Use Vite's BASE_URL ("/inventory-tracking/", trailing slash included) so
+        navigate("/") / <Navigate to="/"> — e.g. after idle auto-logout — lands on
+        "/inventory-tracking/" instead of "/inventory-tracking", which the Vite dev
+        server rejects. Other routes still join cleanly ("/inventory-tracking/dashboard"). */}
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AuthProvider>
         <NameProvider>
           <StudentProvider>

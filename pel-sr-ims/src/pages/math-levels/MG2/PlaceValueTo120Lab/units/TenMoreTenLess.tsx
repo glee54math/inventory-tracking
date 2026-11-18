@@ -1,203 +1,119 @@
-import { useEffect, useState } from "react";
-import { HundredChart } from "../diagrams";
+import { useState } from "react";
+import { BaseTenBlocks, HundredChart, countAlongMs } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
-import { choice, type Problem } from "../../../shared/engine/types";
-import { Stepper } from "../../../shared/engine/controls";
+import { pointing, type NumberStep, type Problem, type VisualHelp } from "../../../shared/engine/types";
+import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { tenMoreTenLessTest } from "./TenMoreTenLessTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { CheckSequence, TypeCheck, type CheckMode } from "../../../shared/components/KCheck";
+import { lookHereSpot } from "../../../shared/lib/lookHere";
+import { countTens, holdFor, tensW } from "./words";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
 // ============================================================================
+// K–1 design (shared/components/KCheck.tsx), review round 1: one question at
+// a time over a few chart rows or sticks, every answer typed on the number
+// pad. Targets: 10 more (down one row, ones stay), 10 less into one digit,
+// and taking away tens with sticks (7 tens − 3 tens, then 70 − 30). Explore
+// starts at 46, moving 2 tens (review C1-05), so it never shows these answers.
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
+const LOOK = {
+  column: { target: "u4-column", label: "Explore: 10 more, 10 less", say: "Look here. 10 more: go down one row." },
+  tens: { target: "u4-tens", label: "Explore: take away sticks", say: "Look here. Take away sticks. Count what is left." },
+};
 
-/** Vocabulary / baseline: 10 more, no rollover. */
-function TenMoreBaselineQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [val, setVal] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = val === "33";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
+/** A few chart rows: the start lit; a wrong try draws the hop to a "?"; "show" marks the landing. */
+const rowPicture = (min: number, max: number, start: number, end: number) => (m: CheckMode) => (
+  <HundredChart
+    min={min}
+    max={max}
+    marks={[{ n: start, tone: "a" }, ...(m === "show" || m === "done" ? [{ n: end, tone: "b" as const }] : [])]}
+    hop={m === "wrong" || m === "show" ? { from: start, to: end } : undefined}
+    ask={m === "wrong" ? end : undefined}
+  />
+);
 
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> What is 10 more than 23?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={val} onChange={(e) => setVal(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="33">33</option>
-          <option value="24">24</option>
-          <option value="32">32</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — 10 more than 23 is 33. Only the TENS digit changed (2 -> 3); the ones digit (3) stayed exactly the same."
-            : "Not quite — adding 10 only changes the tens digit. 23's ones digit (3) never moves: 10 more than 23 is 33."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Commonly-conflated + WHY: 10 LESS, crossing all the way down to a
- *  single-digit number — the hardest case, paired with a reasoning check. */
-function TenLessCrossingQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [val, setVal] = useState("");
-  const [why, setWhy] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [val, why].every((v) => String(v).trim() !== "");
-  const valOk = val === "2";
-  const whyOk = why === "digit";
-  const ok = valOk && whyOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> What is 10 less than 12?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Answer:{" "}
-          <select className="answer" value={val} onChange={(e) => setVal(e.target.value)} style={fieldOk(valOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="2">2</option>
-            <option value="11">11</option>
-            <option value="22">22</option>
-          </select>
-        </label>
-        <label>
-          How did you get it?{" "}
-          <select className="answer" value={why} onChange={(e) => setWhy(e.target.value)} style={fieldOk(whyOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="digit">Just changed the tens digit from 1 to 0 — no need to recount</option>
-            <option value="recount">Counted backward one at a time from 12: 11, 10, 9...</option>
-          </select>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — 10 less than 12 is 2. The tens digit dropped from 1 to 0 (so it disappears), and the ones digit (2) never changed. No recounting needed!"
-            : "Not quite — 10 less than 12 is 2: the tens digit drops from 1 to 0, leaving just the ones digit. You never need to recount by ones to find 10 more or 10 less."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Generalization / true-false: does +-10 EVER touch the ones digit? */
-function OnesNeverChangeQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [picked, setPicked] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = picked === "true";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> True or false: adding or subtracting 10 from a two-digit number ALWAYS changes only the tens digit — the ones digit never changes.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={picked} onChange={(e) => setPicked(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — always true. Moving by exactly 10 only ever changes the tens digit, whether you're adding or subtracting, no matter the starting number."
-            : "Not quite — try a few: 23+10=33, 45-10=35, 12-10=2. The ones digit is identical every single time; only the tens digit moves."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** A multiple-of-ten check, reinforcing that the same rule scales up. */
-function SubtractMultipleOfTenQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [val, setVal] = useState("");
-  const [checked, setChecked] = useState(false);
-  const ok = val === "40";
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> What is 70 minus 30?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <select className="answer" value={val} onChange={(e) => setVal(e.target.value)} style={fieldOk(ok, checked)}>
-          <option value="" disabled>
-            choose
-          </option>
-          <option value="40">40</option>
-          <option value="100">100</option>
-          <option value="4">4</option>
-        </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
-          Check Answer
-        </button>
-      </div>
-      {checked && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — 70 - 30 = 40. 7 tens take away 3 tens leaves 4 tens, with 0 ones the whole time."
-            : "Not quite — think of it as tens: 7 tens take away 3 tens leaves 4 tens, which is 40."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+/** 7 sticks; 3 crossed out once the student is shown (or has answered); "show" counts the sticks left. */
+const takePicture = (tens: number, take: number, label: "count" | "value", alwaysTaken = false) => (m: CheckMode) => (
+  <BaseTenBlocks
+    key={m}
+    tens={tens}
+    ones={0}
+    tenTone="a"
+    takeTens={alwaysTaken || m === "show" || m === "done" ? take : 0}
+    ring={m === "wrong" ? "tens" : undefined}
+    labels={m === "show" ? { tens: label } : undefined}
+    countAlong={m === "show"}
+  />
+);
 
 function TenMoreTenLessCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ baseline: false, crossing: false, generalization: false, multiple: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">Check for understanding: let's make sure moving by tens makes sense before you try practice problems.</ReadAloud>
-      <TenMoreBaselineQuestion onComplete={mark("baseline")} />
-      <TenLessCrossingQuestion onComplete={mark("crossing")} />
-      <OnesNeverChangeQuestion onComplete={mark("generalization")} />
-      <SubtractMultipleOfTenQuestion onComplete={mark("multiple")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => (
+          <TypeCheck
+            n={1}
+            prompt="What is 10 more than 47?"
+            answer={57}
+            picture={rowPicture(31, 70, 47, 57)}
+            nudge="Find 47. Go down one row."
+            why={{ 48: "That is 1 more. Go down one row.", 37: "That is 10 less. Go down, not up." }}
+            showText="Watch: 47. Go down one row. The ones stay the same."
+            praise="Yes! 10 more than 47 is 57."
+            look={LOOK.column}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="What is 10 less than 12?"
+            answer={2}
+            picture={rowPicture(1, 30, 12, 2)}
+            nudge="Find 12. Go up one row."
+            why={{ 11: "That is 1 less. Go up one row.", 22: "That is 10 more. Go up, not down." }}
+            showText="Watch: 12. Go up one row. The ones stay the same."
+            praise="Yes! 10 less than 12 is 2."
+            look={LOOK.column}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={3}
+            prompt="7 tens. Take away 3 tens. How many tens are left?"
+            answer={4}
+            tone="a"
+            picture={takePicture(7, 3, "count")}
+            nudge="Take away 3 sticks. Count the rest."
+            why={{ 10: "Take away, don't add.", 3: "Count the sticks that are left." }}
+            showText="Watch and listen: 1, 2, 3, 4 sticks are left."
+            praise="Yes! 4 tens are left."
+            look={LOOK.tens}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={4}
+            prompt="70 − 30 = ?"
+            answer={40}
+            tone="a"
+            picture={takePicture(7, 3, "value", true)}
+            nudge="Each stick is 10. Count the sticks left by tens."
+            why={{ 4: "Each stick is 10. Count by tens.", 100: "Take away, don't add." }}
+            showText="Watch and listen: 10, 20, 30, 40."
+            praise="Yes! 70 − 30 = 40."
+            look={LOOK.tens}
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 
@@ -208,15 +124,36 @@ function TenMoreTenLessCheckForUnderstanding({ onComplete }: { onComplete?: () =
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
-  const [start, setStart] = useState(23);
-  const [tensMove, setTensMove] = useState(1);
-  const result = start + tensMove * 10;
+  const [start, setStart] = useState(46);
+  // A tens count plus a More/Less switch, so the voice never reads "-3" as "3" (review E1-31).
+  const [tensMove, setTensMove] = useState(2);
+  const [dir, setDir] = useState<"more" | "less">("more");
+  const move = dir === "more" ? tensMove * 10 : -tensMove * 10;
+  const result = start + move;
+  // Buttons gray out instead of leaving 0-120 (review C1-24): the start's range
+  // depends on the move, and the move's range on the start.
+  const startMin = dir === "less" ? Math.max(1, tensMove * 10) : 1;
+  const startMax = dir === "more" ? Math.min(120, 120 - tensMove * 10) : 120;
+  const tensMax = Math.min(3, Math.floor((dir === "more" ? 120 - start : start) / 10));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div className="control-row" data-readaloud-part>
-        <Stepper label="Start at" value={start} min={1} max={99} step={1} onChange={setStart} tone="a" />
-        <Stepper label="Move by tens" value={tensMove} min={-3} max={3} step={1} onChange={setTensMove} tone="b" />
+        <Stepper label="Start at" value={start} min={startMin} max={startMax} step={1} onChange={setStart} tone="a" />
+        <Segmented
+          label="Ten more or ten less"
+          value={dir}
+          onChange={(d) => {
+            const room = Math.floor((d === "more" ? 120 - start : start) / 10);
+            setDir(d);
+            if (tensMove > room) setTensMove(Math.max(0, room));
+          }}
+          options={[
+            { id: "more", label: "More" },
+            { id: "less", label: "Less" },
+          ]}
+        />
+        <Stepper label="Tens" value={tensMove} min={0} max={tensMax} step={1} onChange={setTensMove} tone="b" />
         {!introActive && (
           <button
             type="button"
@@ -229,14 +166,24 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         )}
       </div>
 
-      <div style={{ fontWeight: 800, fontSize: 24 }}>
-        {start} {tensMove >= 0 ? "+" : "-"} {Math.abs(tensMove) * 10} = {result >= 1 && result <= 120 ? result : "?"}
-      </div>
-      {result >= 1 && result <= 120 && <HundredChart marks={[{ n: start, tone: "a" }, { n: result, tone: "b" }]} />}
-      <ReadAloud as="p" className="muted small">
-        Moving by tens always lands you in the SAME column (the ones digit never changes) — just a different row, straight up or straight down. That's true
-        even when the tens digit drops all the way to 0.
+      <ReadAloud as="p" style={{ fontWeight: 800, fontSize: 24, margin: 0 }}>
+        {start} {dir === "more" ? "+" : "−"} {tensMove * 10} = {result}
       </ReadAloud>
+      <div {...lookHereSpot("u4-column")} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <HundredChart
+          marks={result >= 1 ? [{ n: start, tone: "a" }, { n: result, tone: "b" }] : [{ n: start, tone: "a" }]}
+          hop={result >= 1 && result !== start ? { from: start, to: result } : undefined}
+        />
+        <ReadAloud as="p" className="muted small" style={{ margin: 0 }}>
+          10 more: go down one row. 10 less: go up one row. <span data-look-here-key>The ones stay the same.</span>
+        </ReadAloud>
+      </div>
+      <div {...lookHereSpot("u4-tens")} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <BaseTenBlocks tens={5} ones={0} tenTone="a" takeTens={2} labels={{ tens: "value" }} />
+        <ReadAloud as="p" className="muted small" style={{ margin: 0 }}>
+          50 − 20: 5 sticks. <span data-look-here-key>Take away 2 sticks. 3 sticks are left.</span> 50 − 20 = 30.
+        </ReadAloud>
+      </div>
       {/* Below the picture, so students explore first, then check. */}
       {(introActive || showCheck) && <TenMoreTenLessCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
@@ -250,44 +197,96 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 type Bucket = "tenMoreNoRollover" | "tenLessCrossing" | "addMultipleOfTen" | "subtractMultipleOfTen";
 const BUCKETS: Bucket[] = ["tenMoreNoRollover", "tenLessCrossing", "addMultipleOfTen", "subtractMultipleOfTen"];
 
+/** Where a step lands on the chart (a hop from `from` to `to`), or the sticks it counts. */
+type Look = { hop: { from: number; to: number } } | { sticks: number };
+
+/**
+ * The chart marks only the start before help (review C1-22). A wrong try on a
+ * hop step draws the hop with a "?" where it lands; "Show me" draws the hop to
+ * the answer. A "how many tens" step shows its sticks as help (counted aloud
+ * on "Show me"). A step's landing cell is colored only once it is done.
+ */
+const chartVisual = (n: number, looks: Look[]) => (done: number, help?: VisualHelp) => {
+  const i = help?.step ?? done;
+  const look = looks[i];
+  const showing = !!help?.showMe && help.step === i;
+  const point = pointing(help, i) && !showing;
+  const landed = looks.slice(0, done).flatMap((l) => ("hop" in l ? [{ n: l.hop.to, tone: "b" as const }] : []));
+  const hop = look && "hop" in look && (point || showing) ? look.hop : undefined;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <HundredChart marks={[{ n, tone: "a" }, ...landed.filter((m) => m.n !== n)]} hop={hop} ask={point && hop ? hop.to : undefined} />
+      {look && "sticks" in look && (point || showing) && (
+        <BaseTenBlocks key={showing ? "show" : "ring"} tens={look.sticks} ones={0} tenTone="a" ring={point ? "tens" : undefined} labels={showing ? { tens: "value" } : undefined} countAlong={showing} />
+      )}
+    </div>
+  );
+};
+
+/** "What is 10 more/less than n?" — typed, colored like the landing cell. */
+const hopStep = (n: number, by: number): NumberStep => {
+  const result = n + by;
+  const rows = Math.abs(by) / 10;
+  const way = by > 0 ? "down" : "up";
+  const passed = Array.from({ length: rows }, (_, k) => n + Math.sign(by) * 10 * (k + 1)).join(", ");
+  return {
+    kind: "number",
+    prompt: Math.abs(by) === 10 ? `What is 10 ${by > 0 ? "more" : "less"} than ${n}?` : `${n} ${by > 0 ? "+" : "−"} ${Math.abs(by)} = ?`,
+    hint: `Find ${n}. Go ${way} ${rows === 1 ? "one row" : `${rows} rows`}. The ones stay the same.`,
+    showMe: `Start at ${n}. Go ${way} ${rows === 1 ? "one row" : `${rows} rows`}: ${passed}.`,
+    showMeHoldMs: holdFor(rows + 1),
+    explain: `${n} ${by > 0 ? "+" : "−"} ${Math.abs(by)} = ${result}.`,
+    answer: result,
+    tone: "b",
+    diagnose: (v) => (v === n + Math.sign(by) * (rows) ? "That moved by ones. Move by rows." : null),
+  };
+};
+
+/** "How many tens are in 30?" (review E1-24 wording). */
+const tensInStep = (amount: number): NumberStep => {
+  const t = amount / 10;
+  return {
+    kind: "number",
+    prompt: `How many tens are in ${amount}?`,
+    // Review C2-38 / E2-45: the hint names this amount, not a fixed "10, 20, 30".
+    hint: `Count by tens to ${amount}.`,
+    showMe: `Count by tens: ${countTens(t)}. That is ${tensW(t)}.`,
+    showMeHoldMs: countAlongMs(t),
+    explain: `${amount} is ${tensW(t)}.`,
+    answer: t,
+    tone: "a",
+  };
+};
+
 function tenMoreLessProblem(targetBucket?: string): Problem {
   const bucket = (targetBucket as Bucket | undefined) ?? BUCKETS[randInt(0, BUCKETS.length - 1)];
 
   if (bucket === "tenMoreNoRollover") {
-    const n = randInt(10, 88);
-    const result = n + 10;
+    // 10 more, then 10 less of the same number, both typed (review C1-07).
+    const n = randInt(11, 88);
     return {
       title: "10 more",
       bucket,
-      story: `What is 10 more than ${n}?`,
-      visual: () => <HundredChart marks={[{ n, tone: "a" }, { n: result, tone: "b" }]} />,
-      steps: [
-        { kind: "number", prompt: `10 more than ${n} is what number?`, hint: "Only the tens digit changes.", explain: `${n} + 10 = ${result}.`, answer: result },
-        choice({ prompt: "Which digit changed?", hint: "The ones digit never moves when you add exactly 10.", explain: "Only the tens digit changed." }, "Only the tens digit", ["Only the ones digit", "Both digits"]),
-      ],
-      wrapUp: `${n} + 10 = ${result}.`,
+      story: `Start at ${n}.`,
+      visual: chartVisual(n, [{ hop: { from: n, to: n + 10 } }, { hop: { from: n, to: n - 10 } }]),
+      steps: [hopStep(n, 10), hopStep(n, -10)],
+      wrapUp: `${n - 10}, ${n}, ${n + 10}. Only the tens changed.`,
     };
   }
 
   if (bucket === "tenLessCrossing") {
-    // Guarantees a start in the teens/low 20s so 10-less either drops the
-    // tens digit to 0 (a single-digit result) or lands just above it.
-    const n = randInt(11, 23);
-    const result = n - 10;
+    // 10 less from 11-99, half the time from 11-23 (into one digit, or just
+    // above it) — review C1-23. Then 10 more, typed (C1-07).
+    const n = Math.random() < 0.5 ? randInt(11, 23) : randInt(24, 99);
     return {
       title: "10 less",
       bucket,
-      story: `What is 10 less than ${n}?`,
-      visual: () => <HundredChart marks={[{ n, tone: "a" }, { n: result, tone: "b" }]} />,
-      steps: [
-        { kind: "number", prompt: `10 less than ${n} is what number?`, hint: "Just change the tens digit — no need to recount by ones.", explain: `${n} - 10 = ${result}.`, answer: result },
-        choice(
-          { prompt: "How should you find it?", hint: "Recounting works, but it's slow and easy to mess up.", explain: "Just drop the tens digit by 1 (or to 0) — no recounting needed." },
-          "Change the tens digit directly",
-          ["Count backward by ones from the start"]
-        ),
-      ],
-      wrapUp: `${n} - 10 = ${result}.`,
+      story: `Start at ${n}.`,
+      visual: chartVisual(n, [{ hop: { from: n, to: n - 10 } }, { hop: { from: n, to: n + 10 } }]),
+      steps: [hopStep(n, -10), hopStep(n, 10)],
+      // Past 100 (e.g. 98 → 108) "only the tens changed" isn't true, so say
+      // what is: the ones stayed the same (round 3, U4 wrap-up).
+      wrapUp: `${n - 10}, ${n}, ${n + 10}. ${n + 10 >= 100 ? "The ones stayed the same." : "Only the tens changed."}`,
     };
   }
 
@@ -297,21 +296,18 @@ function tenMoreLessProblem(targetBucket?: string): Problem {
     const add = addTens * 10;
     const result = n + add;
     return {
-      title: "Adding a multiple of ten",
+      title: "Add tens",
       bucket,
       story: `What is ${n} + ${add}?`,
-      visual: () => <HundredChart marks={[{ n, tone: "a" }, { n: result, tone: "b" }]} />,
-      steps: [
-        { kind: "number", prompt: `How many tens is ${add}?`, hint: "Count by tens: 10, 20, 30...", explain: `${add} is ${addTens} ten${addTens === 1 ? "" : "s"}.`, answer: addTens },
-        { kind: "number", prompt: `${n} + ${add} = ?`, hint: "Add whole tens to the tens digit; the ones digit stays put.", explain: `${n} + ${add} = ${result}.`, answer: result },
-      ],
-      wrapUp: `${n} + ${add} = ${result}.`,
+      visual: chartVisual(n, [{ sticks: addTens }, { hop: { from: n, to: result } }]),
+      steps: [tensInStep(add), hopStep(n, add)],
+      wrapUp: `${n} + ${add} = ${result}. Adding ${add} is ${tensW(addTens)} more.`,
     };
   }
 
-  // subtractMultipleOfTen — including both the exact-decade landing (e.g.
-  // 70-30=40) and the mid-decade case (e.g. 45-20=25, tens change but ones
-  // stay put — the case that actually tests not brute-counting).
+  // subtractMultipleOfTen — including both the exact-ten landing (e.g.
+  // 70 − 30 = 40) and the mid-row case (e.g. 45 − 20 = 25, tens change but
+  // ones stay — the case that actually tests not counting by ones).
   const subTens = randInt(1, 7); // sub = 10-70
   const sub = subTens * 10;
   const extraTens = randInt(1, 9 - subTens); // keeps the result's tens digit 1-8
@@ -320,27 +316,24 @@ function tenMoreLessProblem(targetBucket?: string): Problem {
   const finalN = (subTens + extraTens) * 10 + ones;
   const finalResult = finalN - sub;
   return {
-    title: "Subtracting a multiple of ten",
+    title: "Take away tens",
     bucket,
-    story: `What is ${finalN} - ${sub}?`,
-    visual: () => <HundredChart marks={[{ n: finalN, tone: "a" }, { n: finalResult, tone: "b" }]} />,
-    steps: [
-      { kind: "number", prompt: `How many tens is ${sub}?`, hint: "Count by tens.", explain: `${sub} is ${subTens} ten${subTens === 1 ? "" : "s"}.`, answer: subTens },
-      { kind: "number", prompt: `${finalN} - ${sub} = ?`, hint: "Subtract whole tens from the tens digit; the ones digit stays put.", explain: `${finalN} - ${sub} = ${finalResult}.`, answer: finalResult },
-    ],
-    wrapUp: `${finalN} - ${sub} = ${finalResult}.`,
+    story: `What is ${finalN} − ${sub}?`,
+    visual: chartVisual(finalN, [{ sticks: subTens }, { hop: { from: finalN, to: finalResult } }]),
+    steps: [tensInStep(sub), hopStep(finalN, -sub)],
+    wrapUp: `${finalN} − ${sub} = ${finalResult}. Taking away ${sub} is ${tensW(subTens)} less.`,
   };
 }
 
 export const tenMoreTenLess: Unit = {
   id: "tenMoreTenLess",
-  title: "Ten More, Ten Less, and Multiples of Ten",
-  goal: "Quickly find 10 more or 10 less than a number, and add or subtract a multiple of ten.",
-  standard: "1.NBT.5, 1.NBT.6",
+  title: "Ten More, Ten Less, and Adding Tens",
+  goal: "Find 10 more and 10 less. Add and take away tens.",
+  standard: "1.NBT.4–6",
   keyIdea: (
     <>
-      <p>Adding or subtracting 10 only ever changes the tens digit — the ones digit never moves. No need to recount by ones.</p>
-      <p>The same idea scales up: adding or subtracting any multiple of ten (20, 30...) just moves the tens digit by that many tens.</p>
+      <p>10 more or 10 less: only the tens change. The ones stay the same.</p>
+      <p>Adding 20 is 2 tens more.</p>
     </>
   ),
   Explore,

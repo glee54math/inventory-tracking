@@ -1,305 +1,177 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CompareRows, TenFrameGroup } from "../diagrams";
+import { storySentenceChoices } from "../logic";
 import { randInt, pick } from "../../../shared/lib/math";
 import { choice, pointing, type Problem, type VisualHelp } from "../../../shared/engine/types";
+import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { putTogetherCompareWordProblemsTest } from "./PutTogetherCompareWordProblemsTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
-import { TapSelect } from "../../../shared/components/TapSelect";
-import { StuckBox, useCfuPointers } from "../../../shared/components/CfuPointers";
-import { lookHereSpot } from "../../../shared/lib/lookHere";
+import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
+import { lookHereSpot, useLookHereRequest } from "../../../shared/lib/lookHere";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
 // ============================================================================
-// Fixed, hand-picked questions. Targets the plan's named misconceptions:
-// subtracting the wrong direction on a "fewer"-phrased Compare problem,
-// treating "more than"/"fewer than" as telling you the OPERATION rather
-// than which amount is bigger, and treating Both-Addends-Unknown as having
-// one right answer. Q3 puts BOTH "more" and "fewer" live in one question,
-// per the plan's explicit requirement.
+// K–1 design (shared/components/KCheck.tsx): one short question at a time,
+// a picture, typed answers. Targets the plan's named misconceptions:
+// subtracting the wrong way on a "fewer" compare story, treating "more" /
+// "fewer" as the operation instead of reading which amount is bigger (both
+// asked about the SAME two rows, one after the other), and treating a
+// both-parts-missing story as having one right answer. Each question gets a
+// "Look here" pointer after its 2nd wrong try; "show it" comes on the 3rd.
 
-const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
-
-/** CFU "Look here" pointers: the Explore spot that teaches each part (shown after its 2nd miss). */
+/** CFU "Look here" pointers: the Explore spot that teaches each question (shown after its 2nd miss). */
 const LOOK = {
-  whole: { target: "ptc-whole", label: "Explore: put together", say: "Look here. In all means put them together." },
+  whole: { target: "ptc-whole", label: "Explore: put together", say: "Look here. Put the two parts together." },
   ways: { target: "ptc-ways", label: "Explore: try different splits", say: "Look here. Try other splits." },
-  part: { target: "ptc-part", label: "Explore: find a missing part", say: "Look here. Take the part away from the whole." },
-  diff: { target: "ptc-diff", label: "Explore: compare", say: "Look here. Take the smaller from the bigger." },
+  part: { target: "ptc-part", label: "Explore: find a missing part", say: "Look here. Start with the total. Take away the part." },
+  // Q4/Q5 (typed): the same line as their nudge (E2-45).
+  diff: { target: "ptc-diff", label: "Explore: compare", say: "Look here. Line them up. Count the extras." },
+  // Q6 (which number sentence): its own line.
+  diffPick: { target: "ptc-diff", label: "Explore: compare", say: "Look here. Start with the bigger. Take away the smaller." },
 };
 
-function TotalOrAddendQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [role, setRole] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [role, answer].every((v) => String(v).trim() !== "");
-  const roleOk = role === "total";
-  const answerOk = answer === "9";
-  const ok = roleOk && answerOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  // Both boxes are one idea ("in all" means the total), so one part.
-  const ptr = useCfuPointers([{ key: "q", to: LOOK.whole }], { done: checked && ok, early: true });
-  const check = () => {
-    if (allFilled) ptr.record(() => ok, `${role}|${answer}`);
-    setChecked(true);
-  };
-
+/** Two given amounts, each its own ten-frame (nothing combined before a try). */
+function TwoParts({ a, b }: { a: number; b: number }) {
   return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>1.</b> Mia has 4 green buttons and 5 orange buttons. How many buttons does Mia have IN ALL?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          What's unknown?{" "}
-          <TapSelect value={role} onChange={(e) => setRole(e.target.value)} style={fieldOk(roleOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="total">the total</option>
-            <option value="addend">one of the parts (an addend)</option>
-          </TapSelect>
-        </label>
-        <label>
-          Answer:{" "}
-          <TapSelect value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(answerOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="1">1</option>
-            <option value="5">5</option>
-            <option value="9">9</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={check}>
-          Check Answer
-        </button>
-      </div>
-      <StuckBox {...ptr} early />
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — \"in all\" means the TOTAL. 4 + 5 = 9." : "Not quite — \"in all\" is asking for the TOTAL (both parts combined): 4 + 5 = 9."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
+    <div className="control-row" style={{ gap: 20, alignItems: "flex-start" }}>
+      <TenFrameGroup value={a} tone="a" />
+      <TenFrameGroup value={b} tone="b" />
+    </div>
   );
 }
 
-/** Both-Addends-Unknown trap: more than one correct split exists. */
-function ManyWaysQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [waysPicked, setWaysPicked] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [waysPicked, answer].every((v) => String(v).trim() !== "");
-  const waysOk = waysPicked === "more";
-  const answerOk = answer === "4";
-  const ok = waysOk && answerOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  const partOk = (key: string) => (key === "ways" ? waysOk : answerOk);
-  const ptr = useCfuPointers(
-    [
-      { key: "ways", part: "How many ways", to: LOOK.ways },
-      { key: "answer", part: "Animal cards", to: LOOK.part },
-    ],
-    { done: checked && ok, early: true, rightNow: (p) => checked && partOk(p.key) }
-  );
-  const check = () => {
-    ptr.record((p) => partOk(p.key), `${waysPicked}|${answer}`);
-    setChecked(true);
-  };
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>2.</b> Jake has 6 trading cards. Some are sports cards and some are animal cards.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          How many different ways could the 6 cards split into sports and animal cards?{" "}
-          <TapSelect value={waysPicked} onChange={(e) => setWaysPicked(e.target.value)} style={fieldOk(waysOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="one">Exactly one way</option>
-            <option value="more">More than one way</option>
-          </TapSelect>
-        </label>
-        <label>
-          If 2 are sports cards, how many are animal cards?{" "}
-          <TapSelect value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(answerOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="2">2</option>
-            <option value="4">4</option>
-            <option value="6">6</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={check}>
-          Check Answer
-        </button>
-      </div>
-      <StuckBox {...ptr} early />
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — there's MORE than one way: 2 sports + 4 animal works, but so would 1 + 5, 3 + 3, and others. This story doesn't have one single right split."
-            : "Not quite — when both parts are unknown, there's MORE than one valid split (2 + 4, 1 + 5, 3 + 3 all work). For this one way: 2 sports cards leaves 6 − 2 = 4 animal cards."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** The plan's required question: BOTH "more" and "fewer" phrasings, live,
- *  in the SAME question — same two numbers, same answer, different words. */
-function MoreAndFewerSameQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [moreAns, setMoreAns] = useState("");
-  const [fewerAns, setFewerAns] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [moreAns, fewerAns].every((v) => String(v).trim() !== "");
-  const moreOk = moreAns === "4";
-  const fewerOk = fewerAns === "4";
-  const ok = moreOk && fewerOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  // "More" and "fewer" are the same gap, taught in one place: one part.
-  const ptr = useCfuPointers([{ key: "q", to: LOOK.diff }], { done: checked && ok, early: true });
-  const check = () => {
-    if (allFilled) ptr.record(() => ok, `${moreAns}|${fewerAns}`);
-    setChecked(true);
-  };
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>3.</b> Lily has 9 crayons. Ben has 5 crayons.
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Lily has how many MORE crayons than Ben?{" "}
-          <TapSelect value={moreAns} onChange={(e) => setMoreAns(e.target.value)} style={fieldOk(moreOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="9">9</option>
-          </TapSelect>
-        </label>
-        <label>
-          Ben has how many FEWER crayons than Lily?{" "}
-          <TapSelect value={fewerAns} onChange={(e) => setFewerAns(e.target.value)} style={fieldOk(fewerOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="9">9</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={check}>
-          Check Answer
-        </button>
-      </div>
-      <StuckBox {...ptr} early />
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — BOTH are 4! \"4 more\" and \"4 fewer\" describe the exact same gap between 9 and 5, just in different words: 9 − 5 = 4."
-            : "Not quite — \"more\" and \"fewer\" here describe the SAME gap between Lily's 9 and Ben's 5: 9 − 5 = 4, both times."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
-
-/** Direction trap: "fewer" phrasing tempts subtracting in sentence order. */
-function FewerDirectionQuestion({ onComplete }: { onComplete?: () => void }) {
-  const [calc, setCalc] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [checked, setChecked] = useState(false);
-  const allFilled = [calc, answer].every((v) => String(v).trim() !== "");
-  const calcOk = calc === "9-5";
-  const answerOk = answer === "4";
-  const ok = calcOk && answerOk;
-  useEffect(() => {
-    if (checked && ok) onComplete?.();
-  }, [checked, ok, onComplete]);
-  // Both boxes are "bigger − smaller", taught in one place: one part.
-  const ptr = useCfuPointers([{ key: "q", to: LOOK.diff }], { done: checked && ok, early: true });
-  const check = () => {
-    if (allFilled) ptr.record(() => ok, `${calc}|${answer}`);
-    setChecked(true);
-  };
-
-  return (
-    <ReadAloud className="align-stack-wrap">
-      <p>
-        <b>4.</b> Ben has 5 crayons. Lily has 9 crayons. How many FEWER crayons does Ben have than Lily?
-      </p>
-      <div className="control-row" style={{ alignItems: "center" }}>
-        <label>
-          Which subtraction finds the answer?{" "}
-          <TapSelect value={calc} onChange={(e) => setCalc(e.target.value)} style={fieldOk(calcOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="5-9">5 − 9</option>
-            <option value="9-5">9 − 5</option>
-          </TapSelect>
-        </label>
-        <label>
-          Answer:{" "}
-          <TapSelect value={answer} onChange={(e) => setAnswer(e.target.value)} style={fieldOk(answerOk, checked)}>
-            <option value="" disabled>
-              choose
-            </option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="9">9</option>
-          </TapSelect>
-        </label>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={check}>
-          Check Answer
-        </button>
-      </div>
-      <StuckBox {...ptr} early />
-      {checked && allFilled && (
-        <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok
-            ? "Correct — always subtract the SMALLER from the BIGGER (9 − 5 = 4), no matter whose name is mentioned first in the sentence."
-            : "Not quite — \"Ben has 5, Lily has 9\" doesn't mean you subtract in that order. Always subtract the smaller amount from the bigger one: 9 − 5 = 4."}
-        </ReadAloud>
-      )}
-    </ReadAloud>
-  );
-}
+const crayons = (showGap: boolean) => (
+  <CompareRows
+    rows={[
+      { label: "Lily", count: 9, tone: "a" },
+      { label: "Ben", count: 5, tone: "b" },
+    ]}
+    showGap={showGap}
+  />
+);
 
 function PutTogetherCompareCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const [done, setDone] = useState({ totalOrAddend: false, manyWays: false, moreFewer: false, direction: false });
-  const allDone = Object.values(done).every(Boolean);
-  useEffect(() => {
-    if (allDone) onComplete?.();
-  }, [allDone, onComplete]);
-  const mark = (key: keyof typeof done) => () => setDone((d) => (d[key] ? d : { ...d, [key]: true }));
-
   return (
-    <div className="align-drill">
-      <ReadAloud as="p" className="intro-gate-title">
-        Check for understanding: let's make sure put-together and compare stories make sense before you try practice problems.
-      </ReadAloud>
-      <TotalOrAddendQuestion onComplete={mark("totalOrAddend")} />
-      <ManyWaysQuestion onComplete={mark("manyWays")} />
-      <MoreAndFewerSameQuestion onComplete={mark("moreFewer")} />
-      <FewerDirectionQuestion onComplete={mark("direction")} />
-    </div>
+    <CheckSequence
+      onComplete={onComplete}
+      items={[
+        (done) => (
+          <TypeCheck
+            n={1}
+            prompt="Mia has 4 green buttons and 5 orange buttons. How many buttons in all?"
+            answer={9}
+            tone="c"
+            picture={(m) => (m === "show" || m === "done" ? <TenFrameGroup value={9} tone="a" splitAt={4} tone2="b" /> : <TwoParts a={4} b={5} />)}
+            nudge="Put the two parts together."
+            why={{ 1: "Put them together. Don't take away." }}
+            showText="Watch: put them together. 4 and 5 make 9."
+            praise="Yes! 4 + 5 = 9."
+            look={LOOK.whole}
+            onComplete={done}
+          />
+        ),
+        // Both parts unknown, as two typed splits of the same 6 (C2-01: the
+        // old "Is there just one way?" two-button pick is gone). Q2's praise
+        // doesn't name 1 and 5, which is Q3's answer. Q2 says the part right
+        // away (E3-53: no "Some are…" that "2 are…" then replaces).
+        (done) => (
+          <TypeCheck
+            n={2}
+            prompt="Jake has 6 cards. 2 are sports cards. The rest are animal cards. How many are animal cards?"
+            answer={4}
+            tone="b"
+            picture={(m) => (m === "ask" ? <TenFrameGroup value={6} tone="c" /> : <TenFrameGroup value={6} tone="a" splitAt={2} tone2="b" />)}
+            nudge="Start with 6. Take away the 2."
+            why={{ 8: "6 cards in all. Don't add.", 6: "6 is all the cards." }}
+            showText="Watch: 2 are sports cards. Count the rest: 1, 2, 3, 4."
+            praise="Yes! 2 and 4 make 6."
+            look={LOOK.part}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={3}
+            prompt="Now 5 are sports cards. How many are animal cards?"
+            answer={1}
+            tone="b"
+            picture={(m) => (m === "ask" ? <TenFrameGroup value={6} tone="c" /> : <TenFrameGroup value={6} tone="a" splitAt={5} tone2="b" />)}
+            nudge="Start with 6. Take away the 5."
+            why={{ 11: "6 cards in all. Don't add.", 6: "6 is all the cards.", 4: "Now 5 are sports cards." }}
+            showText="Watch: 5 are sports cards. Count the rest: 1."
+            praise="Yes! You can split 6 many ways."
+            look={LOOK.ways}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={4}
+            prompt="Lily has 9 crayons. Ben has 5. How many more crayons does Lily have than Ben?"
+            answer={4}
+            tone="a"
+            picture={(m) => crayons(m !== "ask")}
+            nudge="Line them up. Count the extras."
+            why={{ 14: "Don't add. Line them up.", 9: "That is all of Lily's.", 5: "That is all of Ben's." }}
+            showText="Watch: match them up. The extras are 1, 2, 3, 4."
+            praise="Yes! Lily has 4 more."
+            look={LOOK.diff}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={5}
+            prompt="How many fewer crayons does Ben have than Lily?"
+            answer={4}
+            tone="b"
+            picture={(m) => crayons(m !== "ask")}
+            nudge="Line them up. Count the extras."
+            why={{ 14: "Don't add. Line them up.", 5: "That is all of Ben's.", 9: "That is all of Lily's." }}
+            showText="Watch: match them up. Ben is missing 1, 2, 3, 4."
+            praise="Yes! 4 more. 4 fewer. Same gap."
+            look={LOOK.diff}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={6}
+            prompt="Ben has 5 crayons. Lily has 9. Which one finds how many fewer?"
+            picture={
+              <CompareRows
+                rows={[
+                  { label: "Ben", count: 5, tone: "b" },
+                  { label: "Lily", count: 9, tone: "a" },
+                ]}
+              />
+            }
+            showPicture={
+              <CompareRows
+                rows={[
+                  { label: "Ben", count: 5, tone: "b" },
+                  { label: "Lily", count: 9, tone: "a" },
+                ]}
+                showGap
+              />
+            }
+            options={[
+              { id: "5-9", label: "5 − 9" },
+              { id: "9-5", label: "9 − 5" },
+              { id: "9+5", label: "9 + 5" },
+            ]}
+            answer="9-5"
+            why={{ "5-9": "Start with the bigger number.", "9+5": "Don't add. Find the extras." }}
+            showText="Watch: start with Lily's 9. Take away Ben's 5."
+            praise="Yes! 9 − 5 = 4."
+            look={LOOK.diffPick}
+            onComplete={done}
+          />
+        ),
+      ]}
+    />
   );
 }
 
@@ -311,15 +183,29 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
   // Not the CFU's numbers (4 + 5, 9 and 5), so a "Look here" never shows a CFU answer.
-  const [redCount, setRedCount] = useState(6);
-  const [blueCount, setBlueCount] = useState(7);
-  const total = redCount + blueCount;
+  const [green, setGreen] = useState(6);
+  const [orange, setOrange] = useState(7);
+  const total = green + orange;
 
-  const [amountA, setAmountA] = useState(8);
-  const [amountB, setAmountB] = useState(3);
-  const bigger = Math.max(amountA, amountB);
-  const smaller = Math.min(amountA, amountB);
-  const diff = bigger - smaller;
+  const [lily, setLily] = useState(8);
+  const [ben, setBen] = useState(3);
+  const [say, setSay] = useState<"gap" | "more" | "fewer">("gap");
+  const lilyBigger = lily >= ben;
+  const [bigName, bigN, smallName, smallN] = lilyBigger ? ["Lily", lily, "Ben", ben] : ["Ben", ben, "Lily", lily];
+  const diff = bigN - smallN;
+  // The CFU's compare questions point at the gap line.
+  useLookHereRequest((id) => {
+    if (id === "ptc-diff") setSay("gap");
+  });
+
+  const compareLine =
+    diff === 0
+      ? `Lily and Ben have the same. The gap is 0.`
+      : say === "gap"
+        ? `${bigName} has ${bigN}. ${smallName} has ${smallN}. The gap is ${diff}.`
+        : say === "more"
+          ? `${smallName} has ${smallN}. ${bigName} has ${diff} more than ${smallName}. So ${bigName} has ${smallN} + ${diff} = ${bigN}.`
+          : `${bigName} has ${bigN}. ${smallName} has ${diff} fewer than ${bigName}. So ${smallName} has ${bigN} − ${diff} = ${smallN}.`;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -337,48 +223,88 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
 
       <div>
-        <ReadAloud as="p" className="muted small">Put together: two parts make a whole.</ReadAloud>
+        <ReadAloud as="p" className="muted small">
+          Put together: two parts make a total.
+        </ReadAloud>
+        {/* Each part's range comes from the other, so the total stays at most 20. */}
         <div className="control-row" data-readaloud-part>
-          <label>
-            Green: <input type="range" min={0} max={15} value={redCount} onChange={(e) => setRedCount(Number(e.target.value))} /> {redCount}
-          </label>
-          <label>
-            Orange: <input type="range" min={0} max={15} value={blueCount} onChange={(e) => setBlueCount(Number(e.target.value))} /> {blueCount}
-          </label>
+          <Stepper label="Green" value={green} min={0} max={20 - orange} step={1} onChange={setGreen} tone="a" />
+          <Stepper label="Orange" value={orange} min={0} max={20 - green} step={1} onChange={setOrange} tone="b" />
         </div>
         <div {...lookHereSpot("ptc-whole")}>
-          <TenFrameGroup value={Math.min(20, total)} tone="a" splitAt={redCount} tone2="b" />
+          <TenFrameGroup value={total} tone="a" splitAt={green} tone2="b" />
           <ReadAloud as="p" className="muted small" data-look-here-key>
-            {redCount} + {blueCount} = {total} in all.
+            {green} green and {orange} orange make {total} in all. {green} + {orange} = {total}.
           </ReadAloud>
         </div>
-        <ReadAloud as="p" className="muted small" {...lookHereSpot("ptc-ways")}>
-          <span data-look-here-key>Try different green/orange splits that still add up to the same total — notice there's more than one way.</span>
-        </ReadAloud>
+        <div {...lookHereSpot("ptc-ways")}>
+          <div className="control-row" data-readaloud-part>
+            <button
+              type="button"
+              className="btn ghost"
+              disabled={green <= 0}
+              onClick={() => {
+                setGreen(green - 1);
+                setOrange(orange + 1);
+              }}
+            >
+              Move one to orange
+            </button>
+            <button
+              type="button"
+              className="btn ghost"
+              disabled={orange <= 0}
+              onClick={() => {
+                setOrange(orange - 1);
+                setGreen(green + 1);
+              }}
+            >
+              Move one to green
+            </button>
+          </div>
+          <ReadAloud as="p" className="muted small" data-look-here-key>
+            Try other green and orange splits. The total stays the same.
+          </ReadAloud>
+        </div>
         <ReadAloud as="p" className="muted small" {...lookHereSpot("ptc-part")}>
-          <span data-look-here-key>Know the whole and one part? Take that part away from the whole.</span>
+          <span data-look-here-key>Know the total and one part? Start with the total. Take away the part.</span>
         </ReadAloud>
       </div>
 
       <div>
-        <ReadAloud as="p" className="muted small">Compare: two separate amounts, side by side.</ReadAloud>
+        <ReadAloud as="p" className="muted small">
+          Compare: line them up. Find the extras.
+        </ReadAloud>
         <div className="control-row" data-readaloud-part>
-          <label>
-            Amount A: <input type="range" min={0} max={20} value={amountA} onChange={(e) => setAmountA(Number(e.target.value))} /> {amountA}
-          </label>
-          <label>
-            Amount B: <input type="range" min={0} max={20} value={amountB} onChange={(e) => setAmountB(Number(e.target.value))} /> {amountB}
-          </label>
+          <Stepper label="Lily" value={lily} min={0} max={20} step={1} onChange={setLily} tone="a" />
+          <Stepper label="Ben" value={ben} min={0} max={20} step={1} onChange={setBen} tone="b" />
+          <Segmented
+            label="Say it"
+            value={say}
+            onChange={setSay}
+            options={[
+              { id: "gap", label: "The gap" },
+              { id: "more", label: "More than" },
+              { id: "fewer", label: "Fewer than" },
+            ]}
+          />
         </div>
         <div {...lookHereSpot("ptc-diff")}>
-          <div className="control-row" style={{ gap: 24, alignItems: "flex-start" }} data-readaloud-part>
-            <TenFrameGroup value={amountA} tone="a" />
-            <TenFrameGroup value={amountB} tone="b" />
-          </div>
+          <CompareRows
+            rows={[
+              { label: "Lily", count: lily, tone: "a" },
+              { label: "Ben", count: ben, tone: "b" },
+            ]}
+            showGap
+          />
           <ReadAloud as="p" className="muted small" data-look-here-key>
-            The bigger amount is {bigger}, the smaller is {smaller}. The difference is always bigger − smaller = {diff} — whether you call it "
-            {diff} more" or "{diff} fewer" depends only on which amount you're talking about, not on the math.
+            {compareLine}
           </ReadAloud>
+          {say === "gap" && diff > 0 && (
+            <ReadAloud as="p" className="muted small">
+              {bigName} has {diff} more. {smallName} has {diff} fewer.
+            </ReadAloud>
+          )}
         </div>
       </div>
       {/* Below the picture, so students explore first, then check. */}
@@ -394,22 +320,44 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 type Bucket = "ptaTotalUnknown" | "ptaAddendUnknown" | "ptaBothAddendsUnknown" | "compareDiffMore" | "compareDiffFewer" | "compareBiggerUnknown" | "compareSmallerUnknown";
 const BUCKETS: Bucket[] = ["ptaTotalUnknown", "ptaAddendUnknown", "ptaBothAddendsUnknown", "compareDiffMore", "compareDiffFewer", "compareBiggerUnknown", "compareSmallerUnknown"];
 
+// `one` is the singular ("1 button"). Mia's buttons are green and orange, the lab's two colors.
+// Parts are words that also work alone ("3 are big"), not nouns ("3 are sports").
 const ITEM_CONTEXTS = [
-  { person: "Mia", item: "buttons", partA: "green", partB: "orange" },
-  { person: "Jake", item: "cards", partA: "sports", partB: "animal" },
-  { person: "Ava", item: "beads", partA: "round", partB: "square" },
-  { person: "Liam", item: "stickers", partA: "star", partB: "heart" },
+  { person: "Mia", item: "buttons", one: "button", partA: "green", partB: "orange" },
+  { person: "Jake", item: "cards", one: "card", partA: "big", partB: "small" },
+  { person: "Ava", item: "beads", one: "bead", partA: "round", partB: "square" },
+  { person: "Liam", item: "stickers", one: "sticker", partA: "shiny", partB: "plain" },
 ];
 
 const COMPARE_CONTEXTS = [
-  { a: "Lily", b: "Ben", item: "crayons" },
-  { a: "Noah", b: "Ella", item: "pencils" },
-  { a: "Grace", b: "Max", item: "toy cars" },
-  { a: "Ivy", b: "Sam", item: "seashells" },
+  { a: "Lily", b: "Ben", item: "crayons", one: "crayon" },
+  { a: "Noah", b: "Ella", item: "pencils", one: "pencil" },
+  { a: "Grace", b: "Max", item: "toy cars", one: "toy car" },
+  { a: "Ivy", b: "Sam", item: "seashells", one: "seashell" },
 ];
 
-function unknownChoice(correctText: string, distractorText: string) {
-  return choice({ prompt: "What's unknown in this story?", hint: "Decide which piece of information isn't given yet.", explain: `The unknown here is ${correctText}.` }, correctText, [distractorText]);
+/** "1 button" / "3 buttons". */
+const count = (n: number, ctx: { item: string; one: string }) => `${n} ${n === 1 ? ctx.one : ctx.item}`;
+const isAre = (n: number) => (n === 1 ? "is" : "are");
+/** "9, 10, 11" — the numbers you say counting from `from` to `to`. */
+const countWords = (from: number, to: number) => {
+  const dir = to > from ? 1 : -1;
+  return Array.from({ length: Math.abs(to - from) }, (_, k) => from + (k + 1) * dir).join(", ");
+};
+/** About 1 second per number said, after a short lead-in (Show me pacing), at most 7 seconds. */
+const holdFor = (n: number) => Math.min(7000, 1000 + n * 1000);
+
+function roleChoice(correct: "the total" | "a part") {
+  return choice({ prompt: "What is missing?", hint: "The story tells two numbers. Which one is missing?", explain: correct === "the total" ? "The total is missing." : "A part is missing." }, correct, [correct === "the total" ? "a part" : "the total"]);
+}
+
+/** The student picks the number sentence for this story (C1-07). */
+function sentenceChoice(prompt: string, p: number, q: number, correct: string, answer: number) {
+  return choice(
+    { prompt, hint: "Do you put together or take away?", explain: `${correct} matches the story.` },
+    correct,
+    storySentenceChoices(p, q, correct, answer) // misconceptions: the other sign (keyword), the two numbers the wrong way
+  );
 }
 
 function wordProblem(targetBucket?: string): Problem {
@@ -419,13 +367,27 @@ function wordProblem(targetBucket?: string): Problem {
     const ctx = pick(ITEM_CONTEXTS);
     const a = randInt(1, 9);
     const b = randInt(1, 9);
-    const total = Math.min(20, a + b);
+    const total = a + b;
+    const big = Math.max(a, b);
     return {
-      title: "Put Together — how many in all?",
+      title: "Story problem",
       bucket,
-      story: `${ctx.person} has ${a} ${ctx.partA} ${ctx.item} and ${b} ${ctx.partB} ${ctx.item}. How many ${ctx.item} does ${ctx.person} have in all?`,
-      visual: () => <TenFrameGroup value={Math.min(20, a + b)} tone="a" splitAt={a} tone2="b" />,
-      steps: [unknownChoice("the total", "one of the parts (an addend)"), { kind: "number", prompt: "How many in all?", hint: "Add the two parts.", explain: `${a} + ${b} = ${total}.`, answer: total }],
+      story: `${ctx.person} has ${a} ${ctx.partA} ${a === 1 ? ctx.one : ctx.item} and ${b} ${ctx.partB} ${b === 1 ? ctx.one : ctx.item}. How many ${ctx.item} does ${ctx.person} have in all?`,
+      // Before help: the two parts on their own. Stuck on the total: put together.
+      visual: (_done: number, help?: VisualHelp) => (pointing(help, 2) ? <TenFrameGroup value={total} tone="a" splitAt={a} tone2="b" /> : <TwoParts a={a} b={b} />),
+      steps: [
+        roleChoice("the total"),
+        sentenceChoice("Which one matches the story?", a, b, `${a} + ${b} = ☐`, total),
+        {
+          kind: "number",
+          prompt: "How many in all?",
+          hint: "Put the two parts together.",
+          showMe: `Put them together. Start at ${big}. Count on ${a + b - big}: ${countWords(big, total)}.`,
+          showMeHoldMs: holdFor(a + b - big),
+          explain: `${a} + ${b} = ${total}.`,
+          answer: total,
+        },
+      ],
       wrapUp: `${a} + ${b} = ${total}.`,
     };
   }
@@ -433,14 +395,28 @@ function wordProblem(targetBucket?: string): Problem {
   if (bucket === "ptaAddendUnknown") {
     const ctx = pick(ITEM_CONTEXTS);
     const total = randInt(6, 18);
-    const a = randInt(1, total - 1);
+    // At least 2 left over, so "the rest are" always fits.
+    const a = randInt(1, total - 2);
     const b = total - a;
     return {
-      title: "Put Together — how many is the other part?",
+      title: "Story problem",
       bucket,
-      story: `${ctx.person} has ${total} ${ctx.item} in all. ${a} are ${ctx.partA} and the rest are ${ctx.partB}. How many ${ctx.item} are ${ctx.partB}?`,
-      visual: () => <TenFrameGroup value={total} tone="a" splitAt={a} tone2="b" />,
-      steps: [unknownChoice("one of the parts (an addend)", "the total"), { kind: "number", prompt: `How many are ${ctx.partB}?`, hint: "Total − known part = the other part.", explain: `${total} − ${a} = ${b}.`, answer: b }],
+      story: `${ctx.person} has ${total} ${ctx.item}. ${a} ${isAre(a)} ${ctx.partA}. The rest are ${ctx.partB}. How many are ${ctx.partB}?`,
+      // Before help: the total, all one color. Stuck: the known part and the rest in two colors.
+      visual: (_done: number, help?: VisualHelp) => (pointing(help, 2) ? <TenFrameGroup value={total} tone="a" splitAt={a} tone2="b" /> : <TenFrameGroup value={total} tone="c" />),
+      steps: [
+        roleChoice("a part"),
+        sentenceChoice("Which one matches the story?", a, total, `${a} + ☐ = ${total}`, b),
+        {
+          kind: "number",
+          prompt: `How many are ${ctx.partB}?`,
+          hint: "Start with the total. Take away the part.",
+          showMe: `Start with ${total}. Take away the ${a} ${ctx.partA}. The rest are ${b}.`,
+          showMeHoldMs: 3000,
+          explain: `${total} − ${a} = ${b}.`,
+          answer: b,
+        },
+      ],
       wrapUp: `${a} + ${b} = ${total}.`,
     };
   }
@@ -448,29 +424,32 @@ function wordProblem(targetBucket?: string): Problem {
   if (bucket === "ptaBothAddendsUnknown") {
     const ctx = pick(ITEM_CONTEXTS);
     const total = randInt(5, 12);
-    const redGiven = randInt(1, total - 1);
-    let altRed = randInt(1, total - 1);
-    while (altRed === redGiven) altRed = randInt(1, total - 1);
+    const g1 = randInt(1, total - 1);
+    let g2 = randInt(1, total - 1);
+    while (g2 === g1) g2 = randInt(1, total - 1);
     return {
-      title: "Put Together — how many ways?",
+      title: "Story problem",
       bucket,
-      story: `${ctx.person} has ${total} ${ctx.item}. Some are ${ctx.partA} and some are ${ctx.partB}.`,
-      // Help ladder / Show me on steps 2-3: color THAT step's split, so the
-      // picture shows the one way being asked about (not the other one).
+      story: `${ctx.person} has ${total} ${ctx.item}. Some are ${ctx.partA}. Some are ${ctx.partB}.`,
+      // Help ladder / Show me: color THAT step's split, so the picture shows
+      // the one way being asked about (not the other one).
       visual: (done: number, help?: VisualHelp) => {
-        const splitAt = pointing(help, 1) ? redGiven : pointing(help, 2) || done >= 3 ? altRed : undefined;
+        const splitAt = pointing(help, 0) ? g1 : pointing(help, 1) || done >= 2 ? g2 : undefined;
         return splitAt === undefined ? <TenFrameGroup value={total} tone="c" /> : <TenFrameGroup value={total} tone="a" splitAt={splitAt} tone2="b" />;
       },
       steps: [
-        choice(
-          { prompt: `How many different ways could the ${total} ${ctx.item} split into ${ctx.partA} and ${ctx.partB}?`, hint: "Try a few splits yourself — does only one work?", explain: `More than one way works — any split of ${total} into two parts is valid.` },
-          "More than one way",
-          ["Exactly one way"]
-        ),
-        { kind: "number", prompt: `Give one way: if ${redGiven} are ${ctx.partA}, how many are ${ctx.partB}?`, hint: `${total} − ${redGiven} = ?`, explain: `${total} − ${redGiven} = ${total - redGiven}.`, answer: total - redGiven },
-        { kind: "number", prompt: `Give a DIFFERENT way: if ${altRed} are ${ctx.partA} instead, how many are ${ctx.partB} now?`, hint: `${total} − ${altRed} = ?`, explain: `${total} − ${altRed} = ${total - altRed} — a different split of the very same total.`, answer: total - altRed },
+        { kind: "number", prompt: `${g1} ${isAre(g1)} ${ctx.partA}. How many are ${ctx.partB}?`, hint: `Start with ${total}. Take away ${g1}.`, explain: `${total} − ${g1} = ${total - g1}.`, answer: total - g1 },
+        {
+          kind: "number",
+          prompt: `Now ${g2} ${isAre(g2)} ${ctx.partA}. How many are ${ctx.partB}?`,
+          hint: `Start with ${total}. Take away ${g2}.`,
+          showMe: `${g2} ${isAre(g2)} ${ctx.partA}. The rest ${isAre(total - g2)} ${total - g2}. That is another way.`,
+          showMeHoldMs: 3000,
+          explain: `${total} − ${g2} = ${total - g2}. That is another way to split ${total}.`,
+          answer: total - g2,
+        },
       ],
-      wrapUp: `${total} ${ctx.item} can split into ${ctx.partA}/${ctx.partB} in more than one way — there's no single right answer here.`,
+      wrapUp: `You can split ${total} ${ctx.item} many ways.`,
     };
   }
 
@@ -479,11 +458,12 @@ function wordProblem(targetBucket?: string): Problem {
     const small = randInt(2, 14);
     const diff = randInt(1, Math.min(9, 20 - small));
     const big = small + diff;
+    const showMe = { showMe: `Match them up. Count the extras: ${countWords(0, diff)}.`, showMeHoldMs: holdFor(diff) };
     if (bucket === "compareDiffMore") {
       return {
-        title: "Compare — how many more?",
+        title: "Compare",
         bucket,
-        story: `${ctx.a} has ${big} ${ctx.item}. ${ctx.b} has ${small} ${ctx.item}. How many MORE ${ctx.item} does ${ctx.a} have than ${ctx.b}?`,
+        story: `${ctx.a} has ${count(big, ctx)}. ${ctx.b} has ${count(small, ctx)}. How many more ${ctx.item} does ${ctx.a} have than ${ctx.b}?`,
         // Rows line up one-to-one; when stuck, the extras get circled.
         visual: (_done: number, help?: VisualHelp) => (
           <CompareRows
@@ -491,17 +471,20 @@ function wordProblem(targetBucket?: string): Problem {
               { label: ctx.a, count: big, tone: "a" },
               { label: ctx.b, count: small, tone: "b" },
             ]}
-            showGap={pointing(help, 0)}
+            showGap={pointing(help, 1)}
           />
         ),
-        steps: [{ kind: "number", prompt: "How many more?", hint: "Subtract the smaller amount from the bigger amount.", explain: `${big} − ${small} = ${diff}.`, answer: diff }],
-        wrapUp: `${big} − ${small} = ${diff}.`,
+        steps: [
+          sentenceChoice("Which one finds the answer?", big, small, `${big} − ${small} = ☐`, diff),
+          { kind: "number", prompt: "How many more?", hint: "Line them up. Count the extras.", ...showMe, explain: `${big} − ${small} = ${diff}.`, answer: diff },
+        ],
+        wrapUp: `${big} − ${small} = ${diff}. ${ctx.a} has ${diff} more.`,
       };
     }
     return {
-      title: "Compare — how many fewer?",
+      title: "Compare",
       bucket,
-      story: `${ctx.b} has ${small} ${ctx.item}. ${ctx.a} has ${big} ${ctx.item}. How many FEWER ${ctx.item} does ${ctx.b} have than ${ctx.a}?`,
+      story: `${ctx.b} has ${count(small, ctx)}. ${ctx.a} has ${count(big, ctx)}. How many fewer ${ctx.item} does ${ctx.b} have than ${ctx.a}?`,
       visual: (_done: number, help?: VisualHelp) => (
         <CompareRows
           rows={[
@@ -512,31 +495,26 @@ function wordProblem(targetBucket?: string): Problem {
         />
       ),
       steps: [
-        choice(
-          { prompt: "Which calculation finds the answer?", hint: "Always subtract the smaller amount from the bigger amount, no matter the sentence order.", explain: `${big} − ${small} = ${diff} — subtract smaller from bigger, not in the order the names appear.` },
-          `${big} − ${small}`,
-          [`${small} − ${big}`]
-        ),
-        { kind: "number", prompt: "How many fewer?", hint: "Subtract the smaller from the bigger.", explain: `${big} − ${small} = ${diff}.`, answer: diff },
+        sentenceChoice("Which one finds the answer?", small, big, `${big} − ${small} = ☐`, diff),
+        { kind: "number", prompt: "How many fewer?", hint: "Start with the bigger number. Take away the smaller one.", ...showMe, explain: `${big} − ${small} = ${diff}.`, answer: diff },
       ],
-      wrapUp: `${big} − ${small} = ${diff}.`,
+      wrapUp: `${big} − ${small} = ${diff}. ${ctx.b} has ${diff} fewer.`,
     };
   }
 
-  // compareBiggerUnknown / compareSmallerUnknown. diff is capped by `base`
-  // too (not just 20-base) — compareSmallerUnknown computes base - diff,
-  // which would go negative without that cap (a real bug caught by this
-  // lab's brute-force verification script).
+  // compareBiggerUnknown / compareSmallerUnknown, both worded the right way
+  // for 1st grade ("more" finds the bigger, "fewer" finds the smaller).
+  // diff < base keeps the smaller amount at 1 or more; base + diff ≤ 20.
   const ctx = pick(COMPARE_CONTEXTS);
   const base = randInt(2, 15);
-  const diff = randInt(1, Math.min(9, base, 20 - base));
+  const diff = randInt(1, Math.min(9, base - 1, 20 - base));
 
   if (bucket === "compareBiggerUnknown") {
     const biggerAmount = base + diff;
     return {
-      title: "Compare — who has more?",
+      title: "Compare",
       bucket,
-      story: `${ctx.b} has ${base} ${ctx.item}. ${ctx.a} has ${diff} more ${ctx.item} than ${ctx.b}. How many ${ctx.item} does ${ctx.a} have?`,
+      story: `${ctx.b} has ${count(base, ctx)}. ${ctx.a} has ${diff} more than ${ctx.b}. How many ${ctx.item} does ${ctx.a} have?`,
       visual: (_done: number, help?: VisualHelp) =>
         pointing(help, 1) ? (
           <CompareRows
@@ -550,17 +528,25 @@ function wordProblem(targetBucket?: string): Problem {
           <TenFrameGroup value={base} tone="b" />
         ),
       steps: [
-        choice({ prompt: `Is ${ctx.a}'s amount bigger or smaller than ${ctx.b}'s?`, hint: `"More than" means bigger.`, explain: `${ctx.a} has MORE, so ${ctx.a}'s amount is bigger than ${ctx.b}'s.` }, "Bigger", ["Smaller"]),
-        { kind: "number", prompt: `How many does ${ctx.a} have?`, hint: "Add the difference onto the known amount.", explain: `${base} + ${diff} = ${biggerAmount}.`, answer: biggerAmount },
+        sentenceChoice("Which one finds the answer?", base, diff, `${base} + ${diff} = ☐`, biggerAmount),
+        {
+          kind: "number",
+          prompt: `How many does ${ctx.a} have?`,
+          hint: `${ctx.a} has ${diff} more. Count on ${diff} from ${base}.`,
+          showMe: `${ctx.b} has ${base}. ${ctx.a} has ${diff} more: ${countWords(base, biggerAmount)}.`,
+          showMeHoldMs: holdFor(diff),
+          explain: `${base} + ${diff} = ${biggerAmount}.`,
+          answer: biggerAmount,
+        },
       ],
       wrapUp: `${base} + ${diff} = ${biggerAmount}.`,
     };
   }
   const smallerAmount = base - diff;
   return {
-    title: "Compare — who has fewer?",
+    title: "Compare",
     bucket,
-    story: `${ctx.a} has ${base} ${ctx.item}. ${ctx.a} has ${diff} more ${ctx.item} than ${ctx.b}. How many ${ctx.item} does ${ctx.b} have?`,
+    story: `${ctx.a} has ${count(base, ctx)}. ${ctx.b} has ${diff} fewer than ${ctx.a}. How many ${ctx.item} does ${ctx.b} have?`,
     visual: (_done: number, help?: VisualHelp) =>
       pointing(help, 1) ? (
         <CompareRows
@@ -574,27 +560,89 @@ function wordProblem(targetBucket?: string): Problem {
         <TenFrameGroup value={base} tone="a" />
       ),
     steps: [
-      choice({ prompt: `Is ${ctx.b}'s amount bigger or smaller than ${ctx.a}'s?`, hint: `${ctx.a} has MORE, so ${ctx.b} must have less.`, explain: `${ctx.a} has MORE, so ${ctx.b}'s amount is smaller than ${ctx.a}'s.` }, "Smaller", ["Bigger"]),
-      { kind: "number", prompt: `How many does ${ctx.b} have?`, hint: "Subtract the difference from the known amount.", explain: `${base} − ${diff} = ${smallerAmount}.`, answer: smallerAmount },
+      sentenceChoice("Which one finds the answer?", base, diff, `${base} − ${diff} = ☐`, smallerAmount),
+      {
+        kind: "number",
+        prompt: `How many does ${ctx.b} have?`,
+        hint: `"Fewer" means ${ctx.b} has less.`,
+        showMe: `${ctx.a} has ${base}. ${ctx.b} has ${diff} fewer. Count back ${diff}: ${countWords(base, smallerAmount)}.`,
+        showMeHoldMs: holdFor(diff),
+        explain: `${base} − ${diff} = ${smallerAmount}.`,
+        answer: smallerAmount,
+      },
     ],
     wrapUp: `${base} − ${diff} = ${smallerAmount}.`,
   };
 }
 
+// ============================================================================
+// CHALLENGE (optional, user decision C1-26): a "fewer" story where you ADD.
+// "Ben has 3 fewer than Lily. Ben has 5. How many does Lily have?" Not in
+// Mixed, requiredBuckets, the Unit Test or the Module Test, so it never
+// counts toward stars; a student picks "Challenge: tricky compare stories" by hand.
+// ============================================================================
+
+const CHALLENGE_BUCKET = "challengeFewerAdd";
+
+function fewerAddChallenge(): Problem {
+  const ctx = pick(COMPARE_CONTEXTS);
+  // The smaller amount (known) 1–15; the bigger one (asked) at most 20.
+  const small = randInt(1, 15);
+  const diff = randInt(1, Math.min(9, 20 - small));
+  const big = small + diff;
+  return {
+    title: "Challenge",
+    bucket: CHALLENGE_BUCKET,
+    story: `${ctx.b} has ${diff} fewer ${diff === 1 ? ctx.one : ctx.item} than ${ctx.a}. ${ctx.b} has ${small}. How many ${ctx.item} does ${ctx.a} have?`,
+    // Before help: what the story gives (the smaller row). Stuck: both rows lined up, the extras circled.
+    visual: (_done: number, help?: VisualHelp) =>
+      pointing(help, 0) || pointing(help, 1) ? (
+        <CompareRows
+          rows={[
+            { label: ctx.b, count: small, tone: "b" },
+            { label: ctx.a, count: big, tone: "a" },
+          ]}
+          showGap
+        />
+      ) : (
+        <TenFrameGroup value={small} tone="b" />
+      ),
+    steps: [
+      // The keyword trap: "fewer" sounds like take away, but the bigger amount is asked.
+      // Its own hint says who has more (C3-06), not the generic "put together or take away".
+      { ...sentenceChoice("Which one finds the answer?", small, diff, `${small} + ${diff} = ☐`, big), hint: `${ctx.b} has fewer. So ${ctx.a} has more.` },
+      {
+        kind: "number",
+        prompt: `How many does ${ctx.a} have?`,
+        hint: `${ctx.a} has ${diff} more. Count on ${diff} from ${small}.`,
+        showMe: `${ctx.b} has ${small}. ${ctx.a} has ${diff} more: ${countWords(small, big)}.`,
+        showMeHoldMs: holdFor(diff),
+        explain: `${small} + ${diff} = ${big}.`,
+        answer: big,
+      },
+    ],
+    wrapUp: `${small} + ${diff} = ${big}. ${ctx.a} has ${diff} more than ${ctx.b}.`,
+  };
+}
+
 export const putTogetherCompareWordProblems: Unit = {
   id: "putTogetherCompareWordProblems",
-  title: "Word Problems: Put Together/Take Apart and Compare",
-  goal: "Solve stories about two parts making a whole, and stories comparing two amounts.",
+  title: "Put Together and Compare Stories",
+  goal: "Solve put-together stories and compare stories.",
   standard: "1.OA.1",
   keyIdea: (
     <>
-      <p>Put-together stories have a TOTAL and two PARTS — when both parts are unknown, there's usually more than one valid way to split the total.</p>
-      <p>Compare stories are about the GAP between two amounts. To find the gap, subtract the smaller from the bigger. If you know one amount and the gap, add or subtract the gap to find the other amount.</p>
+      <p>Two parts make a total.</p>
+      <p>To compare, line them up. Find the extras.</p>
     </>
   ),
   Explore,
   requiresIntro: true,
-  problems: [{ label: "Put Together / Compare", make: wordProblem, buckets: BUCKETS }],
+  problems: [
+    { label: "Put Together and Compare", make: wordProblem, buckets: BUCKETS },
+    // Optional: not in Mixed, and its bucket is not in requiredBuckets (no stars).
+    { label: "Challenge: tricky compare stories", make: fewerAddChallenge, buckets: [CHALLENGE_BUCKET], optional: true },
+  ],
   requiredBuckets: BUCKETS,
   test: putTogetherCompareWordProblemsTest,
 };

@@ -63,6 +63,64 @@ export function starCount(goal: number, requiredBuckets: string[] | undefined, p
   return Math.min(goal - 1, Math.ceil((goal * earned) / (requiredBuckets.length * BUCKET_CLEAN_GOAL)));
 }
 
+/**
+ * One practice solve applied to a unit's progress. The ONLY place this update
+ * is written: `record()` saves it, and `starOutcome()` uses it to tell the
+ * student whether that solve lit a star — so the two can never disagree.
+ */
+export function applySolve(cur: UnitProgress | undefined, clean: boolean, bucket?: string): UnitProgress {
+  const base = cur ?? { solved: 0, clean: 0 };
+  // Only a CLEAN solve counts as covering a bucket — same bar as the
+  // `clean` counter itself, so a star still means "solved it properly,"
+  // not just "saw every scenario at some point, however messily."
+  const coveredBuckets =
+    clean && bucket && !base.coveredBuckets?.includes(bucket) ? [...(base.coveredBuckets ?? []), bucket] : base.coveredBuckets;
+  const bucketCleanCounts = clean && bucket ? { ...(base.bucketCleanCounts ?? {}), [bucket]: bucketClean(base, bucket) + 1 } : base.bucketCleanCounts;
+  return {
+    ...base,
+    solved: base.solved + 1,
+    clean: base.clean + (clean ? 1 : 0),
+    ...(coveredBuckets ? { coveredBuckets } : {}),
+    ...(bucketCleanCounts ? { bucketCleanCounts } : {}),
+  };
+}
+
+/**
+ * What one practice solve did for the student's stars — drives the honest
+ * wrap-up message in StepProblem (never "⭐" unless a star really lit up).
+ *   "star"       a new star lit up.
+ *   "progress"   it counted, but the next star needs more solves.
+ *   "helped"     help was used (hint ladder, Show me, reveal, wrong picks...).
+ *   "notMixed"   a clean solve while practicing one type (only Mixed counts).
+ *   "bucketFull" this kind already has all the credit it can give.
+ *   "allDone"    every star for this unit is already lit.
+ */
+export type StarOutcome = "star" | "progress" | "helped" | "notMixed" | "bucketFull" | "allDone";
+
+/**
+ * Decide the StarOutcome of a solve BEFORE it is recorded, using the very same
+ * applySolve()/starCount() the lab records and displays with. `counts` is
+ * false when the solve can't earn stars (e.g. a single-type practice set).
+ */
+export function starOutcome(
+  goal: number,
+  requiredBuckets: string[] | undefined,
+  p: UnitProgress | undefined,
+  clean: boolean,
+  bucket: string | undefined,
+  counts = true
+): StarOutcome {
+  if (!clean) return "helped";
+  if (!counts) return "notMixed";
+  const before = starCount(goal, requiredBuckets, p);
+  if (before >= goal) return "allDone";
+  const after = starCount(goal, requiredBuckets, applySolve(p, true, bucket));
+  if (after > before) return "star";
+  const buckets = requiredBuckets && requiredBuckets.length > 0;
+  if (buckets && (!bucket || !requiredBuckets!.includes(bucket) || bucketClean(p, bucket) >= BUCKET_CLEAN_GOAL)) return "bucketFull";
+  return "progress";
+}
+
 const cacheKey = (studentId: string | null, location: string | null, moduleId: string) =>
   studentId && location
     ? `module-progress:${location}:${studentId}:${moduleId}:v1`
@@ -172,23 +230,7 @@ export function useModuleProgress(
   const record = useCallback(
     (unitId: string, clean: boolean, bucket?: string) => {
       setProgress((p) => {
-        const cur = p[unitId] ?? { solved: 0, clean: 0 };
-        // Only a CLEAN solve counts as covering a bucket — same bar as the
-        // `clean` counter itself, so a star still means "solved it properly,"
-        // not just "saw every scenario at some point, however messily."
-        const coveredBuckets =
-          clean && bucket && !cur.coveredBuckets?.includes(bucket) ? [...(cur.coveredBuckets ?? []), bucket] : cur.coveredBuckets;
-        const bucketCleanCounts = clean && bucket ? { ...(cur.bucketCleanCounts ?? {}), [bucket]: bucketClean(cur, bucket) + 1 } : cur.bucketCleanCounts;
-        const next = {
-          ...p,
-          [unitId]: {
-            ...cur,
-            solved: cur.solved + 1,
-            clean: cur.clean + (clean ? 1 : 0),
-            ...(coveredBuckets ? { coveredBuckets } : {}),
-            ...(bucketCleanCounts ? { bucketCleanCounts } : {}),
-          },
-        };
+        const next = { ...p, [unitId]: applySolve(p[unitId], clean, bucket) };
         persist(next);
         return next;
       });
@@ -199,6 +241,27 @@ export function useModuleProgress(
       }
     },
     [studentId, location, moduleId, persist]
+  );
+
+  /**
+   * record() plus the honest star result for the wrap-up message. The result
+   * comes from the same progress + applySolve() that record() saves, so the
+   * message can never say "⭐" for a solve that didn't light one.
+   * `counts` false (e.g. single-type practice) records the solve as not clean.
+   */
+  const recordSolve = useCallback(
+    (
+      unitId: string,
+      clean: boolean,
+      bucket: string | undefined,
+      opts: { goal: number; requiredBuckets?: string[]; counts?: boolean }
+    ): StarOutcome => {
+      const counts = opts.counts ?? true;
+      const outcome = starOutcome(opts.goal, opts.requiredBuckets, progress[unitId], clean, bucket, counts);
+      record(unitId, clean && counts, bucket);
+      return outcome;
+    },
+    [progress, record]
   );
 
   const recordTest = useCallback(
@@ -238,5 +301,5 @@ export function useModuleProgress(
     persist({});
   }, [persist]);
 
-  return { progress, record, recordTest, recordIntroDone, reset };
+  return { progress, record, recordSolve, recordTest, recordIntroDone, reset };
 }

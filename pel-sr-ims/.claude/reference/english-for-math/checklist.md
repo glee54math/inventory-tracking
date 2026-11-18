@@ -29,6 +29,7 @@ largest numbers the generator can produce.
 | Length | Over the grade's working limit | grade file → Limits |
 | Grammar | Structures marked "not yet" (passive, *if*, relative clauses, negation, long noun phrases) | grade file → Grammar; traps §6 |
 | Math words | A word from a later grade, or a word used before the unit teaches it | grade file → Math words |
+| Untaught words | A word a student must understand to answer (in a prompt, choice, title or Test item) that no earlier unit in this lab and no earlier lab teaches. Check the lab vocabulary lists (`_planning/Grade-*/{LabName}/vocabulary.md`) of every earlier lab, and this lab's own list for earlier units. Avoiding a word in Unit 1 isn't enough if Unit 4's Test uses it (MG2: "digit"). Check titles too | builder rules → Vocabulary list |
 | Double meanings | An everyday word used in its math sense (or both senses in one lab) | traps §1 |
 | Voice | Homophones without context; symbols, ranges, "vs.", arrows, "?" | traps §2, §8 |
 | Order | Words in a different order from the operation, when that isn't the skill | traps §3 |
@@ -40,9 +41,9 @@ largest numbers the generator can produce.
 | Text vs. picture | A sentence that describes a picture ("the two numbers in both lists") doesn't match what the picture shows at the values used | traps §1 |
 | False distractors | A wrong choice that is a true statement, just not the reason ("B adds more each time" for a times pattern). Every wrong choice must be false, not just less complete | builder rules |
 | Loaded questions | "What is wrong?" when "Nothing is wrong" can be the answer. Ask "Is anything wrong?" with the same wording in both cases | grade file → Watch for |
+| Mode-dependent lines | An Explore sentence shown in every mode of a toggle (Add To / Take From, Count on / Count back) must be true in every mode, or switch with the mode. Check the "Look here" key lines too. (MG1 Unit 3: "Take the number you know away from the end" showed in Take From mode too, where a start-missing story adds.) | this checklist |
 | Switches | One problem's steps reach opposite results (changes / doesn't change, first numbers / new numbers), and a wrap-up sentence doesn't say which part it means. Name it: "With the new numbers, …" | this checklist |
-| Generated plurals and prepositions | "You plotted ${n} points" with no singular case ("1 points"); a fixed preposition before a pooled noun ("in every ${group}" → "in every plate"). The script flags both as `plural:` and `prep:` | builder rules |
-
+| Generated plurals and prepositions | "You plotted ${n} points" with no singular case ("1 points"); a fixed preposition before a pooled noun ("in every ${group}" → "in every plate"). The script flags both as `plural:` and `prep:`. **Grammar wins over hiding a hint (user decision 2026-11-18):** if a word after a blank must agree with the answer ("☐ ten" when the answer is 1), keep the correct grammar, even though it hints. Never write "ten(s)" or "one(s)"; that is very confusing for early readers | builder rules |
 ## 4. Check each word problem against the standards
 - Is the **problem type** allowed for this grade (CCSS Table 1 for add and
   subtract, Table 2 for multiply and divide)? E.g. "times as many" in 3rd is
@@ -88,8 +89,14 @@ It flags candidates (a person still decides):
 - sentences starting with *If*, or containing *which / whom / whose / NOT*;
 - symbols the voice may not say (`-` between numbers, `vs.`, `→`, `?`
   not at the end);
-- later-grade words, true/false in K–1, homophones (K–3), "times as many"
-  before 4th, start-unknown wording in K–1, dash and parenthesis asides.
+- later-grade words, true/false statements in K–1 (equation true/false like
+  "Is 8 = 8 true or false?" is only noted), homophones (K–3), "times as
+  many" before 4th, start-unknown wording in K–1, dash and parenthesis
+  asides;
+- generated-text grammar: `did ${…}` + a past-tense pool verb ("did Nora
+  found"), `${n} are` / `${n} times` / `${n} numbers` / "them" after a
+  number with no singular case, echo questions ("has how many"), and "not"
+  inside a question.
 
 The word lists in the script mirror the grade files; when a grade file
 changes, update the script's `LATER_WORDS` too.

@@ -1,34 +1,39 @@
-import { HundredChart } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 
-// ---------- end-of-unit test: Ten More, Ten Less, and Multiples of Ten ----------
+// ---------- end-of-unit test: Ten More, Ten Less, and Adding Tens ----------
 // 10 questions from 10 generators. Self-contained — same no-circular-import
-// convention as every other *Test.tsx in this app.
+// convention as every other *Test.tsx in this app. No charts: on a full 1-120
+// chart the answer to "10 more / 10 less / add tens" is printed a row or more
+// away (user decision 2026-11-18: a Test picture must not give the answer away).
 
 /** 10 more, no rollover. */
 export const tenMoreQuestion = (): TestQuestion[] => {
-  const n = randInt(10, 88);
+  // Odd ones only: tenMorePickQuestion uses even ones, so the two never match.
+  const n = randInt(1, 8) * 10 + (randInt(0, 4) * 2 + 1);
   const result = n + 10;
   return [
     {
-      visual: <HundredChart marks={[{ n, tone: "a" }, { n: result, tone: "b" }]} />,
+      visual: null,
       difficulty: "easy",
-      step: { kind: "number", prompt: `What is 10 more than ${n}?`, hint: "Only the tens digit changes.", explain: `${n} + 10 = ${result}.`, answer: result },
+      step: { kind: "number", prompt: `What is 10 more than ${n}?`, hint: "Go down one row.", explain: `${n} + 10 = ${result}.`, answer: result },
     },
   ];
 };
 
 /** 10 less, staying a two-digit number (no crossing down to single digits). */
 export const tenLessNoCrossingQuestion = (): TestQuestion[] => {
-  const n = randInt(31, 99);
+  // Not a number like 40: tenLessFromTensQuestion asks those (separate pools).
+  let n: number;
+  do n = randInt(31, 99);
+  while (n % 10 === 0);
   const result = n - 10;
   return [
     {
-      visual: <HundredChart marks={[{ n, tone: "a" }, { n: result, tone: "b" }]} />,
+      visual: null,
       difficulty: "easy",
-      step: { kind: "number", prompt: `What is 10 less than ${n}?`, hint: "Only the tens digit changes.", explain: `${n} - 10 = ${result}.`, answer: result },
+      step: { kind: "number", prompt: `What is 10 less than ${n}?`, hint: "Go up one row.", explain: `${n} − 10 = ${result}.`, answer: result },
     },
   ];
 };
@@ -36,126 +41,140 @@ export const tenLessNoCrossingQuestion = (): TestQuestion[] => {
 /** 10 less, crossing all the way down to a single-digit number — the hard
  *  case this unit specifically names. */
 export const tenLessCrossingQuestion = (): TestQuestion[] => {
-  const n = randInt(11, 23);
+  // Not 20: tenLessFromTensQuestion asks "10 less than 20" (review C3-46).
+  let n: number;
+  do n = randInt(11, 23);
+  while (n === 20);
   const result = n - 10;
   return [
     {
-      visual: <HundredChart marks={[{ n, tone: "a" }, { n: result, tone: "b" }]} />,
+      visual: null,
       difficulty: "hard",
-      step: { kind: "number", prompt: `What is 10 less than ${n}?`, hint: "The tens digit drops to 0 and disappears — no need to recount by ones.", explain: `${n} - 10 = ${result}.`, answer: result },
+      step: { kind: "number", prompt: `What is 10 less than ${n}?`, hint: "Go up one row.", explain: `${n} − 10 = ${result}.`, answer: result },
     },
   ];
 };
 
-/** Adding a multiple of ten. */
+/** Adding tens. */
 export const addMultipleOfTenQuestion = (): TestQuestion[] => {
-  const n = randInt(10, 79);
-  const addTens = randInt(1, 2);
+  // Review C3-46: 10-49 (addMultipleOfTenUpperQuestion uses 50-79), and 20
+  // or 30 added, never 10: "37 + 10" is the same as tenMoreQuestion's
+  // "10 more than 37".
+  const n = randInt(10, 49);
+  const addTens = randInt(2, 3);
   const add = addTens * 10;
   const result = n + add;
   return [
     {
-      visual: <HundredChart marks={[{ n, tone: "a" }, { n: result, tone: "b" }]} />,
+      visual: null,
       difficulty: "medium",
-      step: { kind: "number", prompt: `What is ${n} + ${add}?`, hint: "Add whole tens; the ones digit stays put.", explain: `${n} + ${add} = ${result}.`, answer: result },
+      step: { kind: "number", prompt: `What is ${n} + ${add}?`, hint: "Add the tens. The ones stay the same.", explain: `${n} + ${add} = ${result}.`, answer: result },
     },
   ];
 };
 
-/** Subtracting a multiple of ten, landing on an exact decade. */
+/** Taking away tens, landing on a number like 40. */
 export const subtractMultipleOfTenExactQuestion = (): TestQuestion[] => {
-  const subTens = randInt(1, 6);
+  // 20-60 taken away: "60 − 10" would match tenLessFromTensQuestion's
+  // "10 less than 60" (review C3-46).
+  const subTens = randInt(2, 6);
   const sub = subTens * 10;
   const extraTens = randInt(1, 9 - subTens);
   const n = (subTens + extraTens) * 10;
   const result = n - sub;
   return [
     {
-      visual: <HundredChart marks={[{ n, tone: "a" }, { n: result, tone: "b" }]} />,
+      visual: null,
       difficulty: "medium",
-      step: { kind: "number", prompt: `What is ${n} - ${sub}?`, hint: "Subtract whole tens from the tens digit.", explain: `${n} - ${sub} = ${result}.`, answer: result },
+      step: { kind: "number", prompt: `What is ${n} − ${sub}?`, hint: "Take away the tens.", explain: `${n} − ${sub} = ${result}.`, answer: result },
     },
   ];
 };
 
-/** Subtracting a multiple of ten, starting mid-decade — tens change, ones
- *  stay put, the case that actually tests not brute-force counting. */
+/** Taking away tens from a number like 45 — tens change, ones stay put, the
+ *  case that actually tests not counting by ones. */
 export const subtractMultipleOfTenMidDecadeQuestion = (): TestQuestion[] => {
-  const subTens = randInt(1, 6);
+  // 20-60 taken away: "45 − 10" is the same as "10 less than 45" (C3-46).
+  const subTens = randInt(2, 6);
   const sub = subTens * 10;
   const extraTens = randInt(1, 9 - subTens);
-  const ones = randInt(1, 9);
+  const ones = randInt(0, 4) * 2 + 1; // odd ones: onesStayQuestion uses even (C3-46)
   const n = (subTens + extraTens) * 10 + ones;
   const result = n - sub;
   return [
     {
-      visual: <HundredChart marks={[{ n, tone: "a" }, { n: result, tone: "b" }]} />,
+      visual: null,
       difficulty: "hard",
-      step: { kind: "number", prompt: `What is ${n} - ${sub}?`, hint: "The tens digit changes, but the ones digit (which doesn't involve tens at all) stays exactly the same.", explain: `${n} - ${sub} = ${result}.`, answer: result },
+      step: { kind: "number", prompt: `What is ${n} − ${sub}?`, hint: "Take away the tens. The ones stay the same.", explain: `${n} − ${sub} = ${result}.`, answer: result },
     },
   ];
 };
 
-/** Generalization / true-false. */
-export const onesNeverChangeTrueFalseQuestion = (): TestQuestion[] => {
+/** The ones stay the same when you take away tens: e.g. 68 − 30, typed, no
+ *  picture (replaces the old true/false item, review C1-08 / E1-30). */
+export const onesStayQuestion = (): TestQuestion[] => {
+  const subTens = randInt(2, 4);
+  const sub = subTens * 10;
+  const n = randInt(subTens + 1, 9) * 10 + randInt(1, 4) * 2; // even ones (C3-46)
+  const result = n - sub;
   return [
     {
       visual: null,
       difficulty: "hard",
-      step: choice(
-        { prompt: "True or false: adding or subtracting any multiple of ten (10, 20, 30...) never changes a number's ones digit.", hint: "Try 45+20 and 68-30 — does the ones digit ever move?", explain: "True — any multiple of ten only ever moves the tens digit (and higher places); the ones digit is untouched." },
-        "True",
-        ["False"]
-      ),
+      step: { kind: "number", prompt: `What is ${n} − ${sub}?`, hint: "The ones stay the same.", explain: `${n} − ${sub} = ${result}.`, answer: result },
     },
   ];
 };
 
-/** WHY reasoning check: efficient strategy vs. recounting by ones. */
-export const strategyWhyQuestion = (): TestQuestion[] => {
-  const n = randInt(11, 88);
+/** 10 less from a number like 60 (review C2-30 / E2-36: replaces the old
+ *  "How can you find 10 more fast?" pick, whose answer never changed and which
+ *  Practice no longer taught). Typed. A start like 60 is a case no other item
+ *  here covers (tenLessNoCrossingQuestion skips numbers like 40). */
+export const tenLessFromTensQuestion = (): TestQuestion[] => {
+  const n = randInt(2, 9) * 10;
+  const result = n - 10;
   return [
     {
       visual: null,
       difficulty: "medium",
-      step: choice(
-        { prompt: `What's the fastest way to find 10 more or 10 less than ${n}?`, hint: "Recounting by ones works, but it's slow and easy to lose track of.", explain: "Just change the tens digit by 1 — no need to recount by ones." },
-        "Just change the tens digit by 1",
-        ["Count forward or backward one at a time by ones"]
-      ),
+      step: { kind: "number", prompt: `What is 10 less than ${n}?`, hint: "Go up one row.", explain: `${n} − 10 = ${result}.`, answer: result },
     },
   ];
 };
 
-/** Which digit changed — the specific misconception check (forgetting that
- *  ONLY the tens digit moves). */
-export const digitChangedChoiceQuestion = (): TestQuestion[] => {
-  const n = randInt(10, 88);
+/** 10 more, as a pick (review C2-30 / E2-36: replaces "Which digit changed?",
+ *  which used an untaught word and always had the same answer). The chart
+ *  marks only the start. Distractors: changed the ones instead, changed both.
+ *  n's ones are 0-8, so "1 more" never rolls into the next ten. */
+export const tenMorePickQuestion = (): TestQuestion[] => {
+  const n = randInt(1, 8) * 10 + randInt(0, 4) * 2; // even ones 0-8 (tenMoreQuestion uses odd)
   const result = n + 10;
   return [
     {
-      visual: <HundredChart marks={[{ n, tone: "a" }, { n: result, tone: "b" }]} />,
+      visual: null,
       difficulty: "medium",
       step: choice(
-        { prompt: `Going from ${n} to ${result}, which digit changed?`, hint: "Compare the two numbers digit by digit.", explain: "Only the tens digit changed; the ones digit is identical in both numbers." },
-        "Only the tens digit",
-        ["Only the ones digit", "Both digits changed"]
+        { prompt: `What is 10 more than ${n}?`, hint: "Go down one row.", explain: `${n} + 10 = ${result}.` },
+        String(result),
+        [
+          String(n + 1), // misconception: changed the ones (1 more, not 10 more)
+          String(n + 11), // misconception: changed both the tens and the ones
+        ]
       ),
     },
   ];
 };
 
-/** A second multiple-of-ten addition, at the upper end of the range, to
- *  cover more of the "add tens" bucket than a single question would. */
+/** A second adding-tens question, at the upper end of the range. */
 export const addMultipleOfTenUpperQuestion = (): TestQuestion[] => {
   const n = randInt(50, 79);
-  const add = randInt(1, 2) * 10;
+  const add = 20; // not 10: that is "10 more than n", asked by tenMoreQuestion (C3-46)
   const result = n + add;
   return [
     {
       visual: null,
       difficulty: "medium",
-      step: { kind: "number", prompt: `What is ${n} + ${add}?`, hint: "Add whole tens; the ones digit stays put.", explain: `${n} + ${add} = ${result}.`, answer: result },
+      step: { kind: "number", prompt: `What is ${n} + ${add}?`, hint: "Add the tens. The ones stay the same.", explain: `${n} + ${add} = ${result}.`, answer: result },
     },
   ];
 };
@@ -168,9 +187,9 @@ export const tenMoreTenLessTest: Unit["test"] = {
     addMultipleOfTenQuestion,
     subtractMultipleOfTenExactQuestion,
     subtractMultipleOfTenMidDecadeQuestion,
-    onesNeverChangeTrueFalseQuestion,
-    strategyWhyQuestion,
-    digitChangedChoiceQuestion,
+    onesStayQuestion,
+    tenLessFromTensQuestion,
+    tenMorePickQuestion,
     addMultipleOfTenUpperQuestion,
   ],
   passScore: 9,

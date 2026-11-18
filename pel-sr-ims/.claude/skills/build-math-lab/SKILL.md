@@ -81,10 +81,13 @@ path to the checkers.
    plan adds units to an EXISTING lab rather than a new one, flag that
    explicitly too. Students who already have practice history must still
    pass the new CFU before Practice opens (user requirement: the CFU gates
-   everyone); their stars and solve counts are kept.
+   everyone); their stars and solve counts are kept. Stars are only
+   announced when actually earned: the wrap-up never says "⭐" if help was
+   used or the bucket's star was already earned (shell uses `recordSolve`
+   and returns its `StarOutcome`; see the builder's "Stars / mastery").
 4. State the target audience framing and the **grade** explicitly in the
    plan. Default: the lab's intended grade audience, pitched at its youngest
-   first-time student (e.g. MK1–MK4 and MG1 = Kindergarten/1st graders seeing
+   first-time student (e.g. MK1–MK4 and MG1–MG4 = Kindergarten/1st graders seeing
    it for the first time plus 2nd graders who are behind, working alone on an
    iPad, mostly non-readers, so audio-first). If the intended audience for
    this lab isn't clear from its slot, ask the user. The grade picks the

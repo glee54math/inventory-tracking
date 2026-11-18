@@ -9,7 +9,7 @@ import { UnitPreviewCarousel } from "../shared/components/UnitPreviewCarousel";
 import { MathText, StackedFractions } from "../shared/components/MathText";
 import { palette } from "../shared/lib/palette";
 import { pick } from "../shared/lib/math";
-import { MASTERY_GOAL, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
+import { MASTERY_GOAL, useModuleProgress, type UnitProgress, type StarOutcome } from "../../../hooks/useModuleProgress";
 import { useStudentContext } from "../../../components/student_portal/StudentContext";
 
 const MODULE_ID = "MM1_RatioLab";
@@ -148,7 +148,7 @@ function UnitView({
 }: {
   unit: Unit;
   progress?: UnitProgress;
-  onSolved: (clean: boolean) => void;
+  onSolved: (clean: boolean, bucket: string | undefined, counts: boolean) => StarOutcome | undefined;
   onTest: (score: number) => void;
   onIntroDone: () => void;
   onNextUnit?: () => void;
@@ -256,7 +256,7 @@ function UnitView({
               Practicing one type is great for extra reps, but only <b>Mixed</b> problems count toward your mastery stars.
             </p>
           )}
-          <StepProblem key={`${unit.id}-${seed}-${String(typeIdx)}`} problem={problem} onComplete={(clean) => onSolved(clean && typeIdx === "mix")} onNext={() => setSeed((s) => s + 1)} />
+          <StepProblem key={`${unit.id}-${seed}-${String(typeIdx)}`} problem={problem} onComplete={(clean) => onSolved(clean, undefined, typeIdx === "mix")} onNext={() => setSeed((s) => s + 1)} />
           {mastered && (unit.test || onNextUnit) && (
             <div className="mastered">
               {unit.test && !testPassed(unit, progress) ? (
@@ -296,7 +296,7 @@ function UnitView({
 function RatioLab() {
   useFonts();
   const { currentStudent } = useStudentContext();
-  const { progress, record, recordTest, recordIntroDone, reset } = useModuleProgress(
+  const { progress, recordSolve, recordTest, recordIntroDone, reset } = useModuleProgress(
     currentStudent?.id ?? null,
     currentStudent?.location ?? null,
     MODULE_ID
@@ -316,7 +316,11 @@ function RatioLab() {
   }, []);
   const unit = current === null ? null : units[current];
   const moduleTestScore = progress[MODULE_PROGRESS_KEY]?.testScore;
-  const onSolved = useCallback((clean: boolean) => unit && record(unit.id, clean), [unit, record]);
+  const onSolved = useCallback(
+    (clean: boolean, bucket: string | undefined, counts: boolean) =>
+      unit ? recordSolve(unit.id, clean, bucket, { goal: MASTERY_GOAL, requiredBuckets: undefined, counts }) : undefined,
+    [unit, recordSolve]
+  );
   const onTest = useCallback((score: number) => unit && recordTest(unit.id, score), [unit, recordTest]);
   const onModuleTestComplete = useCallback((score: number) => recordTest(MODULE_PROGRESS_KEY, score), [recordTest]);
   const onIntroDone = useCallback(() => unit && recordIntroDone(unit.id), [unit, recordIntroDone]);

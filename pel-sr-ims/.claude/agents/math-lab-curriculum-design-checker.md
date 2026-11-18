@@ -84,7 +84,7 @@ student still gets unstuck, learns the idea, and can't fake mastery.
 Vocabulary, sentence length and the amount of reading must be appropriate
 for the lab's grade band, as defined in `math-lab-builder.md` → Audience and
 language:
-- **K–1 (MK1–MK4, MG1):** almost all visual and spoken. A K–1 screen that
+- **K–1 (MK1–MK4, MG1–MG4):** almost all visual and spoken. A K–1 screen that
   needs reading, uses dropdowns or true/false, asks a vocabulary question,
   or gives a paragraph of feedback is a finding, even if it would be fine
   for older students.
@@ -104,7 +104,7 @@ open "Show me" every time. Most of the user's own bug reports came from this.
 Make 3 personas from the lab's intended audience, and walk every unit as
 each one. Defaults:
 
-K–1 labs (MK1–MK4, MG1):
+K–1 labs (MK1–MK4, MG1–MG4):
 1. **The first-timer who can't read.** Kindergartner, never seen this. Taps
    whatever is big and colorful, ignores text, relies on the voice.
 2. **The guesser.** 1st grader who taps answers fast to see what happens,
@@ -272,6 +272,13 @@ For every Problem type, trace the help a stuck student gets:
   confirm each bucket's hard cases actually appear.
 
 ### Layer 7: Mastery integrity
+- **Is every star announcement true?** The wrap-up (text, emoji, animation
+  and spoken audio) may say "⭐" only when a star actually lit up. Saying
+  ⭐ after help (hint ladder, Show me, Show answer, wrong picks), on a
+  single-type (non-Mixed) solve, for a bucket whose star credit was already
+  earned, or when all stars are lit is a **Major** finding. Check that the
+  shell records Practice with `recordSolve` and returns its `StarOutcome`
+  from `onComplete`, and that no lab hard-codes "⭐"/"You got a star".
 - Can stars or a Test pass be earned by guessing? Does every Problem type
   have at least one typed step, and does that step make the student produce
   something (not just copy a number already on screen)?

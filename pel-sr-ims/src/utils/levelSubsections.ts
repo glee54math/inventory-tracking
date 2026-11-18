@@ -433,3 +433,70 @@ export const LEVEL_SKILLS: Record<string, LevelSkill[]> = {
 export function getSkillsForLevel(level: string): LevelSkill[] {
   return LEVEL_SKILLS[level] ?? [];
 }
+
+/**
+ * Lab order: the "needs" list for every standalone lab (keyed by componentFile).
+ * A lab's needs are the labs a student should finish first. A lab is finished
+ * when its Module Test is passed, or when Mr. Lee marks it finished with his PIN
+ * (see utils/labOrder.ts). Needs only NUDGE: a student can always open any lab.
+ * Labs not listed here need nothing first. Needs can point to a lab in an
+ * earlier level. Within a level, LEVEL_SKILLS' order is the suggested order.
+ *
+ * The same order decides which labs count as "earlier" for the vocabulary
+ * lists (_planning/Grade-x/{Lab}/vocabulary.md): a lab's needs, and theirs.
+ *
+ * Every id must be a standalone lab's componentFile (practice tools like
+ * MG7_Nx1DigitMultiplication are "visual" skills, not labs).
+ *
+ * DRAFT 2026-11-18 (Claude, from the standards each lab covers) — Mr. Lee to
+ * review on the All Levels page's "Lab order & vocabulary" board.
+ */
+export const LAB_NEEDS: Record<string, string[]> = {
+  // Kindergarten
+  MK2_AdditionSubtractionAndTeenNumbersLab: ["MK1_CountingAndCardinalityLab"],
+  MK3_MeasurementAndClassifyingLab: ["MK1_CountingAndCardinalityLab"],
+  MK4_ShapesLab: ["MK1_CountingAndCardinalityLab"],
+  // 1st grade
+  MG1_AdditionAndSubtractionWithin20Lab: ["MK2_AdditionSubtractionAndTeenNumbersLab"],
+  MG2_PlaceValueTo120Lab: ["MG1_AdditionAndSubtractionWithin20Lab"],
+  MG3_MeasurementTimeAndDataLab: ["MK3_MeasurementAndClassifyingLab", "MG1_AdditionAndSubtractionWithin20Lab"],
+  MG4_ShapesAndFractionsIntroLab: ["MK4_ShapesLab"],
+  // 2nd grade
+  MG5_PlaceValueTo1000Lab: ["MG2_PlaceValueTo120Lab"],
+  MG5_ExtendingAdditionAndSubtractionLab: ["MG5_PlaceValueTo1000Lab", "MG1_AdditionAndSubtractionWithin20Lab"],
+  MG5_EvenOddAndArraysLab: ["MG1_AdditionAndSubtractionWithin20Lab"],
+  MG5_MeasurementMoneyAndDataLab: ["MG3_MeasurementTimeAndDataLab", "MG5_ExtendingAdditionAndSubtractionLab"],
+  MG5_ShapesAndEqualSharesLab: ["MG4_ShapesAndFractionsIntroLab"],
+  // 3rd grade
+  MG6_PlaceValueAndFluencyTo1000Lab: ["MG5_PlaceValueTo1000Lab", "MG5_ExtendingAdditionAndSubtractionLab"],
+  MG6_AreaAndPerimeterLab: ["MG5_EvenOddAndArraysLab", "MG5_MeasurementMoneyAndDataLab"],
+  MG6_FractionsFoundationsLab: ["MG5_ShapesAndEqualSharesLab"],
+  MG6_BarModel: ["MG5_ExtendingAdditionAndSubtractionLab"],
+  MG7_MultiplicationFoundationsLab: ["MG5_EvenOddAndArraysLab"],
+  MG7_DivisionAndWordProblemsLab: ["MG7_MultiplicationFoundationsLab"],
+  MG7_QuadrilateralsAndPartitioningLab: ["MG5_ShapesAndEqualSharesLab", "MG6_FractionsFoundationsLab"],
+  MG7_TimeMeasurementAndDataLab: ["MG5_MeasurementMoneyAndDataLab", "MG7_MultiplicationFoundationsLab"],
+  // 4th grade
+  MG8_FactorsMultiplesAndPatternsLab: ["MG7_MultiplicationFoundationsLab", "MG7_DivisionAndWordProblemsLab"],
+  MG8_MultiplicativeComparisonAndWordProblemsLab: ["MG7_DivisionAndWordProblemsLab"],
+  MG8_OneDigitDivisionLab: ["MG7_DivisionAndWordProblemsLab", "MG6_PlaceValueAndFluencyTo1000Lab"],
+  MG8_LinesAnglesAndShapeClassificationLab: ["MG7_QuadrilateralsAndPartitioningLab"],
+  MG8_AnglesAndProtractorLab: ["MG8_LinesAnglesAndShapeClassificationLab"],
+  MG9_IntroToFractionsLab: ["MG6_FractionsFoundationsLab", "MG8_FactorsMultiplesAndPatternsLab"],
+  MG9_FractionOperationsLab: ["MG9_IntroToFractionsLab"],
+  MG9_DecimalsLab: ["MG9_IntroToFractionsLab"],
+  MG9_MultiDigitMultiplicationLab: ["MG7_MultiplicationFoundationsLab", "MG6_PlaceValueAndFluencyTo1000Lab"],
+  MG9_TwoDigitDivisionLab: ["MG8_OneDigitDivisionLab"],
+  MG9_MeasurementConversionAndWordProblemsLab: ["MG7_TimeMeasurementAndDataLab", "MG8_MultiplicativeComparisonAndWordProblemsLab"],
+  // 5th grade
+  MG10_AddingAndSubtractingFractionsLab: ["MG9_FractionOperationsLab"],
+  MG10_NumericalExpressionsAndPatternsLab: ["MG8_FactorsMultiplesAndPatternsLab", "MG9_MultiDigitMultiplicationLab"],
+  MG10_WholeNumberAndDecimalOperationsLab: ["MG9_DecimalsLab", "MG9_MultiDigitMultiplicationLab", "MG9_TwoDigitDivisionLab"],
+  MG11_MultDivFractionLab: ["MG10_AddingAndSubtractingFractionsLab"],
+  MG11_PowersOfTen: ["MG10_WholeNumberAndDecimalOperationsLab"],
+  MG11_GeometryLab: ["MG8_LinesAnglesAndShapeClassificationLab"],
+  // 6th grade
+  MM1_RatioLab: ["MG11_MultDivFractionLab"],
+  MM1_NegativeNumbersLab: ["MG11_GeometryLab"],
+  MM1_ExponentsAndExpressionsLab: ["MG10_NumericalExpressionsAndPatternsLab", "MG11_PowersOfTen"],
+};

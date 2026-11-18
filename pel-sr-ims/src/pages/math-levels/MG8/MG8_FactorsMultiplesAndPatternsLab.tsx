@@ -11,7 +11,7 @@ import { MathText, StackedFractions } from "../shared/components/MathText";
 import { PrimesRecallCheck } from "./FactorsMultiplesAndPatternsLab/units/cfu";
 import type { Problem } from "../shared/engine/types";
 import { shuffle } from "../shared/lib/math";
-import { MASTERY_GOAL, isMastered as sharedIsMastered, starCount as sharedStarCount, useModuleProgress, type UnitProgress } from "../../../hooks/useModuleProgress";
+import { MASTERY_GOAL, isMastered as sharedIsMastered, starCount as sharedStarCount, useModuleProgress, type UnitProgress, type StarOutcome } from "../../../hooks/useModuleProgress";
 import { useStudentContext } from "../../../components/student_portal/StudentContext";
 
 const MODULE_ID = "MG8_FactorsMultiplesAndPatternsLab";
@@ -142,7 +142,7 @@ function UnitView({
 }: {
   unit: Unit;
   progress?: UnitProgress;
-  onSolved: (clean: boolean, bucket?: string) => void;
+  onSolved: (clean: boolean, bucket: string | undefined, counts: boolean) => StarOutcome | undefined;
   onTest: (score: number) => void;
   onIntroDone: () => void;
   onNextUnit?: () => void;
@@ -271,7 +271,7 @@ function UnitView({
           <StepProblem
             key={`${unit.id}-${seed}-${String(typeIdx)}`}
             problem={problem}
-            onComplete={(clean, bucket) => onSolved(clean && typeIdx === "mix", bucket)}
+            onComplete={(clean, bucket) => onSolved(clean, bucket, typeIdx === "mix")}
             onNext={() => setSeed((s) => s + 1)}
           />
           {mastered && (unit.test || onNextUnit) && (
@@ -312,7 +312,7 @@ function UnitView({
 
 function FactorsMultiplesAndPatternsLab() {
   const { currentStudent } = useStudentContext();
-  const { progress, record, recordTest, recordIntroDone, reset } = useModuleProgress(currentStudent?.id ?? null, currentStudent?.location ?? null, MODULE_ID);
+  const { progress, recordSolve, recordTest, recordIntroDone, reset } = useModuleProgress(currentStudent?.id ?? null, currentStudent?.location ?? null, MODULE_ID);
   const [current, setCurrent] = useState<number | null>(null);
   const [moduleTestOpen, setModuleTestOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -328,7 +328,11 @@ function FactorsMultiplesAndPatternsLab() {
   }, []);
   const unit = current === null ? null : units[current];
   const moduleTestScore = progress[MODULE_PROGRESS_KEY]?.testScore;
-  const onSolved = useCallback((clean: boolean, bucket?: string) => unit && record(unit.id, clean, bucket), [unit, record]);
+  const onSolved = useCallback(
+    (clean: boolean, bucket: string | undefined, counts: boolean) =>
+      unit ? recordSolve(unit.id, clean, bucket, { goal: MASTERY_GOAL, requiredBuckets: unit.requiredBuckets, counts }) : undefined,
+    [unit, recordSolve]
+  );
   const onTest = useCallback((score: number) => unit && recordTest(unit.id, score), [unit, recordTest]);
   const onModuleTestComplete = useCallback((score: number) => recordTest(MODULE_PROGRESS_KEY, score), [recordTest]);
   const onIntroDone = useCallback(() => unit && recordIntroDone(unit.id), [unit, recordIntroDone]);

@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent, type PointerEvent, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type PointerEvent, type RefObject } from "react";
 
 /**
  * Big on-screen number pads for early learners, so the iPad keyboard never
@@ -70,8 +70,6 @@ export function NumberPad() {
     const onIn = (e: FocusEvent) => {
       if (!isPadInput(e.target)) return;
       setTarget(e.target);
-      // Keep the box clear of the pad, which sits at the bottom of the screen.
-      e.target.scrollIntoView({ block: "center", behavior: "smooth" });
     };
     const onOut = (e: FocusEvent) => {
       if (isPadInput(e.relatedTarget)) return;
@@ -85,6 +83,22 @@ export function NumberPad() {
     };
   }, []);
 
+  // Keep the box clear of the pad, which sits at the bottom of the screen:
+  // center it, or, when centered would still put it under the pad (short
+  // screens, e.g. a laptop), move it to the middle of the space above the pad.
+  const padRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const pad = padRef.current?.getBoundingClientRect();
+    if (!target || !pad) return;
+    const box = target.getBoundingClientRect();
+    const besidePad = box.right < pad.left || box.left > pad.right;
+    if (besidePad || window.innerHeight / 2 + box.height / 2 + 12 <= pad.top) {
+      target.scrollIntoView({ block: "center", behavior: "smooth" });
+    } else {
+      window.scrollBy({ top: (box.top + box.bottom) / 2 - pad.top / 2, behavior: "smooth" });
+    }
+  }, [target]);
+
   // Hide when the box disappears (e.g. the question was answered) without a blur event.
   useEffect(() => {
     if (!target) return;
@@ -97,7 +111,7 @@ export function NumberPad() {
 
   if (!target) return null;
   return (
-    <div className="numpad numpad-float" role="group" aria-label="Number pad" data-tts-skip>
+    <div ref={padRef} className="numpad numpad-float" role="group" aria-label="Number pad" data-tts-skip>
       <PadKeys getTarget={() => target} submits={target.dataset.numpad === "enter"} onDone={() => target.blur()} />
     </div>
   );

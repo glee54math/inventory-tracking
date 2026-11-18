@@ -51,11 +51,21 @@ approved plan, the grade, and the round number.
    **Needs decision** with the options.
 4. **Follow the change through.** The builder's rules require this:
    - A Practice picture or wording changed → update the Test and Module
-     Test questions that show the same idea.
+     Test questions that show the same idea. A Practice step removed or
+     changed → search the Test and Module Test for the same idea and words,
+     and replace any item that nothing in Explore/Practice teaches any more.
+   - A taught word added, removed or renamed → update the lab's
+     `_planning/Grade-*/{LabName}/vocabulary.md` (create it if missing;
+     builder → "Vocabulary list").
    - A CFU question changed → its Practice bucket and Test question still
      match it.
-   - Shared code changed → check every lab that uses it. The five K–1 shells
-     (MK1–MK4, MG1) are near-copies: a `UnitView` fix goes into all five.
+   - Shared code changed → check every lab that uses it. The K–1 shells
+     (MK1–MK4, MG1, MG2; MG3–MG4 once moved to early-learner mode) are
+     near-copies: a `UnitView` fix goes into all of them.
+   - Success / wrap-up text → only announce a star when one is actually
+     awarded: never "⭐" if help was used or the bucket's star was already
+     earned. Use the `StarOutcome` from `recordSolve` (builder "Stars /
+     mastery" section); never hard-code "⭐" in a lab's success text.
    - New text → grammatical for every value the generator can produce, and
      no answer given away in stories, titles or wrong-answer messages.
    - Any CFU touched (or the lab is being fixed at all) → every CFU part

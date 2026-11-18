@@ -63,6 +63,9 @@ const SYMBOLS: Record<string, string> = {
   "&": "and",
   "☐": "blank",
   "□": "blank",
+  // "You got a ⭐!" (StepProblem wrap-up) was spoken "You got a". Other emoji
+  // stay silent.
+  "⭐": "star",
 };
 
 /** "the 30s" → "the thirties" (voices otherwise say "thirty s"). */

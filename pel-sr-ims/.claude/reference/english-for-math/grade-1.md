@@ -28,6 +28,10 @@
   "and / but / so," a pronoun that refers to the sentence just before.
 - **Not yet:** *if…then*, passive voice ("5 were eaten"), relative clauses
   ("the boy who has more"), negatives in questions ("Which is NOT…").
+- **Not yet:** "True or false:" statements about a rule or strategy ("you
+  can always…", "it works for any…"). Ask about one new example instead.
+  Equation true/false (1.OA.7) is fine, said as "Is 8 the same as 8?"
+  (MG1 had 12 of these, 13–38 words long, about the make-ten strategy.)
 
 ## Math words
 - **Known from K:** count, how many, more, fewer, same, add, take away, plus,
@@ -41,7 +45,14 @@
   (1.OA.4, "unknown-addend problem"). Fine to use with students once a
   picture has taught them; until then say "the total" and "the parts."
 - **Not yet:** difference, place value (as words to read), expanded form,
-  even/odd, equation (as a word), commutative.
+  even/odd, equation (as a word), commutative. Also (user-approved
+  2026-11-18, from MG2): *decade* (say "a number like 70"), *regroup* /
+  *carry* / *bundle* (say "make a new ten"), *multiple of ten* (say "tens"
+  or "20, 30, 40").
+- **General rule:** watch for any word this grade probably hasn't learned
+  yet, not just the ones listed here. If a word isn't in "Known" or "New in
+  1st" and isn't taught with a picture in this lab or an earlier one (see
+  the lab vocabulary lists, checklist §3 "Untaught words"), replace it.
 
 ## Word problems (CCSS Table 1, 1st), within 20
 - Everything from K, plus:
