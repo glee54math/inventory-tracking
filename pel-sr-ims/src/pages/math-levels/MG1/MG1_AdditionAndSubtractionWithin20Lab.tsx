@@ -330,9 +330,9 @@ function UnitView({
           <StepProblem
             key={`${unit.id}-${seed}-${String(typeIdx)}`}
             problem={problem}
-            onComplete={(clean, bucket) => {
+            onComplete={(clean, bucket, solvedAlone) => {
               usedTokenRef.current = drawRef.current?.token ?? null;
-              if (clean) {
+              if (solvedAlone) {
                 setOwesRetry(false);
                 onDebt(null);
               }

@@ -113,6 +113,8 @@ to say), and pronouns must match them.
 - **No bare signs inside a sentence** ("Use >, =, or <"). The voice turns
   each sign into its full phrase ("Use is greater than, equals, or is less
   than"). Name them in words, or show the signs on their own in a picture.
+- **No possessive on a number.** "6's partner" is spoken "6 s partner".
+  Rephrase: "6 and 4 make 10." (MK2, user-approved 2026-11-23.)
 - `☐` is spoken "blank" while the text may call it "the box" ("42 ☐ 45.
   What goes in the box?"). The user approved this (2026-11-18); don't flag it.
 - `⭐` is spoken "star". Other emoji are silent; check any emoji that
@@ -121,6 +123,10 @@ to say), and pronouns must match them.
 - "−" is *minus* between numbers and *negative* in front of one.
 - "1/4" → "one fourth" (not "one slash four"). "0.4" → "four tenths" while
   place value is being taught.
+- A slash between two words is read "or": "longer/shorter" → "longer or
+  shorter" (from MK3, 2026-11-24; all grades; done in `mathSpeech.ts`).
+  A unit after the slash ("miles/hour") is not changed; write "miles per
+  hour" in student text.
 - "3²" → "3 squared"; "10³" → "10 cubed" or "10 to the third power".
 - "30s" → "thirties". "a.m." → "A M".
 - Teen numbers: say them, but show the ten and the ones.

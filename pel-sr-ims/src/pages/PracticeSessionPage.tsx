@@ -11,6 +11,8 @@ import SkillPicker from "../components/student_portal/SkillPicker";
 import { LabNudge, TeacherLabPanel, useLabStatuses } from "../components/student_portal/LabOrder";
 import { LAB_BY_ID, nextUp, unmetNeeds } from "../utils/labOrder";
 
+import "./LevelFilesPage_styles.css";
+
 const ALL_MODES: PracticeMode[] = ["visual", "wordProblem", "standalone"];
 
 export default function PracticeSessionPage() {
@@ -152,14 +154,24 @@ export default function PracticeSessionPage() {
   if (isStandalone && selectedSkill && hasHomeworkInLevel && !waitingForLabOrder && !showNudge) {
     return (
       <>
-        {multipleSkillsInMode && (
+        {/* Always give the student a way out of a full-bleed lab: back to the
+            lab list if this level has several, else the mode picker, else the
+            dashboard (single-lab levels like MG1). Same in-flow bar as
+            LevelsPage, so it sits above the lab instead of covering its title. */}
+        <div className="level-back-bar">
           <button
-            onClick={() => setSelectedSkill(null)}
-            className="fixed top-3 left-3 z-20 px-3 py-1.5 text-xs font-medium text-gray-600 !bg-white/90 border border-gray-200 rounded-lg shadow-sm hover:!bg-gray-50 transition-all duration-200"
+            type="button"
+            className="level-back-btn"
+            onClick={() => {
+              if (multipleSkillsInMode) setSelectedSkill(null);
+              else if (multipleModesAvailable) setMode(null);
+              else navigate("/student-portal");
+            }}
           >
-            ← Choose something else to practice
+            <span aria-hidden="true">←</span>{" "}
+            {multipleSkillsInMode || multipleModesAvailable ? "Choose something else to practice" : "Back to my dashboard"}
           </button>
-        )}
+        </div>
         <ProblemRenderer level={level} skill={selectedSkill} />
       </>
     );

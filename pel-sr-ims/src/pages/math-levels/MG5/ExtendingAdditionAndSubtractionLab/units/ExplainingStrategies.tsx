@@ -7,6 +7,8 @@ import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { explainingStrategiesTest } from "./ExplainingStrategiesTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { StuckBox, useCfuPointers, type ExploreTarget } from "../../../shared/components/CfuPointers";
+import { lookHereSpot, useLookHereRequest } from "../../../shared/lib/lookHere";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -16,12 +18,19 @@ import { ReadAloud } from "../../../shared/tts/ReadAloud";
 // that happens to work on easy (no-regroup) cases to EVERY case, without
 // understanding why it stops working once regrouping is required.
 
+// Where in Explore each CFU idea is taught (2nd wrong Check → "Look here first").
+const LOOK = {
+  trade: { target: "es-trade", label: "Trading is equal value" },
+  regroup: { target: "es-regroup", label: "Why columns work — when a column makes 10 or more" },
+} satisfies Record<string, ExploreTarget>;
+
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
 function RegroupValueQuestion({ onComplete }: { onComplete?: () => void }) {
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "same";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.trade }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -39,15 +48,16 @@ function RegroupValueQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="smaller">It gets smaller</option>
           <option value="same">It stays exactly the same</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, picked); setChecked(true); }}>
           Check Answer
         </button>
       </div>
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — 10 ones and 1 ten are two different ways of writing the SAME amount, so trading between them never changes the value." : "Not quite — 10 ones IS 1 ten. Trading between them is just a different way of grouping the same amount; the value never changes."}
+          {ok ? "Correct — 10 ones and 1 ten are two different ways of writing the SAME amount, so trading between them never changes the value." : "Not quite. Is 10 ones more than, less than, or the same as 1 ten?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -56,6 +66,7 @@ function ShortcutStillWorksQuestion({ onComplete }: { onComplete?: () => void })
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "no";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.regroup }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -72,15 +83,16 @@ function ShortcutStillWorksQuestion({ onComplete }: { onComplete?: () => void })
           <option value="yes">Yes — it always works the same way</option>
           <option value="no">No — once a column regroups, you have to carry, which this shortcut skips</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, picked); setChecked(true); }}>
           Check Answer
         </button>
       </div>
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — 37 + 28: ones column 7+8=15, tens column 3+2=5. Writing both straight down gives \"515\", but the real answer is 65. The shortcut needs an extra carrying step once a column regroups." : "Not quite — try it: 37 + 28's ones column is 7+8=15 (two digits!) and tens column is 3+2=5. Writing both straight down gives the wrong answer \"515\" instead of the real 65 — carrying is required once a column regroups."}
+          {ok ? "Correct — 37 + 28: ones column 7+8=15, tens column 3+2=5. Writing both straight down gives \"515\", but the real answer is 65. The shortcut needs an extra carrying step once a column regroups." : "Not quite. Try it: what is 7 + 8? Can that whole number fit in the ones column?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -89,6 +101,7 @@ function WorksOnFewExamplesTrueFalseQuestion({ onComplete }: { onComplete?: () =
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "false";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.regroup }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -105,15 +118,16 @@ function WorksOnFewExamplesTrueFalseQuestion({ onComplete }: { onComplete?: () =
           <option value="true">True</option>
           <option value="false">False</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, picked); setChecked(true); }}>
           Check Answer
         </button>
       </div>
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — false. A method that happens to work on easy, no-regroup examples can quietly break once a harder case (like regrouping) shows up. You have to check the method against the HARD cases, not just the easy ones." : "Not quite — false is right. Working on a few easy examples doesn't prove a method always works — you have to test it against the harder cases too, like ones that need regrouping."}
+          {ok ? "Correct — false. A method that happens to work on easy, no-regroup examples can quietly break once a harder case (like regrouping) shows up. You have to check the method against the HARD cases, not just the easy ones." : "Not quite. The column shortcut works for 34 + 22. Does it still work when a column regroups?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -124,6 +138,7 @@ function CritiqueExampleQuestion({ onComplete }: { onComplete?: () => void }) {
   const [checked, setChecked] = useState(false);
   const allFilled = [what, answer].every((v) => String(v).trim() !== "");
   const ok = what === "carry" && answer === "85";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.regroup }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -148,15 +163,16 @@ function CritiqueExampleQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="75">75</option>
           <option value="85">85</option>
         </select>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => { ptr.record(() => ok, `${what}|${answer}`); setChecked(true); }}>
           Check Answer
         </button>
       </div>
       {checked && allFilled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — 8+7=15 means write 5, carry 1. Then 4+3+1=8. The real answer is 85, not 715." : "Not quite — the ones column (8+7=15) needed to carry its extra ten into the tens column. 4+3+1(carried)=8, so the real answer is 85."}
+          {ok ? "Correct — 8+7=15 means write 5, carry 1. Then 4+3+1=8. The real answer is 85, not 715." : "Not quite. 8 + 7 = 15 is 1 ten and 5 ones. Where should that 1 ten go? Then add the tens again."}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -189,6 +205,11 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [mode, setMode] = useState<"trade" | "columns">("trade");
   const [tens, setTens] = useState(2);
   const [traded, setTraded] = useState(false);
+  // CFU pointers: switch to the mode that shows the spot.
+  useLookHereRequest((id) => {
+    if (id === "es-trade") setMode("trade");
+    else if (id === "es-regroup") setMode("columns");
+  });
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -205,21 +226,30 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         <>
           <div className="control-row" data-readaloud-part>
             <label>
-              Tens to trade: <input type="range" min={1} max={9} value={tens} onChange={(e) => setTens(Number(e.target.value))} /> {tens}
+              Tens to trade: <input type="range" min={1} max={15} value={tens} onChange={(e) => { setTens(Number(e.target.value)); setTraded(false); }} /> {tens}
             </label>
-            <button className="btn ghost" onClick={() => setTraded((t) => !t)}>
+            <button className="btn ghost" type="button" disabled={tens < 10} onClick={() => setTraded((t) => !t)}>
               {traded ? "Trade back" : "Trade 10 tens for 1 hundred"}
             </button>
           </div>
-          {traded && tens >= 10 ? <BaseTenBlocks hundreds={1} tens={0} ones={0} /> : <BaseTenBlocks hundreds={0} tens={tens} ones={0} />}
+          {traded && tens >= 10 ? <BaseTenBlocks hundreds={1} tens={tens - 10} ones={0} /> : <BaseTenBlocks hundreds={0} tens={tens} ones={0} />}
           <ReadAloud as="p" className="muted small">
-            {tens} tens is worth {tens * 10}. {traded && tens >= 10 ? "Traded for 1 hundred — still worth the same amount." : tens >= 10 ? "You can trade this for 1 hundred without changing the value." : "Need 10 tens before you can trade for a hundred."}
+            {traded && tens >= 10 ? `1 hundred and ${tens - 10} tens is worth ${tens * 10}. Still the same amount!` : `${tens} tens is worth ${tens * 10}.`} {tens >= 10 ? "" : "Move the slider to 10 or more tens to trade."}
+          </ReadAloud>
+          <ReadAloud as="p" {...lookHereSpot("es-trade")}>
+            <span data-look-here-key>Trading never changes how much you have. 10 ones = 1 ten, and 10 tens = 1 hundred.</span>
           </ReadAloud>
         </>
       ) : (
         <>
           <PlaceValueColumns breakdown={buildAddColumns([34, 22], 3)} revealCols={3} />
           <ReadAloud as="p" className="muted small">34 + 22: each column's digits add to less than 10, so you can add ones-to-ones and tens-to-tens separately with no carrying — that's WHY the column method works here.</ReadAloud>
+          <div {...lookHereSpot("es-regroup")}>
+            <PlaceValueColumns breakdown={buildAddColumns([46, 38], 3)} revealCols={3} />
+            <ReadAloud as="p">
+              <span data-look-here-key>But in 46 + 38, the ones make 6 + 8 = 14. That is 1 ten and 4 ones. Write 4, and carry the 1 ten. Tens: 4 + 3 + 1 = 8. So 46 + 38 = 84.</span> Skip the carry and you get &quot;714&quot;, which is wrong. A method that works on easy problems must also be tested on hard ones.
+            </ReadAloud>
+          </div>
         </>
       )}
       {/* Below the picture, so students explore first, then check. */}

@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import { convertQuestion, addQuestion, smallAddChoiceQuestion, spotErrorQuestion, carrySentenceQuestion } from "./TenthsToHundredthsTest";
 import { hundredthsToDecimalQuestion, hiddenZeroToDecimalQuestion, readDecimalQuestion, mixedToDecimalQuestion, decimalToMixedChoiceQuestion } from "./DecimalNotationTest";
@@ -16,14 +17,8 @@ import { sameDigitsQuestion, fewerDigitsQuestion, sameWholePartQuestion, diffWho
 const N_UNITS = 3;
 export const MODULE_TEST_TOTAL = N_UNITS * 5;
 
-/** 1-5 star rating on the raw /15 score — the 18/16/14/12-of-20 bands scaled to 15. */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 14) return 5;
-  if (score >= 12) return 4;
-  if (score >= 11) return 3;
-  if (score >= 9) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 export const moduleTest: NonNullable<Unit["test"]> = {
   questions: [
@@ -46,6 +41,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     diffWholeWhoQuestion,
     trailingZeroQuestion,
   ],
-  // 12/15 (80%) = the 4-star cutoff above.
-  passScore: 12,
+  // Passes at 5 stars.
+  passScore: 14,
 };

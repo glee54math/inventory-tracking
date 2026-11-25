@@ -209,6 +209,16 @@ For every Problem type, trace the help a stuck student gets:
   as failure or a shortcut.
 - After help: does "Try one like it" give the same kind of problem, so
   they practice the fix right away? Is "Next problem" locked until then?
+  **Every lab must have "Try one like it"** (user decision 2026-11-24,
+  from MK3; all grades): the shell passes `onRetrySame` to `StepProblem`
+  and has the retry lock. A lab without it is a Major finding. It must
+  trigger after a tapped "Show hint" (even if the next answer is right), a
+  wrong pick, 2 wrong tries on one step, or Show me. One wrong typed answer
+  alone does not trigger it (user decision).
+- **Show me after the 2nd wrong try, in every lab** (user decision
+  2026-11-24, from MK3; all grades): the purpose is that no student stays
+  stuck or learns to give up. A two-button step can't reach a 2nd wrong try,
+  and that is fine; don't flag it.
 - **Can the student get around the retry?** Leave Practice and come back,
   press "New problem," switch the problem type, reload. Any route that
   brings the helped problem back with empty boxes (then copying the shown

@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import { unitFractionQuestion, nonUnitTextQuestion, buildFractionQuestion, trapQuestion, vocabularySentenceQuestion } from "./WhatAFractionIsTest";
 import { identifyNonUnitQuestion, partitionCountQuestion, placeTickQuestion, beyondOneQuestion, conceptQuestion } from "./FractionsOnANumberLineTest";
@@ -17,18 +18,8 @@ import { sameDenomQuestion, sameNumQuestion, diffWholeQuestion, equalQuestion, g
 // random draw from each). Keep in sync with `questions` below.
 export const MODULE_TEST_TOTAL = 25;
 
-/**
- * 1-5 star rating on the raw /25 score — the same 90/80/70/60% bands MM1's
- * 20-question module tests use (18/16/14/12 of 20), scaled to 25 and
- * rounded up: 23 / 20 / 18 / 15.
- */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 23) return 5;
-  if (score >= 20) return 4;
-  if (score >= 18) return 3;
-  if (score >= 15) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 export const moduleTest: NonNullable<Unit["test"]> = {
   questions: [
@@ -63,6 +54,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     equalQuestion,
     generalizationQuestion,
   ],
-  // 20/25 = 80%, matching the 4-star cutoff above.
-  passScore: 20,
+  // Passes at 5 stars.
+  passScore: 23,
 };

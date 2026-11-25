@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import { gcd, money, pick, randInt } from "../../../shared/lib/math";
 import { numberBlank, selectBlank, sentence, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
@@ -329,19 +330,8 @@ const fasterRateSentenceQuestion = (): TestQuestion[] => {
 // would burn a random draw from each just to count them.
 export const MODULE_TEST_TOTAL = 20;
 
-/**
- * 1-5 star rating for a module test score out of 20 — a coarser, letter-
- * grade-style read on the same score TestBadge shows precisely (19/20).
- * Bands line up with A-F cutoffs by percentage (<60/60s/70s/80s/90+), just
- * expressed as the raw score out of 20 the bands land on exactly.
- */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 18) return 5;
-  if (score >= 16) return 4;
-  if (score >= 14) return 3;
-  if (score >= 12) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 export const moduleTest: NonNullable<Unit["test"]> = {
   questions: [
@@ -374,8 +364,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     // Position 20: sentence fill-in-the-blank
     fasterRateSentenceQuestion,
   ],
-  // 16/20 matches the 4-star cutoff in moduleTestStars above — "passed" (the
-  // checkmark on TestBadge, and UnitTestView's "Passed" message) means at
-  // least 4 stars, not the full 5.
-  passScore: 16,
+  // Passes at 5 stars.
+  passScore: 19,
 };

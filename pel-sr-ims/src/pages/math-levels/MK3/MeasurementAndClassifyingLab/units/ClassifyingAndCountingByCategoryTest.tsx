@@ -1,235 +1,156 @@
-import { SortedBins, type BinItem, type ItemShape } from "../diagrams";
-import { randInt } from "../../../shared/lib/math";
-import { itemColors, palette } from "../../../shared/lib/palette";
-import { choice, type TestQuestion } from "../../../shared/engine/types";
+import { SortedBins } from "../diagrams";
+import { randInt, shuffle } from "../../../shared/lib/math";
+import type { TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
+import { COLOR_GROUPS, SHAPE_GROUPS, SHAPE_OF, bin, countLine, groupChoice, groupHas, groupPhrase, groupsFor, itemIn, makeGroups, mixedShapeSet, shapeWord, threeCounts, type SortRule } from "./labParts";
 
-// ---------- end-of-unit test: Classifying and Counting by Category ----------
-// Self-contained — the item builders are duplicated here rather than
-// imported from ClassifyingAndCountingByCategory.tsx, same convention as
-// every other *Test.tsx in this app.
+// ---------- end-of-unit test: Sort and Count ----------
+// Shared data comes from labParts, never from the unit file (the unit file
+// imports this test, so importing back would be a circular import). Every bin
+// hides its count (review C1-30).
 
-let uid = 0;
-const nextId = () => `mk3-test-item-${uid++}`;
+const twoColors = () => shuffle(COLOR_GROUPS).slice(0, 2);
 
-function makeColorItems(countA: number, countB: number): { binA: BinItem[]; binB: BinItem[] } {
-  const binA = Array.from({ length: countA }, () => ({ id: nextId(), shape: "circle" as ItemShape, color: itemColors.red.main }));
-  const binB = Array.from({ length: countB }, () => ({ id: nextId(), shape: "circle" as ItemShape, color: itemColors.green.main }));
-  return { binA, binB };
-}
-
-function makeShapeItems(counts: [number, number, number]): BinItem[][] {
-  const shapes: ItemShape[] = ["circle", "square", "triangle"];
-  return counts.map((n, i) => Array.from({ length: n }, () => ({ id: nextId(), shape: shapes[i], color: palette.c })));
-}
-
-const SHAPE_LABELS = ["Circles", "Squares", "Triangles"];
-
-/** Identify which 2-category (color) group an unsorted item belongs in. */
+/** Two color groups, mixed shapes: the item's shape tempts. */
 export const colorSortIdentifyQuestion = (): TestQuestion[] => {
-  const countA = randInt(2, 5);
-  const countB = randInt(2, 5);
-  const { binA, binB } = makeColorItems(countA, countB);
-  const fromBinA = Math.random() < 0.5;
-  const target = fromBinA ? binA[0] : binB[0];
+  const names = twoColors();
+  const groups = makeGroups(names, [randInt(2, 5), randInt(2, 5)]);
+  const home = randInt(0, 1);
+  const target = itemIn(names[home]);
   return [
     {
-      visual: (
-        <SortedBins
-          tray={[target]}
-          bins={[
-            { label: "Red", items: fromBinA ? binA.slice(1) : binA },
-            { label: "Green", items: fromBinA ? binB : binB.slice(1) },
-          ]}
-          highlightId={target.id}
-        />
-      ),
+      visual: <SortedBins tray={[target]} bins={names.map((n, i) => bin(n, groups[i]))} highlightId={target.id} />,
       difficulty: "easy",
-      step: choice(
-        { prompt: "The circled item belongs with which group?", hint: "Look at its color.", explain: `It's ${fromBinA ? "red" : "green"}.` },
-        fromBinA ? "Red" : "Green",
-        [fromBinA ? "Green" : "Red"]
-      ),
+      step: groupChoice({ prompt: "We sort by color. Where does this one go?", hint: "Look at its color.", explain: `It goes with ${groupPhrase(names[home])}.` }, names, names[home]),
     },
   ];
 };
 
-/** Identify which 3-category (shape) group an unsorted item belongs in — the harder, more-categories case. */
+/** Three shape groups, mixed colors: all three buttons shown. */
 export const shapeSortIdentifyQuestion = (): TestQuestion[] => {
-  const counts: [number, number, number] = [randInt(1, 4), randInt(1, 4), randInt(1, 4)];
-  const groups = makeShapeItems(counts);
-  const targetGroup = randInt(0, 2);
-  const target = groups[targetGroup][0];
-  const bins = groups.map((items, i) => ({ label: SHAPE_LABELS[i], items: i === targetGroup ? items.slice(1) : items }));
-  const shapeWord = ["circle", "square", "triangle"][targetGroup];
+  const groups = makeGroups(SHAPE_GROUPS, [randInt(1, 4), randInt(1, 4), randInt(1, 4)]);
+  const home = randInt(0, 2);
+  const target = itemIn(SHAPE_GROUPS[home]);
   return [
     {
-      visual: <SortedBins tray={[target]} bins={bins} highlightId={target.id} />,
+      visual: <SortedBins tray={[target]} bins={SHAPE_GROUPS.map((n, i) => bin(n, groups[i]))} highlightId={target.id} />,
       difficulty: "hard",
-      step: choice(
-        { prompt: "Which group does the circled item belong in?", hint: "Look at its shape — everything here is the same color.", explain: `It's a ${shapeWord}.` },
-        SHAPE_LABELS[targetGroup],
-        [SHAPE_LABELS[(targetGroup + 1) % 3]]
-      ),
+      step: groupChoice({ prompt: "We sort by shape. Where does this one go?", hint: "Look at its shape.", explain: `It goes with ${groupPhrase(SHAPE_GROUPS[home])}.` }, SHAPE_GROUPS, SHAPE_GROUPS[home]),
     },
   ];
 };
 
-/** Count one already-sorted category. */
-export const countSingleCategoryQuestion = (): TestQuestion[] => {
-  const countA = randInt(3, 10);
-  const countB = randInt(3, 10);
-  const { binA, binB } = makeColorItems(countA, countB);
+const countQuestion = (ask: 0 | 1): TestQuestion[] => {
+  const names = twoColors();
+  const counts = [randInt(3, 10), randInt(3, 10)];
+  const groups = makeGroups(names, counts);
   return [
     {
-      visual: <SortedBins bins={[{ label: "Red", items: binA }, { label: "Green", items: binB }]} />,
+      visual: <SortedBins bins={names.map((n, i) => bin(n, groups[i]))} />,
       difficulty: "easy",
-      step: { kind: "number", prompt: "How many are in the Red group?", hint: "Count each one exactly once.", explain: `There are ${countA} in the Red group.`, answer: countA },
+      step: { kind: "number", prompt: `How many are in the ${names[ask]} group?`, hint: "Count each one once.", explain: groupHas(names[ask], `${counts[ask]}.`), answer: counts[ask] },
     },
   ];
 };
 
-/** Count the OTHER already-sorted category in the same scenario shape. */
-export const countOtherCategoryQuestion = (): TestQuestion[] => {
-  const countA = randInt(3, 10);
-  const countB = randInt(3, 10);
-  const { binA, binB } = makeColorItems(countA, countB);
-  return [
-    {
-      visual: <SortedBins bins={[{ label: "Red", items: binA }, { label: "Green", items: binB }]} />,
-      difficulty: "easy",
-      step: { kind: "number", prompt: "How many are in the Green group?", hint: "Count each one exactly once.", explain: `There are ${countB} in the Green group.`, answer: countB },
-    },
-  ];
+/** Count the first group shown. */
+export const countSingleCategoryQuestion = (): TestQuestion[] => countQuestion(0);
+
+/** Count the second group shown. */
+export const countOtherCategoryQuestion = (): TestQuestion[] => countQuestion(1);
+
+const distinctPair = (): [number, number] => {
+  const a = randInt(2, 10);
+  let b = randInt(2, 10);
+  while (b === a) b = randInt(2, 10);
+  return [a, b];
 };
 
-/** Compare two already-counted categories — which has more. */
+/** Which of two groups has more. */
 export const compareWhichMoreQuestion = (): TestQuestion[] => {
-  const countA = randInt(2, 10);
-  let countB = randInt(2, 10);
-  while (countB === countA) countB = randInt(2, 10);
-  const { binA, binB } = makeColorItems(countA, countB);
-  const more = countA > countB ? "Red" : "Green";
-  const fewer = more === "Red" ? "Green" : "Red";
+  const names = twoColors();
+  const [a, b] = distinctPair();
+  const groups = makeGroups(names, [a, b]);
+  const more = a > b ? names[0] : names[1];
   return [
     {
-      visual: <SortedBins bins={[{ label: "Red", items: binA }, { label: "Green", items: binB }]} />,
+      visual: <SortedBins bins={names.map((n, i) => bin(n, groups[i]))} />,
       difficulty: "medium",
-      step: choice({ prompt: "Which group has MORE?", hint: "Count both groups, then compare.", explain: `${more} has more.` }, more, [fewer]),
+      step: groupChoice({ prompt: <>Which group has <b>more</b>?</>, hint: "Match them up.", explain: `${more} has more.` }, names, more),
     },
   ];
 };
 
-/** Synthesis: compute the numeric difference between two categories' counts. */
-export const compareDifferenceQuestion = (): TestQuestion[] => {
-  const countA = randInt(2, 10);
-  let countB = randInt(2, 10);
-  while (countB === countA) countB = randInt(2, 10);
-  const { binA, binB } = makeColorItems(countA, countB);
-  const more = countA > countB ? "Red" : "Green";
-  const fewer = more === "Red" ? "Green" : "Red";
-  const moreCount = Math.max(countA, countB);
-  const fewerCount = Math.min(countA, countB);
-  const diff = moreCount - fewerCount;
+/** Count the extras (review D3). No subtraction. */
+export const compareExtrasQuestion = (): TestQuestion[] => {
+  const names = twoColors();
+  const [a, b] = distinctPair();
+  const groups = makeGroups(names, [a, b]);
+  const more = a > b ? names[0] : names[1];
+  const diff = Math.abs(a - b);
   return [
     {
-      visual: <SortedBins bins={[{ label: "Red", items: binA }, { label: "Green", items: binB }]} />,
+      visual: <SortedBins bins={names.map((n, i) => bin(n, groups[i]))} extra={{ bin: a > b ? 0 : 1, from: Math.min(a, b), numbered: false }} />,
       difficulty: "hard",
-      step: {
-        kind: "number",
-        prompt: `How many MORE does ${more} have than ${fewer}?`,
-        hint: "Subtract the smaller count from the bigger count.",
-        explain: `${moreCount} - ${fewerCount} = ${diff}.`,
-        answer: diff,
-      },
+      step: { kind: "number", prompt: `How many extra does ${more} have?`, hint: "Match them up. Count the extras.", explain: `${diff} extra.`, answer: diff },
     },
   ];
 };
 
-/** Generalization / false trap: the sorting attribute must stay consistent. */
-export const consistentAttributeTrueFalseQuestion = (): TestQuestion[] => {
+/** Keep one rule: the rule varies, and the item's other attribute tempts. */
+export const keepOneRuleQuestion = (): TestQuestion[] => {
+  const rule: SortRule = Math.random() < 0.5 ? "color" : "shape";
+  const names = groupsFor(rule);
+  const groups = makeGroups(names, [randInt(1, 3), randInt(1, 3), randInt(1, 3)]);
+  const home = randInt(0, 2);
+  const target = itemIn(names[home]);
   return [
     {
-      visual: null,
+      visual: <SortedBins tray={[target]} bins={names.map((n, i) => bin(n, groups[i]))} highlightId={target.id} />,
       difficulty: "hard",
-      step: choice(
-        {
-          prompt: "True or false: it's fine to switch from sorting by color to sorting by shape partway through, as long as you finish sorting everything.",
-          hint: "Think about what happens to the meaning of each group if you switch.",
-          explain: "False — switching attributes partway through breaks the sort; every object must be sorted by the SAME attribute.",
-        },
-        "False",
-        ["True"]
-      ),
+      step: groupChoice({ prompt: `We sort by ${rule}. Where does this one go?`, hint: "Keep sorting the same way.", explain: `It goes with ${groupPhrase(names[home])}.` }, names, names[home]),
     },
   ];
 };
 
-/** Misconception-specific: applying the wrong attribute to one item while sorting by shape. */
+/** Typed: a mixed set, count one shape (C2-42). Distractor: counting a color instead. */
 export const wrongAttributeAppliedQuestion = (): TestQuestion[] => {
-  const groups = makeShapeItems([randInt(2, 4), 1, 0]);
-  const square = groups[1][0];
-  // Recolor the lone square to visually stand out as a different color among same-shaped circles.
-  const oddColorSquare: BinItem = { ...square, color: itemColors.yellow.main };
-  const circles = groups[0];
+  const { items, groups } = mixedShapeSet();
+  const ask = randInt(0, 2);
+  const n = groups[ask].length;
   return [
     {
-      visual: <SortedBins tray={[oddColorSquare]} bins={[{ label: "Circles", items: circles }]} highlightId={oddColorSquare.id} />,
+      visual: <SortedBins tray={items} bins={[]} />,
       difficulty: "medium",
-      step: choice(
-        {
-          prompt: "These are sorted by SHAPE. Does the circled square belong with the circles, even though it's a different color?",
-          hint: "Shape sorts care about shape, not color.",
-          explain: "No — a square is a different shape than a circle, so it doesn't belong with the Circles group, no matter its color.",
-        },
-        "No",
-        ["Yes"]
-      ),
+      step: { kind: "number", prompt: <>We sort by shape. How many {shapeWord(SHAPE_GROUPS[ask], "?")}</>, hint: "Look at each shape.", explain: countLine(SHAPE_GROUPS[ask], n), answer: n },
     },
   ];
 };
 
-/** Counting within the harder 3-category (shape) case. */
+/** Count one of three shape groups. */
 export const threeCategoryCountQuestion = (): TestQuestion[] => {
-  const counts: [number, number, number] = [randInt(2, 10), randInt(2, 10), randInt(2, 10)];
-  const groups = makeShapeItems(counts);
-  const askIndex = randInt(0, 2);
-  const bins = groups.map((items, i) => ({ label: SHAPE_LABELS[i], items }));
+  const counts = [randInt(2, 10), randInt(2, 10), randInt(2, 10)];
+  const groups = makeGroups(SHAPE_GROUPS, counts);
+  const ask = randInt(0, 2);
   return [
     {
-      visual: <SortedBins bins={bins} />,
+      visual: <SortedBins bins={SHAPE_GROUPS.map((n, i) => bin(n, groups[i]))} />,
       difficulty: "medium",
-      step: {
-        kind: "number",
-        prompt: `How many are in the ${SHAPE_LABELS[askIndex]} group?`,
-        hint: "Count each one in that group exactly once.",
-        explain: `There are ${counts[askIndex]} in the ${SHAPE_LABELS[askIndex]} group.`,
-        answer: counts[askIndex],
-      },
+      step: { kind: "number", prompt: `How many are in the ${SHAPE_GROUPS[ask]} group?`, hint: "Count each one once.", explain: countLine(SHAPE_GROUPS[ask], counts[ask]), answer: counts[ask] },
     },
   ];
 };
 
-/** Comparing across THREE categories at once — which has the fewest. */
-export const mostAndFewestAmongThreeQuestion = (): TestQuestion[] => {
-  let counts: [number, number, number] = [randInt(2, 10), randInt(2, 10), randInt(2, 10)];
-  // guarantee a unique minimum so "fewest" has exactly one right answer
-  while (counts[0] === counts[1] || counts[1] === counts[2] || counts[0] === counts[2]) {
-    counts = [randInt(2, 10), randInt(2, 10), randInt(2, 10)];
-  }
-  const groups = makeShapeItems(counts);
-  const bins = groups.map((items, i) => ({ label: SHAPE_LABELS[i], items }));
-  const minIndex = counts.indexOf(Math.min(...counts));
-  const otherIndex = (minIndex + 1) % 3;
+/** Three groups: which has the fewest. All three buttons shown. */
+export const fewestAmongThreeQuestion = (): TestQuestion[] => {
+  const counts = threeCounts();
+  const groups = makeGroups(SHAPE_GROUPS, counts);
+  const few = SHAPE_GROUPS[counts.indexOf(Math.min(...counts))];
   return [
     {
-      visual: <SortedBins bins={bins} />,
+      visual: <SortedBins bins={SHAPE_GROUPS.map((n, i) => ({ ...bin(n, groups[i]), icon: SHAPE_OF[n] }))} />,
       difficulty: "hard",
-      step: choice(
-        { prompt: "Which group has the FEWEST?", hint: "Count all three groups, then find the smallest count.", explain: `${SHAPE_LABELS[minIndex]} has the fewest (${counts[minIndex]}).` },
-        SHAPE_LABELS[minIndex],
-        [SHAPE_LABELS[otherIndex]]
-      ),
+      step: groupChoice({ prompt: <>Which group has the <b>fewest</b>?</>, hint: "Count each group.", explain: groupHas(few, "the fewest.") }, SHAPE_GROUPS, few),
     },
   ];
 };
@@ -241,11 +162,11 @@ export const classifyingTest: Unit["test"] = {
     countSingleCategoryQuestion,
     countOtherCategoryQuestion,
     compareWhichMoreQuestion,
-    compareDifferenceQuestion,
-    consistentAttributeTrueFalseQuestion,
+    compareExtrasQuestion,
+    keepOneRuleQuestion,
     wrongAttributeAppliedQuestion,
     threeCategoryCountQuestion,
-    mostAndFewestAmongThreeQuestion,
+    fewestAmongThreeQuestion,
   ],
   passScore: 9,
 };

@@ -55,7 +55,7 @@ One idea taught in one place = one part, even if it has several boxes (e.g. a nu
 | MG3_MeasurementTimeAndDataLab | 4 | hand-built | todo (early) |
 | MG4_ShapesAndFractionsIntroLab | 3 | hand-built | todo (early) |
 | MG5_EvenOddAndArraysLab | 4 | hand-built | todo |
-| MG5_ExtendingAdditionAndSubtractionLab | 5 | hand-built | todo |
+| MG5_ExtendingAdditionAndSubtractionLab | 5 | hand-built | **done** (2026-11-19; text line, not early; review not yet run) |
 | MG5_MeasurementMoneyAndDataLab | 6 | hand-built | todo |
 | MG5_PlaceValueTo1000Lab | 4 | hand-built | todo |
 | MG5_ShapesAndEqualSharesLab | 3 | hand-built | todo |

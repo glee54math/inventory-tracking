@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import {
   equalGroupsTotalQuestion as u1EqualGroupsTotal,
@@ -33,17 +34,8 @@ import { skipAmountQuestion, ninesFactQuestion, mirrorCellQuestion, oddOddQuesti
 // random draw) — keep in sync with the `questions` array below.
 export const MODULE_TEST_TOTAL = 25;
 
-/**
- * 1-5 star rating banded by percentage (90/80/70/60%), scaled to /25 —
- * same bands as the 20-question labs' 18/16/14/12, rounded up.
- */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 23) return 5;
-  if (score >= 20) return 4;
-  if (score >= 18) return 3;
-  if (score >= 15) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 export const moduleTest: NonNullable<Unit["test"]> = {
   questions: [
@@ -78,6 +70,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     oddOddQuestion,
     predictPastEdgeQuestion,
   ],
-  // 20/25 = 80%, matching the 4-star cutoff above.
-  passScore: 20,
+  // Passes at 5 stars.
+  passScore: 23,
 };

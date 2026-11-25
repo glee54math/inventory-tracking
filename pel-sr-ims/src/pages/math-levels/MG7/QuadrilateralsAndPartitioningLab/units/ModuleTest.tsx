@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import { sortOddOneOutQuestion, skewedRhombusQuestion, rhombusIsRectangleQuestion, squareIsRhombusQuestion, nonExclusiveQuestion } from "./AttributesOfQuadrilateralsTest";
 import { galleryPickQuestion, lostBaselineQuestion, rotatedRectangleQuestion, trapezoidQuestion, accidentalRhombusQuestion } from "./DrawingNonExamplesTest";
@@ -7,20 +8,13 @@ import { stripFractionQuestion, nonCongruentEqualQuestion, judgeUnequalQuestion,
 // 15 questions, 5 drawn from each of the 3 units' own *Test.tsx banks (fresh
 // random parameters every attempt) — same reuse pattern as MG4
 // ShapesAndFractionsIntroLab's / MM1 NegativeNumbersLab's ModuleTest.tsx.
-// passScore and star bands are the 18/16/14/12-of-20 (90/80/70/60%) cutoffs
-// scaled to 15 questions. Diagrams are kept: the shape IS the subject here.
+// Stars and passing follow shared/engine/moduleStars.ts. Diagrams are kept: the shape IS the subject here.
 
 const N_UNITS = 3;
 export const MODULE_TEST_TOTAL = N_UNITS * 5;
 
-/** 1-5 star rating banded on the raw /15 score. */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 14) return 5;
-  if (score >= 12) return 4;
-  if (score >= 11) return 3;
-  if (score >= 9) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 export const moduleTest: NonNullable<Unit["test"]> = {
   questions: [
@@ -43,6 +37,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     () => reverseCountQuestion("hard"),
     () => unequalFourthsQuestion("medium"),
   ],
-  // 12/15 (80%) = the 4-star cutoff above, same convention as every other lab.
-  passScore: 12,
+  // Passes at 5 stars.
+  passScore: 14,
 };

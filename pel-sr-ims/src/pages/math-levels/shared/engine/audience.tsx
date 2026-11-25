@@ -2,11 +2,11 @@ import { createContext, useContext, type ReactNode } from "react";
 import { NumberPad } from "../components/NumberPad";
 
 /**
- * "Early learner" mode for the K–1 labs (MK1–MK4, MG1): students who may not
+ * "Early learner" mode for the K–1 labs (MK1–MK4, MG1, MG2): students who may not
  * read yet, working alone on an iPad. Turns on, across the shared engine:
- *   - the help ladder (hint that points at the picture → "Show me" → "Try one like it")
- *     in place of "Show answer"
- *   - plain-language feedback
+ *   - plain-language feedback, and tried choice buttons locked
+ *   (The help ladder, hint → "Show me" → "Try one like it", is for every lab
+ *   since 2026-11-24; see StepProblem.)
  *   - the on-screen number pad (no iPad keyboard)
  *   - bigger tap targets (the `lab-early` class on the lab root)
  * Labs outside the provider keep the original behavior.

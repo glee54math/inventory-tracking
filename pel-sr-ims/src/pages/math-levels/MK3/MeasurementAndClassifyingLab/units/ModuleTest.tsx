@@ -1,7 +1,7 @@
 import type { Unit } from "../../../shared/units/types";
-import { lengthQuestion, weightQuestion, twoAttributesQuestion, vocabLengthQuestion, sizeVsWeightTrapQuestion } from "./DescribingHowObjectsAreMeasuredTest";
-import { lengthAlignedQuestion, lengthMisalignedQuestion, weightCompareQuestion, describeDifferenceQuestion, commonStartTrueFalseQuestion } from "./ComparingTwoObjectsDirectlyTest";
-import { colorSortIdentifyQuestion, shapeSortIdentifyQuestion, countSingleCategoryQuestion, compareDifferenceQuestion, consistentAttributeTrueFalseQuestion } from "./ClassifyingAndCountingByCategoryTest";
+import { lengthQuestion, weightQuestion, twoAttributesQuestion, wordPictureQuestion, sizeVsWeightTrapQuestion } from "./DescribingHowObjectsAreMeasuredTest";
+import { lengthAlignedQuestion, lengthMisalignedQuestion, weightCompareQuestion, describeDifferenceQuestion, differentStartsQuestion } from "./ComparingTwoObjectsDirectlyTest";
+import { colorSortIdentifyQuestion, shapeSortIdentifyQuestion, countSingleCategoryQuestion, compareExtrasQuestion, keepOneRuleQuestion } from "./ClassifyingAndCountingByCategoryTest";
 
 // ---------- cumulative end-of-module test: Measurement and Classifying ----------
 // 15 questions, 5 drawn from each of the 3 units' own *Test.tsx question
@@ -12,37 +12,37 @@ import { colorSortIdentifyQuestion, shapeSortIdentifyQuestion, countSingleCatego
 // as every other lab's own ModuleTest) — keep in sync with `questions.length`.
 export const MODULE_TEST_TOTAL = 15;
 
-/** 1-5 star rating banded on the raw /15 score — cutoffs scaled from the
- *  18/16/14/12-out-of-20 bands every other 20-question module test in this
- *  app uses (×0.75, rounded to keep the 4-star cutoff matching passScore). */
+/** 0-5 star rating on the raw score out of 15 (user decision D8, round 1):
+ *  a low score earns no star. */
 export const moduleTestStars = (score: number): number => {
   if (score >= 14) return 5;
   if (score >= 12) return 4;
   if (score >= 10) return 3;
   if (score >= 8) return 2;
-  return 1;
+  if (score >= 6) return 1;
+  return 0;
 };
 
 export const moduleTest: NonNullable<Unit["test"]> = {
   questions: [
-    // Describing How Objects Are Measured
+    // Unit 1: Long and Heavy
     lengthQuestion,
     weightQuestion,
     twoAttributesQuestion,
-    vocabLengthQuestion,
+    wordPictureQuestion,
     sizeVsWeightTrapQuestion,
-    // Comparing Two Objects Directly
+    // Unit 2: Which Is Longer? Which Is Heavier?
     lengthAlignedQuestion,
     lengthMisalignedQuestion,
     weightCompareQuestion,
     describeDifferenceQuestion,
-    commonStartTrueFalseQuestion,
-    // Classifying and Counting by Category
+    differentStartsQuestion,
+    // Unit 3: Sort and Count
     colorSortIdentifyQuestion,
     shapeSortIdentifyQuestion,
     countSingleCategoryQuestion,
-    compareDifferenceQuestion,
-    consistentAttributeTrueFalseQuestion,
+    compareExtrasQuestion,
+    keepOneRuleQuestion,
   ],
   // 12/15 = 80%, matching the 4-star cutoff in moduleTestStars above.
   passScore: 12,

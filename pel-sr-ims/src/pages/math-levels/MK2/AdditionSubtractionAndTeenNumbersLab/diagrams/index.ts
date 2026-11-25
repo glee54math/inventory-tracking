@@ -1,10 +1,15 @@
 export { ObjectGroup, layoutPositions } from "./ObjectGroup";
 export type { ObjectGroupProps, Arrangement } from "./ObjectGroup";
-export { SplitGroup } from "./SplitGroup";
-export type { SplitGroupProps } from "./SplitGroup";
+export { SplitGroup, splitGroupWidth } from "./SplitGroup";
+export type { SplitGroupProps, SplitCount } from "./SplitGroup";
 export { Fingers } from "./Fingers";
 export type { FingersProps } from "./Fingers";
 export { TenFrame } from "./TenFrame";
 export type { TenFrameProps } from "./TenFrame";
 export { TenAndOnes } from "./TenAndOnes";
 export type { TenAndOnesProps } from "./TenAndOnes";
+export { ZeroSpot } from "./ZeroSpot";
+export { CompareRows } from "./CompareRows";
+export type { CompareRowsProps } from "./CompareRows";
+export { holdFor, useCountAlong, useWatch } from "./timing";
+export type { WatchDemo } from "./timing";

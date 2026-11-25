@@ -2,17 +2,16 @@ import { TenAndOnes } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
+import { noRepeats } from "./labHelp";
+import { NUMBER_WORDS, cap, count } from "./words";
 
 // ---------- end-of-unit test: Teen Numbers as Ten Plus More ----------
-// 10 questions from 10 generators. Self-contained — no import from
-// TeenNumbers.tsx, and that file never imports back from here.
+// 10 questions from 10 generators. Self-contained: no import from
+// TeenNumbers.tsx. "One ten" and "ones" everywhere, the words the CFU teaches.
 
-const NUMBER_WORDS: Record<number, string> = {
-  11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen", 15: "fifteen",
-  16: "sixteen", 17: "seventeen", 18: "eighteen", 19: "nineteen",
-};
+const oneTen = (ones: number) => `One ten and ${count(ones, "one", "ones")}`;
 
-/** Compose a teen number from a ten-group plus extra ones. */
+/** Build a teen number from one ten and some ones. */
 export const composeTeenQuestion = (): TestQuestion[] => {
   const ones = randInt(1, 9);
   const teen = 10 + ones;
@@ -20,109 +19,104 @@ export const composeTeenQuestion = (): TestQuestion[] => {
     {
       visual: <TenAndOnes tens={1} ones={ones} />,
       difficulty: "easy",
-      step: { kind: "number", prompt: `1 full group of ten and ${ones} more loose ones. What number is this?`, hint: "A full ten-group plus some extra ones.", explain: `10 + ${ones} = ${teen}.`, answer: teen },
+      step: { kind: "number", prompt: `${oneTen(ones)}. What number is it?`, hint: "Start at 10. Count on.", explain: `10 + ${ones} = ${teen}.`, answer: teen },
     },
   ];
 };
 
-/** Decompose a given teen number into a ten-group and extra ones. */
+/** Break a teen number into one ten and ones. */
 export const decomposeTeenQuestion = (): TestQuestion[] => {
   const teen = randInt(11, 19);
   const ones = teen - 10;
   return [
     {
-      visual: <TenAndOnes tens={1} ones={ones} />,
+      // No picture: the ones drawn in their own frame would show the answer.
+      visual: null,
       difficulty: "medium",
-      step: { kind: "number", prompt: `${teen} is made of 1 ten-group and how many more ones?`, hint: "Take away the ten-group — what's left over?", explain: `${teen} − 10 = ${ones}.`, answer: ones },
+      step: { kind: "number", tone: "b", prompt: `${teen} is one ten and how many ones?`, hint: "Count the dots outside the ten.", explain: `${teen} = 10 + ${ones}.`, answer: ones },
     },
   ];
 };
 
-/** Decompose, asked the other way: given the ones, find the ten-group's size. */
-export const decomposeTeenTensQuestion = (): TestQuestion[] => {
+/** Record it with the total on the left. */
+export const recordTeenQuestion = (): TestQuestion[] => {
   const teen = randInt(11, 19);
   const ones = teen - 10;
   return [
     {
-      visual: <TenAndOnes tens={1} ones={ones} />,
+      visual: null,
       difficulty: "medium",
-      step: { kind: "number", prompt: `${teen} has ${ones} extra ones. How many objects are in the ten-group part?`, hint: "The ten-group is always exactly ten objects.", explain: `The ten-group always has exactly 10 objects, regardless of the teen number.`, answer: 10 },
+      step: { kind: "number", tone: "b", prompt: `${teen} = 10 + ☐. What goes in the box?`, hint: "How many ones?", explain: `${teen} = 10 + ${ones}.`, answer: ones },
     },
   ];
 };
 
-/** Vocabulary / conflation: how many tens are in a teen number's name? */
-export const howManyTensQuestion = (): TestQuestion[] => {
-  const teen = randInt(11, 19);
+/** Hear the number, pick how it's written. */
+export const hearTeenQuestion = (): TestQuestion[] => {
+  const teen = randInt(12, 19);
   const ones = teen - 10;
   return [
     {
       visual: <TenAndOnes tens={1} ones={ones} />,
       difficulty: "medium",
       step: choice(
-        { prompt: `When you say "${NUMBER_WORDS[teen]}," how many TENS are in that number?`, hint: "Every teen number has exactly one ten-group.", explain: `"${NUMBER_WORDS[teen]}" has exactly 1 ten.` },
-        "1",
-        ["0", String(teen)] // misconceptions: recognizing no ten-group at all; treating the whole numeral as an undifferentiated count
+        { prompt: `Listen: ${NUMBER_WORDS[teen]}. Which number is it?`, hint: "The ten comes first.", explain: `${cap(NUMBER_WORDS[teen])} is ${teen}.` },
+        String(teen),
+        [`${ones}1`, String(ones)] // misconceptions: written backwards (41 for 14); forgot the ten
       ),
     },
   ];
 };
 
-/** Vocabulary / conflation: digit-meaning question, both digits in one question. */
-export const digitMeaningQuestion = (): TestQuestion[] => {
-  const teen = randInt(11, 19);
+/** What the 1 shows. Only 12–19, so the two digits never look alike. */
+export const oneShowsQuestion = (): TestQuestion[] => {
+  const teen = randInt(12, 19);
   const ones = teen - 10;
   return [
     {
       visual: <TenAndOnes tens={1} ones={ones} />,
       difficulty: "hard",
       step: choice(
-        { prompt: `In the number ${teen}, what does the FIRST digit (the "1") stand for?`, hint: "It's never a single object by itself.", explain: `The "1" in ${teen} always stands for one whole group of ten, not one single object.` },
-        "A whole group of ten",
-        ["One single object"] // misconception: treating the tens digit of a teen numeral as just another ones-digit
+        { prompt: `Look at ${teen}. What does the 1 show?`, hint: "Look at the full boxes.", explain: `The 1 in ${teen} shows one ten.` },
+        "One ten",
+        ["One dot"] // misconception: the 1 is just one object
       ),
     },
   ];
 };
 
-/** Generalization: does the ten-plus-more structure hold for every teen number? */
-export const everyTeenTrueFalseQuestion = (): TestQuestion[] => {
+/** No picture: from the words alone. Replaces the true/false item. */
+export const teenNoPictureQuestion = (): TestQuestion[] => {
+  const ones = randInt(2, 9);
+  const teen = 10 + ones;
   return [
     {
       visual: null,
       difficulty: "hard",
-      step: choice(
-        {
-          prompt: "True or false: every number from 11 to 19 is made of exactly one group of ten, plus some extra ones.",
-          hint: "Check a few: 11, 15, 19...",
-          explain: "True — 11 is ten + 1 all the way through 19, which is ten + 9. Every one of them follows the same pattern.",
-        },
-        "True",
-        ["False"] // misconception: doubting the pattern holds for every teen number
-      ),
+      step: { kind: "number", prompt: `${oneTen(ones)}. What number is it?`, hint: "Start at 10. Count on.", explain: `10 + ${ones} = ${teen}.`, answer: teen },
     },
   ];
 };
 
-/** Equation record — the direct digit-swap trap (e.g. writing 31 instead of 13). */
+/** Which number sentence matches? The written-backwards trap. */
 export const digitSwapTrapQuestion = (): TestQuestion[] => {
-  const teen = randInt(12, 19); // excludes 11, where the digit-swap distractor collapses to 11 itself
+  const teen = randInt(12, 19); // not 11, which looks the same backwards
   const ones = teen - 10;
-  const swapped = Number(`${ones}${1}`);
+  const swapped = Number(`${ones}1`);
   return [
     {
       visual: <TenAndOnes tens={1} ones={ones} />,
       difficulty: "hard",
       step: choice(
-        { prompt: "10 objects are bundled into a ten-group, and " + ones + " more ones are added. Which equation is written correctly?", hint: "Watch out for the digits written backwards.", explain: `10 + ${ones} = ${teen}, NOT ${swapped} — writing the digits backwards is a common teen-number mix-up.` },
+        { prompt: `${oneTen(ones)}. Which number sentence matches?`, hint: "The ten comes first.", explain: `10 + ${ones} = ${teen}.` },
         `10 + ${ones} = ${teen}`,
-        [`10 + ${ones} = ${swapped}`] // misconception: digit-reversal when writing the teen numeral
+        [`10 + ${ones} = ${swapped}`] // misconception: writing the number backwards
       ),
     },
   ];
 };
 
-/** Equation record — "forgot the ten" distractor. */
+/** Which number sentence matches? The "forgot the ten" trap. */
 export const forgotTheTenTrapQuestion = (): TestQuestion[] => {
   const teen = randInt(11, 19);
   const ones = teen - 10;
@@ -131,15 +125,15 @@ export const forgotTheTenTrapQuestion = (): TestQuestion[] => {
       visual: <TenAndOnes tens={1} ones={ones} />,
       difficulty: "medium",
       step: choice(
-        { prompt: "1 ten-group and " + ones + " more ones. Which equation correctly records this?", hint: "Don't forget to include the ten-group in the equation.", explain: `10 + ${ones} = ${teen} — leaving the 10 out entirely would be forgetting the whole ten-group.` },
+        { prompt: `${oneTen(ones)}. Which number sentence matches?`, hint: "Don't forget the ten.", explain: `10 + ${ones} = ${teen}.` },
         `10 + ${ones} = ${teen}`,
-        [`${ones} = ${teen}`] // misconception: dropping the ten-group from the equation entirely
+        [`10 + ${ones} = ${ones}`] // misconception: dropping the ten
       ),
     },
   ];
 };
 
-/** Reading a teen number word and recovering its ones count — ties naming to structure. */
+/** Hear the number, say how many ones. */
 export const wordToOnesQuestion = (): TestQuestion[] => {
   const teen = randInt(11, 19);
   const ones = teen - 10;
@@ -147,34 +141,39 @@ export const wordToOnesQuestion = (): TestQuestion[] => {
     {
       visual: null,
       difficulty: "medium",
-      step: { kind: "number", prompt: `"${NUMBER_WORDS[teen]}" is 1 ten plus how many ones?`, hint: "Subtract the ten-group from the whole number.", explain: `${teen} − 10 = ${ones}.`, answer: ones },
+      step: { kind: "number", tone: "b", prompt: `Listen: ${NUMBER_WORDS[teen]}. One ten and how many ones?`, hint: "Picture the ten. How many more?", explain: `${cap(NUMBER_WORDS[teen])} is one ten and ${count(ones, "one", "ones")}.`, answer: ones },
     },
   ];
 };
 
-/** The boundary case: 10 itself has zero extra ones (sets up what "extra" means). */
-export const tenHasZeroOnesQuestion = (): TestQuestion[] => {
+/** Finish the number sentence. Replaces the "10 and 0 ones" item. */
+export const tenPlusOnesQuestion = (): TestQuestion[] => {
+  const ones = randInt(1, 9);
+  const teen = 10 + ones;
   return [
     {
-      visual: <TenAndOnes tens={1} ones={0} />,
+      visual: null,
       difficulty: "easy",
-      step: { kind: "number", prompt: "10 is 1 ten-group plus how many extra ones?", hint: "A ten-group by itself, with nothing extra.", explain: "10 = 10 + 0 — no extra ones at all.", answer: 0 },
+      step: { kind: "number", prompt: `10 + ${ones} = ☐. What goes in the box?`, hint: "Start at 10. Count on.", explain: `10 + ${ones} = ${teen}.`, answer: teen },
     },
   ];
 };
 
+// These three all ask "how many ones?", so one sitting asks them about three different teen numbers.
+const HOW_MANY_ONES: (() => TestQuestion[])[] = [decomposeTeenQuestion, recordTeenQuestion, wordToOnesQuestion];
+
 export const teenNumbersTest: Unit["test"] = {
-  questions: [
+  questions: noRepeats([
     composeTeenQuestion,
     decomposeTeenQuestion,
-    decomposeTeenTensQuestion,
-    howManyTensQuestion,
-    digitMeaningQuestion,
-    everyTeenTrueFalseQuestion,
+    recordTeenQuestion,
+    hearTeenQuestion,
+    oneShowsQuestion,
+    teenNoPictureQuestion,
     digitSwapTrapQuestion,
     forgotTheTenTrapQuestion,
     wordToOnesQuestion,
-    tenHasZeroOnesQuestion,
-  ],
+    tenPlusOnesQuestion,
+  ], (q, make) => (HOW_MANY_ONES.includes(make) && q.step.kind === "number" ? `ones-${q.step.answer}` : null)),
   passScore: 9,
 };

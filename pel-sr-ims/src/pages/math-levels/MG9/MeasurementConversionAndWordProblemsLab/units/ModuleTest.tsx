@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import type { TestQuestion } from "../../../shared/engine/types";
 import { bigToSmallQuestion, compareQuestion, mixedMeasureQuestion, multiplyOrDivideQuestion, tableRuleQuestion } from "./ConvertingUnitsTest";
@@ -14,14 +15,8 @@ import { areaOrPerimeterChoiceQuestion, missingAreaChoiceQuestion, missingFromPe
 // Hand-maintained — keep in sync with `questions.length` below.
 export const MODULE_TEST_TOTAL = 20;
 
-/** 1-5 star band on the /20 score: the standard 18/16/14/12 cutoffs. */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 18) return 5;
-  if (score >= 16) return 4;
-  if (score >= 14) return 3;
-  if (score >= 12) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 /** Strips the diagram from a reused question — Unit 4's perimeter question
  *  draws the rectangle, but by then the module test has already shown
@@ -55,6 +50,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     missingFromPerimeterQuestion,
     sameAreaChoiceQuestion,
   ],
-  // 16/20 = 80%, matching the 4-star cutoff above.
-  passScore: 16,
+  // Passes at 5 stars.
+  passScore: 19,
 };

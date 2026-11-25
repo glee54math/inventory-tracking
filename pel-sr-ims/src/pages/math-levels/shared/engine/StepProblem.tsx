@@ -26,8 +26,14 @@ export interface StepState {
   hint: boolean;
   revealed: boolean;
   feedback: string | null;
-  /** Early learners: the "Show me" walk-through is open for this step. */
+  /** The "Show me" walk-through is open for this step (every lab). */
   showMe: boolean;
+  /**
+   * The student tapped "Show hint" themselves (not the hint that opens after a
+   * wrong try). Costs the star AND owes "Try one like it", even if the next
+   * answer is right (user decision 2026-11-24, from the MK3 review; all grades).
+   */
+  hintAsked?: boolean;
   /** Choice steps: indexes already picked wrong (early learners can't re-pick them). */
   tried: number[];
   /**
@@ -347,23 +353,26 @@ export const check = (s: Step, inputs: string[], opts: { early?: boolean; tries?
 export interface StepProblemProps {
   problem: Problem;
   /**
-   * Called once when the last step is finished. `clean` = no revealed
-   * answers, no wrong picks on a multiple-choice step (those can be
-   * guessed), and at most one hint. `bucket` forwards problem.bucket as-is
-   * (undefined for problems that don't set one) — see Problem.bucket and
-   * UnitProgress.coveredBuckets for what it's for.
+   * Called once when the last step is finished. `clean` = star-worthy: no
+   * hint, no wrong try of any kind and no revealed answer (rule for every
+   * lab). `bucket` forwards problem.bucket as-is (undefined for problems that
+   * don't set one) — see Problem.bucket and UnitProgress.coveredBuckets for
+   * what it's for. `solvedAlone` is the looser bar for "Try one like it": one
+   * wrong typed try (and the hint it opens) costs the star but doesn't owe a
+   * retry. A tapped "Show hint", a wrong pick, 2 wrong tries on a step or
+   * "Show me" all owe one.
    *
    * Return the StarOutcome from useModuleProgress's recordSolve() (the same
    * call that saves the star) so the wrap-up only says "⭐" when a star really
    * lit up. Returning nothing gives a plain "Solved it!" with no star.
    */
-  onComplete?: (clean: boolean, bucket?: string) => StarOutcome | void;
+  onComplete?: (clean: boolean, bucket: string | undefined, solvedAlone: boolean) => StarOutcome | void;
   onNext?: () => void;
-  /** Early learners: a new problem of the SAME kind, offered after a solve that needed help. */
+  /** A new problem of the SAME kind, required after a solve that needed help (every lab should pass it). */
   onRetrySame?: () => void;
   /**
-   * Called once, the first time this problem stops counting as clean (a
-   * reveal, "Show me", a second hint, a wrong pick...), even if the student
+   * Called once, the first time this problem stops counting as solved alone
+   * (a reveal, "Show me", a tapped "Show hint", a wrong pick...), even if the student
    * never finishes it. Lets the lab shell require "Try one like it" even if
    * the student leaves Practice and comes back.
    */
@@ -372,12 +381,17 @@ export interface StepProblemProps {
 
 /**
  * Help ladder.
- *   Everyone: a wrong answer shows feedback and pulses the picture ("look here").
- *   Early learners (EarlyLearnerProvider): the hint opens on the first wrong
- *   try; after two wrong tries "Show me" walks through that step (the picture
- *   fills in and the explanation is read aloud); a solve that needed help ends
- *   with "Try one like it". Everyone else: the hint opens on the second wrong
- *   try and "Show answer" appears on the third.
+ *   Every lab (user decision 2026-11-24, from the MK3 review; all grades; it
+ *   replaced "hint on the 2nd wrong try, Show answer on the 3rd" for MG3+):
+ *   1st wrong try: feedback, the "look here" pulse and the hint opens.
+ *   2nd wrong try on the same step: "Show me" walks through that step (the
+ *   picture fills in, the explanation is shown and read, then "Got it").
+ *   The point is that no student stays stuck. A two-button step can't reach a
+ *   2nd wrong try (the tried button is disabled for early learners), which is
+ *   fine: only the right button is left.
+ *   A solve that needed help ends with "Try one like it" when the shell passes
+ *   onRetrySame. Early learners (EarlyLearnerProvider) also get plain wording,
+ *   locked tried buttons and the number pad.
  */
 export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped }: StepProblemProps) {
   const early = useEarlyLearner();
@@ -453,43 +467,48 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
     if (now.hint && !before.hint) return autoRead(readerId, [q(".step.active .hint")]);
   }, [current, finished, starResult, cur?.wrong, cur?.hint, cur?.showMe, problem, readerId]);
 
-  const isClean = (all: StepState[]) => {
+  // Earns a star: no hint, no wrong try, nothing revealed.
+  const earnsStar = (all: StepState[]) => all.every((s) => !s.hint && s.wrong === 0 && !s.revealed && !s.formMiss);
+  // Solved without needing "Try one like it" (looser than earning a star).
+  const isSolvedAlone = (all: StepState[]) => {
     const hints = all.filter((s) => s.hint).length;
     const reveals = all.filter((s) => s.revealed).length;
     // A "fill in the reason" sentence (SentenceStep.checkEach) is tap picks too, so a wrong Check is a guess.
     // A built expression (BuildExprStep, MG10) has a two-way part (where the parentheses go), so a wrong Check is a guess too.
     const picks = (st: Step) => st.kind === "choice" || (st.kind === "sentence" && !!st.checkEach) || st.kind === "buildExpr";
     const guessed = all.some((s, k) => picks(problem.steps[k]) && s.wrong > 0);
-    // Early learners: two wrong tries on any step is trial and error, not a solve by themselves.
-    const triedAndErred = early && all.some((s) => s.wrong >= 2);
+    // Two wrong tries on any step is trial and error, not a solve by themselves (every lab).
+    const triedAndErred = all.some((s) => s.wrong >= 2);
     // A FractionStep that asks for simplest form was answered equal-but-unsimplified.
     const formMissed = all.some((s) => s.formMiss);
-    return reveals === 0 && hints <= 1 && !guessed && !triedAndErred && !formMissed;
+    // Tapping "Show hint" owes a retry even if the next answer is right (user decision 2026-11-24).
+    const askedForHint = all.some((s) => s.hintAsked);
+    return reveals === 0 && hints <= 1 && !guessed && !triedAndErred && !formMissed && !askedForHint;
   };
 
   useEffect(() => {
     if (finished && !reported.current) {
       reported.current = true;
-      setStarResult(onComplete?.(isClean(states), problem.bucket) || "none");
+      setStarResult(onComplete?.(earnsStar(states), problem.bucket, isSolvedAlone(states)) || "none");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finished, states, onComplete, problem.bucket]);
 
   const helpedReported = useRef(false);
-  const cleanNow = isClean(states);
+  const aloneNow = isSolvedAlone(states);
   useEffect(() => {
-    if (!cleanNow && !helpedReported.current) {
+    if (!aloneNow && !helpedReported.current) {
       helpedReported.current = true;
       onHelped?.();
     }
-  }, [cleanNow, onHelped]);
+  }, [aloneNow, onHelped]);
 
   const update = (i: number, patch: Partial<StepState>) => setStates((all) => all.map((s, k) => (k === i ? { ...s, ...patch } : s)));
 
   // A wrong try reported by a custom step itself (it grades its own parts).
   const wrongTry = (i: number) => {
     const wrong = states[i].wrong + 1;
-    update(i, { wrong, feedback: "Not a match. Try again.", hint: states[i].hint || wrong >= (early ? 1 : 2) });
+    update(i, { wrong, feedback: "Not a match. Try again.", hint: true });
   };
 
   const submit = (i: number, inputs = states[i].inputs) => {
@@ -501,18 +520,13 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
     } else {
       const wrong = states[i].wrong + 1;
       const tried = step.kind === "choice" && inputs[0] !== "" ? [...states[i].tried, Number(inputs[0])] : states[i].tried;
-      update(i, { inputs, wrong, tried, feedback: res.msg, hint: states[i].hint || wrong >= (early ? 1 : 2), formMark: res.formMark, ...(res.formMiss ? { formMiss: true } : {}) });
+      update(i, { inputs, wrong, tried, feedback: res.msg, hint: true, formMark: res.formMark, ...(res.formMiss ? { formMiss: true } : {}) });
     }
-  };
-
-  const reveal = (i: number) => {
-    update(i, { revealed: true, feedback: null });
-    setCurrent(i + 1);
   };
 
   const openShowMe = (i: number) => update(i, { revealed: true, showMe: true, feedback: null });
 
-  const clean = isClean(states);
+  const clean = aloneNow;
   const help: VisualHelp | undefined = cur
     ? { step: current, wrong: cur.wrong, hint: cur.hint, showMe: cur.showMe, lastTry: cur.wrong > 0 && cur.feedback !== null ? cur.inputs : undefined, answers: states.map((s) => s.inputs) }
     : undefined;
@@ -635,21 +649,15 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
                         </button>
                       )}
                       {!st.hint && (
-                        <button className="btn ghost" onClick={() => update(i, { hint: true })}>
+                        <button className="btn ghost" onClick={() => update(i, { hint: true, hintAsked: true })}>
                           Show hint
                         </button>
                       )}
-                      {early
-                        ? st.wrong >= 2 && (
-                            <button className="btn primary show-me-btn" onClick={() => openShowMe(i)}>
-                              🙋 Show me
-                            </button>
-                          )
-                        : st.wrong >= 3 && (
-                            <button className="btn ghost" onClick={() => reveal(i)}>
-                              Show answer
-                            </button>
-                          )}
+                      {st.wrong >= 2 && (
+                        <button className="btn primary show-me-btn" onClick={() => openShowMe(i)}>
+                          🙋 Show me
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -683,7 +691,7 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
                     : "Now solve one like it on your own. Then you can move on."
                   : early
                     ? "Try one with no help to earn a star."
-                    : "Solve one with no wrong guesses and at most one hint to earn a mastery star."}
+                    : "Solve one with no hints or wrong tries to earn a mastery star."}
               </p>
             )}
             <div className="step-tools" data-readaloud-part>
@@ -713,6 +721,8 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
  */
 function starNote(result: StarOutcome | "none", early: boolean): string | null {
   switch (result) {
+    case "helped":
+      return early ? "Try one with no help to earn a star." : "Solve one with no hints or wrong tries to earn a star.";
     case "progress":
       return early ? "Good! Keep going for a star." : "That counts. Keep going to fill your next star.";
     case "bucketFull":

@@ -218,6 +218,12 @@ the agreed change — sorted Blocker → Polish.
    version: rounds run, what was found and fixed per round, what was
    skipped and why, anything still open, and the review folder path.
    Then update the lab's row in `_planning/reviews/LAB_STATUS.md`.
+   **Update the glossary** (user request 2026-11-24, from the MK3 review;
+   all grades): if this build, its fixes or an approved rule added a
+   feature or term, or changed which levels use one, edit its entry in
+   `src/pages/admin-glossary/glossaryData.ts` (the Glossary board on the
+   All Levels page) and bump `GLOSSARY_UPDATED`. When talking to the user,
+   use the glossary's plain names, not finding IDs or code names alone.
 3. Close with: a manual pass in the running app is still needed, then a
    real student on a real iPad. Headless checks can't confirm iOS Safari
    speech, real touch feel, or how a young student actually uses it.

@@ -109,7 +109,7 @@ function Home({
             </li>
           ))}
         </ol>
-        <p className="muted small">Earn a star for each Mixed-mode problem you solve with at most one hint. Five stars = mastered.</p>
+        <p className="muted small">Earn a star for each Mixed-mode problem you solve with no hints or wrong tries. Five stars = mastered.</p>
       </section>
       <section>
         <button className="path-card module-test-card" onClick={onModuleTest}>

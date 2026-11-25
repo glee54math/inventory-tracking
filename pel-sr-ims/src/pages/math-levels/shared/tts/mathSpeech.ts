@@ -129,6 +129,28 @@ const isMathOperand = (t: SpeechToken | undefined, src: string): boolean => {
   return /^\d/.test(s) || /^_+$/.test(s) || s === "?" || s === ")";
 };
 
+/** Units that may follow a slash ("miles/hour", "km/h"): never read those as "or". */
+const SLASH_UNITS = new Set([
+  "h", "hr", "hrs", "hour", "hours", "min", "mins", "minute", "minutes", "s", "sec", "secs", "second", "seconds",
+  "day", "days", "week", "weeks", "month", "months", "year", "years", "yr",
+  "mi", "mile", "miles", "km", "m", "cm", "mm", "ft", "foot", "feet", "in", "inch", "inches", "yd", "yard", "yards",
+  "g", "kg", "lb", "lbs", "oz", "l", "ml", "gal", "gallon", "gallons", "qt", "pt", "cup", "cups",
+  "person", "people", "each", "unit", "units", "item", "items", "dollar", "dollars", "page", "pages",
+]);
+
+/**
+ * "longer/shorter" → "longer or shorter" (user decision 2026-11-24, from MK3;
+ * all grades). Only when the slash sits between two plain words with no
+ * spaces, and the word after it isn't a unit (miles/hour, km/h stay as before).
+ * Number slashes (3/4) are fractions and never reach here.
+ */
+function isWordSlash(text: string, at: number): boolean {
+  const before = /[A-Za-zÀ-ɏ]+$/u.exec(text.slice(0, at))?.[0];
+  const after = /^[A-Za-zÀ-ɏ]+/u.exec(text.slice(at + 1))?.[0];
+  if (!before || !after) return false;
+  return !SLASH_UNITS.has(after.toLowerCase());
+}
+
 export function tokenizeForSpeech(text: string): SpeechToken[] {
   const out: SpeechToken[] = [];
   let lastNonSpace: SpeechToken | undefined;
@@ -154,6 +176,7 @@ export function tokenizeForSpeech(text: string): SpeechToken[] {
       const prevIsSpace = start === 0 || /\s/.test(text[start - 1]);
       if (VULGAR[ch]) tok = { start, end, spoken: VULGAR[ch] };
       else if (SYMBOLS[ch]) tok = { start, end, spoken: SYMBOLS[ch] };
+      else if (ch === "/" && isWordSlash(text, start)) tok = { start, end, spoken: "or" };
       else if (ch === "-") {
         // "8 - 3" is minus; a dash in prose is a pause.
         const minus = isMathOperand(lastNonSpace, text) && /[\d_?(]/.test(next);

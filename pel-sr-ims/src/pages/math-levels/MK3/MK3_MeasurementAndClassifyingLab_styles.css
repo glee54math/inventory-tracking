@@ -94,6 +94,51 @@
   border-radius: var(--radius-lg);
 }
 
+/* Answer box matches its group's color in Unit 3's CFU (review C1-33). */
+.mac-lab .mk3-red {
+  --qa: var(--item-red, #c4432e);
+  --qa-soft: var(--item-red-soft, #f6ddd6);
+  --qa-text: var(--item-red-text, #9a3420);
+}
+.mac-lab .mk3-green {
+  --qa: var(--item-green, #4c8c2b);
+  --qa-soft: var(--item-green-soft, #e1edd4);
+  --qa-text: var(--item-green-text, #386b1f);
+}
+
+/* Color-matched word buttons use the picture-button slot: keep them word-sized. */
+.mac-lab .choice.choice-pic:not(:has(svg:only-child)) {
+  min-height: 56px;
+}
+
+/* Three Groups "Show me": the ringed item moves down into its group. */
+.mac-lab .mk3-arrive {
+  animation: mk3Arrive 1s ease-out;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes mk3Arrive {
+  from {
+    opacity: 0.4;
+    transform: translateY(-46px) scale(1.25);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mac-lab .mk3-arrive {
+    animation: none;
+  }
+}
+
+/* A spoken heading sits above a spoken goal: keep their two speaker buttons apart (E3-69). */
+.mac-lab .hero-text h1.tts-block,
+.mac-lab .unit-head h1.tts-block {
+  margin-bottom: 12px;
+}
+
 /* Module test nav/card — same rules as every other lab's own module test
    chrome, since this feature's markup is shared verbatim. */
 .mac-lab .module-test-nav {

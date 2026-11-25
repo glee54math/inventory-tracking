@@ -17,6 +17,8 @@ export interface BinSpec {
   /** Hide the "(n)" count after the label — for when a step asks for that
    *  count, so the picture doesn't give the answer away. Default false. */
   hideCount?: boolean;
+  /** A small shape beside the label, so a non-reader can tell the groups apart. */
+  icon?: ItemShape;
 }
 
 // "Show me" count-along pace, matched to the read-aloud voice (same pacing
@@ -26,6 +28,27 @@ const LEAD_IN_MS = 1200;
 
 /** Milliseconds a countAlongBin of `count` items takes, for Step.showMeHoldMs. */
 export const binCountAlongMs = (count: number) => LEAD_IN_MS + count * STEP_MS[getState().speed];
+
+/** Count 1..total, about one per second after a short lead-in ("Show me"). */
+export function useCountAlong(active: boolean, total: number): number {
+  const speed = useTtsState().speed;
+  const perMs = STEP_MS[speed];
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    setShown(0);
+    let iv: number | undefined;
+    const lead = window.setTimeout(() => {
+      setShown(1);
+      iv = window.setInterval(() => setShown((k) => (k >= total ? k : k + 1)), perMs);
+    }, LEAD_IN_MS);
+    return () => {
+      window.clearTimeout(lead);
+      window.clearInterval(iv);
+    };
+  }, [active, total, perMs]);
+  return active ? shown : 0;
+}
 
 export interface SortedBinsProps {
   bins: BinSpec[];
@@ -46,7 +69,11 @@ export interface SortedBinsProps {
   /** "Show me" for "how many more": ring and number (1, 2, ...) the items in
    *  bin `bin` from index `from` on — the extras with no partner in the
    *  other bin (bins lay items out in matching rows of 5). */
-  extra?: { bin: number; from: number };
+  extra?: { bin: number; from: number; numbered?: boolean };
+  /** Outline this whole bin, with no numbers: "count this group". */
+  outlineBin?: number;
+  /** This item moves into its bin when it first appears ("Show me" for sorting). */
+  arriveId?: string;
 }
 
 const ICON = 22;
@@ -67,24 +94,9 @@ function ShapeIcon({ item }: { item: BinItem }) {
  * Explore's click-one-then-click-a-bin sandbox (same "interactive only in
  * Explore" convention as CounterGroup's countedOrder/onToggle).
  */
-export function SortedBins({ bins, tray, highlightId, selectedId, onItemClick, onBinClick, countAlongBin, extra }: SortedBinsProps) {
-  const speed = useTtsState().speed;
-  const perMs = STEP_MS[speed];
+export function SortedBins({ bins, tray, highlightId, selectedId, onItemClick, onBinClick, countAlongBin, extra, outlineBin, arriveId }: SortedBinsProps) {
   const countTotal = countAlongBin !== undefined ? bins[countAlongBin]?.items.length ?? 0 : 0;
-  const [shown, setShown] = useState(0);
-  useEffect(() => {
-    if (countAlongBin === undefined) return;
-    setShown(0);
-    let iv: number | undefined;
-    const lead = window.setTimeout(() => {
-      setShown(1);
-      iv = window.setInterval(() => setShown((k) => (k >= countTotal ? k : k + 1)), perMs);
-    }, LEAD_IN_MS);
-    return () => {
-      window.clearTimeout(lead);
-      window.clearInterval(iv);
-    };
-  }, [countAlongBin, countTotal, perMs]);
+  const shown = useCountAlong(countAlongBin !== undefined, countTotal);
   const rowOf = (i: number) => Math.floor(i / COLS);
   const colOf = (i: number) => i % COLS;
 
@@ -102,13 +114,16 @@ export function SortedBins({ bins, tray, highlightId, selectedId, onItemClick, o
           style={clickHandler ? { cursor: "pointer" } : undefined}
           onClick={clickHandler}
         >
-          {rung && <circle r={ICON / 2 + 6} fill="none" stroke={palette.a} strokeWidth={3} />}
+          {clickable && it.id === highlightId && <path transform="translate(-9, -43)" d="M5 0h8v11h5l-9 12-9-12h5z" fill="#f59e0b" stroke="#fff" strokeWidth={1.2} strokeLinejoin="round" />}
           {extraNum > 0 && <circle r={ICON / 2 + 5} fill="none" stroke={palette.ink} strokeWidth={2.5} strokeDasharray="4 3" />}
-          <g opacity={counting && !countNum ? 0.4 : 1}>
-            <ShapeIcon item={it} />
+          <g className={it.id === arriveId ? "mk3-arrive" : undefined}>
+            {rung && <circle r={ICON / 2 + 6} fill="none" stroke={palette.a} strokeWidth={3} />}
+            <g opacity={counting && !countNum ? 0.4 : 1}>
+              <ShapeIcon item={it} />
+            </g>
           </g>
           {countNum > 0 && countNum === shown && <circle r={ICON / 2 + 5} fill="none" stroke={palette.ink} strokeWidth={2.5} />}
-          {(countNum > 0 || extraNum > 0) && (
+          {(countNum > 0 || (extraNum > 0 && extra?.numbered !== false)) && (
             <text y={4.5} textAnchor="middle" fontSize={12} fontWeight={800} fill="#fff" stroke={palette.ink} strokeWidth={2.5} paintOrder="stroke">
               {countNum || extraNum}
             </text>
@@ -118,10 +133,12 @@ export function SortedBins({ bins, tray, highlightId, selectedId, onItemClick, o
     });
 
   const trayRows = tray ? Math.max(1, Math.ceil(tray.length / COLS)) : 0;
-  const trayH = tray ? trayRows * CELL + 30 : 0;
+  // Room above the tray's items for the arrow on the "this one" item.
+  const trayTop = tray?.some((t) => t.id === highlightId) ? 48 : 30;
+  const trayH = tray ? trayRows * CELL + trayTop : 0;
   const maxBinItems = Math.max(1, ...bins.map((b) => b.items.length));
   const binRows = Math.max(1, Math.ceil(maxBinItems / COLS));
-  const binH = binRows * CELL + 44;
+  const binH = bins.length ? binRows * CELL + 44 : 0;
   const binW = Math.max(150, COLS * CELL + 20);
   const width = Math.max(binW * bins.length + 16 * Math.max(0, bins.length - 1) + 20, tray ? COLS * CELL + 40 : 0);
   const height = trayH + binH + 20;
@@ -136,10 +153,10 @@ export function SortedBins({ bins, tray, highlightId, selectedId, onItemClick, o
       {tray && (
         <g>
           <rect x={10} y={10} width={width - 20} height={trayH - 10} rx={10} fill="none" stroke={palette.line} strokeWidth={2} strokeDasharray="4 4" />
-          <text x={18} y={26} fontSize={12} fill={palette.muted} fontWeight={700}>
+          <text x={trayTop > 30 ? 54 : 18} y={26} fontSize={12} fill={palette.muted} fontWeight={700}>
             Not sorted yet
           </text>
-          {grid(tray, 18, 30, true)}
+          {grid(tray, 18, trayTop, true)}
         </g>
       )}
       {bins.map((bin, bi) => {
@@ -148,7 +165,12 @@ export function SortedBins({ bins, tray, highlightId, selectedId, onItemClick, o
         const binClickHandler = onBinClick ? () => onBinClick(bi) : undefined;
         return (
           <g key={bi} style={binClickHandler ? { cursor: "pointer" } : undefined} onClick={binClickHandler}>
-            <rect x={bx} y={by} width={binW} height={binH} rx={10} fill={palette.grid} stroke={palette.line} strokeWidth={2} />
+            <rect x={bx} y={by} width={binW} height={binH} rx={10} fill={palette.grid} stroke={bi === outlineBin ? palette.ink : palette.line} strokeWidth={bi === outlineBin ? 4 : 2} />
+            {bin.icon && (
+              <g transform={`translate(${bx + 20}, ${by + 15}) scale(0.62)`}>
+                <ShapeIcon item={{ id: "label", shape: bin.icon, color: palette.muted }} />
+              </g>
+            )}
             <text x={bx + binW / 2} y={by + 20} textAnchor="middle" fontSize={14} fontWeight={700} fill={palette.ink}>
               {bin.hideCount ? bin.label : `${bin.label} (${bin.items.length})`}
             </text>

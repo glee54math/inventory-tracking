@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import type { TestQuestion } from "../../../shared/engine/types";
 import { phraseToNumberQuestion, numberToPhraseQuestion, zeroMeaningQuestion, TEMPERATURE, ELEVATION, MONEY } from "./RealWorldNegativesTest";
@@ -26,19 +27,8 @@ import { inequalityMeaningQuestion, absoluteValueMeaningQuestion, sameAbsoluteVa
 // `questions` array's length below if it's ever edited.
 export const MODULE_TEST_TOTAL = 20;
 
-/**
- * A 1-5 star rating banded on the raw /20 score — lines up with A-F cutoffs
- * by percentage (<60/60s/70s/80s/90+), expressed as the raw score out of 20
- * each band lands on exactly. Same bands as Ratio Lab's module test, since
- * this test is also out of 20.
- */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 18) return 5;
-  if (score >= 16) return 4;
-  if (score >= 14) return 3;
-  if (score >= 12) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 /**
  * Strips the diagram from a reused generator's question(s) — for questions
@@ -83,8 +73,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     noVisual(smallerBalanceQuestion),
     noVisual(trueFalseTrapQuestion),
   ],
-  // 16/20 matches the 4-star cutoff in moduleTestStars above — "passed" (the
-  // checkmark on TestBadge, and UnitTestView's "Passed" message) means at
-  // least 4 stars, not the full 5.
-  passScore: 16,
+  // Passes at 5 stars.
+  passScore: 19,
 };

@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import { nameShapeStandardQuestion, nameShapeRotatedDiamondTrap, positionAboveBelowQuestion, positionVocabPrecisionQuestion, turningGeneralizationTrueFalseQuestion } from "./NamingShapesAndPositionsTest";
 import { classify2DQuestion, classify3DQuestion, sphereVsCircleHardQuestion, nameSolidQuestion, looksCanTrickYouTrueFalseQuestion } from "./FlatOrSolidTest";
@@ -13,15 +14,8 @@ import { build2DGapQuestion, build3DMissingEdgeQuestion, composeNameQuestionA, o
 // as every other lab's own ModuleTest.tsx) — keep in sync with `questions.length`.
 export const MODULE_TEST_TOTAL = 20;
 
-/** 1-5 star rating banded on the raw /20 score, same cutoffs as every other
- *  20-question module test in this app. */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 18) return 5;
-  if (score >= 16) return 4;
-  if (score >= 14) return 3;
-  if (score >= 12) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 export const moduleTest: NonNullable<Unit["test"]> = {
   questions: [
@@ -50,6 +44,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     openEndedOnlyOneWayTrapQuestion,
     gapMisconceptionQuestion,
   ],
-  // 16/20 matches the 4-star cutoff in moduleTestStars above.
-  passScore: 16,
+  // Passes at 5 stars.
+  passScore: 19,
 };

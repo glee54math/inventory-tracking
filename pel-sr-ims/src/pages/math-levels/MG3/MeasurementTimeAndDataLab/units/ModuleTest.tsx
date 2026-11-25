@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import { alignedOrderQuestion, misalignedOrderQuestion, indirectComparisonQuestion } from "./ComparingOrderingLengthTest";
 import { cleanCountQuestion, gappedMistakeQuestion, overlapMistakeQuestion } from "./MeasuringWithUnitsTest";
@@ -24,19 +25,8 @@ import { sortRawQuestion, read2CatQuestion, howManyMoreQuestion, combinedTotalQu
 // the `questions` array's length below if it's ever edited.
 export const MODULE_TEST_TOTAL = 20;
 
-/**
- * A 1-5 star rating banded on the raw /20 score — lines up with A-F cutoffs
- * by percentage (<60/60s/70s/80s/90+), expressed as the raw score out of 20
- * each band lands on exactly. Same bands as every other 20-question module
- * test in this app.
- */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 18) return 5;
-  if (score >= 16) return 4;
-  if (score >= 14) return 3;
-  if (score >= 12) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 export const moduleTest: NonNullable<Unit["test"]> = {
   questions: [
@@ -65,8 +55,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     () => howManyMoreQuestion("fewer"),
     () => combinedTotalQuestion(),
   ],
-  // 16/20 = 80%, matching the 4-star cutoff in moduleTestStars above —
-  // "passed" (the checkmark on TestBadge, and UnitTestView's "Passed"
-  // message) means at least 4 stars, not the full 5.
-  passScore: 16,
+  // Passes at 5 stars.
+  passScore: 19,
 };

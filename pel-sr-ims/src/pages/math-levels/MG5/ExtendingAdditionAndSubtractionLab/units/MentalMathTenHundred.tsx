@@ -7,6 +7,8 @@ import { Stepper, Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { mentalMathTenHundredTest } from "./MentalMathTenHundredTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { StuckBox, useCfuPointers, type ExploreTarget } from "../../../shared/components/CfuPointers";
+import { lookHereSpot } from "../../../shared/lib/lookHere";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -16,12 +18,19 @@ import { ReadAloud } from "../../../shared/tts/ReadAloud";
 // digit without letting the carry/borrow ripple into the hundreds digit
 // (e.g. treating 290 + 10 as "2(10)0" instead of 300).
 
+// Where in Explore each CFU idea is taught (2nd wrong Check → "Look here first").
+const LOOK = {
+  ripple: { target: "mm-ripple", label: "Explore — when a digit rolls past 9 or 0" },
+  which: { target: "mm-which", label: "Explore — which digit moves" },
+} satisfies Record<string, ExploreTarget>;
+
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
 function RippleQuestion({ onComplete }: { onComplete?: () => void }) {
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "300";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.ripple }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -39,7 +48,7 @@ function RippleQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="2100">"2, 10, 0" — just bump the tens digit up by one ten, without carrying</option>
           <option value="200">200</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, picked); setChecked(true); }}>
           Check Answer
         </button>
       </div>
@@ -47,9 +56,10 @@ function RippleQuestion({ onComplete }: { onComplete?: () => void }) {
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 9 tens plus 1 more ten makes 10 tens, which is a whole new hundred. The tens digit rolls back to 0 AND the hundreds digit goes up by 1: 290 + 10 = 300."
-            : 'Not quite — 290 + 10: the tens digit 9 can\'t just become "10." Ten tens make a new hundred, so the tens digit rolls to 0 and the hundreds digit increases: 290 + 10 = 300.'}
+            : "Not quite. A digit can only be 0 to 9. What happens when 9 tens get 1 more ten?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -58,6 +68,7 @@ function TenVsHundredQuestion({ onComplete }: { onComplete?: () => void }) {
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "tens";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.which }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -74,15 +85,16 @@ function TenVsHundredQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="tens">+10 changes the tens digit directly; +100 changes the hundreds digit directly</option>
           <option value="hundreds">+10 changes the hundreds digit directly; +100 changes the tens digit directly</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, picked); setChecked(true); }}>
           Check Answer
         </button>
       </div>
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — +10 directly affects the tens place, +100 directly affects the hundreds place. Either one can still RIPPLE further if that place rolls past 9." : "Not quite — +10 directly changes the tens digit, and +100 directly changes the hundreds digit. (A ripple into another digit can still happen on top of that.)"}
+          {ok ? "Correct — +10 directly affects the tens place, +100 directly affects the hundreds place. Either one can still RIPPLE further if that place rolls past 9." : "Not quite. 10 is 1 ten. 100 is 1 hundred. Which place does each one add to?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -91,6 +103,7 @@ function AlwaysJustTensTrueFalseQuestion({ onComplete }: { onComplete?: () => vo
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "false";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.ripple }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -107,15 +120,16 @@ function AlwaysJustTensTrueFalseQuestion({ onComplete }: { onComplete?: () => vo
           <option value="true">True</option>
           <option value="false">False</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, picked); setChecked(true); }}>
           Check Answer
         </button>
       </div>
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — false. 300 − 10 = 290: the tens digit can't go below 0, so it borrows from the hundreds place, which drops from 3 to 2." : "Not quite — false is right. Try 300 − 10: the tens digit (0) can't drop by 1 on its own, so the hundreds digit has to drop too, giving 290."}
+          {ok ? "Correct — false. 300 − 10 = 290: the tens digit can't go below 0, so it borrows from the hundreds place, which drops from 3 to 2." : "Not quite. Try 300 − 10. Can the tens digit 0 go down by 1 all by itself?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -124,6 +138,7 @@ function EdgeCaseQuestion({ onComplete }: { onComplete?: () => void }) {
   const [answer, setAnswer] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = answer === "1000";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.ripple }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -134,15 +149,16 @@ function EdgeCaseQuestion({ onComplete }: { onComplete?: () => void }) {
       </p>
       <div className="control-row" style={{ alignItems: "center" }}>
         <input className="answer" inputMode="numeric" value={answer} onChange={(e) => setAnswer(e.target.value.replace(/[^0-9]/g, ""))} style={fieldOk(ok, checked)} />
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, answer); setChecked(true); }}>
           Check Answer
         </button>
       </div>
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — 9 hundreds plus 1 more hundred makes 10 hundreds, which is a whole new thousand: 1000." : "Not quite — 900 + 100: 9 hundreds plus 1 more hundred makes 10 hundreds, which rolls all the way into a new thousand: 1000."}
+          {ok ? "Correct — 9 hundreds plus 1 more hundred makes 10 hundreds, which is a whole new thousand: 1000." : "Not quite. 9 hundreds and 1 more hundred make how many hundreds? What is that many hundreds?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -172,7 +188,8 @@ function MentalMathCheckForUnderstanding({ onComplete }: { onComplete?: () => vo
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
-  const [n, setN] = useState(290);
+  // Default differs from the CFU numbers (290, 300, 900).
+  const [n, setN] = useState(590);
   const [delta, setDelta] = useState<10 | -10 | 100 | -100>(10);
   const shift = tenHundredShift(n, delta);
 
@@ -194,6 +211,12 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
       </div>
 
       <PlaceValueBoxes shift={shift} showAfter />
+      <ReadAloud as="p" {...lookHereSpot("mm-which")}>
+        <span data-look-here-key>+10 or −10 changes the tens digit. +100 or −100 changes the hundreds digit.</span>
+      </ReadAloud>
+      <ReadAloud as="p" {...lookHereSpot("mm-ripple")}>
+        <span data-look-here-key>A digit can only be 0 to 9. If it goes past 9, it rolls to 0 and the next digit goes up 1. If it goes below 0, it rolls to 9 and the next digit goes down 1.</span>
+      </ReadAloud>
       <ReadAloud as="p" className="muted small">
         {n} {delta > 0 ? "+" : "−"} {Math.abs(delta)} = {shift.result}.{" "}
         {shift.rippled ? "Notice this rippled into another digit, not just the one you'd expect." : "Only the one digit you'd expect changed here."}

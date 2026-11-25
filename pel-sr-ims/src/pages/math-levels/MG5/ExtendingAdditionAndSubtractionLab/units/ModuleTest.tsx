@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import { sumsTo10NumberQuestion, makeTenSumNumberQuestion, subDecomposeNumberQuestion, factFamilyNumberQuestion, subtractionIsNotOnlyCountDownChoiceQuestion } from "./WithinTwentyFluencyTest";
 import { twoAddendsOneRegroupNumberQuestion, threeAddendsSingleCarryNumberQuestion, fourAddendsDoubleCarryNumberQuestion, carryMoreThanOneTrueFalseChoiceQuestion, threeOrFourAddendsCarryRatioQuestion } from "./AddingFourTwoDigitNumbersTest";
@@ -15,16 +16,8 @@ import { regroupValueChoiceQuestion, columnAdditionJustifyChoiceQuestion, commut
 // `questions.length`.
 export const MODULE_TEST_TOTAL = 25;
 
-/** 1-5 star rating banded on the raw /25 score. 20/25 (80%) is both the
- *  passScore below and the 4-star cutoff — the usual 18/16/14/12 cutoffs for
- *  a 20-question module test, scaled by 25/20 = 1.25 and rounded. */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 23) return 5;
-  if (score >= 20) return 4;
-  if (score >= 18) return 3;
-  if (score >= 15) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 export const moduleTest: NonNullable<Unit["test"]> = {
   questions: [
@@ -59,6 +52,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     critiqueWhereChoiceQuestion,
     critiqueCorrectAnswerNumberQuestion,
   ],
-  // 20/25 = 80%, matching the 4-star cutoff in moduleTestStars above.
-  passScore: 20,
+  // Passes at 5 stars.
+  passScore: 23,
 };

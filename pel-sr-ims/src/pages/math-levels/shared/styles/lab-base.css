@@ -1578,8 +1578,9 @@ input.align-slot.align-slot-input {
 
 /* ==========================================================================
    On-screen number pads (shared/components/NumberPad.tsx).
-   Inline: in the page under a practice/test answer box. Floating: bottom-left,
-   above the read-aloud toolbar, for the few other number boxes.
+   Inline: in the page under a practice/test answer box. Floating: for the few
+   other number boxes; NumberPad.tsx moves it next to them (the left/bottom
+   below are only where it starts before it is measured).
    ========================================================================== */
 
 .lab-base .numpad {

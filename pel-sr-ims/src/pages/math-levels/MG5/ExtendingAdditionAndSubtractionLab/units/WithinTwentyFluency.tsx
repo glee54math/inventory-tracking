@@ -6,6 +6,8 @@ import { Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { withinTwentyFluencyTest } from "./WithinTwentyFluencyTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { StuckBox, useCfuPointers, type ExploreTarget } from "../../../shared/components/CfuPointers";
+import { lookHereSpot, useLookHereRequest } from "../../../shared/lib/lookHere";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -16,12 +18,21 @@ import { ReadAloud } from "../../../shared/tts/ReadAloud";
 // AND confusion about when counting-on is efficient vs. when making a ten is
 // needed.
 
+// Where in Explore each CFU idea is taught (2nd wrong Check → "Look here first").
+const LOOK: Record<"makeTen" | "countOn" | "subAdd" | "family", ExploreTarget> = {
+  makeTen: { target: "w20-make-ten", label: "Addition — make a ten" },
+  countOn: { target: "w20-count-on", label: "Addition — when to just count on" },
+  subAdd: { target: "w20-sub-add", label: "Subtraction — think addition" },
+  family: { target: "w20-family", label: "Addition — related facts" },
+};
+
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
 function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "1+6";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.makeTen }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -39,15 +50,16 @@ function VocabQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="1+6">1 + 6</option>
           <option value="5+2">5 + 2</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, picked); setChecked(true); }}>
           Check Answer
         </button>
       </div>
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — 9 + 1 = 10, then 10 + 6 = 16. Splitting 7 into 1 + 6 is what makes the ten." : "Not quite — 9 needs exactly 1 more to make ten, so split 7 into 1 + 6: 9 + 1 = 10, then 10 + 6 = 16."}
+          {ok ? "Correct — 9 + 1 = 10, then 10 + 6 = 16. Splitting 7 into 1 + 6 is what makes the ten." : "Not quite. How many more does 9 need to make 10? Split 7 so one part is that many."}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -56,6 +68,7 @@ function CountOnVsMakeTenQuestion({ onComplete }: { onComplete?: () => void }) {
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "countOn";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.countOn }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -72,7 +85,7 @@ function CountOnVsMakeTenQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="countOn">Count on — only 2 more to go</option>
           <option value="makeTen">Make a ten — split the 2 into smaller parts first</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, picked); setChecked(true); }}>
           Check Answer
         </button>
       </div>
@@ -80,9 +93,10 @@ function CountOnVsMakeTenQuestion({ onComplete }: { onComplete?: () => void }) {
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — when the second number is small (like 1, 2, or 3), counting on is just as fast and doesn't need any splitting. Making a ten pays off most when the second number is bigger."
-            : "Not quite — when the second number is already small (like 2), just counting on is simplest. Making a ten is most useful for a bigger second number, like 8 + 6."}
+            : "Not quite. Is 2 a small number or a big one? Think about how many counts it takes."}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -91,6 +105,7 @@ function SubtractionIsNotOnlyCountDownQuestion({ onComplete }: { onComplete?: ()
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "false";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.subAdd }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -107,7 +122,7 @@ function SubtractionIsNotOnlyCountDownQuestion({ onComplete }: { onComplete?: ()
           <option value="true">True</option>
           <option value="false">False</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, picked); setChecked(true); }}>
           Check Answer
         </button>
       </div>
@@ -115,9 +130,10 @@ function SubtractionIsNotOnlyCountDownQuestion({ onComplete }: { onComplete?: ()
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? 'Correct — false. 13 − 8 is also "8 plus what makes 13?" — since 8 + 5 = 13, you can know 13 − 8 = 5 without counting down at all.'
-            : 'Not quite — false is right. 13 − 8 is the SAME question as "8 plus what makes 13?" Since 8 + 5 = 13, that already tells you 13 − 8 = 5 — no counting down needed.'}
+            : "Not quite. Can an addition fact help you find 13 − 8? Think: 8 plus what makes 13?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -128,6 +144,7 @@ function FactFamilyQuestion({ onComplete }: { onComplete?: () => void }) {
   const [checked, setChecked] = useState(false);
   const allFilled = [a, b].every((v) => String(v).trim() !== "");
   const ok = a === "6" && b === "9";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.family }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -155,15 +172,16 @@ function FactFamilyQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="9">9</option>
           <option value="15">15</option>
         </select>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => { ptr.record(() => ok, `${a}|${b}`); setChecked(true); }}>
           Check Answer
         </button>
       </div>
       {checked && allFilled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — 15 − 9 = 6 and 15 − 6 = 9. All four facts (9+6=15, 6+9=15, 15−9=6, 15−6=9) come from the same three numbers." : "Not quite — both subtraction facts use the SAME three numbers as 9 + 6 = 15: 15 − 9 = 6, and 15 − 6 = 9."}
+          {ok ? "Correct — 15 − 9 = 6 and 15 − 6 = 9. All four facts (9+6=15, 6+9=15, 15−9=6, 15−6=9) come from the same three numbers." : "Not quite. Both facts use the same three numbers as 9 + 6 = 15. Take one part away from 15. What part is left?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -194,8 +212,14 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
   const [mode, setMode] = useState<"add" | "subtract">("add");
-  const [a, setA] = useState(9);
-  const [b, setB] = useState(6);
+  // Defaults differ from every CFU number (9 + 7, 8 + 2, 13 − 8, 9 + 6).
+  const [a, setA] = useState(7);
+  const [b, setB] = useState(5);
+  // A CFU pointer to a spot in the other mode switches to it.
+  useLookHereRequest((id) => {
+    if (id === "w20-sub-add") setMode("subtract");
+    else if (id.startsWith("w20-")) setMode("add");
+  });
 
   const sum = a + b;
   const diff = Math.max(0, a - b);
@@ -222,8 +246,15 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             </label>
           </div>
           <TenFrameGroup value={Math.min(20, sum)} tone="a" splitAt={a} tone2="b" />
-          <ReadAloud as="p" className="muted small">
-            {a} + {b} = {sum}. Related fact: {sum} − {a} = {b}, and {sum} − {b} = {a}. The same three numbers connect all of these.
+          <ReadAloud as="p" className="muted small" {...lookHereSpot("w20-family")}>
+            {a} + {b} = {sum}. <span data-look-here-key>Related facts: {sum} − {a} = {b}, and {sum} − {b} = {a}. The same three numbers make all of these facts.</span>
+          </ReadAloud>
+          <ReadAloud as="p" {...lookHereSpot("w20-make-ten")}>
+            <span data-look-here-key>Make a ten: find how many more the first number needs to reach 10. Break the second number into that many and the rest.</span>{" "}
+            {sum > 10 && a < 10 ? `${a} needs ${10 - a} more. ${b} = ${10 - a} + ${b - (10 - a)}. So ${a} + ${b} = 10 + ${b - (10 - a)} = ${sum}.` : "Move the sliders so the two numbers add to more than 10."}
+          </ReadAloud>
+          <ReadAloud as="p" {...lookHereSpot("w20-count-on")}>
+            <span data-look-here-key>Is the second number small, like 1, 2, or 3? Then just count on: 6… 7, 8, 9.</span> Making a ten helps most when the second number is bigger.
           </ReadAloud>
         </>
       ) : (
@@ -237,8 +268,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             </label>
           </div>
           <TenFrameGroup value={Math.min(20, a + b)} tone="c" splitAt={diff} tone2="b" />
-          <ReadAloud as="p" className="muted small">
-            {a + b} − {b} = {diff}. You don't have to count down one at a time — since {diff} + {b} = {a + b}, that addition fact already tells you the answer.
+          <ReadAloud as="p" className="muted small" {...lookHereSpot("w20-sub-add")}>
+            {a + b} − {b} = {diff}. <span data-look-here-key>You don't</span> have to count down one at a time — since {diff} + {b} = {a + b}, that addition fact already tells you the answer.
           </ReadAloud>
         </>
       )}

@@ -31,6 +31,8 @@ const ReviewStatusBoard = lazy(() =>
 // Mr. Lee-only lab order + vocabulary board (admin-lab-map/). Lazy for the same reason:
 // the planning files it reads never reach the student portal.
 const LabMapBoard = lazy(() => import("./admin-lab-map/LabMap").then((m) => ({ default: m.LabMapBoard })));
+// Mr. Lee-only glossary of lab-building terms (admin-glossary/). Lazy for the same reason.
+const GlossaryBoard = lazy(() => import("./admin-glossary/Glossary").then((m) => ({ default: m.GlossaryBoard })));
 const LevelReviewDot = lazy(() =>
     import("./admin-review-status/ReviewStatus").then((m) => ({ default: m.LevelReviewDot }))
 );
@@ -167,6 +169,10 @@ export default function AllLevelsPage() {
 
             <Suspense fallback={null}>
                 <LabMapBoard />
+            </Suspense>
+
+            <Suspense fallback={null}>
+                <GlossaryBoard />
             </Suspense>
 
             <div className="all-levels-subjects">

@@ -1,60 +1,106 @@
 import { useState } from "react";
-import { TenFrame } from "../diagrams";
+import { TenFrame, holdFor, useCountAlong, useWatch } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
-import { choice, type Problem } from "../../../shared/engine/types";
+import { choice, pointing, type Problem } from "../../../shared/engine/types";
 import { Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { makingTenTest } from "./MakingTenTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
 import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
+import { lookHereSpot } from "../../../shared/lib/lookHere";
+import { HeldControls, WatchButton, useCheckRound } from "./ExploreParts";
+import { countList } from "./words";
 
 // ============================================================================
-// CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
+// CHECK FOR UNDERSTANDING: gates Practice, and comes back every 20 solves
 // ============================================================================
-// Named misconception (per the plan): counting up from 1 each time instead
-// of recognizing/recalling the ten-complement. Question 2 surfaces that
-// directly.
-
 // Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
-// Ideas checked: a number's partner for 10 fills the empty boxes; checking a
-// pair really makes 10 instead of "looks close".
+// Ideas checked: what makes 10 fills the empty boxes; a pair must really fill
+// every box. A re-check uses the second fixed set of numbers.
+
+const LOOK = {
+  fill: { target: "u4-fill", label: "Explore: the boxes", say: "Look here. Count the empty boxes." },
+  full: { target: "u4-full", label: "Explore: every box", say: "Look here. 10 fills every box." },
+};
+
+/** The boxes fill in one per second, each numbered from 1. */
+function FillAlong({ start, active = true }: { start: number; active?: boolean }) {
+  const partner = 10 - start;
+  const shown = useCountAlong(active, partner);
+  return <TenFrame filled={start} tone="a" fillB={shown} fillBTone="b" numberFrom={start} numberCount={shown} />;
+}
 
 const partnerQuestion = (n: number, start: number, done: () => void) => (
   <TypeCheck
+    key={`${n}-${start}`}
     n={n}
     prompt={`${start} and how many make 10?`}
     answer={10 - start}
     tone="b"
-    picture={(m) => <TenFrame filled={start} tone="a" fillB={m === "show" || m === "done" ? 10 - start : 0} fillBTone="b" />}
+    picture={(m) => (m === "show" ? <FillAlong start={start} /> : <TenFrame filled={start} tone="a" fillB={m === "done" ? 10 - start : 0} fillBTone="b" ringEmpty={m === "wrong"} />)}
     nudge="Count the empty boxes."
     showText={`Watch: the empty boxes fill in. ${start} and ${10 - start} make 10.`}
     praise={`Yes! ${start} and ${10 - start} make 10.`}
+    look={LOOK.fill}
     onComplete={done}
   />
 );
 
+const yesNo = [
+  { id: "yes", label: "Yes" },
+  { id: "no", label: "No" },
+];
+
+// The Yes/No pair is false in the first set and true in the second, so a
+// returning student can't tap the same answer from memory.
+const SETS = [
+  { firsts: [6, 7, 2], pair: [5, 4], twin: [6, 3] },
+  { firsts: [3, 8, 4], pair: [7, 3], twin: [9, 1] },
+] as const;
+
+/** The show-it line, praise and answer for "Do x and y make 10?". */
+const pairLines = (x: number, y: number) =>
+  x + y === 10
+    ? { answer: "yes", showText: `Look: every box is full. ${x} and ${y} make 10.`, praise: `Yes! Every box is full. ${x} and ${y} make 10.` }
+    : { answer: "no", showText: `Look: one box is still empty. ${x} and ${y} make ${x + y}.`, praise: `Right! One box is empty. ${x} and ${y} make ${x + y}.` };
+
 function MakingTenCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
+  const { round, finish } = useCheckRound("makingTen", onComplete);
+  const set = SETS[round];
+  const [p, q] = set.pair;
+  const [tp, tq] = set.twin;
+  const main = pairLines(p, q);
+  const other = pairLines(tp, tq);
+  const wrongPick = main.answer === "no" ? "yes" : "no";
   return (
     <CheckSequence
-      onComplete={onComplete}
+      onComplete={finish}
       items={[
-        (done) => partnerQuestion(1, 6, done),
-        (done) => partnerQuestion(2, 7, done),
-        (done) => partnerQuestion(3, 2, done),
+        (done) => partnerQuestion(1, set.firsts[0], done),
+        (done) => partnerQuestion(2, set.firsts[1], done),
+        (done) => partnerQuestion(3, set.firsts[2], done),
         (done) => (
           <PickCheck
             n={4}
-            prompt="Do 5 and 4 make 10?"
-            picture={<TenFrame filled={5} tone="a" fillB={4} fillBTone="b" />}
-            showPicture={<TenFrame filled={5} tone="a" fillB={4} fillBTone="b" />}
-            showText="Look: one box is still empty. 5 and 4 make 9."
-            options={[
-              { id: "yes", label: "Yes" },
-              { id: "no", label: "No" },
-            ]}
-            answer="no"
-            why={{ yes: "Look again. Is every box full?" }}
-            praise="Right! One box is empty. 5 and 4 make 9."
+            prompt={`Do ${p} and ${q} make 10?`}
+            picture={<TenFrame filled={p} tone="a" fillB={q} fillBTone="b" />}
+            showPicture={<TenFrame filled={p} tone="a" fillB={q} fillBTone="b" ringEmpty />}
+            showText={main.showText}
+            options={yesNo}
+            answer={main.answer}
+            why={{ [wrongPick]: "Look again. Is every box full?" }}
+            praise={main.praise}
+            look={LOOK.full}
+            twin={{
+              prompt: `Do ${tp} and ${tq} make 10?`,
+              picture: <TenFrame filled={tp} tone="a" fillB={tq} fillBTone="b" />,
+              showPicture: <TenFrame filled={tp} tone="a" fillB={tq} fillBTone="b" ringEmpty />,
+              options: yesNo,
+              answer: other.answer,
+              why: { [wrongPick]: "Look again. Is every box full?" },
+              showText: other.showText,
+              praise: other.praise,
+            }}
             onComplete={done}
           />
         ),
@@ -70,25 +116,18 @@ function MakingTenCheckForUnderstanding({ onComplete }: { onComplete?: () => voi
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
-  const [n, setN] = useState(6);
+  const [n, setN] = useState(1);
   const [revealed, setRevealed] = useState(false);
   const partner = 10 - n;
+  const demo = useWatch(partner, (t) => String(t));
+  const running = demo.playing || demo.tick > 0;
+  const filledB = running ? demo.tick : revealed ? partner : 0;
+  const showing = filledB === partner;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div className="control-row" data-readaloud-part>
-        <Stepper
-          label="Starting number"
-          value={n}
-          min={1}
-          max={9}
-          step={1}
-          onChange={(v) => {
-            setN(v);
-            setRevealed(false);
-          }}
-          tone="a"
-        />
+        <WatchButton demo={demo} />
         {!introActive && (
           <button
             type="button"
@@ -101,19 +140,49 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         )}
       </div>
 
-      <TenFrame filled={n} tone="a" fillB={revealed ? partner : 0} fillBTone="b" />
-      <button className="btn primary" style={{ width: "fit-content" }} onClick={() => setRevealed((r) => !r)}>
-        {revealed ? "Hide the partner" : "Reveal the partner for 10"}
-      </button>
-      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
-        {revealed ? `${n} + ${partner} = 10. ${n}'s partner for 10 is ${partner}.` : `How many MORE do you need to fill the frame to 10?`}
+      <HeldControls held={demo.playing}>
+        <Stepper
+          label="Number"
+          value={n}
+          min={1}
+          max={9}
+          step={1}
+          onChange={(v) => {
+            demo.clear();
+            setN(v);
+            setRevealed(false);
+          }}
+          tone="a"
+        />
+      </HeldControls>
+
+      <div {...lookHereSpot("u4-fill")} style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
+        <TenFrame filled={n} tone="a" fillB={filledB} fillBTone="b" numberFrom={n} numberCount={running ? demo.tick : 0} />
+        <button
+          className="btn primary"
+          style={{ width: "fit-content" }}
+          disabled={demo.playing}
+          onClick={() => {
+            demo.clear();
+            setRevealed(!showing);
+          }}
+        >
+          {showing ? "Hide" : "Show me"}
+        </button>
+        <ReadAloud as="p" className="feedback good" style={{ minHeight: 24, margin: 0 }}>
+          <span data-look-here-key>{showing ? `${n} and ${partner} make 10.` : "How many empty boxes?"}</span>
+        </ReadAloud>
+      </div>
+      <ReadAloud as="p" {...lookHereSpot("u4-full")}>
+        <span data-look-here-key>10 fills every box.</span>
       </ReadAloud>
-      <ReadAloud as="p" className="muted small">
-        Try every starting number from 1 to 9 — notice each one has exactly ONE partner. The goal is to eventually just KNOW the partner instantly,
-        without counting up from 1 each time.
-      </ReadAloud>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <MakingTenCheckForUnderstanding onComplete={onIntroDone} />}
+      {/* The Check waits until the demo has played once. */}
+      {introActive && !demo.seen && (
+        <ReadAloud as="p" className="muted small">
+          Tap Watch first.
+        </ReadAloud>
+      )}
+      {((introActive && demo.seen) || showCheck) && <MakingTenCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }
@@ -131,82 +200,104 @@ function makingTenProblem(targetBucket?: string): Problem {
   if (bucket === "smallComplement" || bucket === "nearTenComplement" || bucket === "middleComplement") {
     const n = bucket === "smallComplement" ? randInt(1, 3) : bucket === "nearTenComplement" ? randInt(7, 9) : randInt(4, 6);
     const partner = 10 - n;
-    const doubled = n * 2; // diagnosable mistake: doubling instead of finding the complement
+    // The pick asks about a new number, so it can't repeat the answer just typed.
+    let m = randInt(1, 9);
+    while (m === n || m === partner) m = randInt(1, 9);
+    const mPartner = 10 - m;
+    const wrong = mPartner === 1 ? 2 : mPartner === 9 ? 8 : Math.random() < 0.5 ? mPartner - 1 : mPartner + 1;
     return {
-      title: "Find the partner for 10",
+      title: "Make 10",
       bucket,
-      story: `What number goes with ${n} to make exactly 10?`,
-      // "Show me" for step 1 fills the empty boxes in the partner color.
-      visual: (done) => <TenFrame filled={n} tone="a" fillB={done >= 1 ? partner : 0} />,
+      story: "Look at the boxes.",
+      visual: (done, help) => {
+        if (help?.showMe && help.step === 0) return <FillAlong key="show" start={n} />;
+        if (help?.showMe && help.step === 1) return <FillAlong key="show-new" start={m} />;
+        if (done >= 2) return <TenFrame filled={m} tone="a" fillB={mPartner} />;
+        if (done === 1) return <TenFrame filled={m} tone="a" ringEmpty={pointing(help, 1)} />;
+        return <TenFrame filled={n} tone="a" ringEmpty={pointing(help, 0)} />;
+      },
       steps: [
-        { kind: "number", prompt: `What number goes with ${n} to make 10?`, hint: "Count the empty boxes left in the ten frame.", explain: `${n} + ${partner} = 10.`, answer: partner },
+        {
+          kind: "number",
+          tone: "b",
+          prompt: `${n} and how many make 10?`,
+          hint: "Count the empty boxes.",
+          showMe: `The empty boxes fill in: ${countList(1, partner)}.`,
+          showMeHoldMs: holdFor(partner),
+          explain: `${n} and ${partner} make 10.`,
+          answer: partner,
+        },
         choice(
-          { prompt: "Which number sentence shows this partner pair?", hint: "The two partners add up to exactly 10.", explain: `${n} + ${partner} = 10.` },
-          `${n} + ${partner} = 10`,
-          [`${n} + ${n} = 10`, `${partner} − ${n} = 10`] // misconceptions: doubling instead of finding the complement; wrong operation
+          { prompt: `Now ${m}. Which one makes 10?`, hint: "Count the empty boxes.", showMe: `${m} and ${mPartner} fill every box.`, showMeHoldMs: holdFor(mPartner), explain: `${m} + ${mPartner} = 10.` },
+          `${m} + ${mPartner} = 10`,
+          [`${m} + ${wrong} = 10`] // misconception: off by one when counting the empty boxes
         ),
       ],
-      wrapUp: `${n}'s partner for 10 is ${partner}, since ${n} + ${partner} = 10.${doubled === 10 ? "" : ""}`,
+      wrapUp: `${n} and ${partner} make 10. ${m} and ${mPartner} make 10.`,
     };
   }
 
-  // verifyPair — reverse-direction check, true half the time, false half the
-  // time. The false branch's near-miss must land ±1 away from the real
-  // partner, never accidentally ON it — handled directly per-branch here
-  // (not via one shared guard applied to both branches), since on the true
-  // branch `shownQ` is deliberately EQUAL to actualPartner already, so a
-  // guard written to catch "landed on actualPartner" would misfire there too.
+  // verifyPair: Yes or No, decided first so each is right about half the time.
   const p = randInt(1, 9);
+  const actual = 10 - p;
   const isTrue = Math.random() < 0.5;
-  const actualPartner = 10 - p;
-  let shownQ = actualPartner;
-  if (!isTrue) {
-    const nearMiss = actualPartner + (Math.random() < 0.5 ? 1 : -1);
-    shownQ = nearMiss <= 0 ? actualPartner + 1 : nearMiss; // only actualPartner=1 with -1 needs the fallback
-  }
-  const trulyTrue = p + shownQ === 10;
+  const shown = isTrue ? actual : actual > 1 && Math.random() < 0.5 ? actual - 1 : actual + 1;
+  // The typed step uses a new number, so it can't be copied from the question.
+  let m = randInt(1, 9);
+  while (m === p || m === shown) m = randInt(1, 9);
+  const mPartner = 10 - m;
   return {
-    title: "Does this pair make 10?",
+    title: "Do they make 10?",
     bucket,
-    story: `${p} and ${shownQ}.`,
-    // Step 1's "Show me" adds the shown number's dots (any past 10 spill outside
-    // the frame); step 2's "Show me" and the finish show the real partner.
+    story: `${p} and ${shown}.`,
     visual: (done, help) => {
-      if (done >= 2) return <TenFrame filled={p} tone="a" fillB={actualPartner} />;
-      if (help?.showMe && help.step === 0)
-        return <TenFrame filled={p} tone="a" fillB={Math.min(shownQ, actualPartner)} overflow={Math.max(0, shownQ - actualPartner)} />;
-      return <TenFrame filled={Math.min(10, p)} tone="a" fillB={0} />;
+      const at = help?.showMe ? help.step : done;
+      if (at === 0) {
+        if (help?.showMe) return <TenFrame filled={p} tone="a" fillB={Math.min(shown, actual)} overflow={Math.max(0, shown - actual)} ringEmpty={shown < actual} />;
+        return <TenFrame filled={p} tone="a" ringEmpty={pointing(help, 0)} />;
+      }
+      if (help?.showMe && help.step === 1) return <FillAlong key="show" start={m} />;
+      if (done >= 2) return <TenFrame filled={m} tone="a" fillB={mPartner} />;
+      return <TenFrame filled={m} tone="a" ringEmpty={pointing(help, 1)} />;
     },
     steps: [
       choice(
-        { prompt: `Do ${p} and ${shownQ} make exactly 10?`, hint: "Add them exactly — don't just guess from how close they look.", explain: `${p} + ${shownQ} = ${p + shownQ}${trulyTrue ? ", which is 10." : `, which is NOT 10.`}` },
-        trulyTrue ? "Yes" : "No",
-        [trulyTrue ? "No" : "Yes"]
+        {
+          prompt: `Do ${p} and ${shown} make 10?`,
+          hint: `Count the empty boxes. Is it ${shown}?`,
+          showMe: isTrue ? `${p} and ${shown} fill every box.` : shown < actual ? "One box is still empty." : "One dot does not fit.",
+          explain: `${p} and ${shown} make ${p + shown}.`,
+        },
+        isTrue ? "Yes" : "No",
+        [isTrue ? "No" : "Yes"]
       ),
-      { kind: "number", prompt: `What is ${p}'s ACTUAL partner for 10?`, hint: "Find the number that really does add with it to make exactly 10.", explain: `${p} + ${actualPartner} = 10.`, answer: actualPartner },
+      {
+        kind: "number",
+        tone: "b",
+        prompt: `Now ${m}. ${m} and how many make 10?`,
+        hint: "Count the empty boxes.",
+        showMe: `The empty boxes fill in: ${countList(1, mPartner)}.`,
+        showMeHoldMs: holdFor(mPartner),
+        explain: `${m} and ${mPartner} make 10.`,
+        answer: mPartner,
+      },
     ],
-    wrapUp: `${p}'s partner for 10 is ${actualPartner}.`,
+    wrapUp: `${m} and ${mPartner} make 10.`,
   };
 }
 
 export const makingTen: Unit = {
   id: "makingTen",
-  title: "Making 10",
-  goal: "Instantly know what number to add to any number 1-9 to make exactly 10.",
+  title: "Make 10",
+  goal: "Find what makes 10.",
   standard: "K.OA.4",
-  keyIdea: (
-    <>
-      <p>Every number from 1 to 9 has exactly one partner that makes 10 with it: 1&amp;9, 2&amp;8, 3&amp;7, 4&amp;6, 5&amp;5.</p>
-      <p>The goal is to just KNOW each partner instantly — not to count up from 1 every single time.</p>
-    </>
-  ),
+  keyIdea: <p>Fill the empty boxes to make 10.</p>,
   Explore,
   requiresIntro: true,
-  // Ten-complements are a small, fixed fact set meant for long-term
-  // memorization (K.OA.4's actual goal is instant recall, not re-derivation
-  // by counting) — periodically re-check rather than trusting one early pass.
+  // The pairs that make 10 are a small fixed set to know by heart, so the
+  // Check comes back now and then (with its second set of numbers).
   reintroEverySolved: 20,
-  problems: [{ label: "Partners for 10", make: makingTenProblem, buckets: BUCKETS }],
+  problems: [{ label: "Make 10", make: makingTenProblem, buckets: BUCKETS }],
   requiredBuckets: BUCKETS,
   test: makingTenTest,
 };

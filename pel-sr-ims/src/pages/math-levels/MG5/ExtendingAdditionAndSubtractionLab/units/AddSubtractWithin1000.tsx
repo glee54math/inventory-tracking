@@ -7,6 +7,8 @@ import { Stepper, Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { addSubtractWithin1000Test } from "./AddSubtractWithin1000Test";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { StuckBox, useCfuPointers, type ExploreTarget } from "../../../shared/components/CfuPointers";
+import { lookHereSpot, useLookHereRequest } from "../../../shared/lib/lookHere";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -16,12 +18,19 @@ import { ReadAloud } from "../../../shared/tts/ReadAloud";
 // misconception point in this unit (you cannot borrow a ten from a tens
 // place that holds a 0 — you must reach into the hundreds place first).
 
+// Where in Explore each CFU idea is taught (2nd wrong Check → "Look here first").
+const LOOK = {
+  zero: { target: "w1k-zero", label: "Subtraction — when the tens digit is 0" },
+  picture: { target: "w1k-picture", label: "Subtraction — watch the digits change" },
+} satisfies Record<string, ExploreTarget>;
+
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
 function WhyCantBorrowQuestion({ onComplete }: { onComplete?: () => void }) {
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "zero";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.zero }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -39,15 +48,16 @@ function WhyCantBorrowQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="toobig">403 is too big a number to borrow in</option>
           <option value="noneed">You don't actually need to borrow at all</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, picked); setChecked(true); }}>
           Check Answer
         </button>
       </div>
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — the tens place holds a 0, so there's nothing there yet to lend to the ones place." : "Not quite — the tens digit of 403 is 0. You can't lend a ten from a place that doesn't have one."}
+          {ok ? "Correct — the tens place holds a 0, so there's nothing there yet to lend to the ones place." : "Not quite. Look at the tens digit of 403. How many tens are there to lend?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -56,6 +66,7 @@ function WhereFirstQuestion({ onComplete }: { onComplete?: () => void }) {
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "hundreds";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.zero }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -72,15 +83,16 @@ function WhereFirstQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="hundreds">Borrow a hundred from the hundreds place, giving the tens place 10 tens to work with</option>
           <option value="skip">Skip the tens place and borrow straight from the ones</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, picked); setChecked(true); }}>
           Check Answer
         </button>
       </div>
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — borrowing a hundred from the hundreds place gives the tens place 10 tens. It can then lend one of those tens to the ones place." : "Not quite — you first borrow from the hundreds place, which gives the tens place something to work with (and then lend)."}
+          {ok ? "Correct — borrowing a hundred from the hundreds place gives the tens place 10 tens. It can then lend one of those tens to the ones place." : "Not quite. The tens place is empty. Which place still has something to give?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -89,6 +101,7 @@ function CannotSubtractAtAllTrueFalseQuestion({ onComplete }: { onComplete?: () 
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "false";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.zero }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -105,15 +118,16 @@ function CannotSubtractAtAllTrueFalseQuestion({ onComplete }: { onComplete?: () 
           <option value="true">True</option>
           <option value="false">False</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, picked); setChecked(true); }}>
           Check Answer
         </button>
       </div>
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — false. You just have to borrow from the hundreds place first, so the tens place has something to work with." : "Not quite — false is right. A zero in the tens place just means you borrow from the hundreds place first."}
+          {ok ? "Correct — false. You just have to borrow from the hundreds place first, so the tens place has something to work with." : "Not quite. If the tens place is empty, is there another place you can get a ten from?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -124,6 +138,7 @@ function WorkedExampleQuestion({ onComplete }: { onComplete?: () => void }) {
   const [checked, setChecked] = useState(false);
   const allFilled = [hundreds, tens].every((v) => String(v).trim() !== "");
   const ok = hundreds === "2" && tens === "9";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.picture }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -149,15 +164,16 @@ function WorkedExampleQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="10">10</option>
           <option value="9">9</option>
         </select>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => { ptr.record(() => ok, `${hundreds}|${tens}`); setChecked(true); }}>
           Check Answer
         </button>
       </div>
       {checked && allFilled && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — the hundreds digit drops from 4 to 2 (one hundred given to the tens place). The tens place then lends one of its 10 tens to the ones place, leaving 9." : "Not quite — borrowing a hundred from the 4 leaves 2 in the hundreds place (it passed through a temporary 3-becomes-10-tens state), and after the tens place lends one ten to the ones place, it's left with 9."}
+          {ok ? "Correct — the hundreds digit drops from 4 to 2 (one hundred given to the tens place). The tens place then lends one of its 10 tens to the ones place, leaving 9." : "Not quite. Go step by step. The 4 hundreds give 1 hundred away. Then the 10 tens give 1 ten away. What is left in each place?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -190,8 +206,13 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const [op, setOp] = useState<"add" | "subtract">("add");
   const [a, setA] = useState(287);
   const [b, setB] = useState(398);
-  const [sub, setSub] = useState(403);
-  const [subAmt, setSubAmt] = useState(158);
+  // Defaults differ from the CFU's 403 − 158 (still a borrow-through-zero).
+  const [sub, setSub] = useState(605);
+  const [subAmt, setSubAmt] = useState(278);
+  // CFU pointers all point into Subtraction mode.
+  useLookHereRequest((id) => {
+    if (id.startsWith("w1k-")) setOp("subtract");
+  });
 
   const addBreakdown: ColumnBreakdown = buildAddColumns([a, b], 3);
   const subBreakdown: ColumnBreakdown = buildSubColumns(sub, subAmt, 3);
@@ -227,8 +248,13 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             <Stepper label="Start" value={sub} min={101} max={999} step={1} onChange={setSub} tone="c" />
             <Stepper label="Subtract" value={subAmt} min={1} max={sub - 1} step={1} onChange={setSubAmt} tone="b" />
           </div>
-          <BaseTenBlocks hundreds={hundredsDigit} tens={tensDigit} ones={sub % 10} />
-          <PlaceValueColumns breakdown={subBreakdown} revealCols={subBreakdown.numCols} />
+          <div {...lookHereSpot("w1k-picture")}>
+            <BaseTenBlocks hundreds={hundredsDigit} tens={tensDigit} ones={sub % 10} />
+            <PlaceValueColumns breakdown={subBreakdown} revealCols={subBreakdown.numCols} />
+          </div>
+          <ReadAloud as="p" {...lookHereSpot("w1k-zero")}>
+            <span data-look-here-key>Tens digit is 0? It has no ten to lend. Go to the hundreds first: 1 hundred becomes 10 tens. Now the tens can lend 1 ten to the ones.</span>
+          </ReadAloud>
           <ReadAloud as="p" className="muted small">
             {sub} − {subAmt} = {subBreakdown.total}.{" "}
             {borrowsThroughZero(subBreakdown)

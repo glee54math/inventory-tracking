@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import type React from "react";
 import { palette, diagramFont } from "../../../shared/lib/palette";
+import { useCountAlong } from "./SortedBins";
 
 export type Tone = "a" | "b" | "c";
 
@@ -9,7 +10,7 @@ const toneColor = (tone?: Tone) => (tone === "b" ? palette.b : tone === "c" ? pa
 const BLOCK = 28;
 const BLOCK_GAP = 3;
 const BAR_H = 34;
-const ROW_GAP = 46;
+const ROW_GAP = 62; // room for each rod's name, clear of the rod above it
 const PAD = 24;
 
 export interface LengthBarSpec {
@@ -30,6 +31,12 @@ export interface LengthBarSpec {
   /** Ring and number (1, 2, ...) this bar's blocks from index `extraFrom`
    *  on — the extra blocks past the other rod ("Show me" for "how many longer"). */
   extraFrom?: number;
+  /** Ring the extras without numbers, when the question asks how many. Default true. */
+  extraNumbered?: boolean;
+  /** Outline the whole rod: "look at this one". */
+  ring?: boolean;
+  /** "Show me": number this rod's blocks one at a time. */
+  countAlong?: boolean;
 }
 
 export interface LengthBarsProps {
@@ -57,6 +64,8 @@ export interface LengthBarsProps {
 export function LengthBars({ bars, min = 1, max = 12, onBlocksChange, alignStarts }: LengthBarsProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const countIdx = bars.findIndex((b) => b.countAlong);
+  const shown = useCountAlong(countIdx >= 0, countIdx >= 0 ? bars[countIdx].blocks : 0);
   const maxOffset = Math.max(0, ...bars.map((b) => b.startOffset ?? 0));
   const width = PAD * 2 + (max + maxOffset) * (BLOCK + BLOCK_GAP);
   const height = PAD * 2 + bars.length * ROW_GAP;
@@ -78,7 +87,8 @@ export function LengthBars({ bars, min = 1, max = 12, onBlocksChange, alignStart
   };
   const onMove = (e: React.PointerEvent) => {
     if (dragIndex === null || !onBlocksChange) return;
-    const startOffset = bars[dragIndex].startOffset ?? 0;
+    // Once the rods have slid together, every rod starts at the shared line.
+    const startOffset = alignStarts ? 0 : bars[dragIndex].startOffset ?? 0;
     onBlocksChange(dragIndex, clientXToBlocks(e.clientX, startOffset));
   };
   const endDrag = () => setDragIndex(null);
@@ -112,7 +122,8 @@ export function LengthBars({ bars, min = 1, max = 12, onBlocksChange, alignStart
             {Array.from({ length: bar.blocks }, (_, k) => {
               const bx = x0 + k * (BLOCK + BLOCK_GAP);
               const isExtra = bar.extraFrom !== undefined && k >= bar.extraFrom;
-              const num = isExtra ? k - bar.extraFrom! + 1 : bar.numbered ? k + 1 : 0;
+              const counted = i === countIdx && k < shown;
+              const num = counted || (bar.numbered && !isExtra) ? k + 1 : isExtra && bar.extraNumbered !== false ? k - bar.extraFrom! + 1 : 0;
               return (
                 <g key={k}>
                   <rect x={bx} y={y} width={BLOCK} height={BAR_H} rx={4} fill={color} stroke={palette.paper} strokeWidth={2} />
@@ -125,21 +136,53 @@ export function LengthBars({ bars, min = 1, max = 12, onBlocksChange, alignStart
                 </g>
               );
             })}
+            {bar.ring && <rect x={x0 - 4} y={y - 4} width={bar.blocks * (BLOCK + BLOCK_GAP) - BLOCK_GAP + 8} height={BAR_H + 8} rx={7} fill="none" stroke={palette.ink} strokeWidth={2.5} />}
+            {onBlocksChange && (
+              <circle cx={handleX} cy={y + BAR_H / 2} r={24} fill="transparent" style={{ cursor: "ew-resize", touchAction: "none" }} onPointerDown={startDrag(i)} />
+            )}
             {onBlocksChange && (
               <circle
+                pointerEvents="none"
                 cx={handleX}
                 cy={y + BAR_H / 2}
                 r={10}
                 fill={palette.paper}
                 stroke={color}
                 strokeWidth={3}
-                style={{ cursor: "ew-resize", touchAction: "none" }}
-                onPointerDown={startDrag(i)}
               />
             )}
           </g>
         );
       })}
+    </svg>
+  );
+}
+
+/** A rod standing up: "Tall is long, standing up." */
+export function StandingRod({ blocks, tone = "a", ring, countAlong }: { blocks: number; tone?: Tone; ring?: boolean; countAlong?: boolean }) {
+  const color = toneColor(tone);
+  const size = 24;
+  const gap = 3;
+  const total = blocks * (size + gap) - gap;
+  const height = total + 24;
+  const shown = useCountAlong(!!countAlong, blocks);
+  return (
+    <svg viewBox={`0 0 120 ${height}`} role="img" aria-label="A rod standing up" style={{ display: "block", width: 120, maxWidth: "100%", height: "auto", fontFamily: diagramFont }}>
+      <line x1={20} y1={height - 8} x2={100} y2={height - 8} stroke={palette.line} strokeWidth={3} />
+      {Array.from({ length: blocks }, (_, k) => {
+        const y = height - 10 - (k + 1) * (size + gap) + gap;
+        return (
+          <g key={k}>
+            <rect x={48} y={y} width={size} height={size} rx={3} fill={color} stroke={palette.paper} strokeWidth={1.5} />
+            {k < shown && (
+              <text x={60} y={y + 17} textAnchor="middle" fontSize={13} fontWeight={800} fill="#fff">
+                {k + 1}
+              </text>
+            )}
+          </g>
+        );
+      })}
+      {ring && <rect x={44} y={height - 14 - total} width={size + 8} height={total + 8} rx={6} fill="none" stroke={palette.ink} strokeWidth={2.5} />}
     </svg>
   );
 }

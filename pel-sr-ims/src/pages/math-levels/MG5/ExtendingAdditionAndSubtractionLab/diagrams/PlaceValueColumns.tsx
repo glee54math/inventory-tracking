@@ -17,11 +17,14 @@ export function PlaceValueColumns({ breakdown, revealCols }: { breakdown: Column
 
   const carryRow = (
     <div className="align-row" aria-hidden>
+      {/* Same leading sign slot as the operand rows, so each mark sits over its own column. */}
+      <span className="align-slot" style={{ height: "0.9em" }} />
       {cols.map((col) => {
         const show = col > 0 && revealCols > col - 1 && carry[col - 1] > 0;
         return (
-          <span key={col} className="align-slot" style={{ fontSize: 12, color: operation === "add" ? palette.good : palette.bad, height: "0.9em" }}>
-            {show ? (operation === "add" ? `+${carry[col - 1]}` : "borrow") : ""}
+          // Slot keeps the normal font size (its width is in em); only the mark inside is small.
+          <span key={col} className="align-slot" style={{ height: "0.9em", overflow: "visible" }}>
+            <span style={{ fontSize: 12, whiteSpace: "nowrap", color: operation === "add" ? palette.good : palette.bad }}>{show ? (operation === "add" ? `+${carry[col - 1]}` : "borrow") : ""}</span>
           </span>
         );
       })}

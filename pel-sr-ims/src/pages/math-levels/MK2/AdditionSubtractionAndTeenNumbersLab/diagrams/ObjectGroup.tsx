@@ -96,6 +96,10 @@ export interface ObjectGroupProps {
   /** Ring every object from this index on — e.g. the "extra" objects one
    *  group has beyond the other. Off by default. */
   ringFrom?: number;
+  /** Number the objects from this index on, 1, 2, 3, without dimming the rest. */
+  labelFrom?: number;
+  /** How many objects get a number, from `labelFrom`. */
+  labelCount?: number;
 }
 
 /** A group of simple objects (dots, or an emoji glyph) laid out as a line, a
@@ -103,7 +107,7 @@ export interface ObjectGroupProps {
  *  many" this lab uses so every addition/subtraction idea is shown with
  *  real objects before any bare numeral or "+"/"−" symbol appears, per this
  *  Kindergarten lab's audience framing. */
-export function ObjectGroup({ count, arrangement = "line", tone, seed = 1, glyph, countedOrder, onToggle, alignLeft = false, ringFrom }: ObjectGroupProps) {
+export function ObjectGroup({ count, arrangement = "line", tone, seed = 1, glyph, countedOrder, onToggle, alignLeft = false, ringFrom, labelFrom, labelCount = 0 }: ObjectGroupProps) {
   const points = layoutPositions(count, arrangement, seed, alignLeft);
   const color = toneColor(tone);
   const orderOf = (i: number) => (countedOrder ? countedOrder.indexOf(i) : -1);
@@ -136,6 +140,11 @@ export function ObjectGroup({ count, arrangement = "line", tone, seed = 1, glyph
             {countedOrder && counted && (
               <text x={p.x} y={p.y - R - 6} textAnchor="middle" fontSize={13} fontWeight={800} fill={color}>
                 {order + 1}
+              </text>
+            )}
+            {labelFrom !== undefined && i >= labelFrom && i < labelFrom + labelCount && (
+              <text x={p.x} y={p.y + 5} textAnchor="middle" fontSize={14} fontWeight={800} fill="#ffffff">
+                {i - labelFrom + 1}
               </text>
             )}
             {ringFrom !== undefined && i >= ringFrom && (

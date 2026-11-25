@@ -106,7 +106,7 @@ function Home({
             </li>
           ))}
         </ol>
-        <p className="muted small">Each unit has 3 or 4 different kinds of problems. Stars fill in as you cleanly solve (at most one hint) each new kind in Mixed mode — the last star needs every kind.</p>
+        <p className="muted small">Each unit has 3 or 4 different kinds of problems. Stars fill in as you solve each new kind in Mixed mode with no hints or wrong tries — the last star needs every kind.</p>
       </section>
       <section>
         <button className="path-card module-test-card" onClick={onModuleTest}>

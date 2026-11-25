@@ -1,207 +1,134 @@
 import { LengthBars, BalanceScale } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
-import { choice, type TestQuestion } from "../../../shared/engine/types";
+import type { TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
+import { offsetRods, otherSide, rodChoice, rodName, rodPair, sideChoice, weightPair, type OffsetRods, type Rod, type Side } from "./labParts";
 
-// ---------- end-of-unit test: Comparing Two Objects Directly ----------
-// Self-contained — the distinct-pair helpers are duplicated here rather
-// than imported from ComparingTwoObjectsDirectly.tsx, same convention as
-// every other *Test.tsx in this app.
+// ---------- end-of-unit test: Which Is Longer? Which Is Heavier? ----------
+// Shared data comes from labParts, never from the unit file (the unit file
+// imports this test, so importing back would be a circular import).
 
-function lengthPair(nearTieChance = 0.5): [number, number] {
-  const a = randInt(3, 9);
-  let b: number;
-  if (Math.random() < nearTieChance) {
-    b = a + (Math.random() < 0.5 ? 1 : -1);
-  } else {
-    const delta = randInt(3, 6) * (Math.random() < 0.5 ? 1 : -1);
-    b = a + delta;
-  }
-  b = Math.max(1, Math.min(12, b));
-  if (b === a) b = a + 1 <= 12 ? a + 1 : a - 1;
-  return [a, b];
-}
+const rods = (a: number, b: number) => <LengthBars max={9} bars={[{ blocks: a, tone: "a", label: "Rod A" }, { blocks: b, tone: "b", label: "Rod B" }]} />;
+const shifted = ({ a, b, offA, offB }: OffsetRods) => (
+  <LengthBars max={9} bars={[{ blocks: a, tone: "a", label: "Rod A", startOffset: offA }, { blocks: b, tone: "b", label: "Rod B", startOffset: offB }]} />
+);
+const scale = (blue: number, orange: number) => <BalanceScale left={blue} right={orange} leftLabel="Blue" rightLabel="Orange" />;
+const longerOf = (a: number, b: number): Rod => (a > b ? "A" : "B");
+const otherRod = (r: Rod): Rod => (r === "A" ? "B" : "A");
 
-function weightPair(nearTieChance = 0.5): [number, number] {
-  const a = randInt(2, 7);
-  let b: number;
-  if (Math.random() < nearTieChance) {
-    b = a + (Math.random() < 0.5 ? 1 : -1);
-  } else {
-    const delta = randInt(2, 4) * (Math.random() < 0.5 ? 1 : -1);
-    b = a + delta;
-  }
-  b = Math.max(1, Math.min(8, b));
-  if (b === a) b = a + 1 <= 8 ? a + 1 : a - 1;
-  return [a, b];
-}
-
-/** Aligned length comparison — which is longer, the easy direct case. */
+/** Rods that start together: which is longer. */
 export const lengthAlignedQuestion = (): TestQuestion[] => {
-  const [a, b] = lengthPair();
-  const longer = a > b ? "A" : "B";
-  const shorter = longer === "A" ? "B" : "A";
-  return [
-    {
-      visual: <LengthBars bars={[{ blocks: a, tone: "a", label: "Rod A" }, { blocks: b, tone: "b", label: "Rod B" }]} />,
-      difficulty: "easy",
-      step: choice({ prompt: "Which rod is LONGER?", hint: "Both rods start together.", explain: `Rod ${longer} is longer.` }, `Rod ${longer}`, [`Rod ${shorter}`]),
-    },
-  ];
+  const [a, b] = rodPair(false);
+  const longer = longerOf(a, b);
+  return [{ visual: rods(a, b), difficulty: "easy", step: rodChoice({ prompt: "Which rod is longer?", hint: "Which goes farther?", explain: `Rod ${longer} is longer.` }, longer) }];
 };
 
-/** Aligned length comparison, reverse direction — which is shorter. */
+/** Rods that start together, near-tie: which is shorter. */
 export const lengthAlignedReverseQuestion = (): TestQuestion[] => {
-  const [a, b] = lengthPair();
-  const longer = a > b ? "A" : "B";
-  const shorter = longer === "A" ? "B" : "A";
-  return [
-    {
-      visual: <LengthBars bars={[{ blocks: a, tone: "a", label: "Rod A" }, { blocks: b, tone: "b", label: "Rod B" }]} />,
-      difficulty: "easy",
-      step: choice({ prompt: "Which rod is SHORTER?", hint: "It's the one that doesn't reach as far.", explain: `Rod ${shorter} is shorter.` }, `Rod ${shorter}`, [`Rod ${longer}`]),
-    },
-  ];
+  const [a, b] = rodPair(true);
+  const shorter = otherRod(longerOf(a, b));
+  return [{ visual: rods(a, b), difficulty: "easy", step: rodChoice({ prompt: "Which rod is shorter?", hint: "Which stops first?", explain: `Rod ${shorter} is shorter.` }, shorter) }];
 };
 
-/** Misaligned length comparison — the standard's own named hard case. */
+/** Different starts, any arrangement. */
 export const lengthMisalignedQuestion = (): TestQuestion[] => {
-  const [a, b] = lengthPair();
-  const offsetB = randInt(1, 4);
-  const longer = a > b ? "A" : "B";
-  const shorter = longer === "A" ? "B" : "A";
+  const r = offsetRods(false);
+  const longer = longerOf(r.a, r.b);
   return [
     {
-      visual: <LengthBars bars={[{ blocks: a, tone: "a", label: "Rod A", startOffset: 0 }, { blocks: b, tone: "b", label: "Rod B", startOffset: offsetB }]} />,
+      visual: shifted(r),
       difficulty: "hard",
-      step: choice(
-        { prompt: "Which rod is ACTUALLY longer?", hint: "These rods don't start at the same place — compare how many blocks each one is made of.", explain: `Rod A has ${a} blocks and Rod B has ${b} blocks, so Rod ${longer} is actually longer.` },
-        `Rod ${longer}`,
-        [`Rod ${shorter}`]
-      ),
+      step: rodChoice({ prompt: "They start in different places. Which rod is longer?", hint: "Count the blocks.", explain: `Rod A has ${r.a}. Rod B has ${r.b}.` }, longer),
     },
   ];
 };
 
-/** Generalization / false trap: a farther-right end never guarantees longer. */
-export const misalignedTrapTrueFalseQuestion = (): TestQuestion[] => {
-  const [a, b] = lengthPair();
-  const offsetB = randInt(1, 4);
+/** The trap: the shorter rod reaches farther. Distractor: the rod with the farther end. */
+export const misalignedTrapQuestion = (): TestQuestion[] => {
+  const r = offsetRods(false, true);
+  const longer = longerOf(r.a, r.b);
   return [
     {
-      visual: <LengthBars bars={[{ blocks: a, tone: "a", label: "Rod A", startOffset: 0 }, { blocks: b, tone: "b", label: "Rod B", startOffset: offsetB }]} />,
+      visual: shifted(r),
       difficulty: "hard",
-      step: choice(
-        { prompt: "True or false: the rod whose end reaches farther to the right is always the longer rod.", hint: "Does it matter where each rod starts?", explain: "False — where a rod starts matters. A rod that starts farther right can still be the shorter one." },
-        "False",
-        ["True"]
-      ),
+      step: rodChoice({ prompt: "Which rod is longer? Count the blocks.", hint: "Count the blocks.", explain: `Rod A has ${r.a}. Rod B has ${r.b}.` }, longer),
     },
   ];
 };
 
-/** Weight comparison — which side is heavier. */
+/** Which side is heavier. */
 export const weightCompareQuestion = (): TestQuestion[] => {
-  const [left, right] = weightPair();
-  const heavier = left > right ? "Left" : "Right";
-  const lighter = heavier === "Left" ? "Right" : "Left";
-  return [
-    {
-      visual: <BalanceScale left={left} right={right} leftTone="a" rightTone="b" />,
-      difficulty: "medium",
-      step: choice({ prompt: "Which side is HEAVIER?", hint: "The heavier side tips down.", explain: `The ${heavier} side is heavier.` }, heavier, [lighter]),
-    },
-  ];
+  const [blue, orange] = weightPair(false);
+  const heavier: Side = blue > orange ? "blue" : "orange";
+  return [{ visual: scale(blue, orange), difficulty: "medium", step: sideChoice({ prompt: "Which side is heavier?", hint: "Look at the scale.", explain: `The ${heavier} side went down.` }, heavier) }];
 };
 
-/** Weight comparison, reverse direction — which side is lighter. */
+/** Near-tie: which side is lighter. */
 export const weightCompareReverseQuestion = (): TestQuestion[] => {
-  const [left, right] = weightPair();
-  const heavier = left > right ? "Left" : "Right";
-  const lighter = heavier === "Left" ? "Right" : "Left";
-  return [
-    {
-      visual: <BalanceScale left={left} right={right} leftTone="a" rightTone="b" />,
-      difficulty: "medium",
-      step: choice({ prompt: "Which side is LIGHTER?", hint: "It's the side that tips up.", explain: `The ${lighter} side is lighter.` }, lighter, [heavier]),
-    },
-  ];
+  const [blue, orange] = weightPair(true);
+  const lighter = otherSide(blue > orange ? "blue" : "orange");
+  return [{ visual: scale(blue, orange), difficulty: "medium", step: sideChoice({ prompt: "Which side is lighter?", hint: "Look at the scale.", explain: `The ${lighter} side went up.` }, lighter) }];
 };
 
-/** Describe the difference (not just which is more) — K.MD.2's own explicit requirement. */
+/** Count the ringed extra blocks (review D3). No subtraction. */
 export const describeDifferenceQuestion = (): TestQuestion[] => {
-  const [a, b] = lengthPair(0.3);
-  const longer = a > b ? "A" : "B";
-  const shorter = longer === "A" ? "B" : "A";
-  const longerBlocks = Math.max(a, b);
-  const shorterBlocks = Math.min(a, b);
-  const diff = longerBlocks - shorterBlocks;
+  const [a, b] = rodPair(false);
+  const from = Math.min(a, b);
+  const diff = Math.abs(a - b);
   return [
     {
-      visual: <LengthBars bars={[{ blocks: a, tone: "a", label: "Rod A" }, { blocks: b, tone: "b", label: "Rod B" }]} />,
+      visual: (
+        <LengthBars
+          max={9}
+          bars={[
+            { blocks: a, tone: "a", label: "Rod A", extraFrom: a > b ? from : undefined, extraNumbered: false },
+            { blocks: b, tone: "b", label: "Rod B", extraFrom: b > a ? from : undefined, extraNumbered: false },
+          ]}
+        />
+      ),
       difficulty: "medium",
-      step: {
-        kind: "number",
-        prompt: `How many blocks LONGER is Rod ${longer} than Rod ${shorter}?`,
-        hint: "Count how many extra blocks the longer rod has.",
-        explain: `${longerBlocks} - ${shorterBlocks} = ${diff}.`,
-        answer: diff,
-      },
+      step: { kind: "number", prompt: "How many extra blocks?", hint: "Count the extra blocks.", explain: `${diff} extra.`, answer: diff },
     },
   ];
 };
 
-/** Describe-the-difference forced to the near-tie edge (difference = 1) — the hardest case to read directly off the picture. */
-export const nearTieDifferenceQuestion = (): TestQuestion[] => {
-  const a = randInt(3, 10);
-  const b = Math.random() < 0.5 ? a + 1 : a - 1;
-  const longerBlocks = Math.max(a, b);
-  const shorterBlocks = Math.min(a, b);
-  const longer = a > b ? "A" : "B";
-  const shorter = longer === "A" ? "B" : "A";
+/** Typed: how long one rod is when the rods start in different places. */
+export const rodLengthCountQuestion = (): TestQuestion[] => {
+  const r = offsetRods(true);
+  const ask: Rod = Math.random() < 0.5 ? "A" : "B";
+  const n = ask === "A" ? r.a : r.b;
   return [
     {
-      visual: <LengthBars bars={[{ blocks: a, tone: "a", label: "Rod A" }, { blocks: b, tone: "b", label: "Rod B" }]} />,
+      visual: shifted(r),
       difficulty: "hard",
-      step: {
-        kind: "number",
-        prompt: `How many blocks LONGER is Rod ${longer} than Rod ${shorter}?`,
-        hint: "They're close in length — count carefully, block by block.",
-        explain: `${longerBlocks} - ${shorterBlocks} = 1.`,
-        answer: 1,
-      },
+      step: { kind: "number", prompt: <>How many blocks long is {rodName(ask)}?</>, hint: "Count the blocks.", explain: `Rod ${ask} has ${n}.`, answer: n },
     },
   ];
 };
 
-/** Generalization / true-false: a fair comparison requires a shared starting point. */
-export const commonStartTrueFalseQuestion = (): TestQuestion[] => {
+/** Near-tie rods with different starts: the end alone can't tell. */
+export const differentStartsQuestion = (): TestQuestion[] => {
+  const r = offsetRods(true);
+  const longer = longerOf(r.a, r.b);
   return [
     {
-      visual: null,
+      visual: shifted(r),
       difficulty: "medium",
-      step: choice(
-        { prompt: "True or false: to compare two rods fairly by their ends, they must start at the same point.", hint: "Think about a rod that starts farther to the right.", explain: "True — otherwise comparing the ends alone can be misleading." },
-        "True",
-        ["False"]
-      ),
+      step: rodChoice({ prompt: "These rods start in different places. Which is longer?", hint: "Count the blocks.", explain: `Rod A has ${r.a}. Rod B has ${r.b}.` }, longer),
     },
   ];
 };
 
-/** Vocabulary: which way a heavier side makes the balance tip. */
-export const balanceTipDirectionQuestion = (): TestQuestion[] => {
-  const [left, right] = weightPair();
-  const heavier = left > right ? "Left" : "Right";
+/** Read the scale, then count the side that went up (review C1-25). */
+export const lighterSideCountQuestion = (): TestQuestion[] => {
+  const low = randInt(1, 5);
+  const high = low + randInt(1, 3);
+  const blueHeavy = Math.random() < 0.5;
   return [
     {
-      visual: <BalanceScale left={left} right={right} leftTone="a" rightTone="b" />,
-      difficulty: "easy",
-      step: choice(
-        { prompt: `The ${heavier} side is heavier. Which way does its pan move?`, hint: "A heavier pan sinks.", explain: `The heavier (${heavier}) side's pan moves down.` },
-        "Down",
-        ["Up"]
-      ),
+      visual: scale(blueHeavy ? high : low, blueHeavy ? low : high),
+      difficulty: "medium",
+      step: { kind: "number", prompt: "How many blocks are on the lighter side?", hint: "Look at the scale.", explain: `The lighter side has ${low}.`, answer: low },
     },
   ];
 };
@@ -211,13 +138,13 @@ export const comparingTest: Unit["test"] = {
     lengthAlignedQuestion,
     lengthAlignedReverseQuestion,
     lengthMisalignedQuestion,
-    misalignedTrapTrueFalseQuestion,
+    misalignedTrapQuestion,
     weightCompareQuestion,
     weightCompareReverseQuestion,
     describeDifferenceQuestion,
-    nearTieDifferenceQuestion,
-    commonStartTrueFalseQuestion,
-    balanceTipDirectionQuestion,
+    rodLengthCountQuestion,
+    differentStartsQuestion,
+    lighterSideCountQuestion,
   ],
   passScore: 9,
 };

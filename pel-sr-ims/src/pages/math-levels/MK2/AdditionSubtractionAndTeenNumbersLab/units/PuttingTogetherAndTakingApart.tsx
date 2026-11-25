@@ -1,24 +1,31 @@
 import { useState } from "react";
-import { SplitGroup, Fingers } from "../diagrams";
+import { SplitGroup, Fingers, holdFor, useWatch } from "../diagrams";
 import { randInt, pick } from "../../../shared/lib/math";
-import { choice, type Problem } from "../../../shared/engine/types";
+import { choice, pointing, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { puttingTogetherAndTakingApartTest } from "./PuttingTogetherAndTakingApartTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
 import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
+import { lookHereSpot, useLookHereRequest } from "../../../shared/lib/lookHere";
+import { HeldControls, WatchButton } from "./ExploreParts";
+import { afterTry, joinPicture, takePicture } from "./labHelp";
+import { count, countList, plusTrap, thereAre, verb } from "./words";
 
 // ============================================================================
-// CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
+// CHECK FOR UNDERSTANDING: gates Practice
 // ============================================================================
-// Fixed, hand-picked questions (never randomized), same convention as every
-// other gated unit in this app's labs. This is the first unit introducing
-// addition/subtraction as concepts at all, so the CFU specifically targets
-// confusing which operation matches which action wording.
-
 // Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
-// Ideas checked: putting together makes more (3 + 2 = 5); taking away leaves
-// fewer (5 − 2 = 3); matching fingers to a number sentence.
+// Ideas checked: putting together makes more; taking away leaves fewer;
+// matching fingers to a number sentence.
+
+const LOOK = {
+  join: { target: "u1-join", label: "Explore: put together", say: "Look here. Count both groups." },
+  apart: { target: "u1-apart", label: "Explore: take away", say: "Look here. Count the dots left." },
+  apartLine: { target: "u1-apart-line", label: "Explore: take away", say: "Look here. Some went away." },
+  fingers: { target: "u1-fingers", label: "Explore: fingers", say: "Look here. Count the fingers up." },
+  sentence: { target: "u1-sentence", label: "Explore: plus", say: "Look here. Together is plus." },
+};
 
 function PuttingTogetherCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
   return (
@@ -31,10 +38,11 @@ function PuttingTogetherCheckForUnderstanding({ onComplete }: { onComplete?: () 
             prompt="Put 3 and 2 together. How many in all?"
             answer={5}
             tone="a"
-            picture={() => <SplitGroup total={5} partA={3} toneA="a" toneB="b" />}
-            nudge="Count all the dots, blue and orange."
+            picture={(m) => <SplitGroup total={5} partA={3} toneA="a" toneB="b" countAlong={m === "show" ? { items: 5 } : undefined} />}
+            nudge="Count all the dots."
             showText="Watch and listen: 1, 2, 3, 4, 5."
             praise="Yes! 3 + 2 = 5."
+            look={LOOK.join}
             onComplete={done}
           />
         ),
@@ -44,11 +52,18 @@ function PuttingTogetherCheckForUnderstanding({ onComplete }: { onComplete?: () 
             prompt="Mia has 5 apples. She gives 2 away. How many are left?"
             answer={3}
             tone="a"
-            picture={() => <SplitGroup total={5} partA={3} toneA="a" toneB="b" goneB />}
-            nudge="The faded ones went away. Count the ones left."
-            why={{ 5: "2 went away. Count only the ones left.", 7: "She gave some away. That makes fewer, not more." }}
-            showText="Watch and listen: the ones left are 1, 2, 3."
+            picture={(m) =>
+              m === "ask" ? (
+                <SplitGroup total={5} partA={5} toneA="a" showDivider={false} />
+              ) : (
+                <SplitGroup total={5} partA={3} toneA="a" toneB="b" goneB countAlong={m === "show" ? { items: 3 } : undefined} />
+              )
+            }
+            nudge="The faded dots went away. Count the dots left."
+            why={{ 5: "2 went away. Count the dots left.", 7: "She gave some away. That makes fewer." }}
+            showText="Watch and listen: the dots left are 1, 2, 3."
             praise="Yes! 5 − 2 = 3."
+            look={LOOK.apart}
             onComplete={done}
           />
         ),
@@ -57,15 +72,29 @@ function PuttingTogetherCheckForUnderstanding({ onComplete }: { onComplete?: () 
             n={3}
             prompt="You take some away. Do you have more, or fewer?"
             picture={<SplitGroup total={6} partA={4} toneA="a" toneB="b" goneB />}
-            showPicture={<SplitGroup total={6} partA={4} toneA="a" toneB="b" goneB />}
-            showText="Look: the faded ones went away. There are fewer left."
+            showPicture={<SplitGroup total={6} partA={4} toneA="a" toneB="b" goneB countAlong={{ items: 4 }} />}
+            showText="Look: the faded dots went away. There are fewer left."
             options={[
               { id: "more", label: "More" },
               { id: "fewer", label: "Fewer" },
             ]}
             answer="fewer"
-            why={{ more: "Some went away. Is the group bigger or smaller now?" }}
+            why={{ more: "Some went away. Look at the dots." }}
             praise="Yes! Taking away leaves fewer."
+            look={LOOK.apartLine}
+            twin={{
+              prompt: "You have 8. 3 go away. More, or fewer?",
+              picture: <SplitGroup total={8} partA={5} toneA="a" toneB="b" goneB />,
+              showPicture: <SplitGroup total={8} partA={5} toneA="a" toneB="b" goneB countAlong={{ items: 5 }} />,
+              options: [
+                { id: "more", label: "More" },
+                { id: "fewer", label: "Fewer" },
+              ],
+              answer: "fewer",
+              why: { more: "Some went away. Look at the dots." },
+              showText: "Look: 3 went away. There are fewer left.",
+              praise: "Yes! Taking away leaves fewer.",
+            }}
             onComplete={done}
           />
         ),
@@ -75,19 +104,20 @@ function PuttingTogetherCheckForUnderstanding({ onComplete }: { onComplete?: () 
             prompt="3 fingers and 1 finger. How many fingers?"
             answer={4}
             tone="a"
-            picture={() => <Fingers count={4} tone="a" />}
-            nudge="Count every finger that is up."
+            picture={(m) => <Fingers left={3} right={1} countAlong={m === "show"} />}
+            nudge="Count the fingers up."
             showText="Watch and listen: 1, 2, 3, 4."
             praise="Yes! 4 fingers."
+            look={LOOK.fingers}
             onComplete={done}
           />
         ),
         (done) => (
           <PickCheck
-            n={4}
+            n={5}
             prompt="Which one matches the fingers?"
-            picture={<Fingers count={4} tone="a" />}
-            showPicture={<Fingers count={4} tone="a" />}
+            picture={<Fingers left={3} right={1} />}
+            showPicture={<Fingers left={3} right={1} countAlong />}
             showText="We put 3 and 1 together. Together is plus: 3 + 1 = 4."
             options={[
               { id: "3+1=4", label: "3 + 1 = 4" },
@@ -96,6 +126,20 @@ function PuttingTogetherCheckForUnderstanding({ onComplete }: { onComplete?: () 
             answer="3+1=4"
             why={{ "3-1=4": "Minus means take away. We put the fingers together." }}
             praise="Yes! 3 + 1 = 4."
+            look={LOOK.sentence}
+            twin={{
+              prompt: "2 fingers and 3 fingers. Which one matches?",
+              picture: <Fingers left={2} right={3} />,
+              showPicture: <Fingers left={2} right={3} countAlong />,
+              options: [
+                { id: "2+3=5", label: "2 + 3 = 5" },
+                { id: "2-3=5", label: "2 − 3 = 5" },
+              ],
+              answer: "2+3=5",
+              why: { "2-3=5": "Minus means take away. We put the fingers together." },
+              showText: "We put 2 and 3 together. Together is plus: 2 + 3 = 5.",
+              praise: "Yes! 2 + 3 = 5.",
+            }}
             onComplete={done}
           />
         ),
@@ -108,22 +152,63 @@ function PuttingTogetherCheckForUnderstanding({ onComplete }: { onComplete?: () 
 // EXPLORE
 // ============================================================================
 
+const JOIN_START = { a: 2, b: 4 };
+const APART_START = { a: 6, b: 2 };
+
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
   const [mode, setMode] = useState<"join" | "apart">("join");
-  const [a, setA] = useState(3);
-  const [b, setB] = useState(2);
-  const total = a + b;
+  const [a, setA] = useState(JOIN_START.a);
+  const [b, setB] = useState(JOIN_START.b);
+  const join = mode === "join";
+  const total = join ? a + b : a;
+  const left = join ? a + b : a - b;
+  // Join: count every dot. Take away: fade each dot that goes, then count the dots left.
+  const demoItems = join ? total : b + left;
+  const demo = useWatch(demoItems, (t) => (join ? String(t) : t <= b ? (t === 1 ? "Take away." : null) : String(t - b)));
+
+  const switchMode = (m: "join" | "apart") => {
+    demo.clear();
+    setMode(m);
+    const start = m === "join" ? JOIN_START : APART_START;
+    setA(start.a);
+    setB(start.b);
+  };
+  useLookHereRequest((id) => {
+    // The fingers spot opens on put together, so it never shows a Check answer.
+    if ((id === "u1-join" || id === "u1-sentence" || id === "u1-fingers") && mode !== "join") switchMode("join");
+    if ((id === "u1-apart" || id === "u1-apart-line") && mode !== "apart") switchMode("apart");
+  });
+
+  const changeA = (v: number) => {
+    demo.clear();
+    setA(v);
+    setB((old) => Math.min(old, join ? 10 - v : v));
+  };
+  const changeB = (v: number) => {
+    demo.clear();
+    setB(v);
+  };
+
+  const running = demo.playing || demo.tick > 0;
+  const goneNow = !join && running ? Math.min(b, demo.tick) : 0;
+  const counted = join ? demo.tick : Math.max(0, demo.tick - b);
+  const fingersUp = { left: Math.min(5, total), right: Math.max(0, total - 5) };
+  // One group per hand whenever each fits on a hand (a group over 5 needs both).
+  const oneEach = a <= 5 && b <= 5;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div className="control-row" data-readaloud-part>
         <Segmented
-          label="What's happening"
+          label="Pick one"
           value={mode}
-          onChange={setMode}
-          options={[{ id: "join", label: "Putting together" }, { id: "apart", label: "Taking apart" }]}
+          onChange={switchMode}
+          options={[
+            { id: "join", label: "Put together" },
+            { id: "apart", label: "Take away" },
+          ]}
         />
         {!introActive && (
           <button
@@ -137,32 +222,53 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         )}
       </div>
 
-      <div className="control-row" data-readaloud-part>
-        <Stepper label={mode === "join" ? "First group" : "Whole group"} value={a} min={0} max={10} step={1} onChange={setA} tone="a" />
-        <Stepper label={mode === "join" ? "Second group" : "Part taken apart"} value={b} min={0} max={10 - a} step={1} onChange={setB} tone="b" />
+      <WatchButton demo={demo} />
+
+      <HeldControls held={demo.playing}>
+        <Stepper label={join ? "First" : "Start"} value={a} min={1} max={join ? 9 : 10} step={1} onChange={changeA} tone="a" />
+        <Stepper label={join ? "Second" : "Take away"} value={b} min={join ? 1 : 0} max={join ? 10 - a : a} step={1} onChange={changeB} tone="b" />
+      </HeldControls>
+
+      <div {...lookHereSpot(join ? "u1-join" : "u1-apart")}>
+        {join ? (
+          <SplitGroup total={total} partA={a} toneA="a" toneB="b" numbered={{ items: counted }} />
+        ) : (
+          <SplitGroup total={total} partA={total} toneA="a" showDivider={false} goneCount={running ? goneNow : b} numbered={{ items: counted }} />
+        )}
       </div>
-
-      <SplitGroup total={total} partA={a} toneA="a" toneB="b" />
       <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
-        {mode === "join"
-          ? `${a} and ${b} JOIN together to make ${total} in all.`
-          : `${total} splits APART into ${a} and ${b}.`}
+        {join ? `${a} and ${b} make ${total}.` : `${total}. Take away ${b}. ${left} ${left === 1 ? "is" : "are"} left.`}
       </ReadAloud>
-      <ReadAloud as="p" className="muted small">
-        {mode === "join"
-          ? `Written as a number sentence: ${a} + ${b} = ${total}. The + symbol means the two groups are joining together.`
-          : `Written as a number sentence: ${total} − ${b} = ${a}. The − symbol means a part is being taken away from the whole.`}
-      </ReadAloud>
+      {join ? (
+        <ReadAloud as="p" {...lookHereSpot("u1-sentence")}>
+          <span data-look-here-key>Together is plus: {a} + {b} = {total}.</span>
+        </ReadAloud>
+      ) : (
+        <ReadAloud as="p" {...lookHereSpot("u1-apart-line")}>
+          <span data-look-here-key>{b === 0 ? `None went away: ${total} − 0 = ${total}.` : `Taking away leaves fewer: ${total} − ${b} = ${left}.`}</span>
+        </ReadAloud>
+      )}
 
-      <ReadAloud className="align-stack-wrap">
+      <ReadAloud className="align-stack-wrap" {...lookHereSpot("u1-fingers")}>
         <p>
-          <b>Same idea, with fingers</b> — no picture of objects this time.
+          <b>Fingers</b>
         </p>
-        <Fingers count={total} tone="c" />
-        <p className="muted small">{a} fingers and {b} fingers makes {total} fingers in all — fingers work exactly like any other group of objects.</p>
+        {join ? (
+          <Fingers left={oneEach ? a : fingersUp.left} right={oneEach ? b : fingersUp.right} toneRight={oneEach ? "b" : "a"} />
+        ) : (
+          <Fingers left={fingersUp.left} right={fingersUp.right} toneRight="a" gone={b} />
+        )}
+        <p className="muted small" style={{ marginTop: 6 }}>
+          {join ? `${count(a, "finger", "fingers")} and ${count(b, "finger", "fingers")} make ${total}.` : `${count(total, "finger", "fingers")}. Put ${b} down. ${left} ${left === 1 ? "is" : "are"} still up.`}
+        </p>
       </ReadAloud>
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <PuttingTogetherCheckForUnderstanding onComplete={onIntroDone} />}
+      {/* The Check waits until the demo has played once. */}
+      {introActive && !demo.seen && (
+        <ReadAloud as="p" className="muted small">
+          Tap Watch first.
+        </ReadAloud>
+      )}
+      {((introActive && demo.seen) || showCheck) && <PuttingTogetherCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }
@@ -175,15 +281,27 @@ type Bucket = "addTo" | "takeFrom" | "fingers" | "equation";
 const BUCKETS: Bucket[] = ["addTo", "takeFrom", "fingers", "equation"];
 
 const ADD_SCENES = [
-  { noun: "ducks", verb: "swim over to join them", glyph: "🦆" },
-  { noun: "bunnies", verb: "hop over to join them", glyph: "🐰" },
-  { noun: "balloons", verb: "float over to join them", glyph: "🎈" },
+  { one: "duck", many: "ducks", comeOne: "swims over", comeMany: "swim over" },
+  { one: "bunny", many: "bunnies", comeOne: "hops over", comeMany: "hop over" },
+  { one: "balloon", many: "balloons", comeOne: "floats over", comeMany: "float over" },
 ] as const;
 const SUB_SCENES = [
-  { noun: "birds", verb: "fly away", glyph: "🐦" },
-  { noun: "cookies", verb: "get eaten", glyph: "🍪" },
-  { noun: "balloons", verb: "pop and are gone", glyph: "🎈" },
+  { one: "bird", many: "birds", goOne: "flies away", goMany: "fly away" },
+  { one: "cookie", many: "cookies", goOne: "rolls away", goMany: "roll away" },
+  { one: "balloon", many: "balloons", goOne: "pops", goMany: "pop" },
 ] as const;
+
+/** Wrong choices for a put-together sentence: in range, no bigger number taken from a smaller. */
+const wrongJoin = (a: number, b: number, total: number) => [
+  total + b <= 10 ? `${total} + ${b} = ${a}` : `${a} + ${b} = ${total < 10 ? total + 1 : total - 1}`, // misconception: total in the wrong place, or a miscount
+  `${Math.max(a, b)} − ${Math.min(a, b)} = ${total}`, // misconception: wrong operation
+];
+
+/** Wrong choices for a take-away sentence: in range, no bigger number taken from a smaller. */
+const wrongTake = (total: number, b: number, a: number) => [
+  a >= b ? `${a} − ${b} = ${total}` : `${total} − ${b} = ${a > 1 ? a - 1 : a + 1}`, // misconception: order swapped, or a miscount
+  `${total} + ${plusTrap(total, b)} = ${a}`, // misconception: wrong operation
+];
 
 function puttingTogetherProblem(targetBucket?: string): Problem {
   const bucket = (targetBucket as Bucket | undefined) ?? BUCKETS[randInt(0, BUCKETS.length - 1)];
@@ -194,16 +312,28 @@ function puttingTogetherProblem(targetBucket?: string): Problem {
     const total = a + b;
     const scene = pick(ADD_SCENES);
     return {
-      title: "Putting groups together",
+      title: "Put together",
       bucket,
-      story: `There are ${a} ${scene.noun}. ${b} more ${scene.noun} ${scene.verb}.`,
-      // Step 2's "Show me" fades the joiners so only the starting group stands out.
-      visual: (_done, help) => <SplitGroup total={total} partA={a} toneA="a" toneB="b" goneB={!!help?.showMe && help.step === 1} />,
+      story: `${thereAre(a, scene.one, scene.many)} ${b} more ${b === 1 ? `${scene.one} ${scene.comeOne}` : `${scene.many} ${scene.comeMany}`}.`,
+      visual: (_done, help) => joinPicture(a, b, 0, help),
       steps: [
-        { kind: "number", prompt: `How many ${scene.noun} are there now, all together?`, hint: "Count every object in the picture, both colors.", explain: `${a} + ${b} = ${total}.`, answer: total },
-        { kind: "number", prompt: `Before the ${b} more joined, how many ${scene.noun} were there?`, hint: "Look back at just the first group's color.", explain: `There were ${a} to start, before ${b} more joined.`, answer: a },
+        {
+          kind: "number",
+          prompt: `How many ${scene.many} now?`,
+          hint: "Count all the dots, both colors.",
+          showMe: `Count them all: ${countList(1, total)}.`,
+          showMeHoldMs: holdFor(total),
+          explain: `${a} + ${b} = ${total}.`,
+          answer: total,
+          tone: "a",
+        },
+        choice(
+          { prompt: "Which number sentence matches?", hint: "More came. Together is plus.", showMe: `${a} and ${b} go together. That is plus.`, explain: `${a} + ${b} = ${total}.` },
+          `${a} + ${b} = ${total}`,
+          wrongJoin(a, b, total)
+        ),
       ],
-      wrapUp: `${a} and ${b} joined together to make ${total}.`,
+      wrapUp: `${a} and ${b} make ${total}.`,
     };
   }
 
@@ -213,43 +343,89 @@ function puttingTogetherProblem(targetBucket?: string): Problem {
     const a = total - b;
     const scene = pick(SUB_SCENES);
     return {
-      title: "Taking a group apart",
+      title: "Take away",
       bucket,
-      story: `There are ${total} ${scene.noun}. ${b} of them ${scene.verb}.`,
-      // Once step 1 is shown/answered, the part that went away fades out.
-      visual: (done) => <SplitGroup total={total} partA={a} toneA="a" toneB="b" showDivider goneB={done >= 1} />,
+      story: `${thereAre(total, scene.one, scene.many)} ${b} ${verb(b, scene.goOne, scene.goMany)}.`,
+      visual: (done, help) => takePicture(total, b, 0, done, help),
       steps: [
-        { kind: "number", prompt: `How many ${scene.noun} are left?`, hint: "Count only the color that's still there.", explain: `${total} − ${b} = ${a}.`, answer: a },
-        { kind: "number", prompt: `How many ${scene.noun} were there before any ${scene.verb}?`, hint: "Add the part that's left back to the part that went away.", explain: `${a} + ${b} = ${total}, so there were ${total} to start.`, answer: total },
+        {
+          kind: "number",
+          prompt: `How many ${scene.many} are left?`,
+          hint: `Show ${total} fingers. Put ${b} down.`,
+          showMe: `${b} went away. Count the dots left: ${countList(1, a)}.`,
+          showMeHoldMs: holdFor(a),
+          explain: `${total} − ${b} = ${a}.`,
+          answer: a,
+          tone: "a",
+        },
+        choice(
+          { prompt: "Which number sentence matches?", hint: "Some went away. That is minus.", showMe: `Start with ${total}. Take away ${b}. That is minus.`, explain: `${total} − ${b} = ${a}.` },
+          `${total} − ${b} = ${a}`,
+          wrongTake(total, b, a)
+        ),
       ],
-      wrapUp: `${total} split apart into ${a} left and ${b} gone.`,
+      wrapUp: `${total} take away ${b} is ${a}.`,
     };
   }
 
   if (bucket === "fingers") {
-    const a = randInt(1, 5);
-    const b = randInt(1, Math.min(5, 10 - a));
-    const total = a + b;
     const joining = Math.random() < 0.7;
+    // The count stays at 9 or less, so "1 more finger" always has a finger to raise.
+    const a = joining ? randInt(1, 5) : 0;
+    const b = joining ? randInt(1, Math.min(5, 9 - a)) : 0;
+    const start = joining ? a + b : randInt(2, 9);
+    const down = joining ? 0 : randInt(1, start - 1);
+    const now = start - down;
+    const hands = joining ? { left: a, right: b } : { left: Math.min(5, start), right: Math.max(0, start - 5) };
     return {
-      title: "Show it with fingers",
+      title: "Fingers",
       bucket,
-      story: joining
-        ? `Hold up ${a} fingers on one hand and ${b} fingers on the other hand.`
-        : `Hold up ${total} fingers. Put ${b} of them down.`,
-      // Step 2 ("one more finger") shows that extra finger going up once it's
-      // shown/answered (Fingers draws at most 10).
-      visual: (done) => <Fingers count={(joining ? total : a) + (done >= 2 ? 1 : 0)} tone="c" />,
+      story: joining ? `${count(a, "finger", "fingers")} on one hand. ${count(b, "finger", "fingers")} on the other.` : `${start} fingers are up. Put ${down} down.`,
+      visual: (done, help) => {
+        const showing = !!help?.showMe;
+        const fade = !joining && (done >= 1 || afterTry(help, 0));
+        const toneRight = joining ? "b" : "a";
+        // The fingers up now. Each group stays on its own hand.
+        const nowHands = joining ? hands : { left: Math.min(5, now), right: Math.max(0, now - 5) };
+        // The new finger takes the next open spot.
+        const newOn: "left" | "right" = joining ? (b < 5 ? "right" : "left") : now < 5 ? "left" : "right";
+        const plusOne = newOn === "right" ? { left: nowHands.left, right: nowHands.right + 1 } : { left: nowHands.left + 1, right: nowHands.right };
+        // Step 2 shows the new finger only when it is shown or answered.
+        if (done >= 2 || (showing && help?.step === 1)) {
+          return <Fingers key="more" {...plusOne} toneRight={toneRight} countAlong={showing && help?.step === 1} />;
+        }
+        // Stuck on "1 more": a faded finger marks where the next one goes.
+        if (afterTry(help, 1)) return <Fingers {...plusOne} toneRight={toneRight} ghostOn={newOn} />;
+        if (done === 1 && !joining) return <Fingers {...nowHands} toneRight="a" />;
+        return <Fingers key={showing ? "show" : "ask"} left={hands.left} right={hands.right} toneRight={toneRight} gone={fade ? down : 0} ring={joining && pointing(help, 0) && !showing} countAlong={showing && help?.step === 0} />;
+      },
       steps: [
-        { kind: "number", prompt: joining ? "How many fingers are up in all?" : "How many fingers are still up?", hint: "Count every raised finger on both hands.", explain: joining ? `${a} + ${b} = ${total}.` : `${total} − ${b} = ${a}.`, answer: joining ? total : a },
-        { kind: "number", prompt: "If one more finger went up, how many would be raised then?", hint: "One more than your last answer.", explain: `One more than ${joining ? total : a} is ${(joining ? total : a) + 1}.`, answer: (joining ? total : a) + 1 },
+        {
+          kind: "number",
+          prompt: joining ? "How many fingers are up?" : "How many fingers are still up?",
+          hint: joining ? "Count the fingers on both hands." : `Show ${start} fingers. Put ${down} down.`,
+          showMe: `Count the fingers up: ${countList(1, now)}.`,
+          showMeHoldMs: holdFor(now),
+          explain: joining ? `${a} + ${b} = ${now}.` : `${start} − ${down} = ${now}.`,
+          answer: now,
+          tone: "a",
+        },
+        {
+          kind: "number",
+          prompt: "1 more finger goes up. How many now?",
+          hint: "Say the next number.",
+          showMe: `Count them all: ${countList(1, now + 1)}.`,
+          showMeHoldMs: holdFor(now + 1),
+          explain: `${now} + 1 = ${now + 1}.`,
+          answer: now + 1,
+          tone: "a",
+        },
       ],
-      wrapUp: joining ? `${a} fingers and ${b} fingers makes ${total} in all.` : `${total} fingers take away ${b} leaves ${a}.`,
+      wrapUp: joining ? `${a} and ${b} make ${now}.` : `${start} take away ${down} is ${now}.`,
     };
   }
 
-  // equation — symbolic translation AFTER the concrete reasoning step, not a
-  // standalone arithmetic bucket (per this unit's plan).
+  // equation: pick the sentence that matches the story, then finish it.
   const joining = Math.random() < 0.5;
   if (joining) {
     const a = randInt(1, 8);
@@ -258,15 +434,24 @@ function puttingTogetherProblem(targetBucket?: string): Problem {
     return {
       title: "Write the number sentence",
       bucket,
-      story: `${a} fish are in a pond. ${b} more fish swim in to join them.`,
-      visual: () => <SplitGroup total={total} partA={a} toneA="a" toneB="b" />,
+      story: `${a} fish. ${b} more ${verb(b, "fish comes", "fish come")}.`,
+      visual: (_done, help) => joinPicture(a, b, 1, help),
       steps: [
-        { kind: "number", prompt: "How many fish are in the pond now?", hint: "Count every fish, both colors.", explain: `${a} + ${b} = ${total}.`, answer: total },
         choice(
-          { prompt: "Which number sentence matches this story?", hint: "The two groups are joining together — that's the + symbol.", explain: `${a} fish joined by ${b} more fish makes ${a} + ${b} = ${total}.` },
-          `${a} + ${b} = ${total}`,
-          [`${total} + ${b} = ${a}`, `${a} − ${b} = ${total}`] // misconceptions: total on the wrong side; wrong operation
+          { prompt: "Which number sentence matches?", hint: "More came. Together is plus.", showMe: `${a} and ${b} go together. That is plus.`, explain: `${a} + ${b} = ☐.` },
+          `${a} + ${b} = ☐`,
+          [`${Math.max(a, b)} − ${Math.min(a, b)} = ☐`] // misconception: wrong operation
         ),
+        {
+          kind: "number",
+          prompt: `${a} + ${b} = ☐. What goes in the box?`,
+          hint: "Count all the dots.",
+          showMe: `Count them all: ${countList(1, total)}.`,
+          showMeHoldMs: holdFor(total),
+          explain: `${a} + ${b} = ${total}.`,
+          answer: total,
+          tone: "a",
+        },
       ],
       wrapUp: `${a} + ${b} = ${total}.`,
     };
@@ -277,15 +462,24 @@ function puttingTogetherProblem(targetBucket?: string): Problem {
   return {
     title: "Write the number sentence",
     bucket,
-    story: `${total} fish are in a pond. ${b} of them swim away.`,
-    visual: (done) => <SplitGroup total={total} partA={a} toneA="a" toneB="b" goneB={done >= 1} />,
+    story: `${total} fish. ${b} ${verb(b, "swims", "swim")} away.`,
+    visual: (done, help) => takePicture(total, b, 1, done, help),
     steps: [
-      { kind: "number", prompt: "How many fish are left in the pond?", hint: "Count only the fish still there.", explain: `${total} − ${b} = ${a}.`, answer: a },
       choice(
-        { prompt: "Which number sentence matches this story?", hint: "A part is leaving the whole — that's the − symbol.", explain: `${total} fish, ${b} swam away, leaves ${total} − ${b} = ${a}.` },
-        `${total} − ${b} = ${a}`,
-        [`${a} − ${b} = ${total}`, `${total} + ${b} = ${a}`] // misconceptions: operand order swapped; wrong operation
+        { prompt: "Which number sentence matches?", hint: "Some went away. That is minus.", showMe: `Start with ${total}. Take away ${b}. That is minus.`, explain: `${total} − ${b} = ☐.` },
+        `${total} − ${b} = ☐`,
+        [`${total} + ${plusTrap(total, b)} = ☐`] // misconception: wrong operation
       ),
+      {
+        kind: "number",
+        prompt: `${total} − ${b} = ☐. What goes in the box?`,
+        hint: `Show ${total} fingers. Put ${b} down.`,
+        showMe: `${b} went away. Count the dots left: ${countList(1, a)}.`,
+        showMeHoldMs: holdFor(a),
+        explain: `${total} − ${b} = ${a}.`,
+        answer: a,
+        tone: "a",
+      },
     ],
     wrapUp: `${total} − ${b} = ${a}.`,
   };
@@ -293,21 +487,14 @@ function puttingTogetherProblem(targetBucket?: string): Problem {
 
 export const puttingTogetherAndTakingApart: Unit = {
   id: "puttingTogetherAndTakingApart",
-  title: "Putting Together and Taking Apart",
-  goal: "Show adding as groups joining together, and subtracting as a group splitting apart, using objects, pictures, or fingers.",
+  title: "Put Together and Take Away",
+  goal: "Put groups together. Take some away.",
   standard: "K.OA.1",
-  keyIdea: (
-    <>
-      <p>Adding means two groups JOIN together to make one bigger group. Subtracting means a group splits APART and a part leaves.</p>
-      <p>You can show this with real objects, with fingers, or with a number sentence like 3 + 2 = 5 — they all mean the exact same thing.</p>
-    </>
-  ),
+  keyIdea: <p>Put together makes more. Take away makes fewer.</p>,
   Explore,
   requiresIntro: true,
-  // The very first concept in the lab — a reasoning/representation skill a
-  // student can always re-derive by acting it out again, not a fact to
-  // memorize, so no reintroEverySolved here.
-  problems: [{ label: "Join or Take Apart", make: puttingTogetherProblem, buckets: BUCKETS }],
+  // A skill a student can always re-derive by acting it out again, so no reintroEverySolved.
+  problems: [{ label: "Put Together or Take Away", make: puttingTogetherProblem, buckets: BUCKETS }],
   requiredBuckets: BUCKETS,
   test: puttingTogetherAndTakingApartTest,
 };

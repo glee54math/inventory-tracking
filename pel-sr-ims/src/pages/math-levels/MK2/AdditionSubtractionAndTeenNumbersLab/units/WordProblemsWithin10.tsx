@@ -1,21 +1,37 @@
 import { useState } from "react";
-import { ObjectGroup, SplitGroup } from "../diagrams";
+import { CompareRows, ObjectGroup, SplitGroup, holdFor, useWatch } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
-import { choice, type Problem } from "../../../shared/engine/types";
+import { choice, pointing, type Problem } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { wordProblemsWithin10Test } from "./WordProblemsWithin10Test";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
 import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
+import { lookHereSpot, useLookHereRequest } from "../../../shared/lib/lookHere";
+import { HeldControls, WatchButton } from "./ExploreParts";
+import { afterTry, colorNames, joinPicture, takePicture } from "./labHelp";
+import { ITEM_WORDS, count, countList, nIs, plusTrap, type ItemWord } from "./words";
 
 // ============================================================================
-// CHECK FOR UNDERSTANDING — gates Practice
+// CHECK FOR UNDERSTANDING: gates Practice
 // ============================================================================
 // Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
-// Each story is short and read aloud, with a picture of what it gives.
-// Ideas checked: a group gets more (add to); some go away (take from — the
-// answer is fewer); two groups already together (put together); comparing
-// two groups by lining them up.
+// Ideas checked: more come (add to); some go away (take from); two groups
+// together (put together); who has more, with the rows lined up.
+
+const LOOK = {
+  addTo: { target: "u2-addto", label: "Explore: more come", say: "Look here. Count them all." },
+  takeFrom: { target: "u2-takefrom", label: "Explore: some go away", say: "Look here. Count the dots left." },
+  together: { target: "u2-together", label: "Explore: two colors", say: "Look here. Count both colors." },
+  compare: { target: "u2-compare", label: "Explore: who has more", say: "Look here. Line them up." },
+};
+
+const twoRows = (top: number, bottom: number, ring?: number) => (
+  <div style={{ display: "grid", gap: 6 }}>
+    <ObjectGroup count={top} arrangement="line" tone="a" alignLeft ringFrom={ring} />
+    <ObjectGroup count={bottom} arrangement="line" tone="b" alignLeft />
+  </div>
+);
 
 function WordProblemsCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
   return (
@@ -25,41 +41,50 @@ function WordProblemsCheckForUnderstanding({ onComplete }: { onComplete?: () => 
         (done) => (
           <TypeCheck
             n={1}
-            prompt="Jen has 3 stickers. She gets 2 more. How many does she have now?"
+            prompt="Jen has 3 stickers. She gets 2 more. How many now?"
             answer={5}
             tone="a"
-            picture={() => <SplitGroup total={5} partA={3} toneA="a" toneB="b" />}
-            nudge="The blue ones are what she had. The orange ones are new. Count them all."
+            picture={(m) => <SplitGroup total={5} partA={3} toneA="a" toneB="b" countAlong={m === "show" ? { items: 5 } : undefined} />}
+            nudge="Blue is what she had. Orange is new. Count them all."
             showText="Watch and listen: 1, 2, 3, 4, 5."
             praise="Yes! 3 + 2 = 5 stickers."
+            look={LOOK.addTo}
             onComplete={done}
           />
         ),
         (done) => (
           <TypeCheck
             n={2}
-            prompt="Sam had 6 crackers. He ate 2. How many are left?"
+            prompt="Sam has 6 crackers. He eats 2. How many are left?"
             answer={4}
             tone="a"
-            picture={(m) => <SplitGroup total={6} partA={4} toneA="a" toneB={m === "ask" ? "a" : "b"} showDivider={m !== "ask"} goneB={m !== "ask"} />}
-            nudge="He ate 2, so 2 are gone. Count the ones left."
-            why={{ 8: "He ate some. That leaves fewer, not more.", 6: "He ate 2. Those are gone." }}
-            showText="Watch: 2 are eaten. The ones left are 1, 2, 3, 4."
+            picture={(m) =>
+              m === "ask" ? (
+                <SplitGroup total={6} partA={6} toneA="a" showDivider={false} />
+              ) : (
+                <SplitGroup total={6} partA={4} toneA="a" toneB="b" goneB countAlong={m === "show" ? { items: 4 } : undefined} />
+              )
+            }
+            nudge="The faded dots went away. Count the dots left."
+            why={{ 8: "He eats some. That leaves fewer.", 6: "He eats 2. Those are gone." }}
+            showText="Watch: 2 are gone. The dots left are 1, 2, 3, 4."
             praise="Yes! 6 − 2 = 4 crackers."
+            look={LOOK.takeFrom}
             onComplete={done}
           />
         ),
         (done) => (
           <TypeCheck
             n={3}
-            prompt="A jar has 4 orange marbles and 3 blue marbles. How many marbles in the jar?"
+            prompt="A jar has marbles. 4 are orange. 3 are blue. How many in all?"
             answer={7}
             tone="a"
-            picture={() => <SplitGroup total={7} partA={4} toneA="b" toneB="a" showDivider={false} />}
-            nudge="Count every marble in the jar, both colors."
-            why={{ 4: "That is just one color. Count both colors.", 3: "That is just one color. Count both colors." }}
+            picture={(m) => <SplitGroup total={7} partA={4} toneA="b" toneB="a" showDivider={false} countAlong={m === "show" ? { items: 7 } : undefined} />}
+            nudge="Count all the marbles, both colors."
+            why={{ 4: "That is one color. Count both colors.", 3: "That is one color. Count both colors." }}
             showText="Watch and listen: 1, 2, 3, 4, 5, 6, 7."
             praise="Yes! 4 + 3 = 7 marbles."
+            look={LOOK.together}
             onComplete={done}
           />
         ),
@@ -67,18 +92,8 @@ function WordProblemsCheckForUnderstanding({ onComplete }: { onComplete?: () => 
           <PickCheck
             n={4}
             prompt="Mia has 5 apples. Theo has 3 apples. Who has more?"
-            picture={
-              <div style={{ display: "grid", gap: 6 }}>
-                <ObjectGroup count={5} arrangement="line" tone="a" alignLeft />
-                <ObjectGroup count={3} arrangement="line" tone="b" alignLeft />
-              </div>
-            }
-            showPicture={
-              <div style={{ display: "grid", gap: 6 }}>
-                <ObjectGroup count={5} arrangement="line" tone="a" alignLeft ringFrom={3} />
-                <ObjectGroup count={3} arrangement="line" tone="b" alignLeft />
-              </div>
-            }
+            picture={twoRows(5, 3)}
+            showPicture={twoRows(5, 3, 3)}
             showText="Look: line them up. Mia's row has extras. Mia has more."
             options={[
               { id: "mia", label: <span style={{ color: "var(--qa)", fontWeight: 800 }}>Mia</span> },
@@ -87,6 +102,20 @@ function WordProblemsCheckForUnderstanding({ onComplete }: { onComplete?: () => 
             answer="mia"
             why={{ theo: "Line them up. Whose row is longer?" }}
             praise="Yes! Mia has more apples."
+            look={LOOK.compare}
+            twin={{
+              prompt: "Ana has 6. Leo has 2. Who has more?",
+              picture: twoRows(6, 2),
+              showPicture: twoRows(6, 2, 2),
+              options: [
+                { id: "ana", label: <span style={{ color: "var(--qa)", fontWeight: 800 }}>Ana</span> },
+                { id: "leo", label: <span style={{ color: "var(--qb)", fontWeight: 800 }}>Leo</span> },
+              ],
+              answer: "ana",
+              why: { leo: "Line them up. Whose row is longer?" },
+              showText: "Look: line them up. Ana's row has extras. Ana has more.",
+              praise: "Yes! Ana has more.",
+            }}
             onComplete={done}
           />
         ),
@@ -101,27 +130,79 @@ function WordProblemsCheckForUnderstanding({ onComplete }: { onComplete?: () => 
 
 type Scenario = "addTo" | "takeFrom" | "together" | "missingPart" | "compare";
 
+const SPOT_MODE: Record<string, Scenario> = {
+  "u2-addto": "addTo",
+  "u2-takefrom": "takeFrom",
+  "u2-together": "together",
+  "u2-compare": "compare",
+};
+
+/** The range of the second number, given the first. */
+const secondRange = (s: Scenario, a: number): [number, number] => {
+  if (s === "takeFrom") return [0, a];
+  if (s === "missingPart") return [1, a - 1];
+  if (s === "compare") return [1, 10];
+  return [1, 10 - a];
+};
+const firstRange = (s: Scenario): [number, number] => (s === "missingPart" ? [2, 10] : s === "takeFrom" || s === "compare" ? [1, 10] : [1, 9]);
+
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
   const [scenario, setScenario] = useState<Scenario>("addTo");
-  const [a, setA] = useState(4);
+  const [a, setA] = useState(6);
   const [b, setB] = useState(3);
-  const maxB = scenario === "together" || scenario === "missingPart" || scenario === "addTo" ? Math.max(0, 10 - a) : 10;
+
+  const left = a - b;
+  const lineUp = Math.min(a, b);
+  const items = scenario === "addTo" || scenario === "together" ? a + b : scenario === "takeFrom" ? b + left : scenario === "missingPart" ? left : lineUp + 1;
+  const demo = useWatch(items, (t) => {
+    if (scenario === "takeFrom") return t <= b ? (t === 1 ? "Take away." : null) : String(t - b);
+    if (scenario === "compare") return t <= lineUp ? String(t) : a === b ? "They have the same number." : "Look at the extras.";
+    return String(t);
+  });
+
+  const switchTo = (s: Scenario) => {
+    demo.clear();
+    setScenario(s);
+    setA(6);
+    setB(3);
+  };
+  useLookHereRequest((id) => {
+    const s = SPOT_MODE[id];
+    if (s && s !== scenario) switchTo(s);
+  });
+
+  const changeA = (v: number) => {
+    demo.clear();
+    setA(v);
+    const [lo, hi] = secondRange(scenario, v);
+    setB((old) => Math.max(lo, Math.min(hi, old)));
+  };
+  const changeB = (v: number) => {
+    demo.clear();
+    setB(v);
+  };
+
+  const [minA, maxA] = firstRange(scenario);
+  const [minB, maxB] = secondRange(scenario, a);
+  const running = demo.playing || demo.tick > 0;
+  const firstLabel = scenario === "compare" ? "Zoe" : scenario === "takeFrom" ? "Start" : scenario === "missingPart" ? "In all" : "First";
+  const secondLabel = scenario === "compare" ? "Ben" : scenario === "takeFrom" ? "Take away" : scenario === "missingPart" ? "Blue" : "Second";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div className="control-row" data-readaloud-part>
         <Segmented
-          label="Story type"
+          label="Pick one"
           value={scenario}
-          onChange={setScenario}
+          onChange={switchTo}
           options={[
-            { id: "addTo", label: "Add to" },
-            { id: "takeFrom", label: "Take from" },
-            { id: "together", label: "Put together" },
+            { id: "addTo", label: "More come" },
+            { id: "takeFrom", label: "Some go" },
+            { id: "together", label: "Two colors" },
             { id: "missingPart", label: "Missing part" },
-            { id: "compare", label: "Compare" },
+            { id: "compare", label: "Who has more?" },
           ]}
         />
         {!introActive && (
@@ -135,53 +216,66 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           </button>
         )}
       </div>
-      <div className="control-row" data-readaloud-part>
-        <Stepper label={scenario === "compare" ? "Group A" : scenario === "missingPart" ? "Total" : "First amount"} value={a} min={1} max={10} step={1} onChange={setA} tone="a" />
-        <Stepper label={scenario === "compare" ? "Group B" : scenario === "missingPart" ? "Known part" : "Second amount"} value={b} min={scenario === "missingPart" ? 1 : 0} max={scenario === "missingPart" ? a - 1 || 1 : maxB} step={1} onChange={setB} tone="b" />
-      </div>
+
+      <WatchButton demo={demo} />
+
+      <HeldControls held={demo.playing}>
+        <Stepper label={firstLabel} value={a} min={minA} max={maxA} step={1} onChange={changeA} tone={scenario === "missingPart" ? "c" : "a"} />
+        <Stepper label={secondLabel} value={b} min={minB} max={maxB} step={1} onChange={changeB} tone={scenario === "missingPart" ? "a" : "b"} />
+      </HeldControls>
 
       {scenario === "addTo" && (
-        <>
-          <ReadAloud as="p">Jen has {a} stickers. She gets {b} more. How many does she have now?</ReadAloud>
-          <SplitGroup total={a + b} partA={a} toneA="a" toneB="b" />
-          <ReadAloud as="p" className="muted small">{a} + {b} = {a + b}. An "add to" story starts with one amount, and MORE joins it — look for words like "gets," "gives her," "more."</ReadAloud>
-        </>
+        <div {...lookHereSpot("u2-addto")}>
+          <ReadAloud as="p">Jen has {count(a, "sticker", "stickers")}. She gets {b} more.</ReadAloud>
+          <SplitGroup total={a + b} partA={a} toneA="a" toneB="b" numbered={{ items: demo.tick }} />
+          <ReadAloud as="p" className="feedback good">
+            <span data-look-here-key>Now she has {a + b}. {a} + {b} = {a + b}.</span>
+          </ReadAloud>
+        </div>
       )}
       {scenario === "takeFrom" && (
-        <>
-          <ReadAloud as="p">Sam had {a} crackers. He ate {b} of them. How many are left?</ReadAloud>
-          <SplitGroup total={a} partA={a - Math.min(b, a)} toneA="a" toneB="b" />
-          <ReadAloud as="p" className="muted small">{a} − {Math.min(b, a)} = {a - Math.min(b, a)}. A "take from" story starts with one amount, and SOME of it leaves — look for words like "ate," "gave away," "left."</ReadAloud>
-        </>
+        <div {...lookHereSpot("u2-takefrom")}>
+          <ReadAloud as="p">Sam has {count(a, "cracker", "crackers")}. He eats {b}.</ReadAloud>
+          <SplitGroup total={a} partA={a} toneA="a" showDivider={false} goneCount={running ? Math.min(b, demo.tick) : b} numbered={{ items: Math.max(0, demo.tick - b) }} />
+          <ReadAloud as="p" className="feedback good">
+            <span data-look-here-key>{left} {left === 1 ? "is" : "are"} left. {a} − {b} = {left}.</span>
+          </ReadAloud>
+        </div>
       )}
       {scenario === "together" && (
-        <>
-          <ReadAloud as="p">Jen has {a} blue marbles and {b} orange marbles, all together in one jar. How many marbles in the jar?</ReadAloud>
-          <SplitGroup total={a + b} partA={a} toneA="a" toneB="b" showDivider={false} />
-          <ReadAloud as="p" className="muted small">{a} + {b} = {a + b}. A "put together" story describes two groups that coexist from the start — nothing joins or leaves; you're just finding their combined total.</ReadAloud>
-        </>
+        <div {...lookHereSpot("u2-together")}>
+          <ReadAloud as="p">A jar has marbles. {nIs(a)} blue. {nIs(b)} orange.</ReadAloud>
+          <SplitGroup total={a + b} partA={a} toneA="a" toneB="b" showDivider={false} numbered={{ items: demo.tick }} />
+          <ReadAloud as="p" className="feedback good">
+            <span data-look-here-key>Count both colors. {a} + {b} = {a + b}.</span>
+          </ReadAloud>
+        </div>
       )}
       {scenario === "missingPart" && (
-        <>
-          <ReadAloud as="p">There are {a} crayons in a box. {b} of them are orange, and the rest are blue. How many are blue?</ReadAloud>
-          <SplitGroup total={a} partA={b} toneA="b" toneB="a" />
-          <ReadAloud as="p" className="muted small">{a} − {b} = {a - b} blue crayons. When the TOTAL and one part are both known, you can subtract to find the missing part — even though the story never says "take away."</ReadAloud>
-        </>
+        <div>
+          <ReadAloud as="p">{a} crayons. {nIs(b)} blue. The rest are orange.</ReadAloud>
+          <SplitGroup total={a} partA={b} toneA="a" toneB="b" numbered={{ from: b, items: demo.tick }} />
+          <ReadAloud as="p" className="feedback good">
+            Count the orange crayons. {a} − {b} = {left}.
+          </ReadAloud>
+        </div>
       )}
       {scenario === "compare" && (
-        <>
-          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-            <ObjectGroup count={a} arrangement="line" tone="a" seed={a * 9 + 1} />
-            <ObjectGroup count={b} arrangement="line" tone="b" seed={b * 9 + 2} />
-          </div>
-          <ReadAloud as="p">Mia has {a} apples. Theo has {b} apples. How many more apples does Mia have than Theo?</ReadAloud>
-          <ReadAloud as="p" className="muted small">
-            {a === b ? "They have the same amount — there's no difference to find." : `${Math.max(a, b)} − ${Math.min(a, b)} = ${Math.abs(a - b)}. A "compare" story has TWO separate groups that never join or split — you're just finding the gap between them.`}
+        <div {...lookHereSpot("u2-compare")}>
+          <ReadAloud as="p">Zoe has {a}. Ben has {b}.</ReadAloud>
+          <CompareRows nameA="Zoe" countA={a} nameB="Ben" countB={b} matched={demo.playing && demo.tick <= lineUp ? demo.tick : undefined} ringExtras={!demo.playing || demo.tick > lineUp} />
+          <ReadAloud as="p" className="feedback good">
+            <span data-look-here-key>{a === b ? "They have the same number." : `Line them up. ${a > b ? "Zoe" : "Ben"} has more.`}</span>
           </ReadAloud>
-        </>
+        </div>
       )}
-      {/* Below the picture, so students explore first, then check. */}
-      {(introActive || showCheck) && <WordProblemsCheckForUnderstanding onComplete={onIntroDone} />}
+      {/* The Check waits until the demo has played once. */}
+      {introActive && !demo.seen && (
+        <ReadAloud as="p" className="muted small">
+          Tap Watch first.
+        </ReadAloud>
+      )}
+      {((introActive && demo.seen) || showCheck) && <WordProblemsCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
   );
 }
@@ -190,36 +284,74 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 // PRACTICE
 // ============================================================================
 
+// "compareDifference" keeps its id so earned star credit survives. Since D1 it
+// asks "Who has more?" and never "how many more".
 type Bucket = "addToResult" | "takeFromResult" | "putTogetherTotal" | "putTogetherAddend" | "compareDifference";
 const BUCKETS: Bucket[] = ["addToResult", "takeFromResult", "putTogetherTotal", "putTogetherAddend", "compareDifference"];
+const CHALLENGE_BUCKET = "challengeHowManyMore";
 
-const KIDS = ["Jen", "Sam", "Mia", "Theo", "Ana", "Leo"] as const;
-const ITEMS = ["stickers", "crayons", "marbles", "crackers", "balloons", "blocks"] as const;
+const KIDS = [
+  { name: "Jen", he: "She" },
+  { name: "Sam", he: "He" },
+  { name: "Mia", he: "She" },
+  { name: "Theo", he: "He" },
+  { name: "Ana", he: "She" },
+  { name: "Leo", he: "He" },
+] as const;
+const ITEMS = Object.keys(ITEM_WORDS) as ItemWord[];
+// Things that really come in blue and orange, for the stories that name colors.
+const COLOR_ITEMS: ItemWord[] = ["stickers", "crayons", "marbles", "balloons", "blocks"];
 const pickOne = <T,>(arr: readonly T[]): T => arr[randInt(0, arr.length - 1)];
+
+const addOrTakeStep = (isAdd: boolean, explain: string) =>
+  choice(
+    { prompt: "Add, or take away?", hint: isAdd ? "Do more come?" : "Do some go away?", showMe: isAdd ? "More come. So we add." : "Some go away. So we take away.", explain },
+    isAdd ? "Add" : "Take away",
+    [isAdd ? "Take away" : "Add"]
+  );
+
+const sentenceStep = (right: string, wrong: string, isAdd: boolean, missingPart = false) =>
+  choice(
+    {
+      prompt: "Which number sentence matches?",
+      hint: missingPart ? "Start with all of them. Take away the blue." : isAdd ? "Together is plus." : "Take away is minus.",
+      showMe: missingPart ? "Start with all of them. Take away the blue. That is minus." : isAdd ? "Put them together. That is plus." : "Take some away. That is minus.",
+      explain: right,
+    },
+    right,
+    [wrong]
+  );
 
 function wordProblem(targetBucket?: string): Problem {
   const bucket = (targetBucket as Bucket | undefined) ?? BUCKETS[randInt(0, BUCKETS.length - 1)];
   const kid = pickOne(KIDS);
-  const item = pickOne(ITEMS);
+  const many = pickOne(ITEMS);
+  const one = ITEM_WORDS[many];
 
   if (bucket === "addToResult") {
     const a = randInt(1, 8);
     const b = randInt(1, Math.min(9, 10 - a));
     const total = a + b;
     return {
-      title: "An 'add to' story",
+      title: "Story problem",
       bucket,
-      story: `${kid} has ${a} ${item}. ${kid} gets ${b} more ${item}. How many ${item} does ${kid} have now?`,
-      visual: () => <SplitGroup total={total} partA={a} toneA="a" toneB="b" />,
+      story: `${kid.name} has ${count(a, one, many)}. ${kid.he} gets ${b} more.`,
+      visual: (_done, help) => joinPicture(a, b, 2, help),
       steps: [
-        { kind: "number", prompt: `How many ${item} does ${kid} have now?`, hint: "Add the starting amount and the amount that joined.", explain: `${a} + ${b} = ${total}.`, answer: total },
-        choice(
-          { prompt: "Does this story ADD or SUBTRACT?", hint: 'Look for the word "more" — something is joining.', explain: `${kid} gets MORE ${item}, so this story adds.` },
-          "Add",
-          ["Subtract"]
-        ),
+        addOrTakeStep(true, "More came."),
+        sentenceStep(`${a} + ${b} = ☐`, `${Math.max(a, b)} − ${Math.min(a, b)} = ☐`, true),
+        {
+          kind: "number",
+          prompt: "How many now?",
+          hint: "Count all the dots, both colors.",
+          showMe: `Count them all: ${countList(1, total)}.`,
+          showMeHoldMs: holdFor(total),
+          explain: `${a} + ${b} = ${total}.`,
+          answer: total,
+          tone: "a",
+        },
       ],
-      wrapUp: `${kid} now has ${total} ${item}.`,
+      wrapUp: `${kid.name} has ${count(total, one, many)} now.`,
     };
   }
 
@@ -228,20 +360,25 @@ function wordProblem(targetBucket?: string): Problem {
     const b = randInt(1, total - 1);
     const a = total - b;
     return {
-      title: "A 'take from' story",
+      title: "Story problem",
       bucket,
-      story: `${kid} had ${total} ${item}. ${kid} gave away ${b} of them. How many ${item} does ${kid} have left?`,
-      // Once step 1 is shown/answered, the ones given away fade out.
-      visual: (done) => <SplitGroup total={total} partA={a} toneA="a" toneB="b" goneB={done >= 1} />,
+      story: `${kid.name} has ${total} ${many}. ${kid.he} gives ${b} away.`,
+      visual: (done, help) => takePicture(total, b, 2, done, help),
       steps: [
-        { kind: "number", prompt: `How many ${item} does ${kid} have left?`, hint: "Subtract the amount given away from the starting amount.", explain: `${total} − ${b} = ${a}.`, answer: a },
-        choice(
-          { prompt: "Does this story ADD or SUBTRACT?", hint: 'Look for the word "gave away" — something is leaving.', explain: `${kid} gave ${item} AWAY, so this story subtracts.` },
-          "Subtract",
-          ["Add"]
-        ),
+        addOrTakeStep(false, "Some went away."),
+        sentenceStep(`${total} − ${b} = ☐`, `${total} + ${plusTrap(total, b)} = ☐`, false),
+        {
+          kind: "number",
+          prompt: "How many are left?",
+          hint: `Show ${total} fingers. Put ${b} down.`,
+          showMe: `${b} went away. Count the dots left: ${countList(1, a)}.`,
+          showMeHoldMs: holdFor(a),
+          explain: `${total} − ${b} = ${a}.`,
+          answer: a,
+          tone: "a",
+        },
       ],
-      wrapUp: `${kid} has ${a} ${item} left.`,
+      wrapUp: `${kid.name} has ${count(a, one, many)} left.`,
     };
   }
 
@@ -249,21 +386,25 @@ function wordProblem(targetBucket?: string): Problem {
     const a = randInt(1, 8);
     const b = randInt(1, Math.min(9, 10 - a));
     const total = a + b;
-    const item2 = pickOne(ITEMS.filter((it) => it !== item));
     return {
-      title: "A 'put together' story",
+      title: "Story problem",
       bucket,
-      story: `${kid} has ${a} ${item} and ${b} ${item2}, all together in one basket. How many things are in the basket?`,
-      visual: () => <SplitGroup total={total} partA={a} toneA="a" toneB="b" showDivider={false} />,
+      story: `${kid.name} has ${pickOne(COLOR_ITEMS)}. ${nIs(a)} blue. ${nIs(b)} orange.`,
+      visual: (_done, help) => joinPicture(a, b, 1, help, false),
       steps: [
-        { kind: "number", prompt: "How many things are in the basket, all together?", hint: "Add both groups — they're already together, nothing is joining or leaving.", explain: `${a} + ${b} = ${total}.`, answer: total },
-        choice(
-          { prompt: "Did anything JOIN or LEAVE in this story, or were both groups there the whole time?", hint: "Reread the story — does anything move?", explain: "Both groups were there the whole time — a 'put together' story just asks for the combined total." },
-          "Both groups were there the whole time",
-          ["Something joined partway through"] // misconception: treating a static put-together scene as a sequential "add to" action
-        ),
+        sentenceStep(`${a} + ${b} = ☐`, `${Math.max(a, b)} − ${Math.min(a, b)} = ☐`, true),
+        {
+          kind: "number",
+          prompt: "How many in all?",
+          hint: "Count both colors.",
+          showMe: `Count them all: ${countList(1, total)}.`,
+          showMeHoldMs: holdFor(total),
+          explain: `${a} + ${b} = ${total}.`,
+          answer: total,
+          tone: "a",
+        },
       ],
-      wrapUp: `${a} + ${b} = ${total} things in all.`,
+      wrapUp: `${a} + ${b} = ${total}.`,
     };
   }
 
@@ -271,79 +412,139 @@ function wordProblem(targetBucket?: string): Problem {
     const total = randInt(3, 10);
     const a = randInt(1, total - 1);
     const b = total - a;
-    const item2 = pickOne(ITEMS.filter((it) => it !== item));
     return {
-      title: "A missing-part story",
+      title: "Story problem",
       bucket,
-      story: `There are ${total} ${item} in a box. ${a} of them are ${item2.startsWith("c") ? "the first color" : "one color"}, and the rest are another color. How many are the OTHER color?`,
-      visual: () => <SplitGroup total={total} partA={a} toneA="a" toneB="b" />,
+      story: `${total} ${pickOne(COLOR_ITEMS)}. ${a} ${a === 1 ? "is" : "are"} blue. The rest are orange.`,
+      // The known part and a "?" box. A wrong pick acts it out: the blue dots
+      // fade. Stuck on the count: the orange dots appear to count.
+      visual: (done, help) => {
+        if (afterTry(help, 0)) return <SplitGroup key="act" total={total} partA={a} toneA="a" toneB="b" showDivider={false} goneA />;
+        const open = done >= 2 || afterTry(help, 1);
+        return open ? (
+          <SplitGroup key={help?.showMe ? "show" : "open"} total={total} partA={a} toneA="a" toneB="b" ringB={!help?.showMe && done < 2} countAlong={help?.showMe && help.step === 1 ? { from: a, items: b } : undefined} />
+        ) : (
+          <SplitGroup total={total} partA={a} toneA="a" toneB="b" unknownB />
+        );
+      },
       steps: [
-        { kind: "number", prompt: "How many are the other color?", hint: "Subtract the known part from the total to find the missing part.", explain: `${total} − ${a} = ${b}.`, answer: b },
-        choice(
-          { prompt: "True or false: even though the story never says 'take away,' you can still subtract to find the missing part.", hint: "The total and one part are both known — the gap between them is the missing part.", explain: "True — whenever the total and one part are known, subtracting finds the other part, even with no take-away action in the story." },
-          "True",
-          ["False"] // misconception: thinking subtraction only applies to take-away action stories
-        ),
+        sentenceStep(`${total} − ${a} = ☐`, `${total} + ${plusTrap(total, a)} = ☐`, false, true),
+        {
+          kind: "number",
+          prompt: "How many are orange?",
+          hint: `Start at ${a}. Count on to ${total} on your fingers.`,
+          showMe: `Count the orange dots: ${countList(1, b)}.`,
+          showMeHoldMs: holdFor(b),
+          explain: `${total} − ${a} = ${b}.`,
+          answer: b,
+          tone: "b",
+        },
       ],
-      wrapUp: `${total} − ${a} = ${b}.`,
+      wrapUp: `${a} blue and ${b} orange make ${total}.`,
     };
   }
 
-  // compareDifference — the hardest bucket: two separate static quantities.
-  const a = randInt(2, 10);
-  let b = randInt(1, 9);
-  while (b === a) b = randInt(1, 9);
-  const bigger = Math.max(a, b);
-  const smaller = Math.min(a, b);
-  const diff = bigger - smaller;
-  const otherKid = pickOne(KIDS.filter((k) => k !== kid));
-  const biggerKid = a > b ? kid : otherKid;
-  const smallerKid = a > b ? otherKid : kid;
+  // compareDifference: "Who has more?" on lined-up rows. Never equal.
+  const big = randInt(2, 10);
+  const small = randInt(1, big - 1);
+  const firstHasMore = Math.random() < 0.5;
+  const countA = firstHasMore ? big : small;
+  const countB = firstHasMore ? small : big;
+  const other = pickOne(KIDS.filter((k) => k.name !== kid.name));
+  const winner = firstHasMore ? kid.name : other.name;
+  const loser = firstHasMore ? other.name : kid.name;
   return {
-    title: "A 'compare' story",
+    title: "Story problem",
     bucket,
-    story: `${kid} has ${a} ${item}. ${otherKid} has ${b} ${item}. How many more ${item} does ${biggerKid} have than ${smallerKid}?`,
-    // Step 1's "Show me" (and after) lines the two groups up one above the
-    // other and rings the extra ones the bigger group has.
-    visual: (done) =>
-      done >= 1 ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-          <ObjectGroup count={a} arrangement="line" tone="a" alignLeft ringFrom={a > b ? b : undefined} />
-          <ObjectGroup count={b} arrangement="line" tone="b" alignLeft ringFrom={b > a ? a : undefined} />
-        </div>
-      ) : (
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          <ObjectGroup count={a} arrangement="line" tone="a" seed={a * 11 + 3} />
-          <ObjectGroup count={b} arrangement="line" tone="b" seed={b * 11 + 5} />
-        </div>
-      ),
+    story: `${kid.name} and ${other.name} have ${many}.`,
+    visual: (_done, help) => (
+      <CompareRows
+        key={help?.showMe ? `show-${help.step}` : "ask"}
+        nameA={kid.name}
+        countA={countA}
+        nameB={other.name}
+        countB={countB}
+        countRow={help?.showMe && help.step === 0 ? "a" : help?.showMe && help.step === 1 ? "b" : undefined}
+        ringRow={help?.showMe ? undefined : pointing(help, 0) ? "a" : pointing(help, 1) ? "b" : undefined}
+        ringExtras={pointing(help, 2)}
+      />
+    ),
     steps: [
-      { kind: "number", prompt: `How many more ${item} does ${biggerKid} have than ${smallerKid}?`, hint: "Subtract the smaller amount from the bigger amount.", explain: `${bigger} − ${smaller} = ${diff}.`, answer: diff },
-      choice(
-        { prompt: `If ${smallerKid} got ${diff} more ${item}, would ${smallerKid} then have the SAME amount as ${biggerKid}?`, hint: "Adding the difference back always closes the gap.", explain: `${smaller} + ${diff} = ${bigger}, so yes — they'd be equal.` },
-        "Yes",
-        ["No"] // misconception: not recognizing that the difference, added back, equalizes the two amounts
+      { kind: "number", prompt: `How many does ${kid.name} have?`, hint: `Count ${kid.name}'s dots.`, showMe: `Count: ${countList(1, countA)}.`, showMeHoldMs: holdFor(countA), explain: `${kid.name} has ${countA}.`, answer: countA, tone: "a" },
+      { kind: "number", prompt: `How many does ${other.name} have?`, hint: `Count ${other.name}'s dots.`, showMe: `Count: ${countList(1, countB)}.`, showMeHoldMs: holdFor(countB), explain: `${other.name} has ${countB}.`, answer: countB, tone: "b" },
+      colorNames(
+        choice(
+          { prompt: "Who has more?", hint: "Whose row is longer?", showMe: `Line them up. ${winner}'s row has extras.`, explain: `${winner} has more than ${loser}.` },
+          winner,
+          [loser] // misconception: picking the name said first, or the shorter row
+        ),
+        kid.name
       ),
-      { kind: "number", prompt: `How many ${item} does ${smallerKid} have?`, hint: "That's the smaller of the two starting amounts.", explain: `${smallerKid} has ${smaller} ${item}.`, answer: smaller },
     ],
-    wrapUp: `${biggerKid} has ${diff} more ${item} than ${smallerKid}.`,
+    wrapUp: `${winner} has more.`,
+  };
+}
+
+// ============================================================================
+// CHALLENGE (optional, user decision D1): "How many more?"
+// Not in Mixed, requiredBuckets, the Unit Test or the Module Test, so it never
+// counts toward stars. The story always asks about the child who has more.
+// ============================================================================
+
+function howManyMoreChallenge(): Problem {
+  const kid = pickOne(KIDS);
+  const other = pickOne(KIDS.filter((k) => k.name !== kid.name));
+  const many = pickOne(ITEMS);
+  const one = ITEM_WORDS[many];
+  const big = randInt(2, 10);
+  const small = randInt(1, big - 1);
+  const firstHasMore = Math.random() < 0.5;
+  const countA = firstHasMore ? big : small;
+  const countB = firstHasMore ? small : big;
+  const winner = firstHasMore ? kid.name : other.name;
+  const loser = firstHasMore ? other.name : kid.name;
+  const extras = big - small;
+  return {
+    title: "Challenge",
+    bucket: CHALLENGE_BUCKET,
+    story: `${kid.name} has ${count(countA, one, many)}. ${other.name} has ${count(countB, one, many)}.`,
+    visual: (done, help) => <CompareRows key={help?.showMe ? `show-${help.step}` : "ask"} nameA={kid.name} countA={countA} nameB={other.name} countB={countB} ringExtras={done >= 2 || pointing(help, 0) || pointing(help, 1)} countExtras={!!help?.showMe && help.step === 1} />,
+    steps: [
+      colorNames(
+        choice(
+          { prompt: `Who has more ${many}?`, hint: "Whose row is longer?", showMe: `Line them up. ${winner}'s row has extras.`, explain: `${winner} has more.` },
+          winner,
+          [loser]
+        ),
+        kid.name
+      ),
+      {
+        kind: "number",
+        prompt: `How many more does ${winner} have?`,
+        hint: "Count the dots with rings.",
+        showMe: `Count the extras: ${countList(1, extras)}.`,
+        showMeHoldMs: holdFor(extras),
+        explain: `${count(extras, "extra", "extras")}.`,
+        answer: extras,
+      },
+    ],
+    wrapUp: `${winner} has ${extras} more.`,
   };
 }
 
 export const wordProblemsWithin10: Unit = {
   id: "wordProblemsWithin10",
-  title: "Solving Word Problems Within 10",
-  goal: "Solve simple stories about adding and taking away, with numbers up to 10.",
+  title: "Story Problems to 10",
+  goal: "Solve stories with numbers up to 10.",
   standard: "K.OA.2",
-  keyIdea: (
-    <>
-      <p>Word problems describe add/subtract stories in different ways: a group getting MORE, a group having some TAKEN AWAY, two groups already TOGETHER, a missing PART of a known total, or two groups being COMPARED.</p>
-      <p>Comparing two groups is the trickiest kind — nothing joins or leaves either group; you're just finding the gap between two separate amounts.</p>
-    </>
-  ),
+  keyIdea: <p>Listen to the story. Look at the picture.</p>,
   Explore,
   requiresIntro: true,
-  problems: [{ label: "Word Problems", make: wordProblem, buckets: BUCKETS }],
+  problems: [
+    { label: "Word Problems", make: wordProblem, buckets: BUCKETS },
+    // Optional: not in Mixed, and its bucket is not in requiredBuckets (no stars).
+    { label: "Challenge: how many more?", make: howManyMoreChallenge, buckets: [CHALLENGE_BUCKET], optional: true },
+  ],
   requiredBuckets: BUCKETS,
   test: wordProblemsWithin10Test,
 };

@@ -363,5 +363,5 @@ export const fractionDivisionTest: Unit["test"] = {
     modelChoiceQuestion,
     relationshipChoiceQuestion,
   ],
-  passScore: 8,
+  passScore: 9,
 };

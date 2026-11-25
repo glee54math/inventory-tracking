@@ -11,26 +11,24 @@ export interface TenFrameProps {
   /** 0-10 cells filled, in order, in `tone`. */
   filled: number;
   tone?: "a" | "b" | "c";
-  /** Additional cells filled right after `filled`, in `fillBTone` — e.g. the
-   *  "partner for 10" complement, so a single frame visually shows a number
-   *  AND how many more it takes to reach 10 in one picture. filled + fillB
-   *  must not exceed 10. */
+  /** More cells filled right after `filled`, in `fillBTone`. filled + fillB is at most 10. */
   fillB?: number;
   fillBTone?: "a" | "b" | "c";
-  /** Extra dots (in `fillBTone`) drawn just OUTSIDE the frame, to the right —
-   *  for showing a pair that goes past 10 (e.g. "7 and 4" spills one over).
-   *  0 by default. */
+  /** Extra dots (in `fillBTone`) just outside the frame, for a pair that goes past 10. */
   overflow?: number;
+  /** Ring the empty boxes, to point at them after a wrong try. Prints no number. */
+  ringEmpty?: boolean;
+  /** Number the cells from this index (0-based). */
+  numberFrom?: number;
+  /** How many cells get a number. */
+  numberCount?: number;
+  /** The number before the first label: 0 counts 1, 2, 3; 10 counts 11, 12. */
+  numberBase?: number;
 }
 
-/** The standard 2-row-of-5 "ten frame," filled left-to-right then top-to-
- *  bottom — the one fixed, memorizable shape behind both Making 10 (filled +
- *  complement in a second tone) and Teen Numbers (one full frame = "the
- *  ten"). Capped at exactly 10 cells, unlike MK1's TenGroups (which bundles
- *  any count 0-100 into repeated ten-blocks) — this lab only ever needs a
- *  SINGLE frame, so a simpler, fixed-size component was clearer than reusing
- *  TenGroups' repeating-block layout for a case that never repeats. */
-export function TenFrame({ filled, tone, fillB, fillBTone, overflow }: TenFrameProps) {
+/** The standard ten-frame: 2 rows of 5, filled left to right, then top to
+ *  bottom. Empty boxes stay visible, so they show how many more make 10. */
+export function TenFrame({ filled, tone, fillB, fillBTone, overflow, ringEmpty = false, numberFrom = 0, numberCount = 0, numberBase = 0 }: TenFrameProps) {
   const f = Math.max(0, Math.min(10, Math.round(filled)));
   const fb = Math.max(0, Math.min(10 - f, Math.round(fillB ?? 0)));
   const color = toneColor(tone);
@@ -45,7 +43,7 @@ export function TenFrame({ filled, tone, fillB, fillBTone, overflow }: TenFrameP
     <svg
       viewBox={`0 0 ${width} ${height}`}
       role="img"
-      aria-label={`A ten frame with ${f} filled${fb ? ` and ${fb} more highlighted` : ""}, out of 10 cells${extra ? `, plus ${extra} more that do not fit` : ""}`}
+      aria-label={`A ten frame with ${f + fb} of 10 boxes filled${extra ? `, plus ${extra} more outside` : ""}`}
       style={{ display: "block", width: "100%", maxWidth: width, height: "auto", fontFamily: diagramFont }}
     >
       {Array.from({ length: 10 }, (_, i) => {
@@ -57,10 +55,25 @@ export function TenFrame({ filled, tone, fillB, fillBTone, overflow }: TenFrameP
         const cy = y + CELL / 2;
         const inA = i < f;
         const inB = i >= f && i < f + fb;
+        const labelled = (inA || inB) && i >= numberFrom && i < numberFrom + numberCount;
         return (
           <g key={i}>
-            <rect x={x + 2} y={y + 2} width={CELL - 4} height={CELL - 4} rx={6} fill="none" stroke={palette.line} strokeWidth={1.5} />
+            <rect
+              x={x + 2}
+              y={y + 2}
+              width={CELL - 4}
+              height={CELL - 4}
+              rx={6}
+              fill="none"
+              stroke={ringEmpty && !inA && !inB ? palette.c : palette.line}
+              strokeWidth={ringEmpty && !inA && !inB ? 3 : 1.5}
+            />
             {(inA || inB) && <circle cx={cx} cy={cy} r={R} fill={inA ? color : colorB} stroke={palette.paper} strokeWidth={2} />}
+            {labelled && (
+              <text x={cx} y={cy + 5} textAnchor="middle" fontSize={14} fontWeight={800} fill="#ffffff">
+                {numberBase + (i - numberFrom) + 1}
+              </text>
+            )}
           </g>
         );
       })}

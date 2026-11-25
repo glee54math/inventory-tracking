@@ -62,6 +62,10 @@ approved plan, the grade, and the round number.
    - Shared code changed → check every lab that uses it. The K–1 shells
      (MK1–MK4, MG1, MG2; MG3–MG4 once moved to early-learner mode) are
      near-copies: a `UnitView` fix goes into all of them.
+   - **"Try one like it" in every lab** (user decision 2026-11-24, from
+     MK3; all grades): if the lab's shell doesn't pass `onRetrySame` to
+     `StepProblem` with the retry lock, add it (builder → "Try one like it
+     (every lab)"), even if the merged list doesn't mention it.
    - Success / wrap-up text → only announce a star when one is actually
      awarded: never "⭐" if help was used or the bucket's star was already
      earned. Use the `StarOutcome` from `recordSolve` (builder "Stars /

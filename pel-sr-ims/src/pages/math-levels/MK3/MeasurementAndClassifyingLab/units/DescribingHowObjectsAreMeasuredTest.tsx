@@ -1,212 +1,169 @@
-import { ObjectGlyph, WordCard } from "../diagrams";
-import { pick } from "../../../shared/lib/math";
-import { choice, sentence, selectBlank, type TestQuestion } from "../../../shared/engine/types";
+import type { ReactNode } from "react";
+import { BalanceScale, ObjectOnBlocks, StandingRod, WordCard, WordPicture, type DescribeWord } from "../diagrams";
+import { pick, randInt, shuffle } from "../../../shared/lib/math";
+import { choice, pictureChoice, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
+import { OBJECTS, WORD_LINES, blocksFor, blocksWord, scaleBlocksFor, sideCountScene, sizePairScale, type MeasureObject } from "./labParts";
 
-// ---------- end-of-unit test: Describing How Objects Are Measured ----------
-// Self-contained — the object/word pools are duplicated here rather than
-// imported from DescribingHowObjectsAreMeasured.tsx, same convention as
-// every other *Test.tsx in this app (avoids a real circular import, since
-// the unit file itself imports this test).
+// ---------- end-of-unit test: Long and Heavy ----------
+// Shared data comes from labParts, never from the unit file (the unit file
+// imports this test, so importing back would be a circular import).
 
-interface MeasureObject {
-  name: string;
-  glyph: string;
-  length: "long" | "short";
-  weight: "heavy" | "light";
-}
+/** The object on one pan against blocks. Which way it moves shows heavy or light. */
+const objectScale = (obj: MeasureObject, n: number): ReactNode => {
+  const objLeft = Math.random() < 0.5;
+  const objSide = objLeft ? "left" : "right";
+  const blockSide = objLeft ? "right" : "left";
+  const scaleObj = { glyph: obj.glyph, name: obj.name };
+  return (
+    <BalanceScale
+      left={objLeft ? 0 : n}
+      right={objLeft ? n : 0}
+      leftObject={objLeft ? scaleObj : undefined}
+      rightObject={objLeft ? undefined : scaleObj}
+      leftLabel={objLeft ? obj.name : "blocks"}
+      rightLabel={objLeft ? "blocks" : obj.name}
+      down={obj.weight === "heavy" ? objSide : blockSide}
+    />
+  );
+};
 
-const OBJECTS: MeasureObject[] = [
-  { name: "train", glyph: "🚂", length: "long", weight: "heavy" },
-  { name: "crocodile", glyph: "🐊", length: "long", weight: "heavy" },
-  { name: "log", glyph: "🪵", length: "long", weight: "heavy" },
-  { name: "pencil", glyph: "✏️", length: "long", weight: "light" },
-  { name: "snake", glyph: "🐍", length: "long", weight: "light" },
-  { name: "jump rope", glyph: "🨢", length: "long", weight: "light" },
-  { name: "rock", glyph: "🪨", length: "short", weight: "heavy" },
-  { name: "anchor", glyph: "⚓", length: "short", weight: "heavy" },
-  { name: "brick", glyph: "🧱", length: "short", weight: "heavy" },
-  { name: "feather", glyph: "🪶", length: "short", weight: "light" },
-  { name: "balloon", glyph: "🎈", length: "short", weight: "light" },
-  { name: "leaf", glyph: "🍃", length: "short", weight: "light" },
-];
+const wordPick = (word: DescribeWord, wrong: DescribeWord, difficulty: TestQuestion["difficulty"]): TestQuestion[] => {
+  const nameOf = (x: DescribeWord) => (x === "heavy" || x === "light" ? "scale" : "rod");
+  const options = shuffle<DescribeWord>([word, wrong]);
+  return [
+    {
+      visual: <WordCard word={word} />,
+      difficulty,
+      step: pictureChoice(
+        { prompt: <>Which picture shows <b>{word}</b>?</>, hint: "Listen to the word.", explain: WORD_LINES[word] },
+        options.map((x) => [nameOf(x), <WordPicture key={x} word={x} />]),
+        options.indexOf(word)
+      ),
+    },
+  ];
+};
 
-const WORDS: { word: string; attr: "length" | "weight" }[] = [
-  { word: "long", attr: "length" },
-  { word: "short", attr: "length" },
-  { word: "tall", attr: "length" },
-  { word: "heavy", attr: "weight" },
-  { word: "light", attr: "weight" },
-];
-
-/** Single-object length description — the easy, direct case. */
+/** Long or short, read from the blocks under the object. */
 export const lengthQuestion = (): TestQuestion[] => {
   const obj = pick(OBJECTS);
-  const other = obj.length === "long" ? "short" : "long";
   return [
     {
-      visual: <ObjectGlyph glyph={obj.glyph} name={obj.name} big />,
+      visual: <ObjectOnBlocks glyph={obj.glyph} name={obj.name} blocks={blocksFor(obj)} />,
       difficulty: "easy",
-      step: choice({ prompt: `Is the ${obj.name} long or short?`, hint: "Think about how it would look stretched out end to end.", explain: `The ${obj.name} is ${obj.length}.` }, obj.length, [other]),
+      step: choice({ prompt: `Is the ${obj.name} long or short?`, hint: "Look at the blocks.", explain: `The ${obj.name} is ${obj.length}.` }, obj.length, [obj.length === "long" ? "short" : "long"]),
     },
   ];
 };
 
-/** Single-object weight description — the easy, direct case. */
+/** Heavy or light, read from the scale. */
 export const weightQuestion = (): TestQuestion[] => {
   const obj = pick(OBJECTS);
-  const other = obj.weight === "heavy" ? "light" : "heavy";
   return [
     {
-      visual: <ObjectGlyph glyph={obj.glyph} name={obj.name} big />,
+      visual: objectScale(obj, scaleBlocksFor(obj)),
       difficulty: "easy",
-      step: choice({ prompt: `Is the ${obj.name} heavy or light?`, hint: "Think about how hard it would be to lift.", explain: `The ${obj.name} is ${obj.weight}.` }, obj.weight, [other]),
+      step: choice({ prompt: `Is the ${obj.name} heavy or light?`, hint: "Look at the scale.", explain: `The ${obj.name} is ${obj.weight}.` }, obj.weight, [obj.weight === "heavy" ? "light" : "heavy"]),
     },
   ];
 };
 
-/** Holding two independent attributes of the same object at once. */
+/** One object, a second word: told its length, read its weight. */
 export const twoAttributesQuestion = (): TestQuestion[] => {
   const obj = pick(OBJECTS);
-  const otherLen = obj.length === "long" ? "short" : "long";
-  const otherWt = obj.weight === "heavy" ? "light" : "heavy";
   return [
     {
-      visual: <ObjectGlyph glyph={obj.glyph} name={obj.name} big />,
-      difficulty: "medium",
-      step: sentence(
-        { prompt: "Fill in both words.", hint: "One word is about length, one is about weight.", explain: `The ${obj.name} is ${obj.length} and ${obj.weight}.` },
-        `This ${obj.name} is `,
-        selectBlank(obj.length, [otherLen]),
-        " and ",
-        selectBlank(obj.weight, [otherWt]),
-        "."
-      ),
-    },
-  ];
-};
-
-/** Vocabulary: a word that describes LENGTH, including "tall" (not a literal
- *  synonym of "long"/"short", so this can't be answered by text-matching). */
-export const vocabLengthQuestion = (): TestQuestion[] => {
-  const w = pick(WORDS.filter((x) => x.attr === "length"));
-  return [
-    {
-      visual: <WordCard word={w.word} />,
+      visual: objectScale(obj, scaleBlocksFor(obj)),
       difficulty: "medium",
       step: choice(
-        { prompt: `Does "${w.word}" tell you about an object's LENGTH or its WEIGHT?`, hint: `Think about what "${w.word}" means when you say it about an object.`, explain: `"${w.word}" describes length.` },
-        "Length",
-        ["Weight"]
+        { prompt: `The ${obj.name} is ${obj.length}. What else is it?`, hint: "Look at the scale.", explain: `The ${obj.name} is ${obj.length} and ${obj.weight}.` },
+        obj.weight,
+        [obj.weight === "heavy" ? "light" : "heavy"]
       ),
     },
   ];
 };
 
-/** Vocabulary: a word that describes WEIGHT. */
-export const vocabWeightQuestion = (): TestQuestion[] => {
-  const w = pick(WORDS.filter((x) => x.attr === "weight"));
-  return [
-    {
-      visual: <WordCard word={w.word} />,
-      difficulty: "medium",
-      step: choice(
-        { prompt: `Does "${w.word}" tell you about an object's LENGTH or its WEIGHT?`, hint: `Think about what "${w.word}" means when you say it about an object.`, explain: `"${w.word}" describes weight.` },
-        "Weight",
-        ["Length"]
-      ),
-    },
-  ];
+const wrongFor = (w: DescribeWord): DescribeWord => (w === "heavy" || w === "light" ? pick<DescribeWord>(["long", "short", "tall"]) : pick<DescribeWord>(["heavy", "light"]));
+
+/** Hear a word, tap its picture. The answer can be the rod or the scale. */
+export const wordPictureQuestion = (): TestQuestion[] => {
+  const w = pick<DescribeWord>(["long", "tall", "heavy"]);
+  return wordPick(w, wrongFor(w), "medium");
 };
 
-/** Generalization / false trap: looking bigger never guarantees heavier. */
+/** The same skill from a separate word pool, so the two never match. */
+export const wordPictureQuestionB = (): TestQuestion[] => {
+  const w = pick<DescribeWord>(["short", "light"]);
+  return wordPick(w, wrongFor(w), "medium");
+};
+
+/** Big does not mean heavy, and small does not either: read the scale.
+ *  Distractor: whichever object size the student assumes wins. */
 export const sizeVsWeightTrapQuestion = (): TestQuestion[] => {
+  const pair = sizePairScale();
   return [
     {
-      visual: (
-        <svg viewBox="0 0 160 90" role="img" aria-label="A big balloon and a small rock">
-          <text x={40} y={60} textAnchor="middle" fontSize={44}>
-            {"🎈"}
-          </text>
-          <text x={120} y={60} textAnchor="middle" fontSize={28}>
-            {"🪨"}
-          </text>
-        </svg>
-      ),
+      visual: <BalanceScale left={0} right={0} leftObject={pair.leftObject} rightObject={pair.rightObject} leftLabel={pair.leftObject.name} rightLabel={pair.rightObject.name} down={pair.down} />,
       difficulty: "hard",
-      step: choice(
-        {
-          prompt: "True or false: an object that looks bigger (like the balloon) is always heavier than an object that looks smaller (like the rock).",
-          hint: "Which one would actually be harder to lift?",
-          explain: "False — the balloon looks bigger, but the rock is heavier. Looking bigger never guarantees being heavier.",
-        },
-        "False",
-        ["True"]
-      ),
+      step: choice({ prompt: "Which one is heavier?", hint: "Look at the scale.", explain: `The ${pair.heavy} is heavier.` }, pair.heavy, [pair.light]),
     },
   ];
 };
 
-/** Conflation trap: appearance changes (like color) don't change measurable attributes. */
-export const colorChangeQuestion = (): TestQuestion[] => {
-  const obj = pick(OBJECTS);
+/** Typed: how many blocks long (fills the old paint slot, review D10). */
+export const blocksLongQuestion = (): TestQuestion[] => {
+  const obj = pick(OBJECTS.filter((o) => o.length === "long"));
+  const n = randInt(5, 8);
   return [
     {
-      visual: <ObjectGlyph glyph={obj.glyph} name={obj.name} big />,
+      visual: <ObjectOnBlocks glyph={obj.glyph} name={obj.name} blocks={n} />,
       difficulty: "medium",
-      step: choice(
-        {
-          prompt: `True or false: if you painted the ${obj.name} a different color, it would become a different length and weight.`,
-          hint: "Painting something changes how it looks, not how long or heavy it is.",
-          explain: `False — color doesn't change the ${obj.name}'s length or weight, only how it looks.`,
-        },
-        "False",
-        ["True"]
-      ),
+      step: { kind: "number", prompt: `How many blocks are under the ${obj.name}?`, hint: "Count the blocks under it.", explain: `It is ${blocksWord(n)} long.`, answer: n },
     },
   ];
 };
 
-/** Reverse vocabulary: pick the WEIGHT word out of a length/weight pair. */
-export const reverseVocabQuestion = (): TestQuestion[] => {
+/** Typed: count the side that went down or up (D11). Distractor: the other side's count. */
+export const blocksOnScaleQuestion = (): TestQuestion[] => {
+  const s = sideCountScene();
   return [
     {
-      visual: null,
+      visual: <BalanceScale left={s.left} right={s.right} />,
       difficulty: "medium",
-      step: choice(
-        { prompt: 'Which word describes WEIGHT: "short" or "light"?', hint: '"short" is about length.', explain: '"light" describes weight. "short" describes length instead.' },
-        "light",
-        ["short"]
-      ),
+      step: { kind: "number", prompt: `How many blocks are on the side that went ${s.ask}?`, hint: "Look at the scale.", explain: `That side has ${blocksWord(s.answer)}.`, answer: s.answer },
     },
   ];
 };
 
-/** Generalization: the opposite of a length word is still a length word, not a weight word. */
-export const oppositeOfLongQuestion = (): TestQuestion[] => {
+/** Typed: tall is long, standing up. */
+export const tallRodQuestion = (): TestQuestion[] => {
+  const n = randInt(3, 8);
   return [
     {
-      visual: null,
-      difficulty: "hard",
-      step: choice(
-        { prompt: 'Which word means the OPPOSITE of "long"?', hint: 'The opposite of "long" is still about length, not weight.', explain: '"short" is the opposite of "long" — both describe length.' },
-        "short",
-        ["light"]
-      ),
+      visual: <StandingRod blocks={n} />,
+      difficulty: "medium",
+      step: { kind: "number", prompt: "How tall is the rod? Count the blocks.", hint: "Count the blocks.", explain: `It is ${blocksWord(n)} tall.`, answer: n },
     },
   ];
 };
 
-/** Generalization: the opposite of a weight word is still a weight word, not a length word. */
-export const oppositeOfHeavyQuestion = (): TestQuestion[] => {
+/** Read one marked side of the scale: it went down (heavy) or up (light). */
+export const sideWordQuestion = (): TestQuestion[] => {
+  const markHeavy = Math.random() < 0.5;
+  const heavyLeft = Math.random() < 0.5;
+  const hi = randInt(4, 8);
+  const lo = randInt(1, 3);
+  const markLeft = markHeavy === heavyLeft;
+  const answer = markHeavy ? "heavy" : "light";
   return [
     {
-      visual: null,
+      visual: <BalanceScale left={heavyLeft ? hi : lo} right={heavyLeft ? lo : hi} point={markLeft ? "left" : "right"} />,
       difficulty: "hard",
       step: choice(
-        { prompt: 'Which word means the OPPOSITE of "heavy"?', hint: 'The opposite of "heavy" is still about weight, not length.', explain: '"light" is the opposite of "heavy" — both describe weight.' },
-        "light",
-        ["short"]
+        { prompt: `This side went ${markHeavy ? "down" : "up"}. Is it heavy or light?`, hint: "The heavy side goes down.", explain: `It is ${answer}.` },
+        answer,
+        [markHeavy ? "light" : "heavy"]
       ),
     },
   ];
@@ -217,13 +174,13 @@ export const describingTest: Unit["test"] = {
     lengthQuestion,
     weightQuestion,
     twoAttributesQuestion,
-    vocabLengthQuestion,
-    vocabWeightQuestion,
+    wordPictureQuestion,
+    wordPictureQuestionB,
     sizeVsWeightTrapQuestion,
-    colorChangeQuestion,
-    reverseVocabQuestion,
-    oppositeOfLongQuestion,
-    oppositeOfHeavyQuestion,
+    blocksLongQuestion,
+    blocksOnScaleQuestion,
+    tallRodQuestion,
+    sideWordQuestion,
   ],
   passScore: 9,
 };

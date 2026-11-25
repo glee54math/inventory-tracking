@@ -2,53 +2,54 @@ import { TenFrame } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
+import { noRepeats } from "./labHelp";
 
-// ---------- end-of-unit test: Making 10 ----------
-// 10 questions from 10 generators. Self-contained — no import from
-// MakingTen.tsx, and that file never imports back from here.
+// ---------- end-of-unit test: Make 10 ----------
+// 10 questions from 10 generators. Self-contained: no import from
+// MakingTen.tsx. Pictures show only the given number in the frame.
 
-/** Partner for a small number (1, 2, 3) — large, easy-to-visualize complement. */
-export const smallComplementQuestion = (): TestQuestion[] => {
-  const n = randInt(1, 3);
+const typed = (n: number, difficulty: TestQuestion["difficulty"], picture: boolean): TestQuestion[] => {
   const partner = 10 - n;
   return [
     {
-      visual: <TenFrame filled={n} tone="a" />,
-      difficulty: "easy",
-      step: { kind: "number", prompt: `What number goes with ${n} to make exactly 10?`, hint: "Count the empty boxes left in the ten frame.", explain: `${n} + ${partner} = 10.`, answer: partner },
+      visual: picture ? <TenFrame filled={n} tone="a" /> : null,
+      difficulty,
+      step: { kind: "number", tone: "b", prompt: `${n} and how many make 10?`, hint: "Count the empty boxes.", explain: `${n} and ${partner} make 10.`, answer: partner },
     },
   ];
 };
 
-/** Partner for a number close to 10 (7, 8, 9) — small complement, easy to undercount. */
-export const nearTenComplementQuestion = (): TestQuestion[] => {
-  const n = randInt(7, 9);
+/** Yes/No: does this pair make 10? True about half the time. A false pair misses by 1. */
+const verify = (lo: number, hi: number, difficulty: TestQuestion["difficulty"]): TestQuestion[] => {
+  const n = randInt(lo, hi);
   const partner = 10 - n;
+  const isTrue = Math.random() < 0.5;
+  const shown = isTrue ? partner : partner > 1 && Math.random() < 0.5 ? partner - 1 : partner + 1;
   return [
     {
-      visual: <TenFrame filled={n} tone="a" />,
-      difficulty: "hard",
-      step: { kind: "number", prompt: `What number goes with ${n} to make exactly 10?`, hint: "The complement here is small — count the empty boxes carefully, don't guess.", explain: `${n} + ${partner} = 10.`, answer: partner },
+      visual: null,
+      difficulty,
+      step: choice(
+        { prompt: `Do ${n} and ${shown} make 10?`, hint: "Picture the boxes.", explain: `${n} and ${shown} make ${n + shown}.` },
+        isTrue ? "Yes" : "No",
+        [isTrue ? "No" : "Yes"] // misconception: a close pair is "close enough"
+      ),
     },
   ];
 };
 
-/** Partner for a "middle" number (4, 5, 6) — no proximity shortcut. */
-export const middleComplementQuestion = (): TestQuestion[] => {
-  const n = randInt(4, 6);
-  const partner = 10 - n;
-  return [
-    {
-      visual: <TenFrame filled={n} tone="a" />,
-      difficulty: "medium",
-      step: { kind: "number", prompt: `What number goes with ${n} to make exactly 10?`, hint: "Count the empty boxes left in the ten frame.", explain: `${n} + ${partner} = 10.`, answer: partner },
-    },
-  ];
-};
+/** A small number (1, 2, 3). */
+export const smallComplementQuestion = (): TestQuestion[] => typed(randInt(1, 3), "easy", true);
 
-/** Doubling-instead-of-complement distractor — a specific, nameable mistake. */
+/** A number close to 10 (7, 8, 9). */
+export const nearTenComplementQuestion = (): TestQuestion[] => typed(randInt(7, 9), "hard", true);
+
+/** A middle number (4, 5, 6). */
+export const middleComplementQuestion = (): TestQuestion[] => typed(randInt(4, 6), "medium", true);
+
+/** Doubling instead of finding what makes 10: a specific, nameable mistake. */
 export const doublingDistractorQuestion = (): TestQuestion[] => {
-  const n = randInt(2, 8);
+  const n = randInt(2, 4);
   const partner = 10 - n;
   const doubled = n * 2;
   return [
@@ -56,127 +57,69 @@ export const doublingDistractorQuestion = (): TestQuestion[] => {
       visual: <TenFrame filled={n} tone="a" />,
       difficulty: "medium",
       step: choice(
-        { prompt: `What number goes with ${n} to make exactly 10?`, hint: "You need 10 total, not double the number.", explain: `${n} + ${partner} = 10, not ${n} + ${n} = ${doubled}.` },
+        { prompt: `${n} and how many make 10?`, hint: "Count the empty boxes.", explain: `${n} and ${partner} make 10.` },
         String(partner),
-        doubled !== partner ? [String(doubled)] : [String(partner + 1)] // misconception: doubling the number instead of finding its complement
+        [String(doubled)] // misconception: doubling the number
       ),
     },
   ];
 };
 
-/** Which equation shows the partner pair — symbolic recognition. */
-export const partnerEquationChoiceQuestion = (): TestQuestion[] => {
+/** Which number sentence makes 10? */
+export const makeTenSentenceQuestion = (): TestQuestion[] => {
   const n = randInt(1, 9);
   const partner = 10 - n;
+  const wrong = partner > 1 && Math.random() < 0.5 ? partner - 1 : partner + 1;
   return [
     {
-      visual: <TenFrame filled={n} tone="a" fillB={partner} fillBTone="b" />,
+      visual: <TenFrame filled={n} tone="a" />,
       difficulty: "medium",
       step: choice(
-        { prompt: "Which number sentence shows this partner pair?", hint: "The two partners add up to exactly 10.", explain: `${n} + ${partner} = 10.` },
+        { prompt: "Which one makes 10?", hint: "Count the empty boxes.", explain: `${n} + ${partner} = 10.` },
         `${n} + ${partner} = 10`,
-        [`${n} + ${n} = 10`, `${partner} − ${n} = 10`] // misconceptions: doubling; wrong operation
+        [`${n} + ${wrong} = 10`] // misconception: off by one when counting the empty boxes
       ),
     },
   ];
 };
 
-/** Strategy check — the named misconception, counting up vs. recall. */
-export const countingUpVsRecallQuestion = (): TestQuestion[] => {
-  return [
-    {
-      visual: null,
-      difficulty: "medium",
-      step: choice(
-        {
-          prompt: "To find a number's partner for 10 quickly, which is better: counting up from 1 every time, or just knowing the fact right away?",
-          hint: "Think about which one is faster once you've practiced.",
-          explain: "Just knowing it (recall) is the goal — counting up from 1 every time works, but it's slow.",
-        },
-        "Just knowing it (recall)",
-        ["Counting up from 1 every time"] // misconception: relying on re-deriving the fact instead of recalling it
-      ),
-    },
-  ];
-};
+/** No picture: the fact itself (replaces the strategy-preference item). */
+export const makeTenNoPictureQuestion = (): TestQuestion[] => typed(randInt(6, 9), "medium", false);
 
-/** Generalization: every number 1-9 has exactly one partner for 10. */
-export const everyNumberHasOneTrueFalseQuestion = (): TestQuestion[] => {
-  return [
-    {
-      visual: null,
-      difficulty: "hard",
-      step: choice(
-        {
-          prompt: "True or false: every number from 1 to 9 has exactly one partner that makes 10.",
-          hint: "Check a few: 1+9, 2+8, 3+7...",
-          explain: "True — each number from 1 to 9 pairs with exactly one other number to make 10.",
-        },
-        "True",
-        ["False"] // misconception: doubting the pattern holds for every number
-      ),
-    },
-  ];
-};
+/** Verify a pair (the plan's verify bucket), Yes/No. Used by the Module Test too. */
+export const verifyPairQuestion = (): TestQuestion[] => verify(1, 5, "medium");
 
-/** Reverse-direction verify: a TRUE pair. */
-export const verifyTruePairQuestion = (): TestQuestion[] => {
+/** Verify a pair from a separate pool of numbers. */
+export const verifyPairBigQuestion = (): TestQuestion[] => verify(6, 9, "hard");
+
+/** No picture, smaller numbers, a separate pool. */
+export const makeTenNoPictureSmallQuestion = (): TestQuestion[] => typed(randInt(1, 5), "hard", false);
+
+/** Record it: n + ☐ = 10 (replaces the "10 and 0 more" item). */
+export const makeTenRecordQuestion = (): TestQuestion[] => {
   const n = randInt(1, 9);
   const partner = 10 - n;
   return [
     {
-      visual: null,
+      visual: <TenFrame filled={n} tone="a" />,
       difficulty: "medium",
-      step: choice(
-        { prompt: `Do ${n} and ${partner} make exactly 10?`, hint: "Add them exactly.", explain: `${n} + ${partner} = 10.` },
-        "Yes",
-        ["No"] // misconception: doubting a genuinely correct pair
-      ),
-    },
-  ];
-};
-
-/** Reverse-direction verify: a FALSE (near-miss) pair — targets undercounting. */
-export const verifyFalsePairQuestion = (): TestQuestion[] => {
-  const n = randInt(2, 8);
-  const actualPartner = 10 - n;
-  const nearMiss = Math.random() < 0.5 ? actualPartner + 1 : actualPartner - 1;
-  return [
-    {
-      visual: null,
-      difficulty: "hard",
-      step: choice(
-        { prompt: `Do ${n} and ${nearMiss} make exactly 10?`, hint: "Add them exactly — don't just guess from how close they look.", explain: `${n} + ${nearMiss} = ${n + nearMiss}, which is NOT 10. ${n}'s actual partner is ${actualPartner}.` },
-        "No",
-        ["Yes"] // misconception: accepting a near-miss pair as "close enough" to 10
-      ),
-    },
-  ];
-};
-
-/** Full ten-frame edge case: 10's "partner" is 0. */
-export const zeroComplementQuestion = (): TestQuestion[] => {
-  return [
-    {
-      visual: <TenFrame filled={10} tone="a" />,
-      difficulty: "medium",
-      step: { kind: "number", prompt: "The ten frame is already completely full (10). How many MORE do you need to reach 10?", hint: "If it's already full, nothing more is needed.", explain: "10 + 0 = 10 — no more are needed.", answer: 0 },
+      step: { kind: "number", tone: "b", prompt: `${n} + ☐ = 10. What goes in the box?`, hint: "Count the empty boxes.", explain: `${n} + ${partner} = 10.`, answer: partner },
     },
   ];
 };
 
 export const makingTenTest: Unit["test"] = {
-  questions: [
+  questions: noRepeats([
     smallComplementQuestion,
     nearTenComplementQuestion,
     middleComplementQuestion,
     doublingDistractorQuestion,
-    partnerEquationChoiceQuestion,
-    countingUpVsRecallQuestion,
-    everyNumberHasOneTrueFalseQuestion,
-    verifyTruePairQuestion,
-    verifyFalsePairQuestion,
-    zeroComplementQuestion,
-  ],
+    makeTenSentenceQuestion,
+    makeTenNoPictureQuestion,
+    verifyPairQuestion,
+    verifyPairBigQuestion,
+    makeTenNoPictureSmallQuestion,
+    makeTenRecordQuestion,
+  ]),
   passScore: 9,
 };

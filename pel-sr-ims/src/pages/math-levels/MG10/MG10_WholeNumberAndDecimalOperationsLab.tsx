@@ -122,7 +122,7 @@ function Home({
           ))}
         </ol>
         <p className="muted small">
-          To fill in your stars, solve each kind of problem twice on your own. Use no wrong guesses and at most one hint. Only <b>All types</b> problems count.
+          To fill in your stars, solve each kind of problem twice on your own. Use no hints and no wrong tries. Only <b>All types</b> problems count.
         </p>
       </section>
       <section>
@@ -328,9 +328,9 @@ function UnitView({
           <StepProblem
             key={`${unit.id}-${seed}-${String(typeIdx)}`}
             problem={problem}
-            onComplete={(clean, bucket) => {
+            onComplete={(clean, bucket, solvedAlone) => {
               usedTokenRef.current = drawRef.current?.token ?? null;
-              if (clean) {
+              if (solvedAlone) {
                 setOwesRetry(false);
                 onDebt(null);
               }

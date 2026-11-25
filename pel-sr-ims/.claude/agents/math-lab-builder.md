@@ -206,9 +206,22 @@ Mirror `MG1/MG1_AdditionAndSubtractionWithin20Lab.tsx`:
   lab-early"`) for bigger tap targets.
 - Wrap the lab's content in `<EarlyLearnerProvider>` (from
   `shared/engine/audience.tsx`), just inside `<TtsProvider>`. This turns on
-  the help ladder, plain-language feedback, and the on-screen number pad
-  across the shared engine. Labs outside the provider keep the older
-  behavior (Show answer after 3 tries), so don't add it to MG6+ labs.
+  plain-language feedback, locked tried buttons, and the on-screen number
+  pad across the shared engine. Don't add it to MG6+ labs. (The help ladder
+  and "Try one like it" are for every lab; see the next section.)
+- The CFU gate and near-copy rules below the next section apply here too.
+
+### Try one like it (every lab)
+**User decision 2026-11-24, from the MK3 review; all grades.** It was
+K–1 only before; MG3–MG9, MG11 and MM1 were built without it and get it
+when they are next reviewed or fixed. Copy it from
+`MK1_CountingAndCardinalityLab.tsx`'s `UnitView` (older-grade wording:
+MG10's shells).
+- **What triggers it** (decided in `StepProblem`'s `isSolvedAlone`): a
+  tapped "Show hint" (even if the next answer is right), a wrong pick on a
+  choice, 2 wrong tries on one step, Show me, or more than one hint. One
+  wrong typed answer (and the hint it opens) costs the star but does NOT
+  trigger it (user decision).
 - In `UnitView`, keep a `lastMakeRef` to the factory that made the current
   problem, and pass `onRetrySame={retrySame}` to `StepProblem`. `retrySame`
   pushes that factory back onto the shuffle bag and re-seeds, so "Try one
@@ -292,17 +305,20 @@ stars.", "You have all the stars here!"), or "Solved, with help." Never
 hard-code "⭐" or "You got a star" in any lab's own success text or audio;
 any custom success screen must use the same `StarOutcome`.
 
-"Clean" (decided in `StepProblem`) means: no Show me / Show answer, at most
-one hint, and **no wrong pick on any choice step** (a two-choice question
-can be guessed). Because choices can be guessed, every Practice problem type
+"Clean" (decided in `StepProblem`, rule for every lab) means: **no hint, no
+wrong try of any kind, and no Show me**. Only a clean solve
+earns star credit. "Try one like it" uses a looser bar (`solvedAlone`, the
+third `onComplete` argument): one wrong typed try (and the hint it opens)
+costs the star but doesn't owe a retry. A tapped "Show hint" costs the star
+AND owes a retry (user decision 2026-11-24, from MK3; all grades). Shells clear retry debt on `solvedAlone`, never
+on `clean`. Because choices can be guessed, every Practice problem type
 needs at least one typed-number step, so a clean solve proves the student
 can produce the answer, not just recognize it.
 
 Update the "Your path" helper paragraph under the star list to describe
 this in the audience's words. K–1 copy (MG1): "Solve each kind of problem
 2 times by yourself to fill in your stars. Only Mixed problems count."
-Older-grade copy: "(no wrong guesses, at most one hint) each kind of problem
-twice."
+Older-grade copy: "each kind of problem twice with no hints or wrong tries."
 
 ## Per-unit build
 
@@ -410,6 +426,31 @@ the parentheses change the value?"), the problem pool must include a case
 that breaks the obvious surface rule ((a + b) − c for "mixed signs change
 it"), and no hint may teach a surface rule ("look at the signs").
 
+**Linked controls stay in range (user-approved 2026-11-23, MK2).** When one
+Explore control limits another, changing the first pulls the second back
+into range, so no story, picture or sentence can show an impossible value.
+
+**A sandbox checks student work before it praises it (user-approved
+2026-11-24, from MK3; all grades).** When Explore accepts the student's work
+(sorting, matching, placing), each move is checked: a wrong placement goes
+back with a short nudge, and "done" or "all sorted" is said only when every
+item is right. (MK3 Unit 3 said "Every item is sorted!" with red and green
+mixed.) Where a unit's idea is a definition or a classification, consider
+sort problems with several categories in which the student must sort by the
+definition, e.g. shapes by attribute, even/odd, prime/composite, types of
+quadrilaterals or triangles. This may be a new problem type; use judgment on
+which units it fits.
+
+**Verify taught statements from more than one direction (user-approved
+2026-11-24, from MK3; all grades).** When a unit teaches a rule, a
+definition or an "X does not mean Y" idea, the Explore, Practice and Test
+pools include examples that make the opposite shortcut fail, and, where
+applicable, check the statement's converse, inverse and contrapositive.
+(MK3: "big does not mean heavy" was only ever shown with small heavy
+objects, so it became "the small one is heavier"; it needs big-and-heavy
+pairs too. Later grades: "every square is a rectangle" vs. "every rectangle
+is a square.")
+
 ### Check for Understanding (CFU) — the mandatory gate
 **Every unit has one, and it gates Practice (user requirement).** No
 exceptions for "fluency practice" or "word problems on concepts already
@@ -459,6 +500,11 @@ the comprehension bar further down, but deliver it one short item at a time
 (`CheckSequence` where its item types fit, otherwise a hand-built sequence
 with the same flow). Only 6th–8th grade (MM) labs may show a multi-part
 question.
+
+**A second CFU set can't be answered by Explore (user-approved 2026-11-23,
+MK2).** If a CFU has a second question set, check the opening numbers of
+every Explore mode against that set's answers, not only the mode its pointer
+opens.
 
 #### K–1 CFU (MK1–MK4, MG1–MG4): the Kindergarten design
 The user's approved design. Build it with the shared pieces in
@@ -645,13 +691,18 @@ favors. **The bucket list must include every concept and trap the CFU
 checks** (see CFU → "Carry every CFU concept forward"); add a bucket if the
 plan's list is missing one, and note it in the report.
 
-**Getting unstuck: the help ladder (K–1 labs).** The main goal is that a
-student who is stuck can get unstuck without the teacher. Under
-`EarlyLearnerProvider`, `StepProblem` already runs the ladder: 1st wrong
-answer → plain feedback + the step's `hint` + a "look here" pulse on the
-picture; 2nd wrong → a "Show me" button that reveals the step's `showMe`;
-after a solve that needed help → "Try one like it." Your job is to give
-each rung something worth showing:
+**Getting unstuck: the help ladder (every lab; user decision 2026-11-24,
+from the MK3 review; all grades — it replaced "Show answer after 3 tries"
+for MG3+).** The main goal is that a student who is stuck can get unstuck
+without the teacher and never learns to give up. `StepProblem` runs the
+ladder in every lab: 1st wrong answer → feedback + the step's `hint` + a
+"look here" pulse on the picture; 2nd wrong try on the same step → a
+"Show me" button that walks through the step (its `showMe` line if it has
+one, its `explain`, and the answer); after a solve that needed help → "Try
+one like it." A two-button step can't reach a 2nd wrong try; that's fine,
+because only the right button is left. Your job is to give each rung
+something worth showing (older-grade labs: a `showMe` line is optional but
+wanted on multi-step work):
 
 - **Hints are an action that points at the picture**, not a restatement of
   the prompt: "Count the empty boxes in the first ten-frame." / "How many
@@ -739,8 +790,8 @@ wanted, for help after a wrong try to point strongly toward the answer:
 show a worked example, refer back to an earlier step or picture, draw
 part of the work. What it must not do is hand over the finished answer
 immediately (before any try, or as a complete answer to copy after one
-try). Help gets stronger with each wrong try, and "Show me" / "Show answer"
-is the step that gives the answer. Don't strip helpful pictures out of
+try). Help gets stronger with each wrong try, and "Show me" (after the 2nd
+wrong try, every lab) is the step that gives the answer. Don't strip helpful pictures out of
 Practice just because they hint; strip only what gives the answer away.
 
 **Practice must not be passable without the math (user requirement):**
@@ -951,7 +1002,39 @@ remainder) rather than generating a random dividend and hoping the division
 comes out "nice" — this also bounds the cycle count regardless of divisor
 size.
 
+**A missed two-button question must teach (user-approved 2026-11-23, MK2).**
+A two-button question can't reach Show me, because the tried button locks and
+only one is left. Its first wrong tap must change the picture and teach the
+idea.
+
+**Hints are true before a try (user-approved 2026-11-23, MK2).** A hint can
+open before any try, and `pointing()` is true for it. A picture that reveals
+the asked-for part waits for a wrong try or Show me, and the hint's words must
+be true of what is drawn before a try.
+
+**Test every generated choice at 0 and at equal values (user-approved
+2026-11-24, MK2).** Random numbers can break a choice question at the edges.
+Run the generator at 0 and with two equal numbers, and check: exactly one
+choice is true, and at least 2 buttons are left after duplicates are removed.
+(MK2: "2 − 0" offered 2 + 0 = 2 and 0 + 2 = 2, both true with one marked
+wrong; "0 + ? = 4" showed one button.) The brute-force script counts both, and
+the target is 0.
+
+**A true answer that doesn't count says why (user-approved 2026-11-24, MK2).**
+When a step asks for a new or different answer ("another way to make 5",
+"simplest form"), an answer that is true but doesn't count must say it is true
+and why it doesn't count, and a second such try opens the normal help. Only
+flipping the order never counts as a new answer: after 1 + 4 = 5, 4 + 1 = 5 is
+"the same numbers in a different order", not a new way. Any answer that always
+works (adding 0, such as 4 = 4 + 0) can't pass a "write your own" step on its
+own. (MK2: 4 + 1 after 1 + 4 only heard "Not a match"; typing 4 = 4 + 0 earned
+a star every time.)
+
 ### Unit Test
+
+**No repeated questions (user-approved 2026-11-23, MK2).** No question may
+appear twice in one Unit or Module Test sitting. The brute-force script counts
+repeated prompts per sitting, and the target is 0.
 A self-contained `{UnitName}Test.tsx` — do NOT import from the unit's own
 Explore/Practice file, and don't let the unit file import anything back from
 the Test file either. This isn't a style preference: the unit file already
@@ -996,6 +1079,10 @@ two rows). A picture that prints the answer is not: a full 1–120 chart on
 "What comes after 86?" shows 87 beside 86, and on "10 more than 47" shows
 57 one row down (MG2 Units 1 and 4). Never mark, color or label the answer
 cell. Judge each question; don't just copy the Practice picture.
+**When a picture can print a count or value, hide it on the Test
+(user-approved 2026-11-24, from MK3; all grades).** Every Test question that
+asks for that count or depends on it must hide it. (MK3 Unit 3's Test showed
+"Red (4)" above "How many are in the Red group?")
 
 **Test pictures and words match Practice (user requirement):** the same
 labeled group boxes, the same color-coded names on prompts and buttons, the
@@ -1026,10 +1113,13 @@ question, and avoids reinventing grading.
 ### Module Test
 `{LabName}/units/ModuleTest.tsx`: import ~5 generators from each unit's
 `*Test.tsx` (reuse, don't rewrite — vary the parameters you call them with
-for variety), assemble `N_UNITS * 5` questions, `passScore` at 80% of the
-total, plus a `moduleTestStars(score)` band function (18/16/14/12 cutoffs
-for a 20-question test, scaled proportionally otherwise) and a
-hand-maintained `MODULE_TEST_TOTAL` constant. If some reused questions'
+for variety), assemble `N_UNITS * 5` questions, and keep a hand-maintained
+`MODULE_TEST_TOTAL` constant. Stars come from the shared rule:
+`export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);`
+(`shared/engine/moduleStars.ts`; never write your own bands). **Passing is
+5 stars (user-approved 2026-11-24):** `passScore` is the lowest 5-star score
+(10 questions → 9, 15 → 14, 20 → 19, 25 → 23, 30 → 28), written as a plain
+number (`passScore: 19,`) because `utils/labOrder.ts` reads it from the file. If some reused questions'
 diagrams are redundant once several similar ones appear back-to-back (the
 user has asked for this before), wrap the later ones with a small
 `noVisual` helper that strips `visual` from the returned `TestQuestion[]`
@@ -1136,6 +1226,10 @@ Delete the harness when done. Take screenshots and look at them.
     right. Log the nudge, the "show" line and the praise; confirm none of
     the wrong-answer messages states the answer, only one question is on
     screen at a time, and the last one unlocks Practice.
+
+**Number pad on a landscape iPad (user-approved 2026-11-23, MK2).** Also check
+Tests at 1180×820: every number pad key and Check must be on screen without
+scrolling.
 
 ## Final report (what the user actually reads)
 

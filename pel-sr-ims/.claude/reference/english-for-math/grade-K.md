@@ -65,6 +65,13 @@ Not yet: start unknown, change unknown, compare problems.
 - **"Left" has two meanings.** "How many are left?" (still there) vs. "the
   left group" (side). Don't use both in one lab; prefer "How many are still
   there?" and pictures over left/right.
+- **Left and right are not taught in K** (from MK3, 2026-11-24; K–1). Don't
+  make an answer depend on them; use colors or pictures ("the blue side").
+  "The right side" can also be heard as "the correct side."
+- **Long/short and heavy/light need something to compare to** (from MK3,
+  2026-11-24; K–1). Don't ask about one object ("Is the pencil long?") unless
+  the picture shows a reference or nearly every child would give the same
+  answer.
 - **"Fewer" is rarer than "less" in children's talk.** Teach it with a
   picture before asking it.
 - **"Same" vs. "equal."** Use *the same* first; bring in *equal* with the

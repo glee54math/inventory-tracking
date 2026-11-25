@@ -1,85 +1,65 @@
 import { useState } from "react";
-import { LengthBars, BalanceScale } from "../diagrams";
-import { randInt } from "../../../shared/lib/math";
-import { choice, type Problem } from "../../../shared/engine/types";
+import { LengthBars, BalanceScale, binCountAlongMs, type LengthBarSpec } from "../diagrams";
+import { pick } from "../../../shared/lib/math";
+import { pointing, type Problem, type VisualHelp } from "../../../shared/engine/types";
 import { Segmented, Stepper } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { comparingTest } from "./ComparingTwoObjectsDirectlyTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
 import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
-
-// ============================================================================
-// SHARED HELPERS — distinct-pair generators, duplicated (not imported) in
-// ComparingTwoObjectsDirectlyTest.tsx per the usual *Test.tsx convention.
-// ============================================================================
-
-/**
- * Two distinct block counts in [1,12]. `nearTieChance` controls how often
- * the pair lands a "near tie" (difference of exactly 1 — the harder case to
- * judge at a glance) versus an "obviously different" pair (difference >= 3).
- * Folding near-tie-vs-obvious into a randomized difficulty regime inside
- * each comparison bucket, rather than a 5th disjoint bucket, mirrors the
- * same autonomous call MK1_CountingAndCardinalityLab's build made for its
- * own "close vs. obvious difference" plan bullet — see that build's final
- * report / VISUAL_COMPONENT_TODO.txt's MK1 entry.
- */
-export function lengthPair(nearTieChance = 0.5): [number, number] {
-  const a = randInt(3, 9);
-  let b: number;
-  if (Math.random() < nearTieChance) {
-    b = a + (Math.random() < 0.5 ? 1 : -1);
-  } else {
-    const delta = randInt(3, 6) * (Math.random() < 0.5 ? 1 : -1);
-    b = a + delta;
-  }
-  b = Math.max(1, Math.min(12, b));
-  if (b === a) b = a + 1 <= 12 ? a + 1 : a - 1;
-  return [a, b];
-}
-
-export function weightPair(nearTieChance = 0.5): [number, number] {
-  const a = randInt(2, 7);
-  let b: number;
-  if (Math.random() < nearTieChance) {
-    b = a + (Math.random() < 0.5 ? 1 : -1);
-  } else {
-    const delta = randInt(2, 4) * (Math.random() < 0.5 ? 1 : -1);
-    b = a + delta;
-  }
-  b = Math.max(1, Math.min(8, b));
-  if (b === a) b = a + 1 <= 8 ? a + 1 : a - 1;
-  return [a, b];
-}
+import { lookHereSpot, useLookHereRequest } from "../../../shared/lib/lookHere";
+import { blocksWord, countExtrasLine, countUp, offsetRods, otherSide, rodName, rodChoice, rodPair, sideChoice, sideName, wantNearTie, weightPair, type Rod, type Side } from "./labParts";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
 // ============================================================================
 
-// Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
-// Ideas checked: which rod is longer, and how many blocks stick out; rods
-// that don't start together (count, don't look at the ends); the heavy side
-// of a balance goes down.
+// K-1 design, one question at a time, 2 of 5 typed. Line up first, count to
+// check (review D5). Extras are ringed and counted, with no subtraction (D3).
+// Explore's defaults (6 and 8) avoid the CFU's rods (7 and 4) and its 3 extras.
+// Each pick's twin has the other right answer (C2-38). The first wrong tap's
+// reason plays over the twin, so it must fit both.
 
-const rodBtn = (name: "Rod A" | "Rod B") => ({ id: name, label: <span style={{ color: name === "Rod A" ? "var(--qa)" : "var(--qb)", fontWeight: 800 }}>{name}</span> });
+const LOOK = {
+  rods: { target: "u2-rods", label: "Explore: the rods", say: "Look here. Which rod goes past?" },
+  extras: { target: "u2-extras", label: "Explore: extra blocks", say: "Look here. Count the extra blocks." },
+  slide: { target: "u2-slide", label: "Explore: slide together", say: "Look here. Slide them together." },
+  scale: { target: "u2-scale", label: "Explore: the scale", say: "Look here. Watch the scale." },
+};
+
+const rodOption = (r: Rod) => ({ id: `Rod ${r}`, label: rodName(r) });
+const sideOption = (s: Side) => ({ id: s, label: sideName(s) });
+
+const lined = (a: number, b: number, extra = false, numbered = false, count?: Rod) => {
+  const longerA = a > b;
+  const from = Math.min(a, b);
+  return (
+    <LengthBars
+      max={9}
+      bars={[
+        { blocks: a, tone: "a", label: "Rod A", extraFrom: extra && longerA ? from : undefined, extraNumbered: numbered, countAlong: count === "A" },
+        { blocks: b, tone: "b", label: "Rod B", extraFrom: extra && !longerA ? from : undefined, extraNumbered: numbered, countAlong: count === "B" },
+      ]}
+    />
+  );
+};
+
+const offset = (a: number, b: number, offB: number, align = false, count?: Rod, numberB = false, offA = 0) => (
+  <LengthBars
+    max={9}
+    alignStarts={align}
+    bars={[
+      { blocks: a, tone: "a", label: "Rod A", startOffset: offA, countAlong: count === "A" },
+      { blocks: b, tone: "b", label: "Rod B", startOffset: offB, countAlong: count === "B", numbered: numberB },
+    ]}
+  />
+);
+
+const scalePicture = (left: number, right: number) => <BalanceScale left={left} right={right} leftLabel="Blue" rightLabel="Orange" />;
 
 function ComparingCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
-  const lined = (extra = false, numberB = false) => (
-    <LengthBars
-      bars={[
-        { blocks: 7, tone: "a", label: "Rod A", extraFrom: extra ? 4 : undefined },
-        { blocks: 4, tone: "b", label: "Rod B", numbered: numberB },
-      ]}
-    />
-  );
-  const offset = (align = false, numbered = false) => (
-    <LengthBars
-      alignStarts={align}
-      bars={[
-        { blocks: 7, tone: "a", label: "Rod A", startOffset: 0, numbered },
-        { blocks: 4, tone: "b", label: "Rod B", startOffset: 5, numbered },
-      ]}
-    />
-  );
+  const rods = [rodOption("A"), rodOption("B")];
+  const sides = [sideOption("blue"), sideOption("orange")];
   return (
     <CheckSequence
       onComplete={onComplete}
@@ -87,72 +67,104 @@ function ComparingCheckForUnderstanding({ onComplete }: { onComplete?: () => voi
         (done) => (
           <PickCheck
             n={1}
-            prompt="Which rod is longer?"
-            picture={lined()}
-            showPicture={lined(true)}
-            showText="Look: Rod A sticks out past Rod B. Rod A is longer."
-            options={[rodBtn("Rod A"), rodBtn("Rod B")]}
+            prompt="Which rod is longer? Rod A or Rod B?"
+            picture={lined(7, 4)}
+            showPicture={lined(7, 4, true, true)}
+            showText="Look: Rod A goes past Rod B. Rod A is longer."
+            options={rods}
             answer="Rod A"
-            why={{ "Rod B": "Look at the ends. Which rod sticks out farther?" }}
+            why={{ "Rod B": "The longer one goes past." }}
             praise="Yes! Rod A is longer."
+            look={LOOK.rods}
+            twin={{
+              prompt: "Now which rod is longer? Rod A or Rod B?",
+              picture: lined(2, 6),
+              showPicture: lined(2, 6, true, true),
+              options: rods,
+              answer: "Rod B",
+              why: { "Rod A": "The longer one goes past." },
+              showText: "Look: Rod B goes past Rod A. Rod B is longer.",
+              praise: "Yes! Rod B is longer.",
+            }}
             onComplete={done}
           />
         ),
         (done) => (
           <TypeCheck
-            n={1}
-            prompt="How many blocks of Rod A stick out past Rod B?"
+            n={2}
+            prompt="How many extra blocks?"
             answer={3}
             tone="a"
-            picture={(m) => lined(m === "show" || m === "done")}
-            nudge="Look past the end of Rod B. Count only those blocks."
-            why={{ 7: "That is all of Rod A. Count only the blocks past Rod B.", 4: "That is Rod B. Count the blocks past its end." }}
+            picture={(m) => lined(7, 4, true, m === "show" || m === "done")}
+            nudge="Count only the extra blocks."
+            why={{ 7: "That is all of Rod A. Count the extra blocks.", 4: "That is Rod B. Count the extra blocks." }}
             showText="Watch and listen: the extra blocks are 1, 2, 3."
-            praise="Yes! Rod A is 3 blocks longer."
-            onComplete={done}
-          />
-        ),
-        (done) => (
-          <PickCheck
-            n={2}
-            prompt="These rods start in different places. Which rod is longer?"
-            picture={offset()}
-            showPicture={offset(true)}
-            showText="Watch: slide them to start together. Rod A is longer."
-            options={[rodBtn("Rod A"), rodBtn("Rod B")]}
-            answer="Rod A"
-            why={{ "Rod B": "Rod B starts later, so its end is farther. Count the blocks!" }}
-            praise="Yes! Rod A has more blocks, so it is longer."
-            onComplete={done}
-          />
-        ),
-        (done) => (
-          <TypeCheck
-            n={2}
-            prompt="How many blocks long is Rod B?"
-            answer={4}
-            tone="b"
-            picture={(m) => offset(false, m === "show" || m === "done")}
-            nudge="Count each block in Rod B once."
-            showText="Watch and listen: Rod B has 1, 2, 3, 4."
-            praise="Yes! Rod B is only 4 blocks. Count blocks, not where the end is."
+            praise="Yes! 3 extra blocks."
+            look={LOOK.extras}
             onComplete={done}
           />
         ),
         (done) => (
           <PickCheck
             n={3}
-            prompt="Which side is heavier?"
-            picture={<BalanceScale left={6} right={3} leftTone="a" rightTone="b" />}
-            showPicture={<BalanceScale left={6} right={3} leftTone="a" rightTone="b" />}
-            showText="Look: the heavy side goes down. The left side is down."
-            options={[
-              { id: "Left", label: "Left" },
-              { id: "Right", label: "Right" },
-            ]}
-            answer="Left"
-            why={{ Right: "The right side went up. The heavy side goes down." }}
+            prompt="They start in different places. Which is longer? Rod A or Rod B?"
+            picture={offset(7, 4, 5)}
+            showPicture={offset(7, 4, 5, true)}
+            showText="Watch: slide them to start together. Rod A is longer."
+            options={rods}
+            answer="Rod A"
+            why={{ "Rod B": "They start in different places. Count the blocks." }}
+            praise="Yes! Rod A is longer."
+            look={LOOK.slide}
+            twin={{
+              prompt: "Try these. Which is longer? Rod A or Rod B?",
+              picture: offset(3, 6, 0, false, undefined, false, 5),
+              showPicture: offset(3, 6, 0, true, undefined, false, 5),
+              options: rods,
+              answer: "Rod B",
+              why: { "Rod A": "They start in different places. Count the blocks." },
+              showText: "Watch: slide them to start together. Rod B is longer.",
+              praise: "Yes! Rod B is longer.",
+            }}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={4}
+            prompt="How many blocks long is Rod B?"
+            answer={4}
+            tone="b"
+            picture={(m) => offset(7, 4, 5, false, m === "show" ? "B" : undefined, m === "done")}
+            nudge="Count each block in Rod B once."
+            showText="Watch and listen: Rod B has 1, 2, 3, 4."
+            praise="Yes! Rod B is 4 blocks long."
+            look={LOOK.slide}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <PickCheck
+            n={5}
+            prompt="Which side is heavier? Blue side or orange side?"
+            picture={scalePicture(3, 6)}
+            showPicture={<BalanceScale left={3} right={6} leftLabel="Blue" rightLabel="Orange" point="right" />}
+            showText="Look: the heavy side goes down. The orange side went down."
+            options={sides}
+            answer="orange"
+            why={{ blue: "Look at the scale. The heavy side goes down." }}
             praise="Yes! The heavy side goes down."
+            look={LOOK.scale}
+            twin={{
+              prompt: "Now which side is heavier? Blue side or orange side?",
+              picture: scalePicture(5, 2),
+              showPicture: <BalanceScale left={5} right={2} leftLabel="Blue" rightLabel="Orange" point="left" />,
+              options: sides,
+              answer: "blue",
+              why: { orange: "Look at the scale. The heavy side goes down." },
+              showText: "Look: the heavy side goes down. The blue side went down.",
+              praise: "Yes! The heavy side goes down.",
+            }}
             onComplete={done}
           />
         ),
@@ -168,22 +180,49 @@ function ComparingCheckForUnderstanding({ onComplete }: { onComplete?: () => voi
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
-  const [blocksA, setBlocksA] = useState(5);
+  const [blocksA, setBlocksA] = useState(6);
   const [blocksB, setBlocksB] = useState(8);
   const [aligned, setAligned] = useState<"aligned" | "offset">("aligned");
-  const [leftW, setLeftW] = useState(4);
-  const [rightW, setRightW] = useState(4);
+  const [slid, setSlid] = useState(false);
+  const [blueW, setBlueW] = useState(4);
+  const [orangeW, setOrangeW] = useState(4);
+  useLookHereRequest((id) => {
+    // The 2nd miss is on a twin whose answer is Rod B, so these spots show Rod A longer.
+    if (id === "u2-slide" || id === "u2-rods") {
+      setBlocksA(8);
+      setBlocksB(6);
+    }
+    if (id === "u2-slide") {
+      setAligned("offset");
+      setSlid(false);
+    }
+    if (id === "u2-extras" || id === "u2-rods") {
+      setAligned("aligned");
+      setSlid(false);
+    }
+  });
 
-  const longer = blocksA === blocksB ? null : blocksA > blocksB ? "A" : "B";
-  const heavier = leftW === rightW ? null : leftW > rightW ? "Left" : "Right";
+  const together = aligned === "aligned" || slid;
+  const longer: Rod | null = blocksA === blocksB ? null : blocksA > blocksB ? "A" : "B";
+  const extras = Math.abs(blocksA - blocksB);
+  const heavier: Side | null = blueW === orangeW ? null : blueW > orangeW ? "blue" : "orange";
+  const extraFrom = (r: Rod) => (together && longer === r ? Math.min(blocksA, blocksB) : undefined);
+  const bars: LengthBarSpec[] = [
+    { blocks: blocksA, tone: "a", label: "Rod A", extraFrom: extraFrom("A") },
+    { blocks: blocksB, tone: "b", label: "Rod B", startOffset: aligned === "offset" ? 3 : 0, extraFrom: extraFrom("B") },
+  ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ReadAloud as="p" className="muted small">This is a rod. It is made of blocks.</ReadAloud>
       <div className="control-row" data-readaloud-part>
         <Segmented
-          label="Starting point"
+          label="Start"
           value={aligned}
-          onChange={(v) => setAligned(v as "aligned" | "offset")}
+          onChange={(v) => {
+            setAligned(v as "aligned" | "offset");
+            setSlid(false);
+          }}
           options={[{ id: "aligned", label: "Same start" }, { id: "offset", label: "Different start" }]}
         />
         {!introActive && (
@@ -198,27 +237,48 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         )}
       </div>
 
-      <ReadAloud as="p" className="muted small">Drag the circle at the end of each rod to change how long it is.</ReadAloud>
-      <LengthBars
-        bars={[
-          { blocks: blocksA, tone: "a", label: "Rod A" },
-          { blocks: blocksB, tone: "b", label: "Rod B", startOffset: aligned === "offset" ? 3 : 0 },
-        ]}
-        onBlocksChange={(i, n) => (i === 0 ? setBlocksA(n) : setBlocksB(n))}
-      />
-      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
-        {longer ? `Rod ${longer} is longer.` : "The rods are the same length."}
-      </ReadAloud>
-
-      <ReadAloud as="p" className="muted small">Add weight to each side of the balance and see which way it tips.</ReadAloud>
       <div className="control-row" data-readaloud-part>
-        <Stepper label="Left weight" value={leftW} min={0} max={8} onChange={setLeftW} tone="a" />
-        <Stepper label="Right weight" value={rightW} min={0} max={8} onChange={setRightW} tone="b" />
+        <Stepper label="Rod A" value={blocksA} min={1} max={12} onChange={setBlocksA} tone="a" />
+        <Stepper label="Rod B" value={blocksB} min={1} max={12} onChange={setBlocksB} tone="b" />
       </div>
-      <BalanceScale left={leftW} right={rightW} leftTone="a" rightTone="b" />
-      <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
-        {heavier ? `The ${heavier} side is heavier.` : "Both sides balance evenly."}
-      </ReadAloud>
+      <div {...lookHereSpot("u2-rods")} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <LengthBars bars={bars} alignStarts={aligned === "offset" && slid} onBlocksChange={(i, n) => (i === 0 ? setBlocksA(n) : setBlocksB(n))} />
+        <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
+          {!together ? "Slide them together first." : longer ? <span data-look-here-key>Rod {longer} goes past. Rod {longer} is longer.</span> : "They are the same."}
+        </ReadAloud>
+      </div>
+      <div {...lookHereSpot("u2-slide")} className="control-row" data-readaloud-part>
+        <button type="button" className="btn primary" disabled={aligned !== "offset" || slid} onClick={() => setSlid(true)}>
+          Slide together
+        </button>
+      </div>
+      <div {...lookHereSpot("u2-extras")}>
+        <ReadAloud as="p" className="muted small">
+          {together && longer ? (
+            <span data-look-here-key>{extras === 1 ? "The ring shows the extra block: 1." : `The rings show the extra blocks: ${countUp(extras)}.`}</span>
+          ) : (
+            <span data-look-here-key>Line them up. Then count the extra blocks.</span>
+          )}
+        </ReadAloud>
+      </div>
+
+      <div {...lookHereSpot("u2-scale")} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <ReadAloud as="p" className="muted small">Add blocks. Watch the scale.</ReadAloud>
+        <div className="control-row" data-readaloud-part>
+          <Stepper label="Blue side" value={blueW} min={0} max={8} onChange={setBlueW} tone="c" />
+          <Stepper label="Orange side" value={orangeW} min={0} max={8} onChange={setOrangeW} tone="b" />
+        </div>
+        <BalanceScale left={blueW} right={orangeW} leftLabel="Blue" rightLabel="Orange" />
+        <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
+          {heavier ? (
+            <>
+              <span data-look-here-key>The heavy side goes down.</span> The {heavier} side is heavier.
+            </>
+          ) : (
+            "Both sides are the same."
+          )}
+        </ReadAloud>
+      </div>
       {/* Below the picture, so students explore first, then check. */}
       {(introActive || showCheck) && <ComparingCheckForUnderstanding onComplete={onIntroDone} />}
     </div>
@@ -232,137 +292,179 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 type Bucket = "lengthAligned" | "lengthMisaligned" | "weightCompare" | "describeDifference";
 const BUCKETS: Bucket[] = ["lengthAligned", "lengthMisaligned", "weightCompare", "describeDifference"];
 
+const showing = (help: VisualHelp | undefined, step: number) => !!help?.showMe && help.step === step;
+const rodOf = (a: number, b: number): { longer: Rod; shorter: Rod } => (a > b ? { longer: "A", shorter: "B" } : { longer: "B", shorter: "A" });
+
+const countRodStep = (r: Rod, n: number) => ({
+  kind: "number" as const,
+  prompt: <>How many blocks long is {rodName(r)}?</>,
+  hint: "Count each block once.",
+  showMe: `Count with me: ${countUp(n)}.`,
+  showMeHoldMs: binCountAlongMs(n),
+  explain: `${blocksWord(n)}.`,
+  answer: n,
+  tone: (r === "A" ? "a" : "b") as "a" | "b",
+});
+
 function comparingProblem(targetBucket?: string): Problem {
-  const bucket = (targetBucket as Bucket | undefined) ?? BUCKETS[Math.floor(Math.random() * BUCKETS.length)];
+  const bucket = (targetBucket as Bucket | undefined) ?? pick(BUCKETS);
 
   if (bucket === "lengthAligned") {
-    const [a, b] = lengthPair();
-    const longer = a > b ? "A" : "B";
-    const shorter = longer === "A" ? "B" : "A";
+    const [a, b] = rodPair(wantNearTie(bucket));
+    const { longer, shorter } = rodOf(a, b);
+    const ask: Rod = Math.random() < 0.5 ? longer : shorter;
+    const askN = ask === "A" ? a : b;
     return {
-      title: "Which rod is longer?",
+      title: "Rods",
       bucket,
-      story: "Both rods start at the same place (the dashed line).",
+      story: "They start at the same place.",
       visual: (_done, help) => {
-        // Step 1's "Show me" says how many blocks each rod has: count them on the picture.
-        const numbered = !!help?.showMe && help.step === 0;
-        return <LengthBars bars={[{ blocks: a, tone: "a", label: "Rod A", numbered }, { blocks: b, tone: "b", label: "Rod B", numbered }]} />;
-      },
-      steps: [
-        choice({ prompt: "Which rod is LONGER?", hint: "Both rods start together, so just compare how far each one reaches.", explain: `Rod A has ${a} blocks and Rod B has ${b} blocks, so Rod ${longer} is longer.` }, `Rod ${longer}`, [`Rod ${shorter}`]),
-        choice({ prompt: "Which rod is SHORTER?", hint: "It's the other one.", explain: `Rod ${shorter} is shorter.` }, `Rod ${shorter}`, [`Rod ${longer}`]),
-      ],
-      wrapUp: `Rod ${longer} is longer than Rod ${shorter}.`,
-    };
-  }
-
-  if (bucket === "lengthMisaligned") {
-    const [a, b] = lengthPair();
-    const offsetB = randInt(1, 4);
-    const longer = a > b ? "A" : "B";
-    const shorter = longer === "A" ? "B" : "A";
-    return {
-      title: "Which rod is actually longer?",
-      bucket,
-      story: "These rods do NOT start at the same place. Look at where each one starts, not just where it ends.",
-      visual: (_done, help) => {
-        // Step 1's "Show me": slide Rod B back to the start line and number
-        // the blocks, so "line them up, then compare" is actually shown.
-        const demo = !!help?.showMe && help.step === 0;
+        const demo = pointing(help, 0);
+        const from = Math.min(a, b);
         return (
           <LengthBars
-            alignStarts={demo}
-            bars={[{ blocks: a, tone: "a", label: "Rod A", startOffset: 0, numbered: demo }, { blocks: b, tone: "b", label: "Rod B", startOffset: offsetB, numbered: demo }]}
+            max={9}
+            bars={[
+              { blocks: a, tone: "a", label: "Rod A", extraFrom: demo && longer === "A" ? from : undefined, extraNumbered: false, ring: pointing(help, 1) && !help?.showMe && ask === "A", countAlong: showing(help, 1) && ask === "A" },
+              { blocks: b, tone: "b", label: "Rod B", extraFrom: demo && longer === "B" ? from : undefined, extraNumbered: false, ring: pointing(help, 1) && !help?.showMe && ask === "B", countAlong: showing(help, 1) && ask === "B" },
+            ]}
           />
         );
       },
       steps: [
-        choice(
-          { showMeHoldMs: 1200, prompt: "Which rod is ACTUALLY longer?", hint: "Rod B doesn't start where Rod A does — compare how many blocks each rod is actually made of.", explain: `Rod A has ${a} blocks and Rod B has ${b} blocks, so Rod ${longer} is actually longer, no matter where either one starts.` },
-          `Rod ${longer}`,
-          [`Rod ${shorter}`]
-        ),
-        choice(
-          { prompt: "True or false: the rod whose end is farther to the right is always the longer one.", hint: "Think about what you just found.", explain: "False — where a rod starts matters. A rod that starts farther right can still be the shorter one." },
-          "False",
-          ["True"]
-        ),
+        rodChoice({ prompt: "Which rod is longer?", hint: "Which one goes farther?", explain: `Rod ${longer} goes past Rod ${shorter}.` }, longer),
+        countRodStep(ask, askN),
       ],
-      wrapUp: `Rod ${longer} is actually longer, even though the two rods don't start in the same place.`,
+      wrapUp: `Rod ${longer} is longer.`,
+    };
+  }
+
+  if (bucket === "lengthMisaligned") {
+    const { a, b, offA, offB } = offsetRods(wantNearTie(bucket));
+    const { longer } = rodOf(a, b);
+    const ask: Rod = Math.random() < 0.5 ? "A" : "B";
+    const askN = ask === "A" ? a : b;
+    return {
+      title: "Rods",
+      bucket,
+      story: "They start in different places.",
+      visual: (done, help) => {
+        // First wrong try on step 1: slide the rods to one start and ring the
+        // extras, so "line them up" is shown even with only two buttons.
+        const slide = pointing(help, 0) || (done >= 1 && !help);
+        const from = Math.min(a, b);
+        return (
+          <LengthBars
+            max={9}
+            alignStarts={slide}
+            bars={[
+              { blocks: a, tone: "a", label: "Rod A", startOffset: offA, extraFrom: pointing(help, 0) && longer === "A" ? from : undefined, extraNumbered: false, ring: pointing(help, 1) && !help?.showMe && ask === "A", countAlong: showing(help, 1) && ask === "A" },
+              { blocks: b, tone: "b", label: "Rod B", startOffset: offB, extraFrom: pointing(help, 0) && longer === "B" ? from : undefined, extraNumbered: false, ring: pointing(help, 1) && !help?.showMe && ask === "B", countAlong: showing(help, 1) && ask === "B" },
+            ]}
+          />
+        );
+      },
+      steps: [
+        rodChoice({ prompt: "Which rod is longer?", hint: "Slide them together. Which goes past?", showMeHoldMs: 1200, explain: `Rod ${longer} is longer.` }, longer),
+        countRodStep(ask, askN),
+      ],
+      wrapUp: `Rod ${longer} is longer.`,
     };
   }
 
   if (bucket === "weightCompare") {
-    const [left, right] = weightPair();
-    const heavier = left > right ? "Left" : "Right";
-    const lighter = heavier === "Left" ? "Right" : "Left";
+    const [blue, orange] = weightPair(wantNearTie(bucket));
+    const heavier: Side = blue > orange ? "blue" : "orange";
+    const lighter = otherSide(heavier);
+    const lighterN = Math.min(blue, orange);
+    const lighterSide = lighter === "blue" ? "left" : "right";
+    const heavierSide = heavier === "blue" ? "left" : "right";
     return {
-      title: "Which side is heavier?",
+      title: "Scale",
       bucket,
-      story: "Watch which side of the balance tips down.",
-      visual: () => <BalanceScale left={left} right={right} leftTone="a" rightTone="b" />,
+      story: "Look at the scale.",
+      visual: (_done, help) => (
+        <BalanceScale
+          left={blue}
+          right={orange}
+          leftLabel="Blue"
+          rightLabel="Orange"
+          point={pointing(help, 0) ? heavierSide : pointing(help, 1) && !help?.showMe ? lighterSide : undefined}
+          countSide={showing(help, 1) ? lighterSide : undefined}
+        />
+      ),
       steps: [
-        choice({ prompt: "Which side is HEAVIER?", hint: "The heavier side tips down.", explain: `The ${heavier} side is heavier — it tips down.` }, heavier, [lighter]),
-        choice({ prompt: "Which side is LIGHTER?", hint: "It's the side that tips up.", explain: `The ${lighter} side is lighter — it tips up.` }, lighter, [heavier]),
+        sideChoice({ prompt: "Which side is heavier?", hint: "The heavy side goes down.", explain: `The ${heavier} side went down.` }, heavier),
+        {
+          kind: "number",
+          prompt: "How many blocks are on the lighter side?",
+          hint: "The light side goes up. Count its blocks.",
+          showMe: `Count with me: ${countUp(lighterN)}.`,
+          showMeHoldMs: binCountAlongMs(lighterN),
+          explain: `${blocksWord(lighterN)}.`,
+          answer: lighterN,
+        },
       ],
-      wrapUp: `The ${heavier} side is heavier than the ${lighter} side.`,
+      wrapUp: `The ${heavier} side is heavier.`,
     };
   }
 
-  // describeDifference
-  const [a, b] = lengthPair(0.3);
-  const longer = a > b ? "A" : "B";
-  const shorter = longer === "A" ? "B" : "A";
-  const longerBlocks = Math.max(a, b);
+  // describeDifference (review D3): line up, ring the extras, count them.
+  const [a, b] = rodPair(wantNearTie(bucket));
+  const { longer, shorter } = rodOf(a, b);
   const shorterBlocks = Math.min(a, b);
-  const diff = longerBlocks - shorterBlocks;
+  const diff = Math.abs(a - b);
   return {
-    title: "How much longer?",
+    title: "Extras",
     bucket,
-    story: "Both rods start at the same place.",
-    visual: (_done, help) => {
-      // Step 2's "Show me": ring and number the longer rod's extra blocks
-      // (the ones past the end of the shorter rod).
-      const extraFrom = help?.showMe && help.step === 1 ? shorterBlocks : undefined;
+    story: "They start at the same place.",
+    visual: (done, help) => {
+      // The ring appears for the "how many extra" step, and numbers only in Show me.
+      const at = help?.step ?? done;
+      const extraFrom = at >= 1 || pointing(help, 0) ? shorterBlocks : undefined;
+      const numbered = showing(help, 1) || done >= 2;
       return (
         <LengthBars
+          max={9}
           bars={[
-            { blocks: a, tone: "a", label: "Rod A", extraFrom: longer === "A" ? extraFrom : undefined },
-            { blocks: b, tone: "b", label: "Rod B", extraFrom: longer === "B" ? extraFrom : undefined },
+            { blocks: a, tone: "a", label: "Rod A", extraFrom: longer === "A" ? extraFrom : undefined, extraNumbered: numbered },
+            { blocks: b, tone: "b", label: "Rod B", extraFrom: longer === "B" ? extraFrom : undefined, extraNumbered: numbered },
           ]}
         />
       );
     },
     steps: [
-      choice({ prompt: "Which rod is longer?", hint: "Compare how far each one reaches.", explain: `Rod ${longer} is longer.` }, `Rod ${longer}`, [`Rod ${shorter}`]),
+      rodChoice({ prompt: "Which rod is longer?", hint: "Which one goes farther?", explain: `Rod ${longer} goes past Rod ${shorter}.` }, longer),
       {
         kind: "number",
-        prompt: `How many blocks LONGER is Rod ${longer} than Rod ${shorter}?`,
-        hint: "Count how many extra blocks the longer rod has.",
-        showMe: `Look past the end of Rod ${shorter}. Count the extra blocks on Rod ${longer}: ${Array.from({ length: diff }, (_, i) => i + 1).join(", ")}.`,
-        explain: `Rod ${longer} has ${longerBlocks} blocks and Rod ${shorter} has ${shorterBlocks} blocks — that's ${diff} more.`,
+        prompt: "How many extra blocks?",
+        hint: "Count the blocks with rings.",
+        showMe: countExtrasLine(diff),
+        showMeHoldMs: binCountAlongMs(diff),
+        explain: `${diff} extra.`,
         answer: diff,
       },
     ],
-    wrapUp: `Rod ${longer} is longer than Rod ${shorter} by ${diff} block${diff === 1 ? "" : "s"}.`,
+    wrapUp: `Rod ${longer} has ${diff} extra.`,
   };
 }
 
 export const comparingTwoObjectsDirectly: Unit = {
   id: "comparingTwoObjectsDirectly",
-  title: "Comparing Two Objects Directly",
-  goal: "Look at two objects side by side and tell which has more of an attribute (longer/heavier), and say how you know.",
+  title: "Which Is Longer? Which Is Heavier?",
+  goal: "Look at two things. Find the longer one. Find the heavier one.",
   standard: "K.MD.2",
   keyIdea: (
     <>
-      <p>To compare two objects fairly, line them up at the SAME starting point before looking at which one reaches farther.</p>
-      <p>You can describe the DIFFERENCE, not just which one is more — "Rod A is longer than Rod B by 3 blocks," not just "Rod A is longer."</p>
+      <p>Start them at the same place.</p>
+      <p>Which one goes past the other? It is longer.</p>
+      <p>Count the blocks to check.</p>
     </>
   ),
   Explore,
   requiresIntro: true,
   // Direct-comparison reasoning applied fresh each time, not a memorized fact.
-  problems: [{ label: "Comparing Objects", make: comparingProblem, buckets: BUCKETS }],
+  problems: [{ label: "Rods and Scale", make: comparingProblem, buckets: BUCKETS }],
   requiredBuckets: BUCKETS,
   test: comparingTest,
 };

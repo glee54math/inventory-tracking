@@ -1,60 +1,46 @@
 import { useState } from "react";
-import { BalanceScale, LengthBars, ObjectGlyph, WordCard } from "../diagrams";
-import { pick } from "../../../shared/lib/math";
-import { choice, sentence, selectBlank, type Problem } from "../../../shared/engine/types";
+import { BalanceScale, ObjectGlyph, ObjectOnBlocks, StandingRod, LengthBars, WordCard, WordPicture, binCountAlongMs, type DescribeWord } from "../diagrams";
+import { pick, randInt, shuffle } from "../../../shared/lib/math";
+import { choice, pictureChoice, pointing, type Problem, type VisualHelp } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
 import { describingTest } from "./DescribingHowObjectsAreMeasuredTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
 import { CheckSequence, PickCheck, TypeCheck } from "../../../shared/components/KCheck";
-
-// ============================================================================
-// SHARED DATA — object pool + describing-word pool. Duplicated (not
-// imported) in DescribingHowObjectsAreMeasuredTest.tsx, same intentional
-// per-*Test.tsx convention as every other lab (see MK1_CountingAndCardinalityLab).
-// ============================================================================
-
-export interface MeasureObject {
-  name: string;
-  glyph: string;
-  length: "long" | "short";
-  weight: "heavy" | "light";
-}
-
-// 3 objects per (length x weight) combination, so every combo — and every
-// bucket that depends on one — is always reachable, not just reachable "on
-// average."
-export const OBJECTS: MeasureObject[] = [
-  { name: "train", glyph: "🚂", length: "long", weight: "heavy" },
-  { name: "crocodile", glyph: "🐊", length: "long", weight: "heavy" },
-  { name: "log", glyph: "🪵", length: "long", weight: "heavy" },
-  { name: "pencil", glyph: "✏️", length: "long", weight: "light" },
-  { name: "snake", glyph: "🐍", length: "long", weight: "light" },
-  { name: "jump rope", glyph: "🨢", length: "long", weight: "light" },
-  { name: "rock", glyph: "🪨", length: "short", weight: "heavy" },
-  { name: "anchor", glyph: "⚓", length: "short", weight: "heavy" },
-  { name: "brick", glyph: "🧱", length: "short", weight: "heavy" },
-  { name: "feather", glyph: "🪶", length: "short", weight: "light" },
-  { name: "balloon", glyph: "🎈", length: "short", weight: "light" },
-  { name: "leaf", glyph: "🍃", length: "short", weight: "light" },
-];
-
-export const WORDS: { word: string; attr: "length" | "weight" }[] = [
-  { word: "long", attr: "length" },
-  { word: "short", attr: "length" },
-  { word: "tall", attr: "length" },
-  { word: "heavy", attr: "weight" },
-  { word: "light", attr: "weight" },
-];
+import { lookHereSpot, useLookHereRequest } from "../../../shared/lib/lookHere";
+import { OBJECTS, WORD_LINES, WORD_LIST, blocksFor, blocksWord, countUp, isLengthWord, scaleBlocksFor, sideCountScene, sizePairScale, weightKind, type MeasureObject, type SideCountScene } from "./labParts";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
 // ============================================================================
 
-// Kindergarten-sized, one question at a time (shared/components/KCheck.tsx).
-// Ideas checked: words for weight and length; looking bigger is not the
-// same as being heavier; one object has a length AND a weight.
+// K-1 design (shared/components/KCheck.tsx), one question at a time. 2 of 5
+// typed. Each pick says its choices in the prompt, because KCheck doesn't read
+// the buttons (review D7). Its twin has the OTHER right answer, so tapping the
+// other button after a miss can't pass (C2-38). The first wrong tap's reason
+// plays over the twin, so it must fit both. No Look here spot shows its own
+// question's answer.
+
+const LOOK = {
+  down: { target: "u1-down", label: "Explore: the scale", say: "Look here. See which side goes down." },
+  big: { target: "u1-big", label: "Explore: big and small", say: "Look here. See which one goes down." },
+  same: { target: "u1-same", label: "Explore: both sides the same", say: "Look here. See the flat scale." },
+  blocks: { target: "u1-blocks", label: "Explore: count the blocks", say: "Look here. Count the blocks." },
+};
+
+const SEE_SCALE = "Look at the scale. See which way it went.";
+const LIFT = "Heavy is hard to lift.";
+const READ_SCALE = "Look at the scale. The heavy side goes down.";
 
 const wordBtn = (w: string) => ({ id: w, label: w });
+
+const bigSmall = (big: { glyph: string; name: string }, small: { glyph: string; name: string }) => (
+  <div style={{ display: "flex", gap: 12, alignItems: "flex-end" }}>
+    <ObjectGlyph glyph={big.glyph} name={big.name} big />
+    <div style={{ width: 90 }}>
+      <ObjectGlyph glyph={small.glyph} name={small.name} />
+    </div>
+  </div>
+);
 
 function DescribingCheckForUnderstanding({ onComplete }: { onComplete?: () => void }) {
   return (
@@ -64,74 +50,103 @@ function DescribingCheckForUnderstanding({ onComplete }: { onComplete?: () => vo
         (done) => (
           <PickCheck
             n={1}
-            prompt="Which word tells how heavy something is?"
-            picture={<BalanceScale left={6} right={2} leftLabel="Heavy" rightLabel="Light" />}
-            showPicture={<BalanceScale left={6} right={2} leftLabel="Heavy" rightLabel="Light" />}
-            showText="The heavy side goes down. Heavy tells about weight."
-            options={["tall", "heavy", "long"].map(wordBtn)}
+            prompt="This side went down. Is it heavy or light?"
+            picture={<BalanceScale left={6} right={2} point="left" />}
+            showPicture={<BalanceScale left={6} right={2} point="left" />}
+            showText="Look: the heavy side goes down."
+            options={["heavy", "light"].map(wordBtn)}
             answer="heavy"
-            why={{ tall: "Tall tells how high something is.", long: "Long tells how far it is from end to end." }}
-            praise="Yes! Heavy tells about weight."
+            why={{ light: SEE_SCALE }}
+            praise="Yes! It is heavy."
+            look={LOOK.down}
+            twin={{
+              prompt: "Now this side went up. Is it heavy or light?",
+              picture: <BalanceScale left={1} right={5} point="left" />,
+              showPicture: <BalanceScale left={1} right={5} point="left" />,
+              options: ["heavy", "light"].map(wordBtn),
+              answer: "light",
+              why: { heavy: SEE_SCALE },
+              showText: "Look: the light side goes up.",
+              praise: "Yes! It is light.",
+            }}
             onComplete={done}
           />
         ),
         (done) => (
           <PickCheck
             n={2}
-            prompt="A big balloon and a small rock. Which one is heavier?"
-            picture={
-              <div style={{ display: "flex", gap: 12, alignItems: "flex-end" }}>
-                <ObjectGlyph glyph={"🎈"} name="balloon" big />
-                <ObjectGlyph glyph={"🪨"} name="rock" />
-              </div>
-            }
-            showPicture={<BalanceScale left={1} right={6} leftLabel="Balloon" rightLabel="Rock" />}
-            showText="Watch: on the scale, the rock goes down. The rock is heavier."
+            prompt="A big balloon and a small rock. Which is heavier?"
+            picture={bigSmall({ glyph: "🎈", name: "balloon" }, { glyph: "🪨", name: "rock" })}
+            showPicture={<BalanceScale left={0} right={0} leftObject={{ glyph: "🎈", name: "balloon", big: true }} rightObject={{ glyph: "🪨", name: "rock" }} leftLabel="balloon" rightLabel="rock" down="right" />}
+            showText="Watch: the rock goes down. The rock is heavier."
             options={["balloon", "rock"].map(wordBtn)}
             answer="rock"
-            why={{ balloon: "The balloon is big, but it is full of air. Big does not mean heavy." }}
-            praise="Yes! The rock is small, but it is heavier."
-            onComplete={done}
-          />
-        ),
-        (done) => (
-          <TypeCheck
-            n={2}
-            prompt="How many blocks are on the heavy side?"
-            answer={6}
-            tone="b"
-            picture={() => <BalanceScale left={1} right={6} leftLabel="Balloon" rightLabel="Rock" />}
-            nudge="Find the side that went down. Count its blocks."
-            why={{ 1: "That is the light side. Count the side that went down." }}
-            showText="Watch and listen: the rock side has 1, 2, 3, 4, 5, 6."
-            praise="Yes! The rock side has 6."
+            why={{ balloon: LIFT }}
+            praise="Yes! The rock is heavier."
+            look={LOOK.big}
+            twin={{
+              prompt: "A big train and a small leaf. Which is heavier?",
+              picture: bigSmall({ glyph: "🚂", name: "train" }, { glyph: "🍃", name: "leaf" }),
+              showPicture: <BalanceScale left={0} right={0} leftObject={{ glyph: "🚂", name: "train", big: true }} rightObject={{ glyph: "🍃", name: "leaf" }} leftLabel="train" rightLabel="leaf" down="left" />,
+              options: ["train", "leaf"].map(wordBtn),
+              answer: "train",
+              why: { leaf: LIFT },
+              showText: "Watch: the train goes down. The train is heavier.",
+              praise: "Yes! The train is heavier.",
+            }}
             onComplete={done}
           />
         ),
         (done) => (
           <TypeCheck
             n={3}
-            prompt="How long is the train? Count the blocks."
+            prompt="The scale is flat. How many blocks?"
+            answer={5}
+            tone="b"
+            picture={(m) => <BalanceScale left={0} right={5} leftObject={{ glyph: "🪨", name: "rock" }} leftLabel="rock" rightLabel="blocks" down="even" countSide={m === "show" ? "right" : undefined} />}
+            nudge="Count the blocks."
+            showText="Watch and listen: 1, 2, 3, 4, 5."
+            praise="Yes! 5 blocks. The scale is flat."
+            look={LOOK.same}
+            onComplete={done}
+          />
+        ),
+        (done) => (
+          <TypeCheck
+            n={4}
+            prompt="How many blocks are under the train?"
             answer={7}
             tone="a"
-            picture={(m) => <LengthBars bars={[{ blocks: 7, tone: "a", label: "Train", numbered: m === "show" || m === "done" }]} />}
-            nudge="Count each block once."
+            picture={(m) => <ObjectOnBlocks glyph={"🚂"} name="train" blocks={7} ring={m === "wrong"} numbered={m === "done"} countAlong={m === "show"} />}
+            nudge="Count the blocks under it."
             showText="Watch and listen: 1, 2, 3, 4, 5, 6, 7."
             praise="Yes! The train is 7 blocks long."
+            look={LOOK.blocks}
             onComplete={done}
           />
         ),
         (done) => (
           <PickCheck
-            n={4}
-            prompt="The train is long. What else is it?"
-            picture={<ObjectGlyph glyph={"🚂"} name="train" big />}
-            showPicture={<BalanceScale left={2} right={8} leftLabel="Toy" rightLabel="Train" />}
-            showText="Look: the train goes way down. A train is heavy."
+            n={5}
+            prompt="The train is long. What else is it? Heavy or light?"
+            picture={<BalanceScale left={0} right={2} leftObject={{ glyph: "🚂", name: "train" }} leftLabel="train" rightLabel="blocks" down="left" />}
+            showPicture={<BalanceScale left={0} right={2} leftObject={{ glyph: "🚂", name: "train" }} leftLabel="train" rightLabel="blocks" down="left" point="left" />}
+            showText="Look: the train went down. A train is heavy."
             options={["heavy", "light"].map(wordBtn)}
             answer="heavy"
-            why={{ light: "Could you lift a train? It is not light." }}
-            praise="Yes! A train is long AND heavy."
+            why={{ light: READ_SCALE }}
+            praise="Yes! A train is long and heavy."
+            look={LOOK.down}
+            twin={{
+              prompt: "The scarf is long. What else is it? Heavy or light?",
+              picture: <BalanceScale left={0} right={2} leftObject={{ glyph: "🧣", name: "scarf" }} leftLabel="scarf" rightLabel="blocks" down="right" />,
+              showPicture: <BalanceScale left={0} right={2} leftObject={{ glyph: "🧣", name: "scarf" }} leftLabel="scarf" rightLabel="blocks" down="right" point="left" />,
+              options: ["heavy", "light"].map(wordBtn),
+              answer: "light",
+              why: { heavy: READ_SCALE },
+              showText: "Look: the scarf went up. A scarf is light.",
+              praise: "Yes! A scarf is long and light.",
+            }}
             onComplete={done}
           />
         ),
@@ -144,13 +159,33 @@ function DescribingCheckForUnderstanding({ onComplete }: { onComplete?: () => vo
 // EXPLORE
 // ============================================================================
 
+// None of these is a CFU question's pair or answer. One big object IS heavy,
+// so "the small one" is not a rule (C2-41).
+const SCALE_EXAMPLES = [
+  { id: "teddy", label: "🧸 and 🔨", say: "teddy bear and hammer", left: { glyph: "🧸", name: "teddy bear", big: true }, right: { glyph: "🔨", name: "hammer" }, blocks: 0, down: "right" as const, line: "Big does not mean heavy." },
+  { id: "kite", label: "🪁 and 🔨", say: "kite and hammer", left: { glyph: "🪁", name: "kite", big: true }, right: { glyph: "🔨", name: "hammer" }, blocks: 0, down: "right" as const, line: "Big does not mean heavy." },
+  { id: "elephant", label: "🐘 and 🐭", say: "elephant and mouse", left: { glyph: "🐘", name: "elephant", big: true }, right: { glyph: "🐭", name: "mouse" }, blocks: 0, down: "left" as const, line: "This big one is heavy." },
+  { id: "same", label: "🔨 and blocks", say: "hammer and blocks", left: { glyph: "🔨", name: "hammer" }, right: undefined, blocks: 4, down: "even" as const, line: "The scale is flat. They are the same." },
+];
+const SAME_EXAMPLE = SCALE_EXAMPLES.findIndex((s) => s.id === "same");
+// Q2's Look here comes on its twin, whose big train is heavier (C3-51).
+const BIG_HEAVY_EXAMPLE = SCALE_EXAMPLES.findIndex((s) => s.id === "elephant");
+
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
-  const [objIndex, setObjIndex] = useState(0);
-  const [revealedWord, setRevealedWord] = useState<string | null>(null);
-  const shown = OBJECTS.slice(0, 8);
-  const obj = shown[objIndex];
+  const [objIndex, setObjIndex] = useState(() => OBJECTS.findIndex((o) => o.name === "snake"));
+  const [revealedWord, setRevealedWord] = useState<DescribeWord | null>(null);
+  const [exampleIdx, setExampleIdx] = useState(0);
+  useLookHereRequest((id) => {
+    if (id === "u1-same") setExampleIdx(SAME_EXAMPLE);
+    if (id === "u1-big") setExampleIdx(BIG_HEAVY_EXAMPLE);
+    if (id === "u1-down") setExampleIdx(0);
+  });
+  const obj = OBJECTS[objIndex];
+  const ex = SCALE_EXAMPLES[exampleIdx];
+  // A fixed size for each kind in Explore: never the CFU's 7.
+  const shownBlocks = obj.length === "long" ? 6 : 2;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -167,31 +202,55 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         )}
       </div>
 
-      <ReadAloud as="p" className="muted small">Click an object to see how it can be described.</ReadAloud>
-      <div className="control-row" role="listbox" aria-label="Pick an object" data-readaloud-part>
-        {shown.map((o, i) => (
-          <button key={o.name} role="option" aria-selected={i === objIndex} className={`btn ghost ${i === objIndex ? "pressed" : ""}`} onClick={() => setObjIndex(i)}>
-            {o.glyph} {o.name}
-          </button>
-        ))}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <ReadAloud as="p" className="muted small">Tap a picture.</ReadAloud>
+        <div className="control-row" role="listbox" aria-label="Pick a picture" data-readaloud-part>
+          {OBJECTS.map((o, i) => (
+            <button key={o.name} role="option" aria-selected={i === objIndex} className={`btn ghost ${i === objIndex ? "pressed" : ""}`} onClick={() => setObjIndex(i)}>
+              {o.glyph} {o.name}
+            </button>
+          ))}
+        </div>
       </div>
-      <ObjectGlyph glyph={obj.glyph} name={obj.name} big />
+      <div {...lookHereSpot("u1-blocks")} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <ObjectOnBlocks glyph={obj.glyph} name={obj.name} blocks={shownBlocks} />
+        <ReadAloud as="p" className="muted small"><span data-look-here-key>Many blocks? It is long. Few blocks? It is short.</span></ReadAloud>
+      </div>
       <ReadAloud as="p" className="feedback good" style={{ minHeight: 24 }}>
-        This {obj.name} is <b>{obj.length}</b> and <b>{obj.weight}</b>.
+        The {obj.name} is <b>{obj.length}</b> and <b>{obj.weight}</b>.
       </ReadAloud>
 
-      <ReadAloud as="p" className="muted small">Click a describing word to see which attribute it's about.</ReadAloud>
+      {/* The big and same spots hold the scale, its buttons and its line (C2-44). */}
+      <div {...lookHereSpot("u1-big")}>
+        <div {...lookHereSpot("u1-same")} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div {...lookHereSpot("u1-down")} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <ReadAloud as="p" className="muted small">This is a scale. {exampleIdx === SAME_EXAMPLE ? "The heavy side goes down." : <span data-look-here-key>The heavy side goes down.</span>} The light side goes up.</ReadAloud>
+            <BalanceScale left={0} right={ex.blocks} leftObject={ex.left} rightObject={ex.right} leftLabel={ex.left.name} rightLabel={ex.right ? ex.right.name : "blocks"} down={ex.down} />
+          </div>
+          <div className="control-row" data-readaloud-part>
+            {SCALE_EXAMPLES.map((s, i) => (
+              <button key={s.id} type="button" className={`btn ghost ${i === exampleIdx ? "pressed" : ""}`} data-tts-say={s.say} onClick={() => setExampleIdx(i)}>
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <ReadAloud as="p" className="feedback good"><span data-look-here-key>{ex.line}</span></ReadAloud>
+        </div>
+      </div>
+
+      <ReadAloud as="p" className="muted small">Tap a word.</ReadAloud>
       <div className="control-row" data-readaloud-part>
-        {WORDS.map((w) => (
-          <button key={w.word} type="button" className="btn ghost" onClick={() => setRevealedWord(w.word)}>
-            {w.word}
+        {WORD_LIST.map((w) => (
+          <button key={w} type="button" className={`btn ghost ${revealedWord === w ? "pressed" : ""}`} onClick={() => setRevealedWord(w)}>
+            {w}
           </button>
         ))}
       </div>
       {revealedWord && (
-        <ReadAloud as="p" className="feedback good">
-          "{revealedWord}" describes {WORDS.find((w) => w.word === revealedWord)!.attr}.
-        </ReadAloud>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          {revealedWord === "tall" ? <StandingRod blocks={5} /> : <WordPicture word={revealedWord} />}
+          <ReadAloud as="p" className="feedback good">{isLengthWord(revealedWord) ? "This is a rod. " : ""}{WORD_LINES[revealedWord]}</ReadAloud>
+        </div>
       )}
       {/* Below the picture, so students explore first, then check. */}
       {(introActive || showCheck) && <DescribingCheckForUnderstanding onComplete={onIntroDone} />}
@@ -206,52 +265,114 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
 type Bucket = "lengthSingle" | "weightSingle" | "twoAttributes" | "vocabMatch";
 const BUCKETS: Bucket[] = ["lengthSingle", "weightSingle", "twoAttributes", "vocabMatch"];
 
+const showing = (help: VisualHelp | undefined, step: number) => !!help?.showMe && help.step === step;
+
+/** The object on one pan against some blocks. Its side shows heavy or light. */
+function objectScale(obj: MeasureObject, n: number, objLeft: boolean, point: boolean) {
+  const objDown = obj.weight === "heavy";
+  const objSide = objLeft ? "left" : "right";
+  const blockSide = objLeft ? "right" : "left";
+  const scaleObj = { glyph: obj.glyph, name: obj.name };
+  return (
+    <BalanceScale
+      left={objLeft ? 0 : n}
+      right={objLeft ? n : 0}
+      leftObject={objLeft ? scaleObj : undefined}
+      rightObject={objLeft ? undefined : scaleObj}
+      leftLabel={objLeft ? obj.name : "blocks"}
+      rightLabel={objLeft ? "blocks" : obj.name}
+      down={objDown ? objSide : blockSide}
+      point={point ? objSide : undefined}
+    />
+  );
+}
+
+/** Blocks on both sides. Help rings the side asked about, then counts it (D11). */
+const sideCountPicture = (s: SideCountScene, help: VisualHelp | undefined, step: number) => (
+  <BalanceScale left={s.left} right={s.right} ringSide={pointing(help, step) ? s.askSide : undefined} countSide={showing(help, step) ? s.askSide : undefined} />
+);
+
+const sideCountStep = (s: SideCountScene) => ({
+  kind: "number" as const,
+  prompt: `How many blocks are on the side that went ${s.ask}?`,
+  hint: `Find the side that went ${s.ask}. Count its blocks.`,
+  showMe: `Count with me: ${countUp(s.answer)}.`,
+  showMeHoldMs: binCountAlongMs(s.answer),
+  explain: `${blocksWord(s.answer)}.`,
+  answer: s.answer,
+});
+
+const lengthStep = (obj: MeasureObject, other: string) =>
+  choice(
+    { prompt: `Is the ${obj.name} long or short?`, hint: "Many blocks? It is long. Few blocks? It is short.", explain: `The ${obj.name} is ${obj.length}.` },
+    obj.length,
+    [other]
+  );
+
+const countBlocksStep = (n: number, prompt: string, hint = "Count each block once.") => ({
+  kind: "number" as const,
+  prompt,
+  hint,
+  showMe: `Count with me: ${countUp(n)}.`,
+  showMeHoldMs: binCountAlongMs(n),
+  explain: `${blocksWord(n)}.`,
+  answer: n,
+});
+
 function describingProblem(targetBucket?: string): Problem {
   const bucket = (targetBucket as Bucket | undefined) ?? pick(BUCKETS);
 
   if (bucket === "lengthSingle") {
     const obj = pick(OBJECTS);
-    const other = obj.length === "long" ? "short" : "long";
+    const n = blocksFor(obj);
     return {
-      title: "Long or short?",
+      title: "Blocks",
       bucket,
-      story: `Look at the ${obj.name}.`,
-      visual: () => <ObjectGlyph glyph={obj.glyph} name={obj.name} big />,
-      steps: [
-        choice(
-          { prompt: `Is the ${obj.name} long or short?`, hint: "Think about how it would look stretched out end to end.", explain: `The ${obj.name} is ${obj.length}.` },
-          obj.length,
-          [other]
-        ),
-        choice(
-          { prompt: `Which word describes LENGTH, not weight: "${obj.length}" or "heavy"?`, hint: "Length is about how long or short something is.", explain: `"${obj.length}" describes length. "heavy" describes weight instead.` },
-          obj.length,
-          ["heavy"]
-        ),
-      ],
+      story: "Look at the blocks.",
+      visual: (_done, help) => <ObjectOnBlocks glyph={obj.glyph} name={obj.name} blocks={n} ring={pointing(help, 0) || (pointing(help, 1) && !help?.showMe)} countAlong={showing(help, 1)} />,
+      steps: [lengthStep(obj, obj.length === "long" ? "short" : "long"), countBlocksStep(n, `How many blocks are under the ${obj.name}?`, "Count the blocks under it.")],
       wrapUp: `The ${obj.name} is ${obj.length}.`,
     };
   }
 
   if (bucket === "weightSingle") {
+    // Step 2 is always a blocks-only scale: count the side that moved (D11).
+    const scene = sideCountScene();
+    if (weightKind() === "pair") {
+      // A big and a small object, read from the scale. Either one can be heavier (C2-41).
+      const pair = sizePairScale();
+      return {
+        title: "Scale",
+        bucket,
+        story: "Look at the scale.",
+        visual: (done, help) =>
+          (help?.step ?? done) < 1 ? (
+            <BalanceScale left={0} right={0} leftObject={pair.leftObject} rightObject={pair.rightObject} leftLabel={pair.leftObject.name} rightLabel={pair.rightObject.name} down={pair.down} point={pointing(help, 0) ? pair.down : undefined} />
+          ) : (
+            sideCountPicture(scene, help, 1)
+          ),
+        steps: [
+          choice({ prompt: "Which one is heavier?", hint: "Which side went down?", explain: `The ${pair.heavy} is heavier.` }, pair.heavy, [pair.light]),
+          sideCountStep(scene),
+        ],
+        wrapUp: `The ${pair.heavy} is heavier.`,
+      };
+    }
     const obj = pick(OBJECTS);
-    const other = obj.weight === "heavy" ? "light" : "heavy";
+    const n = scaleBlocksFor(obj);
+    const objLeft = Math.random() < 0.5;
     return {
-      title: "Heavy or light?",
+      title: "Scale",
       bucket,
-      story: `Look at the ${obj.name}.`,
-      visual: () => <ObjectGlyph glyph={obj.glyph} name={obj.name} big />,
+      story: "Look at the scale.",
+      visual: (done, help) => ((help?.step ?? done) < 1 ? objectScale(obj, n, objLeft, pointing(help, 0)) : sideCountPicture(scene, help, 1)),
       steps: [
         choice(
-          { prompt: `Is the ${obj.name} heavy or light?`, hint: "Think about how hard it would be to lift.", explain: `The ${obj.name} is ${obj.weight}.` },
+          { prompt: `Is the ${obj.name} heavy or light?`, hint: obj.weight === "heavy" ? "See the arrow. This side went down." : "See the arrow. This side went up.", explain: `The ${obj.name} is ${obj.weight}.` },
           obj.weight,
-          [other]
+          [obj.weight === "heavy" ? "light" : "heavy"]
         ),
-        choice(
-          { prompt: `Which word describes WEIGHT, not length: "${obj.weight}" or "long"?`, hint: "Weight is about how heavy or light something is.", explain: `"${obj.weight}" describes weight. "long" describes length instead.` },
-          obj.weight,
-          ["long"]
-        ),
+        sideCountStep(scene),
       ],
       wrapUp: `The ${obj.name} is ${obj.weight}.`,
     };
@@ -259,88 +380,99 @@ function describingProblem(targetBucket?: string): Problem {
 
   if (bucket === "twoAttributes") {
     const obj = pick(OBJECTS);
-    const otherLen = obj.length === "long" ? "short" : "long";
-    const otherWt = obj.weight === "heavy" ? "light" : "heavy";
+    const n = blocksFor(obj);
+    const m = scaleBlocksFor(obj);
+    const objLeft = Math.random() < 0.5;
     return {
-      title: "Two words for one object",
+      title: "Two words",
       bucket,
-      story: `Look at the ${obj.name}. It has more than one way to describe it.`,
-      visual: () => <ObjectGlyph glyph={obj.glyph} name={obj.name} big />,
+      story: `Look at the ${obj.name}.`,
+      // Steps 1 and 2 are about length (blocks). Step 3 is about weight (scale).
+      visual: (done, help) => {
+        const at = help?.step ?? done;
+        return at < 2
+          ? <ObjectOnBlocks glyph={obj.glyph} name={obj.name} blocks={n} ring={pointing(help, 0) || (pointing(help, 1) && !help?.showMe)} countAlong={showing(help, 1)} />
+          : objectScale(obj, m, objLeft, pointing(help, 2));
+      },
       steps: [
-        sentence(
-          { prompt: "Fill in both words.", hint: "One word is about length, one is about weight.", explain: `The ${obj.name} is ${obj.length} and ${obj.weight}.` },
-          `This ${obj.name} is `,
-          selectBlank(obj.length, [otherLen]),
-          " and ",
-          selectBlank(obj.weight, [otherWt]),
-          "."
-        ),
+        lengthStep(obj, obj.length === "long" ? "short" : "long"),
+        countBlocksStep(n, `How many blocks are under the ${obj.name}?`, "Count the blocks under it."),
         choice(
-          {
-            prompt: `If someone painted the ${obj.name} a new color, would it become longer/shorter or heavier/lighter?`,
-            hint: "Painting something changes how it looks, not how long or heavy it actually is.",
-            explain: "No — color doesn't change an object's length or weight, only how it looks.",
-          },
-          "No — it would stay the same length and weight",
-          ["Yes — a new color always changes its size"]
+          { prompt: `Is the ${obj.name} heavy or light?`, hint: "The heavy side goes down.", explain: `The ${obj.name} is ${obj.weight}.` },
+          obj.weight,
+          [obj.weight === "heavy" ? "light" : "heavy"]
         ),
       ],
       wrapUp: `The ${obj.name} is ${obj.length} and ${obj.weight}.`,
     };
   }
 
-  // vocabMatch
-  const w = pick(WORDS);
-  const sameAttr = WORDS.filter((x) => x.attr === w.attr && x.word !== w.word);
-  const oppAttr = WORDS.filter((x) => x.attr !== w.attr);
-  const sameWord = pick(sameAttr).word;
-  const oppWord = pick(oppAttr).word;
-  const oppLabel = w.attr === "length" ? "weight" : "length";
+  // vocabMatch (review D4): hear the word, tap its picture, then use the picture.
+  const w = pick(WORD_LIST);
+  const lengthWord = isLengthWord(w);
+  const wrongWord: DescribeWord = lengthWord ? pick<DescribeWord>(["heavy", "light"]) : pick<DescribeWord>(["long", "short", "tall"]);
+  const options = shuffle<DescribeWord>([w, wrongWord]);
+  const nameOf = (x: DescribeWord) => (isLengthWord(x) ? "rod" : "scale");
+  const rodN = w === "short" ? randInt(1, 2) : randInt(5, 8);
+  const [lo, hi] = [randInt(1, 3), randInt(5, 8)];
+  const side = Math.random() < 0.5 ? "left" : "right";
+  const heavyOnLeft = side === "left";
+  const askCount = w === "heavy" ? hi : w === "light" ? lo : rodN;
+  const askSide = (w === "heavy") === heavyOnLeft ? "left" : "right";
   return {
-    title: "What does this word describe?",
+    title: "Words",
     bucket,
-    story: `The word "${w.word}" is a describing word.`,
-    visual: () => <WordCard word={w.word} />,
+    story: "Listen to the word.",
+    visual: (done, help) => {
+      const at = help?.step ?? done;
+      // A two-button pick can't reach Show me, so its demo plays on the first wrong try.
+      if (at < 1)
+        return pointing(help, 0) ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+            <WordCard word={w} />
+            <WordPicture word={w} />
+          </div>
+        ) : (
+          <WordCard word={w} />
+        );
+      const count = showing(help, 1);
+      const ring = pointing(help, 1) && !help?.showMe;
+      if (w === "tall") return <StandingRod blocks={rodN} ring={ring} countAlong={count} />;
+      if (lengthWord) return <LengthBars max={8} bars={[{ blocks: rodN, tone: "a", label: "Rod", ring, countAlong: count }]} />;
+      return <BalanceScale left={heavyOnLeft ? hi : lo} right={heavyOnLeft ? lo : hi} point={ring ? askSide : undefined} countSide={count ? askSide : undefined} />;
+    },
     steps: [
-      choice(
-        {
-          prompt: `Does "${w.word}" tell you about an object's LENGTH or its WEIGHT?`,
-          hint: `Think about what "${w.word}" means when you say it about an object.`,
-          explain: `"${w.word}" describes ${w.attr}.`,
-        },
-        w.attr === "length" ? "Length" : "Weight",
-        [w.attr === "length" ? "Weight" : "Length"]
+      pictureChoice(
+        { prompt: <>Which picture shows <b>{w}</b>?</>, hint: w === "short" ? "Short is a few blocks. Find the rod." : w === "light" ? "Light goes up. Find the scale." : lengthWord ? "It tells how long. Find the rod." : "It tells how heavy. Find the scale.", explain: WORD_LINES[w] },
+        options.map((x) => [nameOf(x), <WordPicture key={x} word={x} />]),
+        options.indexOf(w)
       ),
-      choice(
-        {
-          prompt: `Which of these ALSO describes ${w.attr}: "${sameWord}" or "${oppWord}"?`,
-          hint: `One of these words goes with "${w.word}", and one doesn't.`,
-          explain: `"${sameWord}" describes ${w.attr}, just like "${w.word}" does. "${oppWord}" describes ${oppLabel} instead.`,
-        },
-        sameWord,
-        [oppWord]
+      countBlocksStep(
+        askCount,
+        w === "tall" ? "How tall is the rod? Count the blocks." : lengthWord ? "How many blocks long is the rod?" : `How many blocks are on the ${w} side?`
       ),
     ],
-    wrapUp: `"${w.word}" describes ${w.attr}.`,
+    wrapUp: WORD_LINES[w],
   };
 }
 
 export const describingHowObjectsAreMeasured: Unit = {
   id: "describingHowObjectsAreMeasured",
-  title: "Describing How Objects Are Measured",
-  goal: "Name ways an object can be measured, like how long it is or how heavy it is.",
+  title: "Long and Heavy",
+  goal: "Tell how long. Tell how heavy.",
   standard: "K.MD.1",
   keyIdea: (
     <>
-      <p>Every object has measurable attributes — like how LONG or SHORT it is, and how HEAVY or LIGHT it is.</p>
-      <p>Looking bigger does NOT always mean being heavier — a balloon looks big but a rock is heavier. One object can have more than one attribute at once.</p>
+      <p>Things can be long or short.</p>
+      <p>Things can be heavy or light.</p>
+      <p>Big does not mean heavy.</p>
     </>
   ),
   Explore,
   requiresIntro: true,
   // Vocabulary-application skill tied to whatever object is shown, not a
   // fixed fact set — so no reintroEverySolved.
-  problems: [{ label: "Describing Objects", make: describingProblem, buckets: BUCKETS }],
+  problems: [{ label: "Long and Heavy", make: describingProblem, buckets: BUCKETS }],
   requiredBuckets: BUCKETS,
   test: describingTest,
 };

@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import { repeatedMultQuestion, baseEdgeCaseQuestion, conflationTrapQuestion } from "./ExponentsTest";
 import { wordToExprStraightQuestion, wordToExprFlipQuestion, exprToWordQuestion, identifyPartsQuestion, parenDualQuestion } from "./WritingReadingExpressionsTest";
@@ -29,18 +30,8 @@ import { equivDistributiveQuestion, equivCombineQuestion, nonequivLookalikeQuest
 // as Ratio Lab's MODULE_TEST_TOTAL) — keep in sync with `questions.length`.
 export const MODULE_TEST_TOTAL = 25;
 
-/**
- * A 1-5 star rating banded on the raw /25 score. Negative Numbers' module
- * test uses 18/16/14/12 cutoffs out of 20; scaled by 25/20 = 1.25 gives
- * 22.5/20/17.5/15, rounded to whole questions: 23/20/18/15.
- */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 23) return 5;
-  if (score >= 20) return 4;
-  if (score >= 18) return 3;
-  if (score >= 15) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 export const moduleTest: NonNullable<Unit["test"]> = {
   questions: [
@@ -75,8 +66,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     () => nonequivOneValueTrapQuestion("hard"),
     () => verifyWithTwoValuesQuestion("hard"),
   ],
-  // 20/25 = 80%, matching the 4-star cutoff in moduleTestStars above —
-  // "passed" (TestBadge's checkmark, UnitTestView's "Passed" message) means
-  // at least 4 stars, same convention as Negative Numbers' module test.
-  passScore: 20,
+  // Passes at 5 stars.
+  passScore: 23,
 };

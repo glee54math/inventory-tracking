@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import { countOnLargerNumberQuestion, countOnSmallFirstChoiceQuestion, countBackSimpleNumberQuestion, countBackHowManyTimesChoiceQuestion, countBackCrossNumberQuestion } from "./CountingOnAndBackTest";
 import { gapToTenQuestion, makeTenNearTenNumberQuestion, wrongAddendChoiceQuestion, subtractBridgeNumberQuestion, equivalentSumNumberQuestion } from "./MakingTenAndDecomposingTest";
@@ -16,16 +17,8 @@ import { equalSignMeaningChoiceQuestion, unknownOnLeftNumberQuestion, backwardsE
 // `questions.length`.
 export const MODULE_TEST_TOTAL = 30;
 
-/** 1-5 star rating banded on the raw /30 score. 24/30 (80%) is both the
- *  passScore below and the 4-star cutoff, same convention as every other
- *  module test in this app. */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 27) return 5;
-  if (score >= 24) return 4;
-  if (score >= 21) return 3;
-  if (score >= 18) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 export const moduleTest: NonNullable<Unit["test"]> = {
   questions: [
@@ -67,6 +60,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     trivialTrueFalseQuestion,
     findUnknownSecondAddendNumberQuestion,
   ],
-  // 24/30 = 80%, matching the 4-star cutoff in moduleTestStars above.
-  passScore: 24,
+  // Passes at 5 stars.
+  passScore: 28,
 };

@@ -112,7 +112,7 @@ function Home({
           ))}
         </ol>
         <p className="muted small">
-          Stars fill in as you solve each kind of problem twice in Mixed mode, cleanly (no wrong guesses, at most one hint). The last star needs all of
+          Stars fill in as you solve each kind of problem twice in Mixed mode with no hints or wrong tries. The last star needs all of
           them.
         </p>
       </section>

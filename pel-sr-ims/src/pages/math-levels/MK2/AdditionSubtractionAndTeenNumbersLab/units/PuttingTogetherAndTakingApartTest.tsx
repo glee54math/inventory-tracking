@@ -2,181 +2,193 @@ import { SplitGroup, Fingers } from "../diagrams";
 import { randInt } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
+import { noRepeats } from "./labHelp";
+import { count, plusTrap, thereAre, verb } from "./words";
 
 // ---------- end-of-unit test: Putting Together and Taking Apart ----------
-// 10 questions from 10 generators. Self-contained — no import from
-// PuttingTogetherAndTakingApart.tsx, and that file never imports back from
-// here, since the unit file already imports this file's test export; an
-// import the other way would be a circular import that throws at
-// module-eval time (silently surfacing as "Level not found" via the level
-// loader's dynamic import()).
+// 10 questions from 10 generators. Self-contained: no import from
+// PuttingTogetherAndTakingApart.tsx, which imports this file's test export.
+// Pictures show only what the story gives: a take-away is one color with
+// nothing marked, so the student has to do the taking away.
 
-/** Addition, result unknown — concrete join. */
+/** Add to, result unknown (smaller numbers). */
 export const addToResultQuestion = (): TestQuestion[] => {
-  const a = randInt(1, 8);
-  const b = randInt(1, Math.min(9, 10 - a));
+  const a = randInt(1, 4);
+  const b = randInt(1, 4);
   const total = a + b;
   return [
     {
       visual: <SplitGroup total={total} partA={a} toneA="a" toneB="b" />,
       difficulty: "easy",
-      step: { kind: "number", prompt: `${a} ducks are swimming. ${b} more ducks swim over to join them. How many ducks are there now?`, hint: "Count every duck, both colors.", explain: `${a} + ${b} = ${total}.`, answer: total },
+      step: { kind: "number", prompt: `${thereAre(a, "duck", "ducks")} ${b} more ${verb(b, "duck comes", "ducks come")}. How many now?`, hint: "Count all the dots.", explain: `${a} + ${b} = ${total}.`, answer: total },
     },
   ];
 };
 
-/** Addition reverse-direction: given the total and one join amount, find the starting part. */
-export const addToStartUnknownQuestion = (): TestQuestion[] => {
-  const a = randInt(1, 7);
-  const b = randInt(1, Math.min(8, 10 - a));
+/** Add to, result unknown (bigger start). Replaces the start-unknown item (D2). */
+export const addToBirdsQuestion = (): TestQuestion[] => {
+  const a = randInt(5, 8);
+  const b = randInt(1, 10 - a);
   const total = a + b;
   return [
     {
       visual: <SplitGroup total={total} partA={a} toneA="a" toneB="b" />,
       difficulty: "medium",
-      step: { kind: "number", prompt: `${b} more birds joined a group, making ${total} birds in all. How many birds were there before the ${b} joined?`, hint: "Subtract the joining part from the total.", explain: `${total} − ${b} = ${a}, so there were ${a} to start.`, answer: a },
+      step: { kind: "number", prompt: `${a} birds. ${b} more ${verb(b, "bird comes", "birds come")}. How many now?`, hint: "Count all the dots.", explain: `${a} + ${b} = ${total}.`, answer: total },
     },
   ];
 };
 
-/** Subtraction, result unknown — concrete take-apart. */
+/** Take from, result unknown. */
 export const takeFromResultQuestion = (): TestQuestion[] => {
-  const total = randInt(2, 10);
+  const total = randInt(2, 6);
   const b = randInt(1, total - 1);
   const a = total - b;
   return [
     {
-      visual: <SplitGroup total={total} partA={a} toneA="a" toneB="b" />,
+      visual: <SplitGroup total={total} partA={total} toneA="a" showDivider={false} />,
       difficulty: "easy",
-      step: { kind: "number", prompt: `There are ${total} cookies. ${b} of them get eaten. How many cookies are left?`, hint: "Count only the color that's still there.", explain: `${total} − ${b} = ${a}.`, answer: a },
+      step: { kind: "number", prompt: `${total} cookies. Sam eats ${b}. How many are left?`, hint: "Take some away. Count the dots left.", explain: `${total} − ${b} = ${a}.`, answer: a },
     },
   ];
 };
 
-/** Subtraction reverse-direction: given what's left and what was taken, find the start. */
-export const takeFromStartUnknownQuestion = (): TestQuestion[] => {
-  const total = randInt(2, 10);
+/** Take from, result unknown (bigger start). Replaces the start-unknown item (D2). */
+export const takeFromBalloonsQuestion = (): TestQuestion[] => {
+  const total = randInt(7, 10);
   const b = randInt(1, total - 1);
   const a = total - b;
   return [
     {
-      visual: <SplitGroup total={total} partA={a} toneA="a" toneB="b" />,
+      visual: <SplitGroup total={total} partA={total} toneA="a" showDivider={false} />,
       difficulty: "medium",
-      step: { kind: "number", prompt: `${b} balloons popped, leaving ${a} balloons. How many balloons were there before any popped?`, hint: "Add the part that's gone back to the part that's left.", explain: `${a} + ${b} = ${total}.`, answer: total },
+      step: { kind: "number", prompt: `${total} balloons. ${b} ${verb(b, "pops", "pop")}. How many are left?`, hint: "Take some away. Count the dots left.", explain: `${total} − ${b} = ${a}.`, answer: a },
     },
   ];
 };
 
-/** Fingers modality — joining. */
+/** Fingers: one group on each hand. */
 export const fingersJoinQuestion = (): TestQuestion[] => {
   const a = randInt(1, 5);
-  const b = randInt(1, Math.min(5, 10 - a));
+  const b = randInt(1, Math.min(5, 9 - a));
   const total = a + b;
   return [
     {
-      visual: <Fingers count={total} tone="c" />,
+      visual: <Fingers left={a} right={b} />,
       difficulty: "easy",
-      step: { kind: "number", prompt: `Hold up ${a} fingers on one hand and ${b} fingers on the other. How many fingers are up in all?`, hint: "Count every raised finger on both hands.", explain: `${a} + ${b} = ${total}.`, answer: total },
+      step: { kind: "number", prompt: `${count(a, "finger", "fingers")} and ${count(b, "finger", "fingers")}. How many fingers?`, hint: "Count the fingers up.", explain: `${a} + ${b} = ${total}.`, answer: total },
     },
   ];
 };
 
-/** Fingers modality — taking apart. */
+/** Fingers, taking away: the picture shows the starting fingers. */
 export const fingersApartQuestion = (): TestQuestion[] => {
-  const total = randInt(2, 10);
+  const total = randInt(2, 9);
   const b = randInt(1, total - 1);
   const a = total - b;
   return [
     {
-      visual: <Fingers count={a} tone="c" />,
+      visual: <Fingers left={Math.min(5, total)} right={Math.max(0, total - 5)} toneRight="a" />,
       difficulty: "medium",
-      step: { kind: "number", prompt: `${total} fingers are up. ${b} of them go down. How many fingers are still up?`, hint: "Start with the total and take away the ones that went down.", explain: `${total} − ${b} = ${a}.`, answer: a },
+      step: { kind: "number", prompt: `${total} fingers. Put ${b} down. How many are still up?`, hint: "Put some down. Count the fingers up.", explain: `${total} − ${b} = ${a}.`, answer: a },
     },
   ];
 };
 
-/** Symbolic translation — pick the equation that matches a joining scene. */
+/** Pick the number sentence for a put-together story. */
 export const equationJoinChoiceQuestion = (): TestQuestion[] => {
-  const a = randInt(1, 8);
-  const b = randInt(1, Math.min(9, 10 - a));
+  const a = randInt(2, 8);
+  const b = randInt(1, 10 - a);
   const total = a + b;
   return [
     {
       visual: <SplitGroup total={total} partA={a} toneA="a" toneB="b" />,
       difficulty: "medium",
       step: choice(
-        { prompt: `${a} fish are in a pond. ${b} more fish swim in. Which number sentence matches this story?`, hint: "The two groups are joining — that's +.", explain: `${a} + ${b} = ${total}.` },
+        { prompt: `${a} fish. ${b} more ${verb(b, "fish comes", "fish come")}. Which number sentence matches?`, hint: "Do more come?", explain: `${a} + ${b} = ${total}.` },
         `${a} + ${b} = ${total}`,
-        [`${total} + ${b} = ${a}`, `${a} − ${b} = ${total}`] // misconceptions: total placed on the wrong side; wrong operation chosen
+        [
+          total + b <= 10 ? `${total} + ${b} = ${a}` : `${a} + ${b} = ${total < 10 ? total + 1 : total - 1}`, // misconception: total in the wrong place, or a miscount
+          `${Math.max(a, b)} − ${Math.min(a, b)} = ${total}`, // misconception: wrong operation
+        ]
       ),
     },
   ];
 };
 
-/** Symbolic translation — pick the equation that matches a take-apart scene. */
+/** Pick the number sentence for a take-away story. */
 export const equationApartChoiceQuestion = (): TestQuestion[] => {
   const total = randInt(2, 10);
   const b = randInt(1, total - 1);
   const a = total - b;
   return [
     {
-      visual: <SplitGroup total={total} partA={a} toneA="a" toneB="b" />,
+      visual: <SplitGroup total={total} partA={total} toneA="a" showDivider={false} />,
       difficulty: "medium",
       step: choice(
-        { prompt: `${total} fish are in a pond. ${b} of them swim away. Which number sentence matches this story?`, hint: "A part is leaving the whole — that's −.", explain: `${total} − ${b} = ${a}.` },
+        { prompt: `${total} fish. ${b} ${verb(b, "swims", "swim")} away. Which number sentence matches?`, hint: "Do some go away?", explain: `${total} − ${b} = ${a}.` },
         `${total} − ${b} = ${a}`,
-        [`${a} − ${b} = ${total}`, `${total} + ${b} = ${a}`] // misconceptions: operand order swapped; wrong operation chosen
+        [
+          a >= b ? `${a} − ${b} = ${total}` : `${total} − ${b} = ${a > 1 ? a - 1 : a + 1}`, // misconception: order swapped, or a miscount
+          `${total} + ${plusTrap(total, b)} = ${a}`, // misconception: wrong operation
+        ]
       ),
     },
   ];
 };
 
-/** Vocabulary / symbol meaning, asked directly (not just "what's the answer"). */
-export const symbolMeaningQuestion = (): TestQuestion[] => {
+/** What the sign tells you to do. Plus or minus, about half the time each. */
+export const signMeaningQuestion = (): TestQuestion[] => {
+  const plus = Math.random() < 0.5;
+  const a = randInt(3, 6);
+  const b = randInt(1, 3);
   return [
     {
       visual: null,
       difficulty: "medium",
       step: choice(
-        { prompt: "In a number sentence like 4 + 3 = 7, what does the + symbol tell you to do?", hint: "Think about what happens to the two groups.", explain: "The + symbol means two groups are joining together." },
-        "Put groups together",
-        ["Take a group apart", "Compare two groups"] // misconceptions: confusing + with subtraction or with comparison
+        { prompt: `${a} ${plus ? "+" : "−"} ${b}. Put together, or take away?`, hint: "Look at the sign.", explain: plus ? "Plus means put together." : "Minus means take away." },
+        plus ? "Put together" : "Take away",
+        [plus ? "Take away" : "Put together"] // misconception: mixing up + and −
       ),
     },
   ];
 };
 
-/** Generalization / false trap: can taking away ever make a group bigger? */
-export const takeAwayNeverBiggerQuestion = (): TestQuestion[] => {
+/** Does the group get bigger or smaller? More or Fewer, about half the time each. */
+export const moreOrFewerQuestion = (): TestQuestion[] => {
+  const takeAway = Math.random() < 0.5;
+  const n = randInt(4, 6);
+  const change = randInt(1, 3);
   return [
     {
-      visual: null,
+      visual: <SplitGroup total={n} partA={n} toneA="a" showDivider={false} />,
       difficulty: "hard",
       step: choice(
         {
-          prompt: "True or false: taking objects away from a group can sometimes make the group bigger.",
-          hint: "Try it with real objects — does taking any away ever add more?",
-          explain: "False — taking away always leaves the same amount or fewer, never more.",
+          prompt: takeAway ? `${n} dots. Take ${change} away. More, or fewer?` : `${n} dots. Add ${change}. More, or fewer?`,
+          hint: "Do some go away?",
+          explain: takeAway ? "Taking away leaves fewer." : "Putting together makes more.",
         },
-        "False",
-        ["True"] // misconception: not recognizing subtraction's direction is always non-increasing
+        takeAway ? "Fewer" : "More",
+        [takeAway ? "More" : "Fewer"] // misconception: not linking the action to the size of the group
       ),
     },
   ];
 };
 
 export const puttingTogetherAndTakingApartTest: Unit["test"] = {
-  questions: [
+  questions: noRepeats([
     addToResultQuestion,
-    addToStartUnknownQuestion,
+    addToBirdsQuestion,
     takeFromResultQuestion,
-    takeFromStartUnknownQuestion,
+    takeFromBalloonsQuestion,
     fingersJoinQuestion,
     fingersApartQuestion,
     equationJoinChoiceQuestion,
     equationApartChoiceQuestion,
-    symbolMeaningQuestion,
-    takeAwayNeverBiggerQuestion,
-  ],
+    signMeaningQuestion,
+    moreOrFewerQuestion,
+  ]),
   passScore: 9,
 };

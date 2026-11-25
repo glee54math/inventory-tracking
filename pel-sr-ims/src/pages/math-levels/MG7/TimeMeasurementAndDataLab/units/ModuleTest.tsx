@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import { fiveMarkReadQuestion, offMarkReadQuestion, nearHourReadQuestion, matchHandsQuestion } from "./TellingTimeToTheMinuteTest";
 import { endTimeNoRolloverQuestion, endTimeCrossHourQuestion, elapsedCrossHourQuestion, elapsedNoRolloverQuestion, startUnknownQuestion } from "./ElapsedTimeAndIntervalsTest";
@@ -17,15 +18,8 @@ import { measureQuestion, placeQuarterQuestion, frequencyQuestion, comparisonQue
 // draw from each). Keep in sync with `questions` below.
 export const MODULE_TEST_TOTAL = 30;
 
-/** 1-5 star rating on the raw /30 score — the same 90/80/70/60% bands as
- *  every 20-question module test's 18/16/14/12, scaled to 30. */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 27) return 5;
-  if (score >= 24) return 4;
-  if (score >= 21) return 3;
-  if (score >= 18) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 export const moduleTest: NonNullable<Unit["test"]> = {
   questions: [
@@ -66,6 +60,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     () => comparisonQuestion("hard"),
     () => quarterFrequencyQuestion("hard"),
   ],
-  // 24/30 = 80%, the 4-star cutoff above.
-  passScore: 24,
+  // Passes at 5 stars.
+  passScore: 28,
 };

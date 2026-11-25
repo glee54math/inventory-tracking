@@ -6,7 +6,7 @@
 
 export interface UnitProgress {
   solved: number;
-  /** Problems solved cleanly (no revealed answers, at most one hint). */
+  /** Problems solved cleanly (no hint, no wrong try, no revealed answer). */
   clean: number;
   /** Best-ever end-of-unit test score out of 10. A later worse retake never lowers this. */
   testScore?: number;
@@ -45,7 +45,7 @@ export interface ModuleProgressDoc {
 export interface ModuleAttempt {
   unitId: string;
   mode: "problem" | "test";
-  /** Present when mode === "problem": solved with no revealed answer, at most one hint. */
+  /** Present when mode === "problem": solved with no hint, wrong try or revealed answer. */
   clean?: boolean;
   /** Present when mode === "test": raw score out of 10 for that attempt. */
   score?: number;

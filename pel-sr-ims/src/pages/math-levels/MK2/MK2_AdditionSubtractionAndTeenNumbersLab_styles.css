@@ -92,6 +92,55 @@
   border-width: 3px;
   border-radius: var(--radius-lg);
 }
+/* Home: each unit card has its own speaker button beside it (a button can't
+   sit inside the card's button). */
+.atn-lab .atn-path-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.atn-lab .atn-path-item > .path-card {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+/* The floating pad adds 400px of room under the page while it is open. On the
+   "write another way" step, keep that room for the whole step: otherwise the
+   page shifts as the pad closes, and a tap on Show me or Show hint misses. */
+.atn-lab.lab-base:has(.custom-step input[data-numpad]) .main {
+  padding-bottom: 400px;
+}
+/* "Write another way" says its own line (OwnWay.tsx), so the shared
+   "Not a match" line stays hidden on that step. */
+.atn-lab .step.active:has(.atn-own-way) > .step-body > .feedback {
+  display: none;
+}
+/* Name buttons are plain words in their row's color, not big picture buttons. */
+.atn-lab .choice.choice-pic:has(.atn-name) {
+  min-height: 0;
+  font-size: 20px;
+}
+/* Landscape iPad: picture and question on the left, the box and pad on the
+   right, so every key and Check fit on screen without scrolling. */
+@media (orientation: landscape) and (min-width: 900px) {
+  .atn-lab .test-question:has(.numpad-inline) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 28px;
+    align-items: start;
+  }
+  .atn-lab .test-question:has(.numpad-inline) > .problem-visual,
+  .atn-lab .test-question:has(.numpad-inline) > div:has(.test-prompt),
+  .atn-lab .test-question:has(.numpad-inline) > .step-tools {
+    grid-column: 1;
+  }
+  .atn-lab .test-question:has(.numpad-inline) > div:has(.numpad-inline) {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+  .atn-lab .test-question:has(.numpad-inline) .answer-row {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+  }
+}
 /* Module test nav/card — same rules as every other lab's own module test
    chrome, since this feature's markup is shared verbatim. */
 .atn-lab .module-test-nav {

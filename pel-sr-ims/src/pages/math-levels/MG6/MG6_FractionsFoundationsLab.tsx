@@ -109,8 +109,8 @@ function Home({
           ))}
         </ol>
         <p className="muted small">
-          Each unit starts with a short Quick Check in Explore that unlocks Practice. Stars fill in as you cleanly solve (at most one hint) each of
-          the unit's four kinds of problems in Mixed mode — including its "trick" kind — and the last star needs all four.
+          Each unit starts with a short Quick Check in Explore that unlocks Practice. Stars fill in as you solve each of the unit's four kinds of problems in Mixed mode with no hints or wrong tries — including its "trick" kind —
+          and the last star needs all four.
         </p>
       </section>
       <section>

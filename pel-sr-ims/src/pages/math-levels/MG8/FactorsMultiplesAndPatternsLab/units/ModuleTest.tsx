@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import { countPairsQuestion, foundAllQuestion, missingFactorQuestion, NEAR_TOP, squareCountQuestion, stopCheckingQuestion } from "./FactorPairsTest";
 import { factorOrMultipleQuestion, hardMultipleChoiceQuestion, multipleOfEachFactorQuestion, nearMissChoiceQuestion, whichMultipleQuestion } from "./MultiplesTest";
@@ -12,14 +13,8 @@ import { addNextQuestion, allEvenQuestion, multipleFeatureQuestion, shapeFarQues
 // Hand-maintained — keep in sync with `questions` below.
 export const MODULE_TEST_TOTAL = 20;
 
-/** 1-5 star rating: 18/16/14/12 cutoffs for a 20-question test. */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 18) return 5;
-  if (score >= 16) return 4;
-  if (score >= 14) return 3;
-  if (score >= 12) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 export const moduleTest: NonNullable<Unit["test"]> = {
   questions: [
@@ -48,6 +43,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     allEvenQuestion,
     multipleFeatureQuestion,
   ],
-  // 16/20 = 80%, matching the 4-star cutoff.
-  passScore: 16,
+  // Passes at 5 stars.
+  passScore: 19,
 };

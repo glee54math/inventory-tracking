@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import type { TestQuestion } from "../../../shared/engine/types";
 import { LONG, PRIMES } from "../lib/primes";
@@ -16,15 +17,8 @@ import { pairQuestion, plotQuestion, relationQuestion, timesTrapQuestion } from 
 /** Hand-maintained (calling every generator to count would burn a random draw). */
 export const MODULE_TEST_TOTAL = 25;
 
-/** 1-5 stars on the /25 score: the 18/16/14/12-of-20 bands scaled to 25 and
- *  rounded up — 23 / 20 / 18 / 15, identical to the other 25-question module tests. */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 23) return 5;
-  if (score >= 20) return 4;
-  if (score >= 18) return 3;
-  if (score >= 15) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 /** Strips the picture from a reused question whose diagram would only repeat the one just before it. */
 const noVisual = (make: () => TestQuestion[]) => () => make().map((q) => ({ ...q, visual: null }));
@@ -63,6 +57,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     () => plotQuestion("hard"),
     () => timesTrapQuestion("hard"),
   ],
-  // 20/25 = 80%, the 4-star cutoff above.
-  passScore: 20,
+  // Passes at 5 stars.
+  passScore: 23,
 };

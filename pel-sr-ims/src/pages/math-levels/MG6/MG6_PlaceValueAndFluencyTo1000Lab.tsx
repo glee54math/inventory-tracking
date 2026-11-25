@@ -107,7 +107,7 @@ function Home({
           ))}
         </ol>
         <p className="muted small">
-          Each unit starts with a Quick Check in Explore — finish it to unlock Practice. Stars fill in as you cleanly solve (at most one hint) every different kind of problem in Mixed mode — like the exactly-halfway and crossing-a-hundred rounding cases, or borrowing across a 0 — and the last star needs all of them.
+          Each unit starts with a Quick Check in Explore — finish it to unlock Practice. Stars fill in as you solve every different kind of problem in Mixed mode with no hints or wrong tries — like the exactly-halfway and crossing-a-hundred rounding cases, or borrowing across a 0 — and the last star needs all of them.
 </p>
       </section>
       <section>

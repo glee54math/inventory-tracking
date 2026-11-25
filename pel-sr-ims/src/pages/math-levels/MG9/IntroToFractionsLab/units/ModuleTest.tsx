@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import type { TestQuestion } from "../../../shared/engine/types";
 import { boundaryCaseQuestion, classifyImproperQuestion, improperToMixedQuestion, mixedToImproperQuestion, pickEquivalentQuestion } from "./FractionFormsTest";
@@ -13,14 +14,8 @@ import { alreadySimplestQuestion, divideByGcfQuestion, findGcfQuestion, simplify
 /** Hand-maintained (calling every generator to count would burn a random draw). */
 export const MODULE_TEST_TOTAL = 20;
 
-/** 1-5 stars on the /20 score: the standard 18/16/14/12 bands. */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 18) return 5;
-  if (score >= 16) return 4;
-  if (score >= 14) return 3;
-  if (score >= 12) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 /** Strips the picture from a reused question whose diagram would only repeat
  *  the one just before it. */
@@ -53,6 +48,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     whichDividesQuestion,
     divideByGcfQuestion("hard"),
   ],
-  // 16/20 = 80%, the 4-star cutoff above.
-  passScore: 16,
+  // Passes at 5 stars.
+  passScore: 19,
 };

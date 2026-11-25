@@ -7,6 +7,8 @@ import { Stepper, Segmented } from "../../../shared/engine/controls";
 import type { Unit } from "../../../shared/units/types";
 import { addingFourTwoDigitNumbersTest } from "./AddingFourTwoDigitNumbersTest";
 import { ReadAloud } from "../../../shared/tts/ReadAloud";
+import { StuckBox, useCfuPointers, type ExploreTarget } from "../../../shared/components/CfuPointers";
+import { lookHereSpot } from "../../../shared/lib/lookHere";
 
 // ============================================================================
 // CHECK FOR UNDERSTANDING — mandatory gate before Practice unlocks
@@ -16,6 +18,12 @@ import { ReadAloud } from "../../../shared/tts/ReadAloud";
 // still only ever carry a single extra "1" — so a ones-column sum like 27
 // (carry 2) gets silently mishandled as if it were a normal single-digit carry.
 
+// Where in Explore each CFU idea is taught (2nd wrong Check → "Look here first").
+const LOOK = {
+  carry: { target: "f2d-carry", label: "Explore — write one digit, carry the tens" },
+  more: { target: "f2d-more", label: "Explore — when the carry can be more than 1" },
+} satisfies Record<string, ExploreTarget>;
+
 const fieldOk = (ok: boolean, checked: boolean) => (checked ? { borderColor: ok ? "var(--good)" : "var(--bad)" } : {});
 
 function DigitVsCarryQuestion({ onComplete }: { onComplete?: () => void }) {
@@ -24,6 +32,7 @@ function DigitVsCarryQuestion({ onComplete }: { onComplete?: () => void }) {
   const [checked, setChecked] = useState(false);
   const allFilled = [digit, carry].every((v) => String(v).trim() !== "");
   const ok = digit === "7" && carry === "2";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.carry }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -51,7 +60,7 @@ function DigitVsCarryQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="2">2</option>
           <option value="7">7</option>
         </select>
-        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" disabled={!allFilled} onClick={() => { ptr.record(() => ok, `${digit}|${carry}`); setChecked(true); }}>
           Check Answer
         </button>
       </div>
@@ -59,9 +68,10 @@ function DigitVsCarryQuestion({ onComplete }: { onComplete?: () => void }) {
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 27 means you write the 7 and carry the 2 (two whole tens) into the tens column."
-            : "Not quite — 27 means write 7 below the line, and carry 2 (not just 1!) into the tens column, since 27 is two whole tens plus 7 ones."}
+            : "Not quite. 27 is how many tens and how many ones? Only one digit fits below the line."}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -70,6 +80,7 @@ function CarryAlwaysOneTrueFalseQuestion({ onComplete }: { onComplete?: () => vo
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "false";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.more }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -86,7 +97,7 @@ function CarryAlwaysOneTrueFalseQuestion({ onComplete }: { onComplete?: () => vo
           <option value="true">True</option>
           <option value="false">False</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, picked); setChecked(true); }}>
           Check Answer
         </button>
       </div>
@@ -94,9 +105,10 @@ function CarryAlwaysOneTrueFalseQuestion({ onComplete }: { onComplete?: () => vo
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — false. That's true when you only add TWO numbers (max carry is 1), but adding three or four numbers can push a column's sum past 20, 30, even higher — carrying 2 or 3."
-            : "Not quite — false is right. With only two addends, the carry is at most 1. But with three or four addends, a column's sum can be 20-39, which carries 2 or even 3."}
+            : "Not quite. Add 9 + 9 + 9 in one column. How many tens is that?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -105,6 +117,7 @@ function WhyItMattersQuestion({ onComplete }: { onComplete?: () => void }) {
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "wrong";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.carry }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -121,7 +134,7 @@ function WhyItMattersQuestion({ onComplete }: { onComplete?: () => void }) {
           <option value="right">Right — the digit below the line is correct, so it still works out</option>
           <option value="wrong">Wrong — carrying only 1 loses one of the tens, so the total comes out 10 too small</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, picked); setChecked(true); }}>
           Check Answer
         </button>
       </div>
@@ -129,9 +142,10 @@ function WhyItMattersQuestion({ onComplete }: { onComplete?: () => void }) {
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
           {ok
             ? "Correct — 48 + 37 + 26 = 111, but carrying only 1 instead of 2 gives 101, which is 10 too small. The digit you write down can be right while the carry is still wrong."
-            : "Not quite — carrying only 1 (instead of 2) loses a whole ten. 48 + 37 + 26 really is 111, not 101."}
+            : "Not quite. 21 is 2 tens and 1 one. If only 1 ten is carried, where did the other ten go?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -140,6 +154,7 @@ function WhichDigitToWriteQuestion({ onComplete }: { onComplete?: () => void }) 
   const [picked, setPicked] = useState("");
   const [checked, setChecked] = useState(false);
   const ok = picked === "3";
+  const ptr = useCfuPointers([{ key: "q", to: LOOK.carry }], { done: checked && ok, rightNow: () => checked && ok });
   useEffect(() => {
     if (checked && ok) onComplete?.();
   }, [checked, ok, onComplete]);
@@ -157,15 +172,16 @@ function WhichDigitToWriteQuestion({ onComplete }: { onComplete?: () => void }) 
           <option value="2">2</option>
           <option value="3">3</option>
         </select>
-        <button className="btn primary" type="button" onClick={() => setChecked(true)}>
+        <button className="btn primary" type="button" onClick={() => { ptr.record(() => ok, picked); setChecked(true); }}>
           Check Answer
         </button>
       </div>
       {checked && (
         <ReadAloud as="p" className={`feedback ${ok ? "good" : "bad"}`} role="alert">
-          {ok ? "Correct — only the 3 (the ones digit of 23) goes below the line in this column; the 2 is what carries to the NEXT column." : "Not quite — 23 splits into a digit that stays in this column (3) and a digit that carries to the next column (2)."}
+          {ok ? "Correct — only the 3 (the ones digit of 23) goes below the line in this column; the 2 is what carries to the NEXT column." : "Not quite. 23 is 2 tens and 3 ones. Which part stays in this column, and which part moves on?"}
         </ReadAloud>
       )}
+      <StuckBox {...ptr} />
     </ReadAloud>
   );
 }
@@ -196,7 +212,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
   const [count, setCount] = useState<2 | 3 | 4>(3);
-  const [vals, setVals] = useState([48, 37, 26, 19]);
+  // Defaults differ from the CFU numbers (8 + 9 + 4 + 6, 48 + 37 + 26). 3 addends: ones add to 22.
+  const [vals, setVals] = useState([56, 29, 47, 38]);
 
   const addends = vals.slice(0, count);
   const breakdown: ColumnBreakdown = buildAddColumns(addends, 3);
@@ -218,6 +235,12 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         ))}
       </div>
       <PlaceValueColumns breakdown={breakdown} revealCols={breakdown.numCols} />
+      <ReadAloud as="p" {...lookHereSpot("f2d-carry")}>
+        <span data-look-here-key>A column sum like 34 is 3 tens and 4 ones. Write only the ones digit below the line. Carry ALL the tens to the next column.</span>
+      </ReadAloud>
+      <ReadAloud as="p" {...lookHereSpot("f2d-more")}>
+        <span data-look-here-key>With 2 numbers, a column adds to 18 or less, so the carry is never more than 1. With 3 or 4 numbers, a column can add to 20 or more, so the carry can be 2 or 3.</span>
+      </ReadAloud>
       <ReadAloud as="p" className="muted small">
         Ones column: {breakdown.digitsByOperand.map((d) => d[0]).join(" + ")} = {breakdown.digitsByOperand.reduce((s, d) => s + d[0], 0)} → write {breakdown.resultDigits[0]}, carry {breakdown.carry[0]}.{" "}
         {breakdown.carry[0] > 1 ? "Notice the carry here is MORE than 1 — that only happens with three or four addends." : "With just two addends, the carry here can never be more than 1."}

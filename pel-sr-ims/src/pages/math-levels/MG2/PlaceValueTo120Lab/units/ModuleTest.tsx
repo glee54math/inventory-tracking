@@ -1,3 +1,4 @@
+import { moduleStars } from "../../../shared/engine/moduleStars";
 import type { Unit } from "../../../shared/units/types";
 import { decadeCrossChoiceQuestion, cross100ChoiceQuestion, cross100NumberQuestion, after109Question, howManySticksQuestion } from "./CountingTo120Test";
 import { standardSentenceQuestion, teenSentenceQuestion, exactlyTenQuestion, reverseDigitSwapChoiceQuestion, zeroOnesQuestion } from "./TensAndOnesTest";
@@ -16,14 +17,8 @@ import { noRegroupEasyQuestion, regroupStandardQuestion, forgotCarryChoiceQuesti
 // as every other lab's ModuleTest.tsx) — keep in sync with `questions.length`.
 export const MODULE_TEST_TOTAL = 25;
 
-/** 1-5 star rating banded on the raw /25 score. */
-export const moduleTestStars = (score: number): number => {
-  if (score >= 23) return 5;
-  if (score >= 20) return 4;
-  if (score >= 17) return 3;
-  if (score >= 14) return 2;
-  return 1;
-};
+/** 0–5 stars. The rule for every lab is in shared/engine/moduleStars.ts. */
+export const moduleTestStars = (score: number): number => moduleStars(score, MODULE_TEST_TOTAL);
 
 export const moduleTest: NonNullable<Unit["test"]> = {
   questions: [
@@ -59,6 +54,6 @@ export const moduleTest: NonNullable<Unit["test"]> = {
     newTenTypedQuestion,
     regroupSentenceProductionQuestion,
   ],
-  // 20/25 = 80%, matching the 4-star cutoff in moduleTestStars above.
-  passScore: 20,
+  // Passes at 5 stars.
+  passScore: 23,
 };

@@ -21,7 +21,9 @@ Explore text, the Key Idea, CFU questions and feedback, Practice stories,
 prompts, hints, Show me lines, explanations, wrap-ups, Test questions,
 button labels. For generated text, print one sentence per template × every
 pool word (names, verbs, objects) with a scratch script, at the smallest and
-largest numbers the generator can produce.
+largest numbers the generator can produce. Also check Explore lines at
+**every control value, including the lowest and 0**; a generator run doesn't
+reach them.
 
 ## 3. Check each sentence
 | Check | Look for | Where it's explained |
@@ -31,20 +33,27 @@ largest numbers the generator can produce.
 | Math words | A word from a later grade, or a word used before the unit teaches it | grade file → Math words |
 | Untaught words | A word a student must understand to answer (in a prompt, choice, title or Test item) that no earlier unit in this lab and no earlier lab teaches. Check the lab vocabulary lists (`_planning/Grade-*/{LabName}/vocabulary.md`) of every earlier lab, and this lab's own list for earlier units. Avoiding a word in Unit 1 isn't enough if Unit 4's Test uses it (MG2: "digit"). Check titles too | builder rules → Vocabulary list |
 | Double meanings | An everyday word used in its math sense (or both senses in one lab) | traps §1 |
-| Voice | Homophones without context; symbols, ranges, "vs.", arrows, "?" | traps §2, §8 |
+| Voice | Homophones without context; symbols, ranges, "vs.", arrows, "?". **Word-only answer buttons must be spoken:** check that each question's speaker and auto-read include its choices (from MK3, 2026-11-24; all grades) | traps §2, §8 |
+| Retry reasons | The reason after a first wrong tap plays right before the retry question, so write it as a statement, not a question (from MK3, 2026-11-24; K–1 CFUs using KCheck) | this checklist |
 | Order | Words in a different order from the operation, when that isn't the skill | traps §3 |
 | Comparison | "More/fewer" sentences, especially where the words point the wrong way, before 2nd grade | traps §4 |
 | Small words | *each, of, per, between, at least* carrying meaning the student hasn't learned | traps §5 |
 | Setting | Background knowledge a child might not have; hard-to-say names | traps §7 |
 | Synonyms | More than one word for the same idea in one unit | english-learners.md |
 | Giveaways | The answer stated in the story, title or wrong-answer message. This includes a reviewer's own suggested rewrite: a wrong-answer message must not state any box's answer ("The LCD is 12" when a box asks for the LCD) | builder rules |
-| Text vs. picture | A sentence that describes a picture ("the two numbers in both lists") doesn't match what the picture shows at the values used | traps §1 |
+| Text vs. picture | A sentence that describes a picture ("the two numbers in both lists") doesn't match what the picture shows at the values used. An arrow must point the way the voice says: "went up" gets an up arrow (from MK3, 2026-11-24; all grades) | traps §1 |
+| Counting what's on screen | For "How many ___?", count every matching thing on screen. A reference object of the same kind changes the answer (from MK3, 2026-11-24; all grades) | this checklist |
 | False distractors | A wrong choice that is a true statement, just not the reason ("B adds more each time" for a times pattern). Every wrong choice must be false, not just less complete | builder rules |
 | Loaded questions | "What is wrong?" when "Nothing is wrong" can be the answer. Ask "Is anything wrong?" with the same wording in both cases | grade file → Watch for |
 | Mode-dependent lines | An Explore sentence shown in every mode of a toggle (Add To / Take From, Count on / Count back) must be true in every mode, or switch with the mode. Check the "Look here" key lines too. (MG1 Unit 3: "Take the number you know away from the end" showed in Take From mode too, where a start-missing story adds.) | this checklist |
 | Switches | One problem's steps reach opposite results (changes / doesn't change, first numbers / new numbers), and a wrap-up sentence doesn't say which part it means. Name it: "With the new numbers, …" | this checklist |
-| Generated plurals and prepositions | "You plotted ${n} points" with no singular case ("1 points"); a fixed preposition before a pooled noun ("in every ${group}" → "in every plate"). The script flags both as `plural:` and `prep:`. **Grammar wins over hiding a hint (user decision 2026-11-18):** if a word after a blank must agree with the answer ("☐ ten" when the answer is 1), keep the correct grammar, even though it hints. Never write "ten(s)" or "one(s)"; that is very confusing for early readers | builder rules |
+| Generated plurals and prepositions | "You plotted ${n} points" with no singular case ("1 points"); a fixed preposition before a pooled noun ("in every ${group}" → "in every plate"). The script flags both as `plural:` and `prep:`. **Grammar wins over hiding a hint (user decision 2026-11-18):** if a word after a blank must agree with the answer ("☐ ten" when the answer is 1), keep the correct grammar, even though it hints. Never write "ten(s)" or "one(s)"; that is very confusing for early readers. A group name with a count needs a singular form too: "1 triangle", not "The triangles have 1" (from MK3, 2026-11-24; all grades) | builder rules |
+| Counts of two groups | A shared noun after two numbers ("3 blue and 1 orange marbles") breaks at 1. Use separate sentences: "3 are blue. 1 is orange." | this checklist |
+| Number of items named | "The two numbers" on a screen that shows three is unclear. Name the items ("Are 0 and 1 the same?"), and any count the sentence states must match the number of items on screen | this checklist |
+
 ## 4. Check each word problem against the standards
+- In a compare story with fixed names, does the child named as having more
+  **really have more at every generated value**?
 - Is the **problem type** allowed for this grade (CCSS Table 1 for add and
   subtract, Table 2 for multiply and divide)? E.g. "times as many" in 3rd is
   too early; a start-unknown story in 1st is allowed but shouldn't be

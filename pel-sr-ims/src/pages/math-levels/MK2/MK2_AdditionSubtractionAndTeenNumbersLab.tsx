@@ -10,7 +10,7 @@ import { UnitPreviewCarousel } from "../shared/components/UnitPreviewCarousel";
 import { MathText, StackedFractions } from "../shared/components/MathText";
 import type { Problem } from "../shared/engine/types";
 import { bagItems, debtItem, useRetryDebts, type BagItem, type RetryDebt } from "../shared/engine/retryDebt";
-import { shuffle } from "../shared/lib/math";
+import { randInt, shuffle } from "../shared/lib/math";
 import { MASTERY_GOAL, isMastered as sharedIsMastered, starCount as sharedStarCount, useModuleProgress, type UnitProgress, type StarOutcome } from "../../../hooks/useModuleProgress";
 import { useStudentContext } from "../../../components/student_portal/StudentContext";
 import { ReadAllButton, ReadAloud, SpeakButton, TtsProvider } from "../shared/tts/ReadAloud";
@@ -42,7 +42,7 @@ function starCount(unit: Unit, p?: UnitProgress): number {
 function Stars({ unit, p, size = "sm" }: { unit: Unit; p?: UnitProgress; size?: "sm" | "lg" }) {
   const n = starCount(unit, p);
   return (
-    <span className={`stars ${size}`} aria-label={`${n} of ${MASTERY_GOAL} mastery stars`}>
+    <span className={`stars ${size}`} aria-label={`${n} of ${MASTERY_GOAL} stars`}>
       {Array.from({ length: MASTERY_GOAL }, (_, i) => (
         <span key={i} className={i < n ? "on" : ""} aria-hidden>
           ★
@@ -53,10 +53,10 @@ function Stars({ unit, p, size = "sm" }: { unit: Unit; p?: UnitProgress; size?: 
 }
 
 /** A plain n-of-max star rating, independent of the mastery-tracking Stars
- *  component above — used for the module test's letter-grade-style rating. */
-function RatingStars({ n, max = 5, size = "sm", label }: { n: number; max?: number; size?: "sm" | "lg"; label: string }) {
+ *  component above: the Module Test's rating. 0 stars draws all five empty. */
+function RatingStars({ n, max = 5, size = "sm" }: { n: number; max?: number; size?: "sm" | "lg" }) {
   return (
-    <span className={`stars ${size}`} aria-label={label}>
+    <span className={`stars ${size}`} role="img" aria-label={`Module Test: ${n} of ${max} stars`}>
       {Array.from({ length: max }, (_, i) => (
         <span key={i} className={i < n ? "on" : ""} aria-hidden>
           ★
@@ -82,7 +82,7 @@ function Home({
       <section className="hero">
         <div className="hero-text">
           <h1>3 + 2 = 5</h1>
-          <ReadAloud as="p">Join groups together, take them apart, solve story problems, find partners for 10, learn your fast facts, and see teen numbers as ten and some more.</ReadAloud>
+          <ReadAloud as="p">Add. Take away. Make 10. Meet teen numbers.</ReadAloud>
           <button className="btn primary big" onClick={() => onPick(next === -1 ? 0 : next)}>
             {next <= 0 ? "Start exploring" : `Continue: ${units[next].title}`}
           </button>
@@ -95,11 +95,12 @@ function Home({
         <h2 className="section-title">Your path</h2>
         <ol className="path">
           {units.map((u, i) => (
-            <li key={u.id}>
+            <li key={u.id} className="atn-path-item">
+              <SpeakButton targets={() => [document.getElementById(`atn-path-${u.id}`)]} label={`Read ${u.title}`} />
               <button className="path-card" onClick={() => onPick(i)}>
                 <span className="path-num">{i + 1}</span>
-                <span className="path-body">
-                  <span className="path-title">{u.title}</span>
+                <span className="path-body" id={`atn-path-${u.id}`}>
+                  <span className="path-title">{u.title}.</span>{" "}
                   <span className="path-goal">
                     <MathText>{u.goal}</MathText>
                   </span>
@@ -110,17 +111,20 @@ function Home({
           ))}
         </ol>
         <ReadAloud as="p" className="muted small">
-          Solve each kind of problem 2 times by yourself to fill in your stars. Only Mixed problems count.
+          Solve by yourself to fill your stars.
         </ReadAloud>
       </section>
-      <section>
+      <section className="atn-path-item">
+        <SpeakButton targets={() => [document.getElementById("atn-path-module")]} label="Read Module Test" />
         <button className="path-card module-test-card" onClick={onModuleTest}>
-          <span className="path-body">
-            <span className="path-title">📝 Module Test</span>
-            <span className="path-goal">30 cumulative questions, 5 from every unit in this lab.</span>
+          <span className="path-body" id="atn-path-module">
+            <span className="path-title">
+              <span data-tts-skip>📝 </span>Module Test.
+            </span>{" "}
+            <span className="path-goal">30 questions from all the units.</span>
           </span>
           <span className="unit-stars">
-            {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} label="Module test rating" />}
+            {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} />}
             <TestBadge p={progress[MODULE_PROGRESS_KEY]} passScore={moduleTest.passScore} total={MODULE_TEST_TOTAL} />
           </span>
         </button>
@@ -138,6 +142,16 @@ function TestBadge({ p, passScore, total = 10 }: { p?: UnitProgress; passScore: 
       {passed ? " ✓" : ""}
     </span>
   );
+}
+
+// User decision D4: a retry in Unit 2's add or take-away bucket draws either
+// story at random, so "Add, or take away?" must really be decided. The bucket
+// actually drawn is the one that gets the star credit (the problem carries it).
+const RETRY_EITHER = ["addToResult", "takeFromResult"];
+function retryItem(unit: Unit, item: BagItem): BagItem {
+  if (!item.bucket || !RETRY_EITHER.includes(item.bucket)) return item;
+  const bucket = RETRY_EITHER[randInt(0, RETRY_EITHER.length - 1)];
+  return { type: item.type, bucket, make: () => unit.problems[item.type].make(bucket) };
 }
 
 function UnitView({
@@ -163,7 +177,9 @@ function UnitView({
   const [tab, setTab] = useState<"explore" | "practice" | "test">("explore");
   const tabsRef = useRef<HTMLDivElement>(null);
   // A retry owed from an earlier visit reopens in the mode it was owed in.
-  const [typeIdx, setTypeIdx] = useState<number | "mix">(() => (debt ? (debt.mix ? "mix" : debt.type) : "mix"));
+  // Only an optional type (the Unit 2 Challenge) can be picked by hand; a core
+  // type is always practiced through Mixed, so it can't stop earning stars.
+  const [typeIdx, setTypeIdx] = useState<number | "mix">(() => (debt && !debt.mix && unit.problems[debt.type]?.optional ? debt.type : "mix"));
   const [seed, setSeed] = useState(0);
 
   // A shuffle bag, not independent random draws per problem — every item in
@@ -190,7 +206,8 @@ function UnitView({
     if (bagRef.current.key !== key || bagRef.current.items.length === 0) {
       bagRef.current = { key, items: shuffle(bagItems(unit.problems, typeIdx)) };
     }
-    const carried = carriedRef.current && debtItem(unit.problems, carriedRef.current);
+    const owed = carriedRef.current && debtItem(unit.problems, carriedRef.current);
+    const carried = owed && retryItem(unit, owed);
     carriedRef.current = null;
     const item = carried || bagRef.current.items.pop()!;
     lastMakeRef.current = item;
@@ -201,10 +218,10 @@ function UnitView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unit, typeIdx, seed]);
 
-  const retrySame = useCallback(() => {
-    if (lastMakeRef.current) bagRef.current.items.push(lastMakeRef.current);
+  const drawRetry = useCallback(() => {
+    if (lastMakeRef.current) bagRef.current.items.push(retryItem(unit, lastMakeRef.current));
     setSeed((s) => s + 1);
-  }, []);
+  }, [unit]);
 
   // After help (Show me, a wrong pick...), the student owes one problem of the
   // same type solved on their own. Until then "New problem" gives the same
@@ -214,20 +231,25 @@ function UnitView({
   // The draw on screen once it is finished or helped, so it isn't shown again fresh.
   const usedTokenRef = useRef<string | null>(null);
   const handleHelped = useCallback(() => {
-    setOwesRetry(true);
     usedTokenRef.current = drawRef.current?.token ?? null;
     const item = lastMakeRef.current;
+    // The optional Challenge (never in Mixed, no stars) doesn't lock the
+    // student into it after a miss, same as MG1. "Try one like it" is still offered.
+    if (item && unit.problems[item.type]?.optional) return;
+    setOwesRetry(true);
     if (item) onDebt({ type: item.type, bucket: item.bucket, mix: typeIdx === "mix" });
-  }, [onDebt, typeIdx]);
-  const newProblem = () => (owesRetry ? retrySame() : setSeed((s) => s + 1));
+  }, [onDebt, typeIdx, unit]);
+  const drawNew = () => (owesRetry ? drawRetry() : setSeed((s) => s + 1));
   const openPractice = () => {
     if (tab !== "practice" && usedTokenRef.current !== null && usedTokenRef.current === drawRef.current?.token) {
       usedTokenRef.current = null;
-      newProblem();
+      drawNew();
     }
+    setRecheckNote(false);
     setTab("practice");
   };
 
+  const challenges = unit.problems.map((p, i) => ({ p, i })).filter(({ p }) => p.optional);
   const mastered = isMastered(unit, progress);
   // Practice opens only after the student passes this unit's Check for
   // Understanding (user requirement: the CFU gates Practice for everyone,
@@ -236,6 +258,19 @@ function UnitView({
   const solvedSinceIntro = (progress?.solved ?? 0) - (progress?.introDoneAtSolved ?? 0);
   const introNeedsRefresh = !!unit.reintroEverySolved && !!progress?.introDone && solvedSinceIntro >= unit.reintroEverySolved;
   const introSatisfied = !unit.requiresIntro || (!!progress?.introDone && !introNeedsRefresh);
+
+  // A re-check that comes due while the student stays in Practice: the next
+  // problem button goes to Explore, with a short line saying why.
+  const [recheckNote, setRecheckNote] = useState(false);
+  const orRecheck = (next: () => void) => () => {
+    if (introNeedsRefresh) {
+      setRecheckNote(true);
+      setTab("explore");
+      window.scrollTo({ top: 0 });
+    } else next();
+  };
+  const newProblem = orRecheck(drawNew);
+  const retrySame = orRecheck(drawRetry);
 
   // Once the Check for Understanding is passed, keep it open (with its
   // feedback) until the student leaves the Explore tab, instead of letting
@@ -251,7 +286,7 @@ function UnitView({
     <div className="unit">
       <header className="unit-head">
         <div>
-          <h1>{unit.title}</h1>
+          <ReadAloud as="h1">{unit.title}</ReadAloud>
           <ReadAloud as="p" className="goal">
             <MathText>{unit.goal}</MathText>
           </ReadAloud>
@@ -259,7 +294,6 @@ function UnitView({
         <div className="unit-stars">
           <Stars unit={unit} p={progress} size="lg" />
           <span className="small muted">{progress?.solved ?? 0} solved</span>
-          <span className="small muted">Standard {unit.standard}</span>
           {unit.test && <TestBadge p={progress} passScore={unit.test.passScore} />}
         </div>
       </header>
@@ -288,6 +322,11 @@ function UnitView({
       {tab === "explore" && (
         <div className="panel" role="tabpanel">
           <ReadAllButton />
+          {recheckNote && !introSatisfied && (
+            <ReadAloud as="p" className="feedback good" role="alert">
+              Let's check.
+            </ReadAloud>
+          )}
           {introSatisfied && !cfuJustPassed ? <unit.Explore /> : <unit.Explore onIntroDone={handleIntroDone} />}
           <div className="panel-foot" data-readaloud-part>
             {introSatisfied ? (
@@ -295,7 +334,7 @@ function UnitView({
                 Try practice problems
               </button>
             ) : (
-              <ReadAloud as="p" className="muted small">Complete the activity above to unlock practice problems.</ReadAloud>
+              <ReadAloud as="p" className="muted small">Finish the questions. Then you can practice.</ReadAloud>
             )}
           </div>
         </div>
@@ -305,52 +344,52 @@ function UnitView({
         <div className="panel" role="tabpanel">
           <ReadAllButton />
           <div className="practice-bar">
-            <Segmented
-              label="Problem type"
-              value={typeIdx === "mix" ? "mix" : String(typeIdx)}
-              onChange={(id) => setTypeIdx(id === "mix" ? "mix" : Number(id))}
-              disabled={owesRetry}
-              options={[{ id: "mix", label: "Mixed" }, ...unit.problems.map((p, i) => ({ id: String(i), label: p.label }))]}
-            />
+            {/* Shown only when there is a real choice: Unit 2's optional Challenge. */}
+            {challenges.length > 0 && (
+              <Segmented
+                label="Problem type"
+                value={typeIdx === "mix" ? "mix" : String(typeIdx)}
+                onChange={(id) => setTypeIdx(id === "mix" ? "mix" : Number(id))}
+                disabled={owesRetry}
+                options={[{ id: "mix", label: "Mixed" }, ...challenges.map(({ p, i }) => ({ id: String(i), label: p.label }))]}
+              />
+            )}
             <button className="btn ghost" onClick={newProblem}>
               {owesRetry ? "Try one like it" : "New problem"}
             </button>
           </div>
           {typeIdx !== "mix" && (
             <ReadAloud as="p" className="muted small">
-              Practicing one type is great for extra reps, but only <b>Mixed</b> problems count toward your mastery stars.
+              Only <b>Mixed</b> earns stars.
             </ReadAloud>
           )}
           <StepProblem
             key={`${unit.id}-${seed}-${String(typeIdx)}`}
             problem={problem}
-            onComplete={(clean, bucket) => {
+            onComplete={(clean, bucket, solvedAlone) => {
               usedTokenRef.current = drawRef.current?.token ?? null;
-              if (clean) {
+              if (solvedAlone) {
                 setOwesRetry(false);
                 onDebt(null);
               }
               return onSolved(clean, bucket, typeIdx === "mix");
             }}
             onHelped={handleHelped}
-            onNext={() => setSeed((s) => s + 1)}
+            onNext={orRecheck(() => setSeed((s) => s + 1))}
             onRetrySame={retrySame}
           />
           {mastered && (unit.test || onNextUnit) && (
             <ReadAloud className="mastered">
               {unit.test && !testPassed(unit, progress) ? (
                 <>
-                  <span>You've mastered {unit.title.toLowerCase()}. Take the test to finish this unit.</span>
+                  <span>You did it! Now take the test.</span>
                   <button className="btn primary" onClick={() => setTab("test")}>
                     Take the test
                   </button>
                 </>
               ) : (
                 <>
-                  <span>
-                    {unit.test && "🔥 "}You've mastered {unit.title.toLowerCase()}
-                    {unit.test ? " and passed the test." : "."}
-                  </span>
+                  <span>{unit.test ? "You did it! You passed the test." : "You did it!"}</span>
                   {onNextUnit && (
                     <button className="btn primary" onClick={onNextUnit}>
                       Go to the next unit
@@ -438,7 +477,7 @@ function AdditionSubtractionAndTeenNumbersLab() {
                     </span>
                   )}
                 </span>
-                {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} label="Module test rating" />}
+                {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} />}
               </button>
               <button
                 className="reset"
@@ -451,7 +490,7 @@ function AdditionSubtractionAndTeenNumbersLab() {
                 }}
                 onBlur={() => setConfirmReset(false)}
               >
-                {confirmReset ? "Click again to clear all stars" : "Reset progress"}
+                {confirmReset ? "Tap again to clear your stars" : "Reset progress"}
               </button>
             </nav>
             <main className="main">
@@ -459,18 +498,18 @@ function AdditionSubtractionAndTeenNumbersLab() {
                 <div className="unit">
                   <header className="unit-head">
                     <div>
-                      <h1>Module Test</h1>
-                      <ReadAloud as="p" className="goal">30 cumulative questions covering every unit in Addition, Subtraction &amp; Teen Numbers — 5 from each.</ReadAloud>
+                      <ReadAloud as="h1">Module Test</ReadAloud>
+                      <ReadAloud as="p" className="goal">30 questions from all the units.</ReadAloud>
                     </div>
                     <div className="unit-stars">
                       {progress[MODULE_PROGRESS_KEY]?.testScore !== undefined && (
-                        <RatingStars n={moduleTestStars(progress[MODULE_PROGRESS_KEY].testScore)} size="lg" label="Module test rating" />
+                        <RatingStars n={moduleTestStars(progress[MODULE_PROGRESS_KEY].testScore)} size="lg" />
                       )}
                       <TestBadge p={progress[MODULE_PROGRESS_KEY]} passScore={moduleTest.passScore} total={MODULE_TEST_TOTAL} />
                     </div>
                   </header>
                   <button className="btn ghost module-test-back" onClick={() => go(null)}>
-                    ← Back to Addition, Subtraction &amp; Teen Numbers
+                    ← Back
                   </button>
                   <div className="panel">
                     <ReadAllButton />
