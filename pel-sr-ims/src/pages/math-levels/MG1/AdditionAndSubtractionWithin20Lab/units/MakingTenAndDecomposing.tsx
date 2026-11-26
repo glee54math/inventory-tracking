@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { TenFrameGroup, PartPartWhole, EquationStrip, type BondPart, type Tone } from "../diagrams";
+import { TenFrameGroup, PartPartWhole, EquationStrip, KeepBreakFrames, type BondPart, type Tone } from "../diagrams";
 import { makeTenBreakdown, subtractThroughTenBreakdown } from "../logic";
 import { randInt } from "../../../shared/lib/math";
 import { choice, pointing, type Problem, type VisualHelp } from "../../../shared/engine/types";
@@ -276,11 +276,8 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
             </ReadAloud>
           </div>
           <div {...lookHereSpot("mt-keep")}>
-            <div className="control-row" style={pictureRow} data-readaloud-part>
-              <Frame value={a} tone="a" />
-              <Sign>+</Sign>
-              <Frame value={b} tone="b" splitAt={addBreak.addToA} tone2="c" />
-            </div>
+            {/* Keep box (solid, big frame) vs Break box (dashed, small frame); the moving part hops into the ten on a loop. */}
+            <KeepBreakFrames big={a} small={b} />
             <ReadAloud as="p" className="muted small" data-look-here-key>
               Keep the bigger number whole. It is closer to 10. Break apart the smaller number.
             </ReadAloud>
