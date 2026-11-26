@@ -1,172 +1,147 @@
-import { ShapeGlyph, SHAPE_KINDS, SHAPE_LABELS, type ShapeKind } from "../diagrams/Shape2D";
+import { ShapeGlyph } from "../diagrams/Shape2D";
 import { SolidGlyph, SOLID_KINDS, SOLID_LABELS, type SolidKind } from "../diagrams/Solid3D";
+import { SolidThingPicture, SOLID_THINGS, SOLID_THING_SHAPE, SOLID_THING_NAME } from "../diagrams/RealObjects";
 import { pick, shuffle } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
+import { inAnyOrder } from "./labParts";
 
-// ---------- end-of-unit test: Flat or Solid? (2D vs. 3D) ----------
-// 10 questions from 10 generators. Self-contained, same convention as every
-// other *Test.tsx in this lab.
+// ---------- end-of-unit test: Flat or Solid? ----------
+// 10 questions from 10 generators, in a new order every sitting. Self-
+// contained, same convention as every other *Test.tsx in this lab. Every
+// question has a picture, all in one color (review C1-08). Questions on the
+// same skill draw from separate pools (review C1-10). Some flat shapes have a
+// soft fill and one solid is a plain line drawing, so shading never tells.
 
-/** Easy: classify an obviously flat shape. */
+type Tone = "a" | "b" | "c";
+const tone = (): Tone => pick(["a", "b", "c"] as const);
+const FLAT = "Flat (2D)";
+const SOLID = "Solid (3D)";
+const flatOrSolid = (solid: boolean, explain: string) =>
+  choice({ prompt: "Is it flat (2D) or solid (3D)?", hint: "Could you pick it up?", explain }, solid ? SOLID : FLAT, [solid ? FLAT : SOLID]);
+
+/** Easy: a plain rectangle or triangle. */
 export const classify2DQuestion = (): TestQuestion[] => {
-  const kind = pick(SHAPE_KINDS.filter((k) => k !== "circle" && k !== "square") as ShapeKind[]);
-  return [
-    {
-      visual: <ShapeGlyph kind={kind} tone="a" label="a shape" />,
-      difficulty: "easy",
-      step: choice({ prompt: "Is this shape flat (2D) or solid (3D)?", hint: "Could you pick it up and hold it, with real depth?", explain: `A ${SHAPE_LABELS[kind].toLowerCase()} is flat (2D).` }, "Flat (2D)", ["Solid (3D)"]),
-    },
-  ];
+  const kind = pick(["rectangle", "triangle"] as const);
+  return [{ visual: <ShapeGlyph kind={kind} tone={tone()} label="a shape" />, difficulty: "easy", step: flatOrSolid(false, `A ${kind} is flat, like a drawing.`) }];
 };
 
-/** Easy: classify an obviously solid shape. */
-export const classify3DQuestion = (): TestQuestion[] => {
-  const kind = pick(SOLID_KINDS.filter((k) => k !== "sphere" && k !== "cube") as SolidKind[]);
-  return [
-    {
-      visual: <SolidGlyph kind={kind} tone="b" label="a shape" />,
-      difficulty: "easy",
-      step: choice({ prompt: "Is this shape flat (2D) or solid (3D)?", hint: "Could you pick it up and hold it, with real depth?", explain: `A ${SOLID_LABELS[kind].toLowerCase()} is solid (3D).` }, "Solid (3D)", ["Flat (2D)"]),
-    },
-  ];
-};
+/** Easy: a cone. */
+export const classify3DQuestion = (): TestQuestion[] => [
+  { visual: <SolidGlyph kind="cone" tone={tone()} label="a shape" />, difficulty: "easy", step: flatOrSolid(true, "A cone is solid. You can pick it up.") },
+];
 
-/** Medium: a second classify-2D question, a different shape than the easy one. */
-export const classify2DSecondQuestion = (): TestQuestion[] => {
-  const kind = pick(["triangle", "hexagon"] as const);
-  return [
-    {
-      visual: <ShapeGlyph kind={kind} tone="c" label="a shape" />,
-      difficulty: "medium",
-      step: choice({ prompt: "Is this shape flat (2D) or solid (3D)?", hint: "Could you pick it up and hold it, with real depth?", explain: `A ${SHAPE_LABELS[kind].toLowerCase()} is flat (2D).` }, "Flat (2D)", ["Solid (3D)"]),
-    },
-  ];
-};
+/** Medium: a hexagon with a soft fill — still flat. */
+export const classify2DSecondQuestion = (): TestQuestion[] => [
+  { visual: <ShapeGlyph kind="hexagon" soft tone={tone()} label="a shape" />, difficulty: "medium", step: flatOrSolid(false, "A hexagon is flat, like a drawing.") },
+];
 
-/** Medium: a second classify-3D question, a different solid than the easy one. */
-export const classify3DSecondQuestion = (): TestQuestion[] => {
-  const kind = pick(["cone", "cylinder"] as const);
-  return [
-    {
-      visual: <SolidGlyph kind={kind} tone="a" label="a shape" />,
-      difficulty: "medium",
-      step: choice({ prompt: "Is this shape flat (2D) or solid (3D)?", hint: "Could you pick it up and hold it, with real depth?", explain: `A ${SOLID_LABELS[kind].toLowerCase()} is solid (3D).` }, "Solid (3D)", ["Flat (2D)"]),
-    },
-  ];
-};
+/** Medium: a cylinder drawn as plain lines — still solid. */
+export const classify3DSecondQuestion = (): TestQuestion[] => [
+  { visual: <SolidGlyph kind="cylinder" plain tone={tone()} label="a shape" />, difficulty: "medium", step: flatOrSolid(true, "A cylinder is solid, like a can.") },
+];
 
-/** Hard: the circle-vs-sphere discrimination, shown as the solid. */
-export const sphereVsCircleHardQuestion = (): TestQuestion[] => {
-  return [
-    {
-      visual: <SolidGlyph kind="sphere" tone="c" label="a round shape" />,
-      difficulty: "hard",
-      step: choice(
-        { prompt: "Is this round shape flat (2D) or solid (3D)?", hint: "Look for the shading/highlight that shows depth.", explain: "This is a sphere — the shading shows it's round all over and has real depth, so it's solid (3D)." },
-        "Solid (3D)",
-        ["Flat (2D)"]
-      ),
-    },
-  ];
-};
-
-/** Hard: the square-vs-cube discrimination, shown as the flat shape. */
+/** Hard: a square or a cube (either one, so the answer changes; C1-07). */
 export const squareVsCubeHardQuestion = (): TestQuestion[] => {
+  const showCube = pick([true, false]);
+  const t = tone();
   return [
     {
-      visual: <ShapeGlyph kind="square" tone="a" label="a square shape" />,
+      visual: showCube ? <SolidGlyph kind="cube" tone={t} label="a shape" /> : <ShapeGlyph kind="square" tone={t} label="a shape" />,
       difficulty: "hard",
-      step: choice(
-        { prompt: "Is this square-faced shape flat (2D) or solid (3D)?", hint: "No shading at all means no depth.", explain: "This is a flat square (2D) — it has no shading showing depth, unlike a cube." },
-        "Flat (2D)",
-        ["Solid (3D)"]
-      ),
+      step: flatOrSolid(showCube, showCube ? "A cube is solid, like a block." : "A square is flat, like a drawing."),
     },
   ];
 };
 
-/** Medium: production — name the solid (not just classify it). */
-export const nameSolidQuestion = (): TestQuestion[] => {
-  const kind = pick(SOLID_KINDS);
-  const label = SOLID_LABELS[kind];
+/** Medium: the solid a real thing is (K.G.1 / K.G.3; review C1-15). */
+export const realObjectSolidQuestion = (): TestQuestion[] => {
+  const thing = pick(SOLID_THINGS);
+  const kind = SOLID_THING_SHAPE[thing];
+  const name = SOLID_THING_NAME[thing];
   return [
     {
-      visual: <SolidGlyph kind={kind} tone="b" label="a solid shape" />,
+      visual: <SolidThingPicture thing={thing} tone={tone()} />,
       difficulty: "medium",
       step: choice(
-        { prompt: "What is the name of this solid shape?", hint: "Round all over? Two round ends? A point at the top? A box?", explain: `This is a ${label}.` },
-        label,
-        shuffle(SOLID_KINDS.filter((k) => k !== kind).map((k) => SOLID_LABELS[k])).slice(0, 3)
-      ),
-    },
-  ];
-};
-
-/** Hard: name the solid, restricted to just the cube/sphere pair that's
- *  easiest to mix up with their flat cousins. */
-export const nameSolidHardQuestion = (): TestQuestion[] => {
-  const kind = pick(["cube", "sphere"] as const);
-  const label = SOLID_LABELS[kind];
-  return [
-    {
-      visual: <SolidGlyph kind={kind} tone="c" label="a solid shape" />,
-      difficulty: "hard",
-      step: choice(
-        { prompt: "What is the name of this solid shape?", hint: "Round all over, or flat square faces?", explain: `This is a ${label}.` },
-        label,
+        { prompt: `What solid shape is ${name}?`, hint: "Round? A point on top? Like a block?", explain: `${name[0].toUpperCase()}${name.slice(1)} is a ${kind}.` },
+        SOLID_LABELS[kind],
         shuffle(SOLID_KINDS.filter((k) => k !== kind).map((k) => SOLID_LABELS[k])).slice(0, 2)
       ),
     },
   ];
 };
 
-/** Hard: the core generalization, as a true/false trap. */
-export const looksCanTrickYouTrueFalseQuestion = (): TestQuestion[] => {
+const nameSolid = (pool: readonly SolidKind[], difficulty: TestQuestion["difficulty"]): TestQuestion[] => {
+  const kind = pick(pool);
   return [
     {
-      visual: null,
+      visual: <SolidGlyph kind={kind} tone={tone()} label="a solid shape" />,
+      difficulty,
+      step: choice({ prompt: "What solid is it?", hint: "Round? A point on top? Like a block?", explain: `It is a ${kind}.` }, SOLID_LABELS[kind], shuffle(SOLID_KINDS.filter((k) => k !== kind).map((k) => SOLID_LABELS[k])).slice(0, 3)),
+    },
+  ];
+};
+
+/** Medium: name a cone or a cylinder. */
+export const nameSolidQuestion = (): TestQuestion[] => nameSolid(["cone", "cylinder"], "medium");
+
+/** Hard: name a cube or a sphere (the ones that look like a square / circle). */
+export const nameSolidHardQuestion = (): TestQuestion[] => nameSolid(["cube", "sphere"], "hard");
+
+/** Hard: round does not mean solid — a circle or a sphere, so the answer
+ *  changes (review C1-09 / E1-02: it replaced a true/false item). */
+export const roundShapeQuestion = (): TestQuestion[] => {
+  const sphere = pick([true, false]);
+  const t = tone();
+  return [
+    {
+      visual: sphere ? <SolidGlyph kind="sphere" tone={t} label="a round shape" /> : <ShapeGlyph kind="circle" tone={t} label="a round shape" />,
       difficulty: "hard",
       step: choice(
-        {
-          prompt: "True or false: a round shape in a picture must always be solid (3D), just because it looks round.",
-          hint: "A circle is round AND flat.",
-          explain: "False — a circle is round but flat (2D). Whether something is solid depends on real depth, not just a round outline.",
-        },
-        "False",
-        ["True"]
+        { prompt: "This shape is round. Is it flat (2D) or solid (3D)?", hint: "Could you pick it up?", explain: sphere ? "It is a sphere. It is solid, like a ball." : "It is a circle. It is round, but flat." },
+        sphere ? SOLID : FLAT,
+        [sphere ? FLAT : SOLID]
       ),
     },
   ];
 };
 
-/** Medium: synthesis — connecting a flat face back to the solid it came from. */
-export const cubeFaceSynthesisQuestion = (): TestQuestion[] => {
+/** Medium: the flat shape that is a part of a solid, the part ringed: the
+ *  front of the cube (Square) or the end of the can (Circle), half each, with
+ *  the same buttons (review C2-09: it was always Square). Taught in Explore
+ *  and Practice first (review C1-24 / E1-21 replaced "trace one face"). */
+export const cubeFrontQuestion = (): TestQuestion[] => {
+  const front = pick([true, false]);
+  const t = tone();
   return [
     {
-      visual: <SolidGlyph kind="cube" tone="a" label="a solid shape" />,
+      visual: front ? <SolidGlyph kind="cube" ringFront tone={t} label="a cube with its front ringed" /> : <SolidThingPicture thing="can" ringEnd tone={t} label="a can with its end ringed" />,
       difficulty: "medium",
       step: choice(
-        { prompt: "If you traced just ONE flat face of this cube onto paper, what flat (2D) shape would you get?", hint: "Look at one face of the cube — is it round, triangular, or square?", explain: "Each face of a cube is a flat Square." },
-        "Square",
-        ["Circle", "Triangle"]
+        { prompt: front ? "Look at the front of the cube. What shape is it?" : "Look at the end of the can. What shape is it?", hint: "Look at the ringed part.", explain: front ? "The front is a square." : "The end is a circle." },
+        front ? "Square" : "Circle",
+        front ? ["Circle", "Triangle"] : ["Square", "Triangle"]
       ),
     },
   ];
 };
 
+const QUESTIONS = [
+  classify2DQuestion,
+  classify3DQuestion,
+  classify2DSecondQuestion,
+  classify3DSecondQuestion,
+  squareVsCubeHardQuestion,
+  realObjectSolidQuestion,
+  nameSolidQuestion,
+  nameSolidHardQuestion,
+  roundShapeQuestion,
+  cubeFrontQuestion,
+];
+
 export const flatOrSolidTest: Unit["test"] = {
-  questions: [
-    classify2DQuestion,
-    classify3DQuestion,
-    classify2DSecondQuestion,
-    classify3DSecondQuestion,
-    sphereVsCircleHardQuestion,
-    squareVsCubeHardQuestion,
-    nameSolidQuestion,
-    nameSolidHardQuestion,
-    looksCanTrickYouTrueFalseQuestion,
-    cubeFaceSynthesisQuestion,
-  ],
+  questions: inAnyOrder(QUESTIONS),
   passScore: 9,
 };
+

@@ -5,3 +5,4 @@ export * from "./StickBuilder";
 export * from "./CubeFrameBuilder";
 export * from "./ComposeShapes";
 export * from "./countAlong";
+export * from "./RealObjects";

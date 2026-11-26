@@ -506,10 +506,16 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
   const update = (i: number, patch: Partial<StepState>) => setStates((all) => all.map((s, k) => (k === i ? { ...s, ...patch } : s)));
 
   // A wrong try reported by a custom step itself (it grades its own parts).
-  const wrongTry = (i: number) => {
+  // A step that gives its own reason gets that line instead of the generic one
+  // (MK4 round 2: "Not yet. There is a gap." then "Not a match." was two messages).
+  const wrongTry = (i: number, reason?: string) => {
     const wrong = states[i].wrong + 1;
-    update(i, { wrong, feedback: "Not a match. Try again.", hint: true });
+    update(i, { wrong, feedback: reason || "Not a match. Try again.", hint: true });
   };
+  // A custom step's student changed their work: clear the old wrong-try line,
+  // the way a typed step's onChange does (MK4 round 3, C3-02 / E3-08). The try
+  // count, hint and Show me stay. Steps that never call it are unchanged.
+  const editTry = (i: number) => setStates((all) => (all[i].feedback === null ? all : all.map((s, k) => (k === i ? { ...s, feedback: null } : s))));
 
   const submit = (i: number, inputs = states[i].inputs) => {
     const step = problem.steps[i];
@@ -619,7 +625,8 @@ export function StepProblem({ problem, onComplete, onNext, onRetrySame, onHelped
                         state={st}
                         onChange={(inputs) => update(i, { inputs, feedback: null, formMark: undefined })}
                         onSubmit={(inputs) => submit(i, inputs)}
-                        onWrong={() => wrongTry(i)}
+                        onWrong={(reason) => wrongTry(i, reason)}
+                        onEdit={() => editTry(i)}
                       />
                     </div>
                     {st.feedback && (
@@ -745,13 +752,16 @@ export function StepInput({
   onChange,
   onSubmit,
   onWrong,
+  onEdit,
 }: {
   step: Step;
   state: StepState;
   onChange: (v: string[]) => void;
   onSubmit: (v: string[]) => void;
-  /** A custom step's wrong try (see CustomStep.render). */
-  onWrong?: () => void;
+  /** A custom step's wrong try, with the step's own reason if it has one (see CustomStep.render). */
+  onWrong?: (reason?: string) => void;
+  /** A custom step's student changed their work: clear the wrong-try line (see CustomStep.render). */
+  onEdit?: () => void;
 }) {
   const early = useEarlyLearner();
   // Labs with <StackedFractions> (MG10): fraction options become tap buttons (a
@@ -827,7 +837,11 @@ export function StepInput({
     return <ExprBuilder inputs={state.inputs} signs={step.signs} onChange={onChange} onEnter={() => onSubmit(state.inputs)} />;
   }
   if (step.kind === "custom") {
-    return <div className="custom-step">{step.render(() => onSubmit(["done"]), () => onWrong?.())}</div>;
+    return <div className="custom-step">{step.render(
+          () => onSubmit(["done"]),
+          (reason) => onWrong?.(reason),
+          () => onEdit?.()
+        )}</div>;
   }
   if (step.kind === "sentence") {
     // SentenceStep.more (MG10): blanks 3+ follow parts[2]. checkEach: tap buttons for every

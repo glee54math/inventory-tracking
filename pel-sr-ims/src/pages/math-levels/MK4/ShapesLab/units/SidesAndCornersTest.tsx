@@ -1,175 +1,134 @@
-import { ShapeGlyph, SHAPE_KINDS, SHAPE_LABELS, shapeAttributes, sidesLookEqual, BUILDABLE_KINDS, type ShapeKind } from "../diagrams/Shape2D";
-import { pick, shuffle } from "../../../shared/lib/math";
+import { ShapeGlyph, SHAPE_LABELS, shapeAttributes, type ShapeKind, type BuildableKind, type TriangleVariant } from "../diagrams/Shape2D";
+import { pick, randInt } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
+import { inAnyOrder } from "./labParts";
 
 // ---------- end-of-unit test: Sides and Corners ----------
-// 10 questions from 10 generators. Self-contained, same convention as every
-// other *Test.tsx in this lab.
+// 10 questions from 10 generators, in a new order every sitting. Self-
+// contained, same convention as every other *Test.tsx in this lab. Shapes
+// come turned and in different sizes (K.G.4; review C1-16). Yes/No and
+// "the same" answers are drawn at random, half each (review C1-07, E1-26).
+// No question prints a count the student is asked for (review C1-27).
 
-/** Easy: count sides of a shape with straight sides. */
-export const countSidesEasyQuestion = (): TestQuestion[] => {
-  const kind = pick(["square", "triangle"] as const);
-  const n = shapeAttributes(kind).sides;
+type What = "sides" | "corners";
+const turn = (kind: ShapeKind) => (kind === "circle" ? 0 : randInt(0, 11) * 30 + randInt(-10, 10));
+const size = () => pick([48, 56, 64]);
+const glyph = (kind: ShapeKind, variant: TriangleVariant = "plain") => <ShapeGlyph kind={kind} variant={variant} rotation={turn(kind)} size={size()} tone={pick(["a", "b", "c"] as const)} label="a shape" />;
+
+const countQ = (kind: ShapeKind, what: What, difficulty: TestQuestion["difficulty"]): TestQuestion[] => {
+  const n = shapeAttributes(kind)[what];
   return [
     {
-      visual: <ShapeGlyph kind={kind} tone="a" label="a shape" />,
-      difficulty: "easy",
-      step: { kind: "number", prompt: "How many sides does this shape have?", hint: "Count each straight edge one at a time.", explain: `This shape has ${n} sides.`, answer: n },
+      visual: glyph(kind),
+      difficulty,
+      step: { kind: "number", prompt: `How many ${what} does it have?`, hint: `Count each one once.`, explain: kind === "circle" ? `A circle has no ${what}.` : `It has ${n} ${what}.`, answer: n },
     },
   ];
 };
 
-/** Medium: count sides of a hexagon (a bigger count than Units students have practiced). */
-export const countSidesHexagonQuestion = (): TestQuestion[] => {
-  const n = shapeAttributes("hexagon").sides;
+/** Easy: sides of a square or triangle. */
+export const countSidesEasyQuestion = (): TestQuestion[] => countQ(pick(["square", "triangle"] as const), "sides", "easy");
+/** Medium: sides of a hexagon. */
+export const countSidesHexagonQuestion = (): TestQuestion[] => countQ("hexagon", "sides", "medium");
+/** Hard: a circle's sides (0). */
+export const countSidesCircleQuestion = (): TestQuestion[] => countQ("circle", "sides", "hard");
+/** Easy: corners of a rectangle or triangle. */
+export const countCornersEasyQuestion = (): TestQuestion[] => countQ(pick(["rectangle", "triangle"] as const), "corners", "easy");
+/** Hard: a circle's corners (0). */
+export const countCornersCircleQuestion = (): TestQuestion[] => countQ("circle", "corners", "hard");
+/** Medium: corners of a square or hexagon, asked on its own (review C1-27:
+ *  it used to say "This shape has 4 sides." first). */
+export const sidesCornersMatchQuestion = (): TestQuestion[] => countQ(pick(["square", "hexagon"] as const), "corners", "medium");
+
+const sameSides = (pool: { kind: BuildableKind; variant: TriangleVariant; equal: boolean }[]): TestQuestion[] => {
+  const equal = Math.random() < 0.5;
+  const s = pick(pool.filter((p) => p.equal === equal));
+  const label = SHAPE_LABELS[s.kind].toLowerCase();
   return [
     {
-      visual: <ShapeGlyph kind="hexagon" tone="b" label="a shape" />,
+      visual: glyph(s.kind, s.variant),
       difficulty: "medium",
-      step: { kind: "number", prompt: "How many sides does this shape have?", hint: "Count each straight edge one at a time.", explain: `This shape has ${n} sides.`, answer: n },
+      step: choice(
+        { prompt: "Are all the sides the same?", hint: "Look at each side.", explain: `This ${label}'s sides are ${equal ? "all the same" : "not all the same"}.` },
+        equal ? "Yes" : "No",
+        [equal ? "No" : "Yes"]
+      ),
     },
   ];
 };
 
-/** Hard: count the sides of a circle — the 0-sides edge case. */
-export const countSidesCircleQuestion = (): TestQuestion[] => {
-  return [
-    {
-      visual: <ShapeGlyph kind="circle" tone="c" label="a round shape" />,
-      difficulty: "hard",
-      step: { kind: "number", prompt: "How many STRAIGHT sides does this shape have?", hint: "Is the edge curved, or straight?", explain: "A circle's edge is one curved line with no straight parts, so it has 0 sides.", answer: 0 },
-    },
-  ];
-};
+/** Medium: a square (Yes) or a rectangle (No). */
+export const equalSidesYesQuestion = (): TestQuestion[] =>
+  sameSides([
+    { kind: "square", variant: "plain", equal: true },
+    { kind: "rectangle", variant: "plain", equal: false },
+  ]);
 
-/** Easy: count corners of a shape. */
-export const countCornersEasyQuestion = (): TestQuestion[] => {
-  const kind = pick(["rectangle", "triangle"] as const);
-  const n = shapeAttributes(kind).corners;
-  return [
-    {
-      visual: <ShapeGlyph kind={kind} tone="a" label="a shape" />,
-      difficulty: "easy",
-      step: { kind: "number", prompt: "How many corners does this shape have?", hint: "Count each point where two sides meet.", explain: `This shape has ${n} corners.`, answer: n },
-    },
-  ];
-};
+/** Medium: an equal-sided triangle or a hexagon (Yes), or a long thin triangle (No). */
+export const equalSidesNoQuestion = (): TestQuestion[] =>
+  sameSides([
+    { kind: "triangle", variant: "equal", equal: true },
+    { kind: "hexagon", variant: "plain", equal: true },
+    { kind: "triangle", variant: "thin", equal: false },
+  ]);
 
-/** Hard: count the corners of a circle — the 0-corners edge case. */
-export const countCornersCircleQuestion = (): TestQuestion[] => {
-  return [
-    {
-      visual: <ShapeGlyph kind="circle" tone="b" label="a round shape" />,
-      difficulty: "hard",
-      step: { kind: "number", prompt: "How many corners does this shape have?", hint: "A corner is a sharp point where two straight sides meet.", explain: "A circle's edge never meets itself at a sharp point, so it has 0 corners.", answer: 0 },
-    },
-  ];
-};
-
-/** Medium: equal-sides comparison — a shape where the answer is "Yes." */
-export const equalSidesYesQuestion = (): TestQuestion[] => {
-  const kind = pick(BUILDABLE_KINDS.filter((k) => sidesLookEqual(k)));
-  return [
-    {
-      visual: <ShapeGlyph kind={kind} tone="a" label="a shape" />,
-      difficulty: "medium",
-      step: choice({ prompt: "Do all of its sides look the same length?", hint: "Compare each side's length to the others.", explain: "Yes — every side of this shape is the same length." }, "Yes", ["No"]),
-    },
-  ];
-};
-
-/** Medium: equal-sides comparison — a shape where the answer is "No." */
-export const equalSidesNoQuestion = (): TestQuestion[] => {
-  const kind = pick(BUILDABLE_KINDS.filter((k) => !sidesLookEqual(k)));
-  return [
-    {
-      visual: <ShapeGlyph kind={kind} tone="c" label="a shape" />,
-      difficulty: "medium",
-      step: choice({ prompt: "Do all of its sides look the same length?", hint: "Compare each side's length to the others.", explain: "No — this shape's sides are not all the same length." }, "No", ["Yes"]),
-    },
-  ];
-};
-
-/** Hard: cross-shape comparison with a genuine tie (square vs. non-square rectangle). */
-export const crossShapeTieQuestion = (): TestQuestion[] => {
-  const [kindA, kindB] = pick([
-    ["square", "rectangle"],
-    ["rectangle", "square"],
-  ] as const);
+const compareQ = (what: What, diffPairs: [ShapeKind, ShapeKind][]): TestQuestion[] => {
+  const tie = Math.random() < 0.5;
+  const [x, y] = tie ? (pick(["sr", "rs"]) === "sr" ? (["square", "rectangle"] as const) : (["rectangle", "square"] as const)) : pick(diffPairs);
+  const [kindA, kindB] = Math.random() < 0.5 ? [x, y] : [y, x];
+  const a = shapeAttributes(kindA)[what];
+  const b = shapeAttributes(kindB)[what];
+  const answer = a === b ? "The same" : a > b ? SHAPE_LABELS[kindA] : SHAPE_LABELS[kindB];
+  const more = (a > b ? SHAPE_LABELS[kindA] : SHAPE_LABELS[kindB]).toLowerCase();
   return [
     {
       visual: (
         <div className="control-row">
-          <ShapeGlyph kind={kindA} tone="a" label="shape A" />
-          <ShapeGlyph kind={kindB} tone="c" label="shape B" />
+          <div style={{ width: 150 }}>{glyph(kindA)}</div>
+          <div style={{ width: 150 }}>{glyph(kindB)}</div>
         </div>
       ),
       difficulty: "hard",
       step: choice(
-        { prompt: "Which shape has more sides?", hint: "Count each one separately, even if their sides are different lengths.", explain: "Both have 4 sides — that's the same number, even though they look different." },
-        "They have the same number of sides",
-        ["Square", "Rectangle"]
+        { prompt: `Which has more ${what}? Or are they the same?`, hint: "Count each one.", explain: a === b ? `Both have ${a} ${what}. That is the same.` : `The ${more} has more ${what}.` },
+        answer,
+        [SHAPE_LABELS[kindA], SHAPE_LABELS[kindB], "The same"].filter((c) => c !== answer)
       ),
     },
   ];
 };
 
-/** Hard: cross-shape comparison with a genuine difference. */
-export const crossShapeDifferentQuestion = (): TestQuestion[] => {
-  let kindA: ShapeKind;
-  let kindB: ShapeKind;
-  do {
-    kindA = pick(SHAPE_KINDS);
-    kindB = pick(SHAPE_KINDS);
-  } while (kindA === kindB || shapeAttributes(kindA).sides === shapeAttributes(kindB).sides);
-  const a = shapeAttributes(kindA);
-  const b = shapeAttributes(kindB);
-  const more = a.sides > b.sides ? kindA : kindB;
-  const fewer = a.sides > b.sides ? kindB : kindA;
-  return [
-    {
-      visual: (
-        <div className="control-row">
-          <ShapeGlyph kind={kindA} tone="a" label="shape A" />
-          <ShapeGlyph kind={kindB} tone="b" label="shape B" />
-        </div>
-      ),
-      difficulty: "hard",
-      step: choice(
-        { prompt: "Which shape has more sides?", hint: "Count each shape's sides separately, then compare.", explain: `${SHAPE_LABELS[more]} has more sides than ${SHAPE_LABELS[fewer]}.` },
-        SHAPE_LABELS[more],
-        shuffle([SHAPE_LABELS[fewer], "They have the same number of sides"])
-      ),
-    },
-  ];
-};
+/** Hard: which has more sides, or the same (square and rectangle tie half the time). */
+export const crossShapeTieQuestion = (): TestQuestion[] =>
+  compareQ("sides", [
+    ["triangle", "square"],
+    ["triangle", "rectangle"],
+    ["circle", "triangle"],
+  ]);
 
-/** Medium: synthesis — for these shapes, corner count always matches side count. */
-export const sidesCornersMatchQuestion = (): TestQuestion[] => {
-  const kind = pick(BUILDABLE_KINDS);
-  const n = shapeAttributes(kind).sides;
-  return [
-    {
-      visual: <ShapeGlyph kind={kind} tone="a" label="a shape" />,
-      difficulty: "medium",
-      step: { kind: "number", prompt: `This shape has ${n} sides. How many corners does it have?`, hint: "For shapes like this, the number of corners always matches the number of sides.", explain: `It has ${n} corners too — the same as its number of sides.`, answer: n },
-    },
-  ];
-};
+/** Hard: which has more corners, or the same. */
+export const crossShapeDifferentQuestion = (): TestQuestion[] =>
+  compareQ("corners", [
+    ["hexagon", "triangle"],
+    ["hexagon", "square"],
+    ["circle", "square"],
+  ]);
+
+const QUESTIONS = [
+  countSidesEasyQuestion,
+  countSidesHexagonQuestion,
+  countSidesCircleQuestion,
+  countCornersEasyQuestion,
+  countCornersCircleQuestion,
+  equalSidesYesQuestion,
+  equalSidesNoQuestion,
+  crossShapeTieQuestion,
+  crossShapeDifferentQuestion,
+  sidesCornersMatchQuestion,
+];
 
 export const sidesAndCornersTest: Unit["test"] = {
-  questions: [
-    countSidesEasyQuestion,
-    countSidesHexagonQuestion,
-    countSidesCircleQuestion,
-    countCornersEasyQuestion,
-    countCornersCircleQuestion,
-    equalSidesYesQuestion,
-    equalSidesNoQuestion,
-    crossShapeTieQuestion,
-    crossShapeDifferentQuestion,
-    sidesCornersMatchQuestion,
-  ],
+  questions: inAnyOrder(QUESTIONS),
   passScore: 9,
 };

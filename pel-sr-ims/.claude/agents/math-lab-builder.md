@@ -451,6 +451,14 @@ objects, so it became "the small one is heavier"; it needs big-and-heavy
 pairs too. Later grades: "every square is a rectangle" vs. "every rectangle
 is a square.")
 
+**Teach the idea, not a drawing cue (user-approved 2026-11-26, from MK4
+Unit 2; K–2).** When a picture stands for a real-world property (solid,
+heavy, far), teach the property itself ("you can pick it up") and show real
+objects beside it. Don't teach a drawing convention such as shading as the
+rule, and mix in pictures that break the cue (a line-drawn solid, a
+soft-filled flat shape). (MK4 first taught "shading is the real tell" for
+solid shapes.)
+
 ### Check for Understanding (CFU) — the mandatory gate
 **Every unit has one, and it gates Practice (user requirement).** No
 exceptions for "fluency practice" or "word problems on concepts already
@@ -820,7 +828,14 @@ Practice just because they hint; strip only what gives the answer away.
   2). Each step needs its own idea.
 - **A finished step's prompt stays on screen, so no step's prompt may
   contain a later step's answer.** (MG2 "19 to 20: which ten did you just
-  start?" sat above "What comes after 19?")
+  start?" sat above "What comes after 19?") **The same goes for a finished
+  step's `explain`, answer chip and custom `resultText`** (user-approved
+  2026-11-26, from MK4; all grades): none may state a later step's answer
+  (MK4: "Built using 4 sticks" sat above "How many sticks did you need?").
+  And step 1's prompt or button set must not decide a later "which kind?"
+  choice: if step 1 asks "What solid is it?" or offers only flat names, a
+  later "Is it flat or solid?" is given away. Ask the category first, or
+  mix the categories in step 1's buttons.
 - **Breadth inside one problem:** where the skill is matching or naming,
   put several items in one problem (match 4 word–numeral pairs by dragging,
   not one pair), so a few problems cover the range.
@@ -1230,6 +1245,17 @@ Delete the harness when done. Take screenshots and look at them.
 **Number pad on a landscape iPad (user-approved 2026-11-23, MK2).** Also check
 Tests at 1180×820: every number pad key and Check must be on screen without
 scrolling.
+
+**Test screen check, every question (user-approved 2026-11-26, from MK4;
+K–1 `.lab-early` labs).** Check every Test and Module Test question,
+including the first one before any scrolling, at 820×1180, 1180×820 and
+1366×768: every answer button, pad key and Check on screen, nothing under
+the read-aloud bar, and the top of the question's picture on screen. The
+shared `lab-base.css` `.lab-early` landscape layout and the `UnitTest`
+scroll (portrait and landscape) handle this for early labs; a new lab must
+still be checked, because a tall picture or a floating pad can break it
+(MK4 Test Q1 had its pad below the fold; MG2's tens picture was cut off at
+the top).
 
 ## Final report (what the user actually reads)
 

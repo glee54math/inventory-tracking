@@ -39,6 +39,9 @@ function starCount(unit: Unit, p?: UnitProgress): number {
   return sharedStarCount(MASTERY_GOAL, unit.requiredBuckets, p);
 }
 
+/** A unit title ending a sentence: some titles already end in "?". */
+const titleSentence = (t: string) => (/[.?!]$/.test(t) ? t : `${t}.`);
+
 function Stars({ unit, p, size = "sm" }: { unit: Unit; p?: UnitProgress; size?: "sm" | "lg" }) {
   const n = starCount(unit, p);
   return (
@@ -81,21 +84,23 @@ function Home({
     <div className="home">
       <section className="hero">
         <div className="hero-text">
-          <h1>Squares, circles, and cubes!</h1>
-          <ReadAloud as="p">Name shapes (even turned or resized), tell flat from solid, count sides and corners, and build bigger shapes out of smaller ones.</ReadAloud>
-          <button className="btn primary big" onClick={() => onPick(next === -1 ? 0 : next)}>
-            {next <= 0 ? "Start exploring" : `Continue: ${units[next].title}`}
-          </button>
+          <ReadAloud as="h1">Squares, circles, and cubes!</ReadAloud>
+          <ReadAloud as="p">Name shapes. Flat or solid? Count sides. Build shapes.</ReadAloud>
+          <ReadAloud text={next <= 0 ? "Start exploring." : `Continue. ${titleSentence(units[next].title)}`}>
+            <button className="btn primary big" onClick={() => onPick(next === -1 ? 0 : next)}>
+              {next <= 0 ? "Start exploring" : `Continue: ${units[next].title}`}
+            </button>
+          </ReadAloud>
         </div>
         <div className="hero-art">
           <UnitPreviewCarousel units={units} onPick={onPick} />
         </div>
       </section>
       <section>
-        <h2 className="section-title">Your path</h2>
+        <ReadAloud as="h2" className="section-title">Your path</ReadAloud>
         <ol className="path">
           {units.map((u, i) => (
-            <li key={u.id}>
+            <ReadAloud as="li" key={u.id} text={`${titleSentence(u.title)} ${u.goal}`}>
               <button className="path-card" onClick={() => onPick(i)}>
                 <span className="path-num">{i + 1}</span>
                 <span className="path-body">
@@ -106,24 +111,26 @@ function Home({
                 </span>
                 <Stars unit={u} p={progress[u.id]} />
               </button>
-            </li>
+            </ReadAloud>
           ))}
         </ol>
         <ReadAloud as="p" className="muted small">
-          Solve each kind of problem 2 times by yourself to fill in your stars. Only Mixed problems count.
+          Solve each kind 2 times. Fill your stars.
         </ReadAloud>
       </section>
       <section>
-        <button className="path-card module-test-card" onClick={onModuleTest}>
-          <span className="path-body">
-            <span className="path-title">📝 Module Test</span>
-            <span className="path-goal">20 cumulative questions, 5 from every unit in this lab.</span>
-          </span>
-          <span className="unit-stars">
-            {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} label="Module test rating" />}
-            <TestBadge p={progress[MODULE_PROGRESS_KEY]} passScore={moduleTest.passScore} total={MODULE_TEST_TOTAL} />
-          </span>
-        </button>
+        <ReadAloud text={`Module Test. ${MODULE_TEST_TOTAL} questions.`}>
+          <button className="path-card module-test-card" onClick={onModuleTest}>
+            <span className="path-body">
+              <span className="path-title">📝 Module Test</span>
+              <span className="path-goal">{MODULE_TEST_TOTAL} questions.</span>
+            </span>
+            <span className="unit-stars">
+              {moduleTestScore !== undefined && <RatingStars n={moduleTestStars(moduleTestScore)} label="Module test rating" />}
+              <TestBadge p={progress[MODULE_PROGRESS_KEY]} passScore={moduleTest.passScore} total={MODULE_TEST_TOTAL} />
+            </span>
+          </button>
+        </ReadAloud>
       </section>
     </div>
   );
@@ -251,7 +258,7 @@ function UnitView({
     <div className="unit">
       <header className="unit-head">
         <div>
-          <h1>{unit.title}</h1>
+          <ReadAloud as="h1">{unit.title}</ReadAloud>
           <ReadAloud as="p" className="goal">
             <MathText>{unit.goal}</MathText>
           </ReadAloud>
@@ -295,7 +302,7 @@ function UnitView({
                 Try practice problems
               </button>
             ) : (
-              <ReadAloud as="p" className="muted small">Complete the activity above to unlock practice problems.</ReadAloud>
+              <ReadAloud as="p" className="muted small">Do the check first. Then you can practice.</ReadAloud>
             )}
           </div>
         </div>
@@ -318,7 +325,7 @@ function UnitView({
           </div>
           {typeIdx !== "mix" && (
             <ReadAloud as="p" className="muted small">
-              Practicing one type is great for extra reps, but only <b>Mixed</b> problems count toward your mastery stars.
+              Only <b>Mixed</b> problems give you stars.
             </ReadAloud>
           )}
           <StepProblem
@@ -340,7 +347,7 @@ function UnitView({
             <ReadAloud className="mastered">
               {unit.test && !testPassed(unit, progress) ? (
                 <>
-                  <span>You've mastered {unit.title.toLowerCase()}. Take the test to finish this unit.</span>
+                  <span>You finished this part. Now take the test.</span>
                   <button className="btn primary" onClick={() => setTab("test")}>
                     Take the test
                   </button>
@@ -348,8 +355,8 @@ function UnitView({
               ) : (
                 <>
                   <span>
-                    {unit.test && "🔥 "}You've mastered {unit.title.toLowerCase()}
-                    {unit.test ? " and passed the test." : "."}
+                    {unit.test && "🔥 "}You finished this part.
+                    {unit.test ? " You passed the test." : ""}
                   </span>
                   {onNextUnit && (
                     <button className="btn primary" onClick={onNextUnit}>
@@ -451,7 +458,7 @@ function ShapesLab() {
                 }}
                 onBlur={() => setConfirmReset(false)}
               >
-                {confirmReset ? "Click again to clear all stars" : "Reset progress"}
+                {confirmReset ? "Tap again to clear all stars" : "Reset progress"}
               </button>
             </nav>
             <main className="main">
@@ -460,7 +467,7 @@ function ShapesLab() {
                   <header className="unit-head">
                     <div>
                       <h1>Module Test</h1>
-                      <ReadAloud as="p" className="goal">20 cumulative questions covering every unit in Shapes Lab — 5 from each.</ReadAloud>
+                      <ReadAloud as="p" className="goal">{MODULE_TEST_TOTAL} questions.</ReadAloud>
                     </div>
                     <div className="unit-stars">
                       {progress[MODULE_PROGRESS_KEY]?.testScore !== undefined && (

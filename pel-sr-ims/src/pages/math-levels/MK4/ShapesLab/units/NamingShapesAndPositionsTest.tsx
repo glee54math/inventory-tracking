@@ -1,97 +1,91 @@
-import { ShapeGlyph, SHAPE_KINDS, SHAPE_LABELS, type ShapeKind } from "../diagrams/Shape2D";
-import { PositionScene, RELATIONS, RELATION_LABELS, RELATION_RECIPROCAL, type Relation } from "../diagrams/PositionScene";
-import { pick, shuffle } from "../../../shared/lib/math";
+import { ShapeGlyph, SHAPE_LABELS, type ShapeKind } from "../diagrams/Shape2D";
+import { PositionScene, RELATION_LABELS, RELATION_RECIPROCAL, RELATIONS, type Relation } from "../diagrams/PositionScene";
+import { FlatThingPicture, FLAT_THINGS, FLAT_THING_SHAPE, FLAT_THING_NAME } from "../diagrams/RealObjects";
+import { pick } from "../../../shared/lib/math";
 import { choice, type TestQuestion } from "../../../shared/engine/types";
 import type { Unit } from "../../../shared/units/types";
+import { inAnyOrder, shapeDistractors, visibleTurn, VISIBLE_TURNS } from "./labParts";
 
-// ---------- end-of-unit test: Naming Shapes and Positions ----------
-// 10 questions from 10 generators. Self-contained (own copy of the
-// shape/position tables), same convention as every other *Test.tsx in this
-// lab — never imports from NamingShapesAndPositions.tsx, so the two files
-// can't form a circular import.
+// ---------- end-of-unit test: Name It. Where Is It? ----------
+// 10 questions from 10 generators, in a new order every sitting. Self-
+// contained (never imports NamingShapesAndPositions.tsx, so the two files
+// can't form a circular import). Every question has a picture. Questions
+// that check the same skill draw from separate pools, so no question can
+// come up twice in one sitting (review C1-10). Test hints are never shown.
 
-function distractorNames(kind: ShapeKind, includeDiamond: boolean): string[] {
-  const others = shuffle(SHAPE_KINDS.filter((k) => k !== kind)).map((k) => SHAPE_LABELS[k]);
-  if (includeDiamond) return shuffle([others[0], "Diamond"]);
-  return others.slice(0, 2);
-}
+const lowerRel = (r: Relation) => RELATION_LABELS[r].toLowerCase();
 
-/** Easy: name a shape in its plain, standard orientation. */
+/** Easy: name a plain circle, rectangle or triangle. */
 export const nameShapeStandardQuestion = (): TestQuestion[] => {
-  const kind = pick(SHAPE_KINDS.filter((k) => k !== "square") as ShapeKind[]);
+  const kind = pick(["circle", "rectangle", "triangle"] as const);
   const label = SHAPE_LABELS[kind];
   return [
     {
       visual: <ShapeGlyph kind={kind} tone="a" label="a shape" />,
       difficulty: "easy",
-      step: choice({ prompt: "What shape is this?", hint: "Count the sides and corners.", explain: `This is a ${label}.` }, label, distractorNames(kind, false)),
+      step: choice({ prompt: "What shape is it?", hint: "Look at the corners.", explain: `It is a ${label.toLowerCase()}.` }, label, shapeDistractors(kind, false)),
     },
   ];
 };
 
-/** Easy: a second standard-orientation shape, so this bucket's easy end is
- *  actually sampled twice in a 10-question test, not just once. */
-export const nameShapeStandardQuestion2 = (): TestQuestion[] => {
-  const kind = pick(["square", "hexagon"] as const);
-  const label = SHAPE_LABELS[kind];
+/** Easy: the shape of a real thing (K.G.1; review C1-15). */
+export const realObjectShapeQuestion = (): TestQuestion[] => {
+  const thing = pick(FLAT_THINGS);
+  const shape = FLAT_THING_SHAPE[thing];
+  const name = FLAT_THING_NAME[thing];
   return [
     {
-      visual: <ShapeGlyph kind={kind} tone="b" label="a shape" />,
+      visual: <FlatThingPicture thing={thing} tone="a" />,
       difficulty: "easy",
-      step: choice({ prompt: "What shape is this?", hint: "Count the sides and corners.", explain: `This is a ${label}.` }, label, distractorNames(kind, kind === "square")),
+      step: choice({ prompt: `What shape is ${name}?`, hint: "Look at its shape.", explain: `${name[0].toUpperCase()}${name.slice(1)} is a ${SHAPE_LABELS[shape].toLowerCase()}.` }, SHAPE_LABELS[shape], shapeDistractors(shape, false)),
     },
   ];
 };
 
-/** Medium: a rotated square — the named "diamond" trap distractor. */
+/** Medium: a turned square — "Diamond" is the trap (the name some people use). */
 export const nameShapeRotatedDiamondTrap = (): TestQuestion[] => {
-  const rotation = pick([30, 45, 60, 120]);
+  const rotation = pick(VISIBLE_TURNS.square);
   return [
     {
-      visual: <ShapeGlyph kind="square" rotation={rotation} tone="a" label="a tilted shape" />,
+      visual: <ShapeGlyph kind="square" rotation={rotation} tone="a" label="a turned shape" />,
       difficulty: "medium",
-      step: choice(
-        { prompt: "What shape is this?", hint: "Count the sides — turning it never changes the count.", explain: "This is a Square — turning it never makes it a different shape." },
-        "Square",
-        ["Diamond", "Rectangle"]
-      ),
+      step: choice({ prompt: "What shape is it?", hint: "Turning does not change it.", explain: "It is a square. It is just turned." }, "Square", ["Diamond", "Rectangle"]),
     },
   ];
 };
 
-/** Medium: a resized shape (smaller or larger than usual). */
+/** Medium: a bigger or smaller shape. */
 export const nameShapeResizedQuestion = (): TestQuestion[] => {
-  const kind = pick(SHAPE_KINDS);
+  const kind = pick(["square", "hexagon", "circle"] as const);
   const scale = pick([0.5, 1.5]);
   const label = SHAPE_LABELS[kind];
   return [
     {
-      visual: <ShapeGlyph kind={kind} scale={scale} tone="c" label="a shape" />,
+      visual: <ShapeGlyph kind={kind} scale={scale} tone="a" label="a shape" />,
       difficulty: "medium",
       step: choice(
-        { prompt: "What shape is this?", hint: "Size never changes what shape it is.", explain: `This is still a ${label}, just ${scale < 1 ? "smaller" : "bigger"} than usual.` },
+        { prompt: "What shape is it?", hint: "Big or small, it is the same shape.", explain: `It is still a ${label.toLowerCase()}. It is just ${scale < 1 ? "smaller" : "bigger"}.` },
         label,
-        distractorNames(kind, kind === "square")
+        shapeDistractors(kind, false)
       ),
     },
   ];
 };
 
-/** Hard: a rotated triangle or hexagon — no "nickname" trap to lean on. */
+/** Hard: a turned hexagon or triangle — no prompt help at all. */
 export const nameShapeRotatedHardQuestion = (): TestQuestion[] => {
   const kind = pick(["triangle", "hexagon"] as const);
-  const rotation = pick([40, 75, 110, 160, 200]);
   const label = SHAPE_LABELS[kind];
   return [
     {
-      visual: <ShapeGlyph kind={kind} rotation={rotation} tone="a" label="a turned shape" />,
+      visual: <ShapeGlyph kind={kind} rotation={visibleTurn(kind)} tone="a" label="a turned shape" />,
       difficulty: "hard",
-      step: choice({ prompt: "What shape is this?", hint: "Count the sides and corners — turning it doesn't change them.", explain: `This is a ${label}, just turned to face a different way.` }, label, distractorNames(kind, false)),
+      step: choice({ prompt: "What shape is it?", hint: "Turning does not change it.", explain: `It is a ${label.toLowerCase()}. It is just turned.` }, label, shapeDistractors(kind, false)),
     },
   ];
 };
 
-/** Easy: a plain above/below scene. */
+/** Easy: above or below. Buttons: Above / Below / Beside. */
 export const positionAboveBelowQuestion = (): TestQuestion[] => {
   const relation = pick(["above", "below"] as const);
   const correct = RELATION_LABELS[relation];
@@ -99,106 +93,121 @@ export const positionAboveBelowQuestion = (): TestQuestion[] => {
     {
       visual: <PositionScene relation={relation} />,
       difficulty: "easy",
-      step: choice(
-        { prompt: "Which word describes where the ball is, compared to the box?", hint: "Is the ball higher or lower than the box?", explain: `The ball is ${correct.toLowerCase()} the box.` },
-        correct,
-        [RELATION_LABELS[relation === "above" ? "below" : "above"], "Beside"]
-      ),
+      step: choice({ prompt: "Where is the ball?", hint: "Is the ball up or down?", explain: `The ball is ${correct.toLowerCase()} the box.` }, correct, [RELATION_LABELS[relation === "above" ? "below" : "above"], "Beside"]),
     },
   ];
 };
 
-/** Medium: a beside/behind scene. */
-export const positionBesideBehindQuestion = (): TestQuestion[] => {
-  const relation = pick(["beside", "behind"] as const);
+/** Medium: beside, on either side. Buttons: Beside / Above / In front of.
+ *  Only "beside" (review C2-08: it used to draw "above" too, the same
+ *  picture and answer as the above/below question). */
+export const positionBesideAboveQuestion = (): TestQuestion[] => {
   const side = pick(["left", "right"] as const);
-  const correct = RELATION_LABELS[relation];
   return [
     {
-      visual: <PositionScene relation={relation} side={side} />,
+      visual: <PositionScene relation="beside" side={side} />,
       difficulty: "medium",
-      step: choice(
-        { prompt: "Which word describes where the ball is, compared to the box?", hint: "Does anything overlap or hide part of the other object?", explain: `The ball is ${correct.toLowerCase()} the box.` },
-        correct,
-        [RELATION_LABELS["inFrontOf"], relation === "beside" ? "Above" : "Beside"]
-      ),
+      step: choice({ prompt: "Where is the ball?", hint: "Is the ball next to the box?", explain: "The ball is beside the box." }, "Beside", ["Above", "In front of"]),
     },
   ];
 };
 
-/** Hard: forced choice between beside / in front of / behind — the exact
- *  vocabulary-precision pair this unit's plan calls out by name. */
+/** Hard: in front of or behind, with beside as the trap — the precision
+ *  pair the plan calls out. */
 export const positionVocabPrecisionQuestion = (): TestQuestion[] => {
-  const vocabSet: Relation[] = ["beside", "inFrontOf", "behind"];
-  const relation = pick(vocabSet);
+  const relation = pick(["inFrontOf", "behind"] as const);
   const side = pick(["left", "right"] as const);
   const correct = RELATION_LABELS[relation];
   return [
     {
       visual: <PositionScene relation={relation} side={side} />,
       difficulty: "hard",
-      step: choice(
-        { prompt: "Which word describes where the ball is, compared to the box?", hint: "If part of one object is hidden by the other, it's not just 'beside.'", explain: `The ball is ${correct.toLowerCase()} the box.` },
-        correct,
-        vocabSet.filter((r) => r !== relation).map((r) => RELATION_LABELS[r])
-      ),
+      step: choice({ prompt: "Where is the ball?", hint: "Is part of it hidden?", explain: `The ball is ${correct.toLowerCase()} the box.` }, correct, ["In front of", "Behind", "Beside"].filter((c) => c !== correct)),
     },
   ];
 };
 
-/** Hard: the core K.G.2 generalization, stated as a true/false trap. */
-export const turningGeneralizationTrueFalseQuestion = (): TestQuestion[] => {
+/** The shape straight, an arrow, then the same shape turned: the picture
+ *  says "it got turned", so the prompt doesn't name the shape (review E2-01). */
+function TurnedPair({ kind, rotation }: { kind: ShapeKind; rotation: number }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+      <div style={{ width: 130 }}>
+        <ShapeGlyph kind={kind} tone="a" label="a shape" />
+      </div>
+      <svg viewBox="0 0 60 40" width={60} height={40} aria-hidden data-tts-skip style={{ flex: "none" }}>
+        <line x1={6} y1={20} x2={44} y2={20} stroke="var(--ink)" strokeWidth={5} strokeLinecap="round" />
+        <polygon points="54,20 40,10 40,30" fill="var(--ink)" />
+      </svg>
+      <div style={{ width: 130 }}>
+        <ShapeGlyph kind={kind} rotation={rotation} tone="a" label="the same shape, turned" />
+      </div>
+    </div>
+  );
+}
+
+/** Hard: turning does not make a new shape, asked about one new picture
+ *  (review C1-09 / E1-02: it replaced a true/false item). */
+export const turnedShapeQuestion = (): TestQuestion[] => {
+  const kind = pick(["triangle", "rectangle"] as const);
+  const label = SHAPE_LABELS[kind];
+  const others: ShapeKind[] = kind === "triangle" ? ["square", "circle"] : ["square", "triangle"];
   return [
     {
-      visual: null,
+      visual: <TurnedPair kind={kind} rotation={visibleTurn(kind)} />,
       difficulty: "hard",
       step: choice(
-        {
-          prompt: "True or false: turning (rotating) a shape around can make it become a different shape.",
-          hint: "Turning never changes how many sides or corners a shape has.",
-          explain: "False — turning a shape only changes which way it's facing. It's always the same shape.",
-        },
-        "False",
-        ["True"]
+        { prompt: "It got turned. What shape is it now?", hint: "Turning does not change it.", explain: `It is still a ${label.toLowerCase()}.` },
+        label,
+        others.map((k) => SHAPE_LABELS[k])
       ),
     },
   ];
 };
 
-/** Medium: the reciprocal-relation synthesis question. */
+/** "Where is the box?" buttons for each relation (the right one first). */
+const BOX_CHOICES: Record<Relation, Relation[]> = {
+  above: ["below", "above", "beside"],
+  below: ["above", "below", "beside"],
+  beside: ["beside", "above", "inFrontOf"],
+  inFrontOf: ["behind", "inFrontOf", "beside"],
+  behind: ["inFrontOf", "behind", "beside"],
+};
+
+/** Medium: the same scene, told about the box (user decision: keep it,
+ *  reworded; E1-15). The answer changes with the scene. */
 export const reciprocalRelationQuestion = (): TestQuestion[] => {
   const relation = pick(RELATIONS);
   const side = pick(["left", "right"] as const);
-  const reciprocal = RELATION_RECIPROCAL[relation];
+  const [right, ...wrong] = BOX_CHOICES[relation];
+  const theBall = (r: Relation) => `${RELATION_LABELS[r]} the ball`;
   return [
     {
       visual: <PositionScene relation={relation} side={side} />,
       difficulty: "medium",
       step: choice(
-        {
-          prompt: `The ball is ${RELATION_LABELS[relation].toLowerCase()} the box. From the BOX's point of view, where is the ball... I mean, where is the BOX, compared to the ball?`,
-          hint: "Above/below swap with each other. In front of/behind swap with each other. Beside stays beside.",
-          explain: `If the ball is ${RELATION_LABELS[relation].toLowerCase()} the box, the box is ${RELATION_LABELS[reciprocal].toLowerCase()} the ball.`,
-        },
-        RELATION_LABELS[reciprocal],
-        shuffle(RELATIONS.filter((r) => r !== reciprocal)).slice(0, 2).map((r) => RELATION_LABELS[r])
+        { prompt: `The ball is ${lowerRel(relation)} the box. Where is the box?`, hint: "Look at the box.", explain: `The box is ${lowerRel(RELATION_RECIPROCAL[relation])} the ball.` },
+        theBall(right),
+        wrong.map(theBall)
       ),
     },
   ];
 };
 
+const QUESTIONS = [
+  nameShapeStandardQuestion,
+  realObjectShapeQuestion,
+  nameShapeRotatedDiamondTrap,
+  nameShapeResizedQuestion,
+  nameShapeRotatedHardQuestion,
+  positionAboveBelowQuestion,
+  positionBesideAboveQuestion,
+  positionVocabPrecisionQuestion,
+  turnedShapeQuestion,
+  reciprocalRelationQuestion,
+];
+
 export const namingShapesAndPositionsTest: Unit["test"] = {
-  questions: [
-    nameShapeStandardQuestion,
-    nameShapeStandardQuestion2,
-    nameShapeRotatedDiamondTrap,
-    nameShapeResizedQuestion,
-    nameShapeRotatedHardQuestion,
-    positionAboveBelowQuestion,
-    positionBesideBehindQuestion,
-    positionVocabPrecisionQuestion,
-    turningGeneralizationTrueFalseQuestion,
-    reciprocalRelationQuestion,
-  ],
+  questions: inAnyOrder(QUESTIONS),
   passScore: 9,
 };

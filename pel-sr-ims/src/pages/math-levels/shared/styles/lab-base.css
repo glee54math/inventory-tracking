@@ -1576,6 +1576,60 @@ input.align-slot.align-slot-input {
   font-size: 19px;
 }
 
+/* Landscape iPad (1180x820, 1366x768): the first Test question starts low on
+   the page (title, key idea, tabs above it), so a one-column question pushed
+   its pad keys, Check or answer buttons below the fold. Two columns instead:
+   - typed: picture and question on the left, the box and pad on the right
+     (promoted from MK2's own stylesheet; MK4 round 2, user decision 2026-11-25);
+   - picture + answer buttons: picture on the left, question and buttons on
+     the right (MK4 round 2, same decision: the MK2 rule only covers typed).
+   Portrait and narrow screens keep the one-column layout. */
+/* UnitTest.tsx scrolls the question just into view (landscape and portrait:
+   MK4 round 3, C3-05); the bottom margin keeps its last row clear of the
+   read-aloud bar. */
+.lab-base.lab-early .test-question {
+  scroll-margin-top: 12px;
+  scroll-margin-bottom: 84px;
+}
+@media (orientation: landscape) and (min-width: 900px) {
+  .lab-base.lab-early .test-question:has(.numpad-inline) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 28px;
+    align-items: start;
+  }
+  .lab-base.lab-early .test-question:has(.numpad-inline) > .problem-visual,
+  .lab-base.lab-early .test-question:has(.numpad-inline) > div:has(.test-prompt),
+  .lab-base.lab-early .test-question:has(.numpad-inline) > .step-tools {
+    grid-column: 1;
+  }
+  .lab-base.lab-early .test-question:has(.numpad-inline) > div:has(.numpad-inline) {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+  .lab-base.lab-early .test-question:has(.numpad-inline) .answer-row {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+  }
+  .lab-base.lab-early .test-question:has(> .problem-visual):has(.choices):not(:has(.numpad-inline)) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    /* The tall picture's extra height goes to the last row, not between the question and its buttons. */
+    grid-template-rows: auto auto 1fr;
+    column-gap: 28px;
+    align-items: start;
+  }
+  .lab-base.lab-early .test-question:has(> .problem-visual):has(.choices):not(:has(.numpad-inline)) > .problem-visual {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+  }
+  .lab-base.lab-early .test-question:has(> .problem-visual):has(.choices):not(:has(.numpad-inline)) > :not(.problem-visual) {
+    grid-column: 2;
+  }
+  /* Word buttons side by side, so they stay clear of the read-aloud bar. */
+  .lab-base.lab-early .test-question:has(> .problem-visual):has(.choices):not(:has(.numpad-inline)) .choices:not(:has(.choice-pic)) {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+}
+
 /* ==========================================================================
    On-screen number pads (shared/components/NumberPad.tsx).
    Inline: in the page under a practice/test answer box. Floating: for the few

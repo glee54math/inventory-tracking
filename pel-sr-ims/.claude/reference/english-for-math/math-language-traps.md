@@ -127,6 +127,17 @@ to say), and pronouns must match them.
   shorter" (from MK3, 2026-11-24; all grades; done in `mathSpeech.ts`).
   A unit after the slash ("miles/hour") is not changed; write "miles per
   hour" in student text.
+  **A slash that means "swap" or "and"** ("above/below swap") is still
+  read "or" and flips the meaning: write it out. A slash with spaces
+  around it ("Flip / rotate") is silent (from MK4, 2026-11-26; all grades).
+- **No 's on an all-caps word.** The voice lowercases a word only when every
+  letter is a capital, so "the BOX's point of view" keeps "BOX" in capitals
+  and some voices spell it. Use bold lowercase (from MK4, 2026-11-26; all
+  grades).
+- **Don't quote a question-style button label inside an instruction.**
+  'Then tap "Is it closed?"' is heard as the voice asking the student a
+  question. Say what to do ("Close it all the way around.") or relabel the
+  button (from MK4, 2026-11-26; all grades).
 - "3²" → "3 squared"; "10³" → "10 cubed" or "10 to the third power".
 - "30s" → "thirties". "a.m." → "A M".
 - Teen numbers: say them, but show the ten and the ones.

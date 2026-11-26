@@ -395,8 +395,14 @@ export interface VerticalMultiplyStep extends BaseStep {
  */
 export interface CustomStep extends BaseStep {
   kind: "custom";
-  /** `onWrong` reports a wrong try (feedback, hint, "Show me", clean scoring), like a wrong typed answer. */
-  render: (onDone: () => void, onWrong: () => void) => ReactNode;
+  /** `onWrong` reports a wrong try (feedback, hint, "Show me", clean scoring), like a wrong typed answer.
+   *  Pass `reason` (the widget's own short line, e.g. "Not yet. There is a gap.") and the engine shows
+   *  and reads THAT as the step's feedback instead of its generic "Not a match. Try again."; the
+   *  widget then shouldn't print the same line itself. With no reason the generic line is used.
+   *  `onEdit` (optional to call) clears that feedback line: call it when the student changes their
+   *  work after a wrong try, so an old "There is a gap." doesn't stay beside a fixed build (MK4
+   *  round 3, C3-02 / E3-08). Like a typed step's onChange; widgets that never call it are unchanged. */
+  render: (onDone: () => void, onWrong: (reason?: string) => void, onEdit: () => void) => ReactNode;
   resultText: string;
 }
 
@@ -481,7 +487,7 @@ export const fractionStep = (base: BaseStep, n: number, d: number, opts: Omit<Fr
 });
 
 /** Build a CustomStep — see CustomStep's doc comment for when to reach for this. */
-export const customStep = (base: BaseStep, render: (onDone: () => void, onWrong: () => void) => ReactNode, resultText: string): CustomStep => ({ ...base, kind: "custom", render, resultText });
+export const customStep = (base: BaseStep, render: CustomStep["render"], resultText: string): CustomStep => ({ ...base, kind: "custom", render, resultText });
 
 /** Build a CoordinateStep — see its doc comment for when to reach for this over RatioStep. */
 export const coordinateStep = (base: BaseStep, x: number, y: number): CoordinateStep => ({ ...base, kind: "coordinate", answer: [x, y] });

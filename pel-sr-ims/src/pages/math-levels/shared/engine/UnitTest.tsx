@@ -8,6 +8,7 @@ import { MathText, useStackedFractions } from "../components/MathText";
 import { formBoxes, formName, isAnswerForm } from "../components/answerKinds";
 import { parsePoints, pointsText, splitFactorBoxes, timesText } from "../lib/factors";
 import { builtInputText } from "../lib/buildExpr";
+import { useEarlyLearner } from "./audience";
 
 export interface UnitTestViewProps {
   /** A unit's `test` field — or any other `{questions, passScore}` config, e.g. a cross-unit module test. */
@@ -96,6 +97,49 @@ export function UnitTestView({ test, onComplete }: UnitTestViewProps) {
   const outOf = (a: number, b: number) => (stacked ? `${a} out of ${b}` : `${a}/${b}`);
 
   const finished = current >= questions.length;
+
+  // K-1 labs: the question starts low on the page (title, key idea and tabs
+  // above it), so its pad keys or last answer button can sit below the fold or
+  // under the read-aloud bar. Show the whole question, moving the page only
+  // when part of it is off screen (scroll-margin in lab-base.css keeps it clear
+  // of the bar). A question taller than the screen lines up its top, so the
+  // picture is never cut off. Runs again a moment later (after the floating
+  // pad's own smooth scroll, or a shorter picture than the last question's)
+  // and after a box is tapped and the floating pad opens.
+  // MK4 round 2 (landscape only) → round 3 (C3-04 picture top kept on screen;
+  // C3-05 portrait too, user decision 2026-11-25).
+  const early = useEarlyLearner();
+  const questionRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!early || finished) return;
+    const fit = () => {
+      const q = questionRef.current;
+      if (!q) return;
+      const style = window.getComputedStyle(q);
+      const top = parseFloat(style.scrollMarginTop) || 0;
+      const bottom = parseFloat(style.scrollMarginBottom) || 0;
+      const r = q.getBoundingClientRect();
+      const room = window.innerHeight - top - bottom;
+      if (r.top >= top - 1 && r.bottom <= window.innerHeight - bottom + 1) return;
+      if (r.height <= room) q.scrollIntoView({ block: "nearest" });
+      else q.scrollIntoView({ block: "start" });
+    };
+    const frame = window.requestAnimationFrame(fit);
+    const settle = window.setTimeout(fit, 450);
+    let afterPad = 0;
+    const onFocus = () => {
+      window.clearTimeout(afterPad);
+      afterPad = window.setTimeout(fit, 450);
+    };
+    const q = questionRef.current;
+    q?.addEventListener("focusin", onFocus);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(settle);
+      window.clearTimeout(afterPad);
+      q?.removeEventListener("focusin", onFocus);
+    };
+  }, [early, current, finished]);
 
   // A new question replaces the text on screen: stop the old reading, and
   // read the new question (plus its choices) if the student turned sound on.
@@ -188,7 +232,7 @@ export function UnitTestView({ test, onComplete }: UnitTestViewProps) {
           <span key={i} className={i < current ? "on" : i === current ? "now" : ""} />
         ))}
       </div>
-      <div className="test-question">
+      <div className="test-question" ref={questionRef}>
         {q.visual && <div className="problem-visual"><MathText>{q.visual}</MathText></div>}
         <div ref={promptRef}>
           <ReadAloud className="test-prompt" alsoRead={[inputRef, toolsRef]}>

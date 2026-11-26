@@ -26,7 +26,7 @@ export interface GlossaryTerm {
     updated: string;
 }
 
-export const GLOSSARY_UPDATED = "2026-11-24";
+export const GLOSSARY_UPDATED = "2026-11-26";
 
 const D = GLOSSARY_UPDATED;
 
@@ -178,7 +178,7 @@ export const GLOSSARY: GlossaryTerm[] = [
         group: "Help for students",
         meaning: "After the 1st wrong try, the picture rings, arrows or highlights the spot that holds the answer. On some two-button steps MK3 makes this stronger (for example it also shows the word's picture). It is NOT the Show me walkthrough.",
         studentSees: "A ring, arrow or highlight on the picture.",
-        levels: "MK1–MK3, MG1, MG2, MG10",
+        levels: "MK1–MK4, MG1, MG2, MG10",
         code: "pointing(help, i) in each unit's visual",
         updated: D,
     },
@@ -234,7 +234,7 @@ export const GLOSSARY: GlossaryTerm[] = [
         group: "Check for Understanding",
         meaning: "On a two-button CFU question, a wrong tap swaps in a new question of the same kind with new values, so the student can't just tap the other button.",
         studentSees: "A short reason, then a new question.",
-        levels: "MK2, MK3, MG1",
+        levels: "MK2, MK3, MK4, MG1",
         code: "PickCheck twin",
         updated: D,
     },
@@ -244,7 +244,7 @@ export const GLOSSARY: GlossaryTerm[] = [
         group: "Check for Understanding",
         meaning: "After a 2nd CFU miss, an arrow, \"Look here\" label or highlight points to the place in Explore that teaches the answer.",
         studentSees: "An arrow or highlight on the Explore picture.",
-        levels: "MK2, MK3, MG1, MG2, MG5, MG8, MG10",
+        levels: "MK2, MK3, MK4, MG1, MG2, MG5, MG8, MG10",
         updated: D,
     },
     {
@@ -330,6 +330,26 @@ export const GLOSSARY: GlossaryTerm[] = [
         group: "Voice and screen",
         meaning: "An on-screen pad for typing numbers, placed beside its boxes and never over a picture.",
         levels: "Early-learner labs (MK1–MK4, MG1, MG2)",
+        updated: D,
+    },
+    {
+        term: "Test screen fit",
+        aka: ["landscape Test layout", "Test auto-scroll"],
+        group: "Voice and screen",
+        meaning: "In early-learner Tests, the page lays out and scrolls so every answer button, number pad key, Check and the top of the picture are on screen, whether the iPad is upright or sideways. Sideways, the picture sits on the left and the answers on the right.",
+        studentSees: "The whole question on screen without scrolling.",
+        levels: "Early-learner labs (MK1–MK4, MG1, MG2), since 2026-11-26 (MK4 review; the sideways layout came from MK2)",
+        code: "shared/styles/lab-base.css (.lab-early), UnitTest.tsx",
+        updated: D,
+    },
+    {
+        term: "Build step",
+        aka: ["custom step"],
+        group: "Lab parts",
+        meaning: "A Practice step where the student does something in the picture instead of typing or tapping an answer button, like joining clay balls with sticks or fitting shapes into an outline. A wrong build counts as a wrong try and gives its own short reason (\"Not yet. There is a gap.\"). The reason clears as soon as the student keeps working.",
+        studentSees: "A picture to build in, a check button, and one short line after a wrong try.",
+        levels: "MK4 (sticks, cube, shapes, strip); other labs use custom steps without their own reason (MK1, MK2, some MG labs)",
+        code: "shared/engine/StepProblem.tsx (onWrong(reason), onEdit)",
         updated: D,
     },
     {
