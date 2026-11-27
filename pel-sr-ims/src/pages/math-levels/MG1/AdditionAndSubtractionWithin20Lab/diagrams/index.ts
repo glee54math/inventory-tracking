@@ -3,4 +3,5 @@ export { PartPartWhole, EquationStrip, type PartPartWholeProps, type BondPart, t
 export { CompareRows } from "./CompareRows";
 export { StoryStrip, type StoryPart, type StoryStripProps } from "./StoryStrip";
 export { ThreeGroups } from "./ThreeGroups";
+export { FrogStory, MissingPartPlayer } from "./StoryAnimations";
 export { KeepBreakFrames } from "./KeepBreakFrames";

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { StoryStrip, TenFrameGroup, type StoryPart } from "../diagrams";
+import { useState } from "react";
+import { StoryStrip, TenFrameGroup, FrogStory, MissingPartPlayer, type StoryPart } from "../diagrams";
 import { storySentenceChoices } from "../logic";
 import { randInt, pick } from "../../../shared/lib/math";
 import { choice, pointing, type Problem, type VisualHelp } from "../../../shared/engine/types";
@@ -169,33 +169,28 @@ function missingLine(action: "add" | "take", missing: StoryPart, start: number, 
   return missing === "change" ? `Change missing? Start at ${start}. Count back to ${end}.` : `Start missing? Start at ${end}. Add back ${change}.`;
 }
 
-const SHOW_STEP_MS = 800;
+/** The "What is missing?" carousel order: Play moves on to the next part when one finishes. */
+const MISSING_ORDER: StoryPart[] = ["start", "change", "end"];
 
 function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
   const introActive = !!onIntroDone;
   const [showCheck, setShowCheck] = useState(false);
-  // Not the CFU's numbers, so a "Look here" never shows a CFU answer
-  // (answers 11, 5, 7). 3 + 6 = 9, not 5 + 3 = 8: Q3's pointer switches to
-  // "Change missing? Start at 5…", and 5 was Q3's answer (C3-02).
-  const [start, setStart] = useState(3);
-  const [change, setChange] = useState(6);
+  // 5 + 3 (user decision, MG1 U3 redesign): the start is bigger, so
+  // "Switch to Take From" works right away (5 − 3). This replaces 3 + 6 from
+  // C3-02, which kept "5" (CFU Q3's answer) out of Q3's "Look here" line;
+  // with 5 + 3 that line reads "Change missing? Start at 5. Count on to 8."
+  const [start, setStart] = useState(5);
+  const [change, setChange] = useState(3);
   const [action, setAction] = useState<"add" | "take">("add");
   const [missing, setMissing] = useState<StoryPart>("end");
-  // "Show": how many counters the missing box shows so far (counting on), or null.
-  const [reveal, setReveal] = useState<number | null>(null);
+  // Play / Stop: act out the missing part, then move on to the next tab (carousel).
+  const [playing, setPlaying] = useState(false);
 
   // Every control's range comes from the others, so the end is always 0–20 and true.
   const end = action === "add" ? start + change : start - change;
-  const missingValue = missing === "start" ? start : missing === "change" ? change : end;
   // The other kind of story would go past 20 (or below 0) with these numbers: gray out the switch.
   const canSwitch = action === "add" ? start - change >= 0 : start + change <= 20;
 
-  useEffect(() => {
-    if (reveal === null || reveal >= missingValue) return;
-    const t = window.setTimeout(() => setReveal((r) => (r === null ? r : r + 1)), SHOW_STEP_MS);
-    return () => window.clearTimeout(t);
-  }, [reveal, missingValue]);
-  const hideReveal = () => setReveal(null);
   // The start-missing view is its own spot (CFU Q6); the others are the change spot (CFU Q3).
   const missingSpot = missing === "start" ? "atf-missing-start" : "atf-missing-change";
 
@@ -208,7 +203,7 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
         if (start + change > 20) setStart(20 - change);
       }
       setMissing(id === "atf-missing-start" ? "start" : "change");
-      hideReveal();
+      setPlaying(false); // hold still on the part the pointer is about
     }
   });
 
@@ -237,7 +232,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           step={1}
           onChange={(v) => {
             setStart(v);
-            hideReveal();
           }}
           tone="a"
         />
@@ -249,7 +243,6 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           step={1}
           onChange={(v) => {
             setChange(v);
-            hideReveal();
           }}
           tone="b"
         />
@@ -258,27 +251,15 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           disabled={!canSwitch}
           onClick={() => {
             setAction(action === "add" ? "take" : "add");
-            hideReveal();
           }}
         >
           Switch to {action === "add" ? "Take From" : "Add To"}
         </button>
       </div>
       <div {...lookHereSpot("atf-story")}>
-        <div className="control-row" style={{ gap: 24, alignItems: "flex-start" }} data-readaloud-part>
-          <div>
-            <TenFrameGroup value={start} tone="a" />
-            <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
-              Start: {start}
-            </ReadAloud>
-          </div>
-          <div>
-            <TenFrameGroup value={end} tone="c" />
-            <ReadAloud as="p" className="muted small" style={{ textAlign: "center" }}>
-              End: {end}
-            </ReadAloud>
-          </div>
-        </div>
+        {/* The story acted out in one ten frame, on a loop: counters hop in (the frog counts on)
+            or the frog hops back leaving ✕s; the same box turns from Start into End. */}
+        <FrogStory key={`${action}-${start}-${change}`} start={start} change={change} action={action} />
         <ReadAloud as="p" className="muted small" data-look-here-key>
           {action === "add" ? `${start} + ${change} = ${end}. It went up. This is an Add To story.` : `${start} − ${change} = ${end}. It went down. This is a Take From story.`}
         </ReadAloud>
@@ -292,21 +273,26 @@ function Explore({ onIntroDone }: { onIntroDone?: () => void }) {
           <Segmented
             label="What is missing?"
             value={missing}
-            onChange={(m) => {
-              setMissing(m);
-              hideReveal();
-            }}
+            onChange={setMissing}
             options={[
               { id: "start", label: "Start" },
               { id: "change", label: "Change" },
               { id: "end", label: "End" },
             ]}
           />
-          <button type="button" className="btn primary" disabled={reveal !== null} onClick={() => setReveal(0)}>
-            Show
+          <button type="button" className={playing ? "btn ghost" : "btn primary"} onClick={() => setPlaying((v) => !v)}>
+            {playing ? "⏹️ Stop" : "▶️ Play"}
           </button>
         </div>
-        <StoryStrip start={start} change={change} end={end} action={action} missing={missing} reveal={reveal ?? undefined} />
+        <MissingPartPlayer
+          key={`${missing}-${action}-${start}-${change}`}
+          start={start}
+          change={change}
+          action={action}
+          missing={missing}
+          playing={playing}
+          onFinished={() => setMissing((m) => MISSING_ORDER[(MISSING_ORDER.indexOf(m) + 1) % MISSING_ORDER.length])}
+        />
         <ReadAloud as="p" className="muted small" data-look-here-key>
           {missingLine(action, missing, start, change, end)}
         </ReadAloud>
