@@ -459,6 +459,59 @@ rule, and mix in pictures that break the cue (a line-drawn solid, a
 soft-filled flat shape). (MK4 first taught "shading is the real tell" for
 solid shapes.)
 
+**Models paint one concept and its efficient procedure (user-approved
+2026-11-26, from MG1 Unit 2 Making Ten and Unit 3 Add To/Take From; all
+grades unless a rule says otherwise).** References:
+`MG1/AdditionAndSubtractionWithin20Lab/diagrams/KeepBreakFrames.tsx` and
+`.../diagrams/StoryAnimations.tsx` (K–5); `MG11/MultDivFractionLab/units/FractionDivision.tsx`
+(`useStepPlayer`, `KeepChangeFlipSteps`) for grades 6+.
+1. **One glance tells each number's job.** Put each quantity in a role box
+   with a tag that pairs an icon with a word (🔒 Keep, ✂️ Break apart,
+   Start, + Add, End). A solid border means known or kept; a dashed border
+   means it changes or is unknown. A student should know which number does
+   what within one second, before reading anything. (MG1 Making Ten: a
+   student could not tell which number to keep and which to break apart.)
+2. **Colors belong to quantities and stay with them.** A counter keeps its
+   color through every change: the green start stays green inside the End.
+   Never recolor or redraw the result as a new pile.
+3. **Every model animates before → action → after.** Show the starting
+   state, the action itself (a counter hops into the empty spot, an ✕
+   crosses one out, a ten breaks into ones, a decimal point moves, pieces
+   join into a whole), and the result. Two still pictures with nothing
+   happening between them is not enough. K–5: about 1 second per item.
+4. **One object transforms.** The same frame, box, area model or number
+   line becomes the result (the Start box's tag changes to End), instead
+   of a second picture beside it.
+5. **Model and emphasize the efficient strategy.** The animation is where
+   the strategy is taught, so it must use the efficient one and make it
+   visible: never re-count from 1. Count on from the bigger number (label
+   the new counters 6, 7, 8), start at the end and undo the change, make a
+   ten, use partial products instead of repeated addition, use benchmark
+   fractions instead of drawing every piece. (MG1 Unit 3's "Show" filled
+   the End box 1, 2, 3 … 9.)
+6. **The picture acts out the caption's exact words, in the same order.**
+   If the line says "Start at 9. Take away 6," the animation does that.
+7. **Concept and procedure tell one story.** Write the equation above the
+   diagram in the same colors as the parts. The unknown is the same dashed
+   "?" box in the equation, the picture and the missing part, and its
+   number pops in only when the picture finds it. The model, the
+   animation, the start, the end and the unknown must all show the same
+   idea and the same steps; this matters more as the grades go up.
+8. **What matters is drawn bigger** (the kept number gets the bigger frame
+   and numeral).
+9. **Playback by grade.** K–5: the core idea loops on its own with no tap
+   needed; several cases go in a ▶️ Play / ⏹️ Stop carousel that plays one
+   case, holds the answer, then moves to the next tab. Grades 6+: steps
+   with pausing, like MG11 Dividing Fractions (Play/Pause, back and forward
+   one step, jump to start or end, stop at the end). Buttons pair an emoji
+   or icon with a word. With prefers-reduced-motion, show the after state.
+10. **Starting values make every control work on first load.** A button
+    that is grayed out when the screen opens (MG1 Unit 3's "Switch to Take
+    From" at 3 + 6) means the defaults are wrong. This outranks keeping a
+    CFU answer out of Explore's default numbers (MG1 Unit 3 chose 5 + 3
+    over 3 + 6); if a default equals a CFU answer, make sure no "Look here"
+    line presents it as that question's answer.
+
 ### Check for Understanding (CFU) — the mandatory gate
 **Every unit has one, and it gates Practice (user requirement).** No
 exceptions for "fluency practice" or "word problems on concepts already

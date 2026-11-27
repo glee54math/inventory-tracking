@@ -192,6 +192,9 @@ Each part should set up the next. Check the links:
   Flag a part with no pointer, a pointer to a spot that doesn't teach it,
   or a spot that shows the CFU's own answer (e.g. Explore's default numbers
   equal the CFU's). Rules: `_planning/reviews/CFU_Pointer_Rollout/README.md`.
+  Exception (user-approved 2026-11-26, from MG1 Unit 3): defaults that make
+  every Explore control work on first load win over this. Flag only a
+  "Look here" line that presents the shared number as the question's answer.
 - *Check:* make a table per unit: concept → where shown in Explore → CFU
   question → Look-here spot → Practice bucket → Test question. Gaps are findings.
 
@@ -258,6 +261,15 @@ For every Problem type, trace the help a stuck student gets:
   branch on `help.showMe` jumps to the next step's picture (a "?" on 95
   while asking after 93; step 2's X showing on step 1). Open "Show me" on
   every step of every Problem type.
+- **Do the models paint one concept and its efficient procedure?** Check
+  the builder's "Models paint one concept and its efficient procedure"
+  rules (user-approved 2026-11-26, from MG1 Units 2–3; all grades). Major
+  findings: a model with no before → action → after animation (two still
+  pictures); a picture or "Show" that re-counts from 1 or brute-forces when
+  the unit teaches an efficient strategy; colors that change between start
+  and result; an equation, picture and missing box that show the unknown
+  differently; grades 6+ playback with no way to pause or step. Minor: no
+  role tags (which number does what is not clear in one second).
 - Are numbers tied to the picture (labels, numbered dots, a "?" box), and is
   the answer box the same color as the highlight?
 - Are counters grouped in 5s and 10s, and compared groups in labeled boxes?
